@@ -1,0 +1,151 @@
+/* ====== 订单录入页面 ====== */
+.order-search-box {
+  margin-bottom: 20px;
+}
+
+.order-actions {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+#orders-table th, #orders-table td {
+  vertical-align: middle;
+}
+
+#orders-table th:first-child, #orders-table td:first-child {
+  width: 40px;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination {
+  margin-bottom: 0;
+}
+
+.pagination-jump {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagination-jump input {
+  width: 70px;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 10% auto;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ====== 兑换页面 ====== */
+.exchange-container {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.exchange-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+.exchange-divider {
+  text-align: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.exchange-divider span {
+  background: #f8f9fa;
+  padding: 0 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.exchange-divider:before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #ddd;
+  z-index: 0;
+}
+
+.exchange-hint {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.exchange-result {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.exchange-result .success {
+  background: rgba(46, 204, 113, 0.1);
+  color: #27ae60;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.exchange-result .error {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .order-actions {
+    flex-direction: column;
+  }
+  
+  .pagination-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .modal-content {
+    width: 90%;
+    margin: 20% auto;
+  }
+}

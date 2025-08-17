@@ -1,0 +1,492 @@
+/* ===== 每日运势样式 ===== */
+.fortune-container {
+  background-image: url('https://oss.am-all.com.cn/asset/img/main/common/fortune_bg.jpg');
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.fortune-section {
+  max-width: 600px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.song-cover {
+  width: 300px;
+  height: 300px;
+  margin: 0 auto 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  background-color: #f5f5f5;
+}
+
+.song-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.song-info {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+/* 修复每日运势布局 */
+.song-id-cat {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.song-id {
+  background: #2c3e50;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.song-category {
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.cat-pops { background-color: #e74c3c; } /* POPS & ANIME */
+.cat-nico { background-color: #9b59b6; } /* niconico */
+.cat-touhou { background-color: #3498db; } /* 東方Project */
+.cat-variety { background-color: #2ecc71; } /* VARIETY */
+.cat-irodori { background-color: #e84393; } /* イロドリミドリ */
+.cat-gekimai { background-color: #f39c12; } /* ゲキマイ */
+.cat-original { background-color: #d35400; } /* ORIGINAL */
+
+/* 新增黑色分类标签样式 */
+.cat-dummy {
+  background-color: #2c3e50; /* 黑色背景 */
+  color: white;
+}
+
+.song-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #2c3e50;
+}
+
+.song-artist {
+  font-size: 1.1rem;
+  color: #7f8c8d;
+  margin-bottom: 20px;
+}
+
+.difficulties {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* 修改难度标签样式 - PC端显示完整文字 */
+.difficulty-tag {
+  padding: 5px 12px;
+  border-radius: 4px;
+  color: white;
+  font-weight: 500;
+}
+
+.lev-bas { background-color: #27ae60; } /* 深绿色 */
+.lev-adv { background-color: #d35400; } /* 深橙色 */
+.lev-exp { background-color: #c0392b; } /* 红色 */
+.lev-mas { background-color: #8e44ad; } /* 紫色 */
+.lev-ult { background-color: #2c3e50; } /* 黑色 */
+
+/* 添加WE难度文字描边 */
+.lev-we {
+    background: linear-gradient(90deg, 
+        #ff0000, #ff7f00, #ffff00, #00ff00, 
+        #0000ff, #4b0082, #9400d3);
+    color: white;
+    font-weight: bold;
+    text-shadow: 
+        -1px -1px 0 #000,  
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
+}
+
+.fortune-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: block;
+  margin: 0 auto;
+}
+
+.fortune-btn:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.fortune-btn:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.fortune-hint {
+  text-align: center;
+  margin-top: 15px;
+  color: #e74c3c;
+  font-weight: 500;
+}
+
+/* 封面滚动动画 */
+@keyframes scrollCover {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-3000px); }
+}
+
+.scrolling {
+  animation: scrollCover 0.1s linear infinite;
+}
+
+/* 吉凶显示样式 */
+.fortune-luck-container {
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.fortune-luck-label {
+  color: #7f8c8d;
+}
+
+.fortune-luck-value {
+  color: #e74c3c;
+  font-weight: bold;
+  font-size: 1.4rem;
+}
+
+/* 星星样式 */
+.we-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: black;
+  padding: 2px 5px;
+  border-radius: 4px;
+  margin-left: 5px;
+}
+
+.we-stars .star {
+  color: #ffcc00;
+  font-size: 0.9em;
+}
+
+/* 重置每日运势 */
+@keyframes resetFortune {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.reset-fortune {
+  animation: resetFortune 1s ease;
+}
+
+/* 新增签筒动画样式 */
+.song-cover {
+  position: relative; /* 为动画容器提供定位上下文 */
+}
+
+.fortune-animation {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: none;
+}
+
+.kuji-img {
+  width: auto;
+  height: auto;
+  max-width: none;
+}
+
+#kuji-01 {
+  width: 86px;
+  height: 171px;
+}
+
+#kuji-02 {
+  width: 86px;
+  height: 226px;
+  display: none;
+}
+
+/* 签筒摇摆动画 */
+@keyframes kuji-swing {
+  0% { transform: rotate(-5deg); }
+  25% { transform: rotate(5deg); }
+  50% { transform: rotate(-7deg); }
+  75% { transform: rotate(7deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.kuji-swing {
+  animation: kuji-swing 0.8s ease-in-out infinite;
+}
+
+/* 签筒淡入效果 */
+@keyframes kuji-fadein {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.kuji-fadein {
+  animation: kuji-fadein 0.5s ease-out forwards;
+}
+
+/* ===== 新增宜不宜样式 ===== */
+.fortune-recommendation {
+  display: flex;
+  justify-content: center; /* 修改为居中 */
+  width: 100%;
+  margin-top: 15px;
+  font-size: 1.1rem;
+  flex-wrap: wrap; /* 允许换行 */
+  gap: 15px; /* 添加项目间距 */
+}
+
+.recommend-item {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 15px;
+  border-radius: 8px;
+  white-space: nowrap;
+  justify-content: center; /* 确保内容居中 */
+}
+
+.recommend-label {
+  font-weight: bold;
+  margin-bottom: 0;
+  margin-right: 8px;
+}
+
+/* 新增居中样式 */
+.fortune-recommendation .recommend-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+  .fortune-recommendation {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .recommend-item {
+    width: 100%;
+    max-width: 250px;
+    justify-content: center;
+  }
+}
+
+/* 移动端布局调整 */
+@media (max-width: 768px) {
+  .difficulties {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  
+  .difficulty-tag:not(.lev-we) {
+    margin-bottom: 0;
+  }
+}
+
+/* PC端显示难度文字 */
+@media (min-width: 769px) {
+  .difficulty-tag:not(.lev-we)::before {
+    content: attr(data-level) " ";
+    font-size: 0.8em;
+  }
+  
+  .lev-bas::before { content: "BASIC "; }
+  .lev-adv::before { content: "ADVANCE "; }
+  .lev-exp::before { content: "EXPERT "; }
+  .lev-mas::before { content: "MASTER "; }
+  .lev-ult::before { content: "ULTIMA "; }
+}
+
+/* 吉凶显示样式 */
+.fortune-luck-container {
+  flex-direction: column;
+  text-align: center;
+}
+
+.fortune-luck-label {
+  font-size: 1.1rem;
+  margin-bottom: 5px;
+}
+
+.fortune-luck-value {
+  font-weight: bold;
+  color: #e74c3c;
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .lev-we {
+    width: 100%;
+    max-width: 250px;
+    text-align: center;
+  }
+  
+  .we-stars {
+    margin-left: 8px;
+  }
+}
+
+/* 移动端运势页面调整 */
+@media (max-width: 768px) {
+  .fortune-section {
+    padding: 15px;
+  }
+  
+  .song-cover {
+    width: 190px;
+    height: 190px;
+    margin: 0 auto 10px;
+  }
+  
+  .song-id-cat {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .song-id, .song-category {
+    padding: 3px 10px;
+    font-size: 0.9rem;
+  }
+  
+  .song-title {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+  
+  .song-artist {
+    font-size: 1rem;
+    margin-bottom: 15px;
+  }
+  
+  .difficulty-tag {
+    padding: 3px 8px;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+  }
+  
+  .fortune-luck-container {
+    padding: 8px;
+    font-size: 1rem;
+    margin-top: 15px;
+  }
+  
+  .fortune-luck-value {
+    font-size: 1.2rem;
+  }
+  
+  .fortune-btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+  
+  /* 修复滚动问题 */
+  .fortune-container {
+    min-height: 100vh;
+    height: auto;
+    padding-bottom: 20px;
+    overflow-y: auto;
+  }
+  
+  /* 修改难度标签为圆形 */
+  .difficulty-tag:not(.lev-we) {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50% !important; /* 确保圆形 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+  }
+  
+  /* 隐藏难度文字（PC端添加的伪元素） */
+  .difficulty-tag:not(.lev-we)::before {
+    content: "" !important;
+    display: none !important;
+  }
+  
+  /* 调整WE难度的显示 */
+  .lev-we {
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    text-align: center;
+    border-radius: 20px;
+    margin-top: 5px;
+  }
+  
+  /* 确保星星正确显示 */
+  .we-stars {
+    display: inline-flex;
+    margin-left: 5px;
+  }
+}
+
+/* 移动端难度水平排列 */
+@media (max-width: 768px) {
+  .difficulties {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  
+  .difficulty-tag:not(.lev-we) {
+    margin-bottom: 0;
+  }
+}

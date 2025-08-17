@@ -1,0 +1,2117 @@
+// spa.js - 单页面应用主模块
+// 用户状态管理
+let currentUser = null;
+let cropper = null;
+
+// ==================== 新增变量 ====================
+let currentOrders = [];
+let selectedOrderIds = [];
+let currentPage = 1;
+const ordersPerPage = 50;
+
+// 受保护的页面，需要登录才能访问
+const PROTECTED_PAGES = ['tools', 'dllpatcher', 'fortune', 'user-settings', 'order-entry', 'exchange'];
+
+// 显示临时错误消息
+function showTempErrorMessage(element, message, duration = 3000) {
+  if (!element) return;
+  
+  element.textContent = message;
+  element.style.display = 'block';
+  
+  // 清除之前的定时器（如果有）
+  if (element._errorTimer) {
+    clearTimeout(element._errorTimer);
+  }
+  
+  // 设置新的定时器
+  element._errorTimer = setTimeout(() => {
+    element.style.display = 'none';
+    element.textContent = '';
+  }, duration);
+}
+
+// 检查登录状态
+function checkLoginStatus() {
+  const token = localStorage.getItem('token');
+  if (token) {
+    fetchUserInfo(token);
+  } else {
+    showAuthLinks();
+  }
+}
+
+// 获取用户组信息
+function getUserRankInfo(userRank) {
+  const rankInfo = {
+    background: "",
+    icon: "",
+    text: ""
+  };
+  
+  switch(userRank) {
+    case 0:
+      rankInfo.background = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_normal.png';
+      rankInfo.icon = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_1.png';
+      rankInfo.text = '普通用户';
+      break;
+    case 1:
+      rankInfo.background = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_bronze.png';
+      rankInfo.icon = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_2.png';
+      rankInfo.text = '初级用户';
+      break;
+    case 2:
+      rankInfo.background = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_silver.png';
+      rankInfo.icon = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_3.png';
+      rankInfo.text = '中级用户';
+      break;
+    case 3:
+      rankInfo.background = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_gold.png';
+      rankInfo.icon = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_4.png';
+      rankInfo.text = '高级用户';
+      break;
+    case 4:
+      rankInfo.background = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_platinum.png';
+      rankInfo.icon = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_5.png';
+      rankInfo.text = '贵宾用户';
+      break;
+    case 5:
+      rankInfo.background = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_rainbow.png';
+      rankInfo.icon = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_6.png';
+      rankInfo.text = '管理员';
+      break;
+    default:
+      rankInfo.background = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_normal.png';
+      rankInfo.icon = 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_1.png';
+      rankInfo.text = '普通用户';
+  }
+  
+  return rankInfo;
+}
+
+// 获取用户信息
+function fetchUserInfo(token) {
+  secureFetch('https://api.am-all.com.cn/api/user', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('获取用户信息失败');
+    }
+    return response.json();
+  })
+  .then(user => {
+    currentUser = user;
+    updateUserInfo(user);
+    showUserInfo();
+    setupUserDropdown();
+  })
+  .catch(error => {
+    console.error(error);
+    localStorage.removeItem('token');
+    showAuthLinks();
+  });
+}
+
+// 更新用户信息显示
+function updateUserInfo(user) {
+  const defaultAvatarUrl = 'https://api.am-all.com.cn/avatars/default_avatar.png';
+  const rankInfo = getUserRankInfo(user.user_rank || 0);
+  
+  // PC视图
+  const userAvatarPc = document.getElementById('user-avatar-pc');
+  const userNicknamePc = document.getElementById('user-nickname-pc');
+  const userUidPc = document.getElementById('user-uid-pc');
+  const userInfoPc = document.getElementById('user-info-pc');
+  
+  if (userInfoPc) {
+    userInfoPc.style.setProperty('--user-rank-bg', `url(${rankInfo.background})`);
+    
+    let rankIcon = document.getElementById('user-rank-icon-pc');
+    if (!rankIcon) {
+      rankIcon = document.createElement('img');
+      rankIcon.id = 'user-rank-icon-pc';
+      rankIcon.className = 'user-rank-icon';
+      userInfoPc.appendChild(rankIcon);
+    }
+    rankIcon.src = rankInfo.icon;
+  }
+  
+  if (userAvatarPc) {
+    userAvatarPc.src = user.avatar || defaultAvatarUrl;
+  }
+  
+  if (userNicknamePc) {
+    userNicknamePc.textContent = user.nickname || user.username;
+  }
+  if (userUidPc) {
+    userUidPc.textContent = user.email || '未设置邮箱';
+  }
+  
+  const dropdownUid = document.getElementById('dropdown-uid');
+  if (dropdownUid) {
+    dropdownUid.textContent = `UID: ${user.uid}`;
+  }
+  
+  const dropdownRank = document.getElementById('dropdown-rank');
+  if (dropdownRank) {
+    dropdownRank.innerHTML = `<i class="fas fa-crown me-2"></i>用户组: ${rankInfo.text}`;
+  }
+  
+  // 修改积分显示为总积分
+  const dropdownPoints = document.getElementById('dropdown-points');
+  if (dropdownPoints) {
+    const totalPoints = (user.points || 0) + (user.point2 || 0);
+    dropdownPoints.innerHTML = `<i class="fas fa-coins me-2"></i>积分: ${totalPoints}`;
+  }
+  
+  // 移动视图
+  const userAvatarMobile = document.getElementById('user-avatar-mobile');
+  const userNicknameMobile = document.getElementById('user-nickname-mobile');
+  const userEmailMobile = document.getElementById('user-email-mobile');
+  const userUidMobile = document.getElementById('user-uid-mobile');
+  const userPointsMobile = document.getElementById('user-points-mobile');
+  
+  if (userAvatarMobile) {
+    userAvatarMobile.src = user.avatar || defaultAvatarUrl;
+    userAvatarMobile.style.width = '50px';
+    userAvatarMobile.style.height = '50px';
+  }
+  if (userNicknameMobile) {
+    userNicknameMobile.textContent = user.nickname || user.username;
+  }
+  if (userUidMobile) {
+    userUidMobile.textContent = `UID: ${user.uid}`;
+  }
+  if (userPointsMobile) {
+    const totalPoints = (user.points || 0) + (user.point2 || 0);
+    userPointsMobile.textContent = `积分: ${totalPoints}`;
+  }
+  if (userEmailMobile) {
+    userEmailMobile.textContent = user.email || '未设置邮箱';
+  }
+  
+  // 用户设置页面
+  const settingsAvatar = document.getElementById('settings-avatar');
+  const settingsUsername = document.getElementById('settings-username');
+  const settingsEmail = document.getElementById('settings-email');
+  const settingsUid = document.getElementById('settings-uid');
+  const settingsPoints = document.getElementById('settings-points');
+  const settingsPoint2 = document.getElementById('settings-point2');
+  const settingsTotalPoints = document.getElementById('settings-total-points');
+  
+  if (settingsAvatar) {
+    settingsAvatar.src = user.avatar || defaultAvatarUrl;
+  }
+  
+  if (settingsUsername) {
+    settingsUsername.textContent = user.username;
+  }
+  if (settingsEmail) {
+    settingsEmail.textContent = user.email || '未设置';
+  }
+  if (settingsUid) {
+    settingsUid.textContent = user.uid;
+  }
+  if (settingsPoints) {
+    settingsPoints.textContent = user.points || 0;
+  }
+  if (settingsPoint2) {
+    settingsPoint2.textContent = user.point2 || 0;
+  }
+  if (settingsTotalPoints) {
+    const totalPoints = (user.points || 0) + (user.point2 || 0);
+    settingsTotalPoints.textContent = totalPoints;
+  }
+  
+  const nicknameInput = document.getElementById('settings-nickname');
+  if (nicknameInput) {
+    nicknameInput.value = user.nickname || '';
+    document.getElementById('settings-nickname-counter').textContent = (user.nickname || '').length;
+  }
+  
+  // =============== 为移动端添加用户组背景和等级图标 =============== //
+  
+  // 获取移动端用户信息区域
+  const sidebarUserArea = document.querySelector('.sidebar-user-area');
+  
+  if (sidebarUserArea) {
+    // 设置背景图变量
+    sidebarUserArea.style.setProperty('--user-rank-bg', `url(${rankInfo.background})`);
+    
+    // 添加或更新等级图标
+    let rankIconMobile = document.getElementById('user-rank-icon-mobile');
+    if (!rankIconMobile) {
+      rankIconMobile = document.createElement('img');
+      rankIconMobile.id = 'user-rank-icon-mobile';
+      rankIconMobile.className = 'user-rank-icon-mobile';
+      sidebarUserArea.appendChild(rankIconMobile);
+    }
+    rankIconMobile.src = rankInfo.icon;
+  }
+}
+
+// 设置用户下拉菜单事件
+function setupUserDropdown() {
+  const userInfoPc = document.getElementById('user-info-pc');
+  const userDropdown = userInfoPc ? userInfoPc.querySelector('.user-dropdown') : null;
+
+  if (userInfoPc && userDropdown) {
+    let dropdownTimeout;
+    
+    userInfoPc.addEventListener('mouseenter', () => {
+      clearTimeout(dropdownTimeout);
+      userDropdown.style.display = 'block';
+      setTimeout(() => {
+        userDropdown.style.opacity = '1';
+        userDropdown.style.transform = 'translateY(0)';
+      }, 10);
+    });
+
+    userInfoPc.addEventListener('mouseleave', () => {
+      dropdownTimeout = setTimeout(() => {
+        userDropdown.style.opacity = '0';
+        userDropdown.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+          userDropdown.style.display = 'none';
+        }, 200);
+      }, 300);
+    });
+
+    userDropdown.addEventListener('mouseenter', () => {
+      clearTimeout(dropdownTimeout);
+    });
+
+    userDropdown.addEventListener('mouseleave', () => {
+      userDropdown.style.opacity = '0';
+      userDropdown.style.transform = 'translateY(-10px)';
+      setTimeout(() => {
+        userDropdown.style.display = 'none';
+      }, 200);
+    });
+  }
+}
+
+// 显示用户信息区域
+function showUserInfo() {
+  // PC视图
+  const authLinksPc = document.getElementById('auth-links-pc');
+  const userInfoPc = document.getElementById('user-info-pc');
+  
+  if (authLinksPc) authLinksPc.style.display = 'none';
+  if (userInfoPc) userInfoPc.style.display = 'flex';
+  
+  // 移动视图
+  const authLinksMobile = document.getElementById('auth-links-mobile');
+  const userInfoMobile = document.getElementById('user-info-mobile');
+  
+  if (authLinksMobile) authLinksMobile.style.display = 'none';
+  if (userInfoMobile) userInfoMobile.style.display = 'block';
+  
+  // ==================== 在 showUserInfo 函数中添加新菜单项 ====================
+  // 添加新菜单项（仅对贵宾用户显示）
+  if (currentUser && currentUser.user_rank >= 4) {
+    // 检查是否已添加，避免重复
+    if (!document.querySelector('.sidebar-nav a[data-page="order-entry"]')) {
+      const orderEntryItem = document.createElement('a');
+      orderEntryItem.href = '#';
+      orderEntryItem.dataset.page = 'order-entry';
+      orderEntryItem.innerHTML = `
+        <i class="fas fa-file-invoice me-2"></i>
+        <span>订单录入</span>
+      `;
+      
+      const exchangeItem = document.createElement('a');
+      exchangeItem.href = '#';
+      exchangeItem.dataset.page = 'exchange';
+      exchangeItem.innerHTML = `
+        <i class="fas fa-exchange-alt me-2"></i>
+        <span>积分兑换</span>
+      `;
+      
+      // 在每日运势下方添加
+      const fortuneItem = document.querySelector('.sidebar-nav a[data-page="fortune"]');
+      if (fortuneItem) {
+        fortuneItem.parentNode.insertBefore(orderEntryItem, fortuneItem.nextSibling);
+        fortuneItem.parentNode.insertBefore(exchangeItem, orderEntryItem.nextSibling);
+      }
+    }
+  }
+}
+
+// 显示登录/注册链接
+function showAuthLinks() {
+  // PC视图
+  const authLinksPc = document.getElementById('auth-links-pc');
+  const userInfoPc = document.getElementById('user-info-pc');
+  
+  if (authLinksPc) authLinksPc.style.display = 'flex';
+  if (userInfoPc) userInfoPc.style.display = 'none';
+  
+  // 移动视图
+  const authLinksMobile = document.getElementById('auth-links-mobile');
+  const userInfoMobile = document.getElementById('user-info-mobile');
+  
+  if (authLinksMobile) authLinksMobile.style.display = 'block';
+  if (userInfoMobile) userInfoMobile.style.display = 'none';
+  
+  // 移除移动端用户组背景和等级图标
+  const sidebarUserArea = document.querySelector('.sidebar-user-area');
+  if (sidebarUserArea) {
+    sidebarUserArea.style.removeProperty('--user-rank-bg');
+    const rankIconMobile = document.getElementById('user-rank-icon-mobile');
+    if (rankIconMobile) {
+      rankIconMobile.remove();
+    }
+  }
+}
+
+// 发送验证码
+function sendVerificationCode(email, type) {
+  return fetch('https://api.am-all.com.cn/api/send-verification-code', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ email, type })
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => { throw err; });
+    }
+    return response.json();
+  });
+}
+
+// 验证验证码
+function verifyCode(email, code, type) {
+  return fetch('https://api.am-all.com.cn/api/verify-code', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ email, code, type })
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => { throw err; });
+    }
+    return response.json();
+  });
+}
+
+// 重置密码
+function resetPassword(resetToken, newPassword) {
+  return fetch('https://api.am-all.com.cn/api/reset-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ resetToken, newPassword })
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => { throw err; });
+    }
+    return response.json();
+  });
+}
+
+// 登录功能 - 使用修复后的安全请求
+function handleLogin() {
+  const login = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+  const errorElement = document.getElementById('login-error');
+
+  if (errorElement) {
+    errorElement.textContent = '';
+    errorElement.style.display = 'none';
+  }
+
+  if (!login || !password) {
+    showTempErrorMessage(errorElement, '用户名/邮箱和密码不能为空');
+    return;
+  }
+
+  secureFetch('https://api.am-all.com.cn/api/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ login, password })
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => { throw err; });
+    }
+    return response.json();
+  })
+  .then(data => {
+    localStorage.setItem('token', data.token);
+    updateUserInfo(data.user);
+    showUserInfo();
+    loadPage('home');
+  })
+  .catch(error => {
+    showTempErrorMessage(errorElement, error.error || '登录失败');
+  });
+}
+
+// 注册功能
+function handleRegister() {
+  const username = document.getElementById('register-username').value;
+  const nickname = document.getElementById('register-nickname').value;
+  const email = document.getElementById('register-email').value;
+  const password = document.getElementById('register-password').value;
+  const confirmPassword = document.getElementById('register-confirm-password').value;
+  const verificationCode = document.getElementById('register-verification-code').value;
+  const errorElement = document.getElementById('register-error');
+
+  if (errorElement) {
+    errorElement.textContent = '';
+    errorElement.style.display = 'none';
+  }
+
+  if (!username || !password || !email || !verificationCode) {
+    showTempErrorMessage(errorElement, '用户名、密码、邮箱和验证码不能为空');
+    return;
+  }
+
+  // 验证用户名长度
+  if (username.length < 6 || username.length > 20) {
+    showTempErrorMessage(errorElement, '用户名长度需在6-20个字符之间');
+    return;
+  }
+
+  // 验证昵称长度
+  if (nickname && (nickname.length < 6 || nickname.length > 20)) {
+    showTempErrorMessage(errorElement, '昵称长度需在6-20个字符之间');
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showTempErrorMessage(errorElement, '邮箱格式不正确');
+    return;
+  }
+
+  if (password.length < 8 || password.length > 16) {
+    showTempErrorMessage(errorElement, '密码长度需在8-16个字符之间');
+    return;
+  }
+  if (password !== confirmPassword) {
+    showTempErrorMessage(errorElement, '两次输入的密码不一致');
+    return;
+  }
+
+  fetch('https://api.am-all.com.cn/api/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ username, password, nickname, email, verificationCode })
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => { throw err; });
+    }
+    return response.json();
+  })
+  .then(data => {
+    localStorage.setItem('token', data.token);
+    updateUserInfo(data.user);
+    showUserInfo();
+    loadPage('home');
+  })
+  .catch(error => {
+    showTempErrorMessage(errorElement, error.error || '注册失败');
+  });
+}
+
+// 退出登录
+function handleLogout() {
+  localStorage.removeItem('token');
+  currentUser = null;
+  showAuthLinks();
+  loadPage('home');
+}
+
+// 获取公告详情
+function getAnnouncementById(id) {
+  return announcementsData.find(item => item.id === id);
+}
+
+// 显示公告详情弹窗
+function showAnnouncementModal(id) {
+  const modal = document.getElementById('announcement-modal');
+  if (!modal) return;
+  
+  const announcement = getAnnouncementById(id);
+  
+  if (announcement) {
+    const titleElement = document.getElementById('announcement-title');
+    const dateElement = document.getElementById('announcement-date');
+    const contentElement = document.getElementById('announcement-content');
+    
+    if (titleElement) titleElement.textContent = announcement.title;
+    if (dateElement) dateElement.textContent = announcement.date;
+    if (contentElement) contentElement.innerHTML = announcement.content;
+    
+    modal.classList.add('show');
+    
+    const pageLinks = modal.querySelectorAll('[data-page]');
+    pageLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        modal.classList.remove('show');
+        
+        if (window.innerWidth <= 992) {
+          const sidebar = document.querySelector('.sidebar');
+          if (sidebar) sidebar.classList.remove('show');
+          document.body.classList.remove('mobile-sidebar-open');
+          document.body.classList.add('mobile-sidebar-closed');
+        }
+        
+        if (typeof loadPage === 'function') {
+          loadPage(this.getAttribute('data-page'));
+        }
+      });
+    });
+    
+    const closeBtn = document.getElementById('announcement-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        modal.classList.remove('show');
+      });
+    }
+  }
+}
+
+// 加载帮助详情页
+function loadHelpDetail(id) {
+  const content = document.getElementById('content-container');
+  if (!content) return;
+  
+  content.innerHTML = pages['help-detail'];
+  
+  const helpData = helpContentData[id] || {
+    title: "帮助主题不存在",
+    content: "<p>请求的帮助内容不存在</p>"
+  };
+  
+  document.getElementById('help-detail-title').textContent = helpData.title;
+  document.getElementById('help-content').innerHTML = helpData.content;
+  
+  const backButton = document.querySelector('.back-button[data-page="help"]');
+  if (backButton) {
+    backButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      loadPage('help');
+    });
+  }
+  
+  if (typeof languageModule !== 'undefined') {
+    languageModule.initLanguage();
+  }
+}
+
+// 显示登录提示界面
+function showLoginRequired(pageId) {
+  const contentContainer = document.getElementById('content-container');
+  if (!contentContainer) return;
+  
+  const pageNames = {
+    'tools': '实用工具',
+    'dllpatcher': '补丁工具',
+    'fortune': '每日运势',
+    'user-settings': '用户设置',
+    'order-entry': '订单录入',
+    'exchange': '积分兑换'
+  };
+  
+  const pageName = pageNames[pageId] || '此功能';
+  
+  contentContainer.innerHTML = `
+    <div class="section">
+      <div class="login-required-container">
+        <div class="login-required-icon">
+          <i class="fas fa-lock"></i>
+        </div>
+        <h2>请登录</h2>
+        <p>${pageName}需要登录后才能使用</p>
+        <button class="login-btn" data-page="login">
+          <i class="fas fa-sign-in-alt me-2"></i>
+          立即登录
+        </button>
+      </div>
+    </div>
+  `;
+  
+  const loginBtn = contentContainer.querySelector('.login-btn');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      loadPage(this.getAttribute('data-page'));
+    });
+  }
+  
+  updateActiveMenuItem('home');
+}
+
+// 设置字符计数器
+function setupCharCounters() {
+  // 注册页面
+  const usernameInput = document.getElementById('register-username');
+  const nicknameInput = document.getElementById('register-nickname');
+  const passwordInput = document.getElementById('register-password');
+  
+  if (usernameInput) {
+    usernameInput.addEventListener('input', function() {
+      document.getElementById('username-counter').textContent = this.value.length;
+    });
+  }
+  
+  if (nicknameInput) {
+    nicknameInput.addEventListener('input', function() {
+      document.getElementById('nickname-counter').textContent = this.value.length;
+    });
+  }
+  
+  if (passwordInput) {
+    passwordInput.addEventListener('input', function() {
+      document.getElementById('password-counter').textContent = this.value.length;
+    });
+  }
+  
+  // 用户设置页面
+  const settingsNicknameInput = document.getElementById('settings-nickname');
+  const newPasswordInput = document.getElementById('new-password');
+  
+  if (settingsNicknameInput) {
+    settingsNicknameInput.addEventListener('input', function() {
+      document.getElementById('settings-nickname-counter').textContent = this.value.length;
+    });
+  }
+  
+  if (newPasswordInput) {
+    newPasswordInput.addEventListener('input', function() {
+      document.getElementById('new-password-counter').textContent = this.value.length;
+    });
+  }
+}
+
+// 显示每日运势结果
+function displayFortune(song, luck, recommendations) {
+  updateDisplay(song, luck, recommendations);
+  
+  // 随机增加1-10积分
+  const pointsEarned = Math.floor(Math.random() * 10) + 1;
+  
+  const token = localStorage.getItem('token');
+  if (token) {
+    fetch('https://api.am-all.com.cn/api/user/add-points', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ points: pointsEarned })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        currentUser.points = data.points;
+        updateUserInfo(currentUser);
+        
+        // 显示获得的积分
+        const fortuneHint = document.getElementById('fortune-hint');
+        if (fortuneHint) {
+          const totalPoints = data.points + (currentUser.point2 || 0);
+          fortuneHint.textContent = `恭喜获得 ${pointsEarned} 积分！当前积分: ${totalPoints}`;
+          fortuneHint.style.color = '#27ae60';
+        }
+      }
+    })
+    .catch(error => {
+      console.error('增加积分失败:', error);
+    });
+  }
+}
+
+// 加载页面内容
+function loadPage(pageId) {
+  const contentContainer = document.getElementById('content-container');
+  if (!contentContainer) return;
+  
+  if (PROTECTED_PAGES.includes(pageId)) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showLoginRequired(pageId);
+      return;
+    }
+  }
+  
+  document.body.classList.add('spa-loading');
+  
+  contentContainer.scrollTop = 0;
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  
+  setTimeout(() => {
+    if (pages[pageId]) {
+      contentContainer.innerHTML = pages[pageId];
+      
+      if (typeof languageModule !== 'undefined') {
+        languageModule.initLanguage();
+      }
+      
+      if (pageId === 'user-settings') {
+        const settingsContainer = contentContainer.querySelector('.section');
+        if (settingsContainer) {
+          settingsContainer.classList.add('user-settings-container');
+          const sections = settingsContainer.querySelectorAll('.setting-card');
+          sections.forEach(section => {
+            section.classList.add('user-settings-section');
+          });
+        }
+        
+        // 用户设置页面 - 头像上传功能
+        const token = localStorage.getItem('token');
+        if (token) {
+          fetchUserInfo(token);
+        } else {
+          loadPage('login');
+        }
+        
+        const changeAvatarBtn = document.getElementById('change-avatar-btn');
+        const avatarUpload = document.getElementById('avatar-upload');
+        const cancelAvatarBtn = document.getElementById('cancel-avatar-btn');
+        
+        if (changeAvatarBtn && avatarUpload) {
+          changeAvatarBtn.addEventListener('click', () => {
+            avatarUpload.click();
+          });
+          
+          avatarUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+              // 检查文件大小
+              if (file.size > 150 * 1024) { // 150KB限制
+                showErrorMessage('头像大小不能超过150KB');
+                return;
+              }
+              
+              if (cropper) {
+                cropper.destroy();
+                cropper = null;
+              }
+              
+              const reader = new FileReader();
+              reader.onload = function(event) {
+                const cropContainer = document.getElementById('avatar-crop-container');
+                const previewImg = document.getElementById('avatar-preview');
+                
+                cropContainer.innerHTML = '';
+                const img = document.createElement('img');
+                img.id = 'avatar-to-crop';
+                img.src = event.target.result;
+                
+                // 限制预览图片尺寸
+                img.style.maxWidth = '200px';
+                img.style.maxHeight = '200px';
+                
+                cropContainer.appendChild(img);
+                
+                // 初始化Cropper并设置圆形裁剪区域
+                cropper = new Cropper(img, {
+                  aspectRatio: 1,
+                  viewMode: 1,
+                  autoCropArea: 0.8,
+                  movable: true,
+                  zoomable: true,
+                  rotatable: false,
+                  scalable: false,
+                  guides: true,
+                  highlight: false,
+                  background: false,
+                  cropBoxResizable: true,
+                  minCropBoxWidth: 100,
+                  minCropBoxHeight: 100,
+                  crop: function(event) {
+                    // 圆形裁剪效果
+                    const canvas = this.cropper.getCroppedCanvas({
+                      width: 200,
+                      height: 200
+                    });
+                    
+                    const context = canvas.getContext('2d');
+                    context.beginPath();
+                    context.arc(100, 100, 100, 0, Math.PI * 2, true);
+                    context.closePath();
+                    context.clip();
+                  }
+                });
+                
+                document.getElementById('avatar-crop-section').style.display = 'block';
+              };
+              reader.readAsDataURL(file);
+            }
+          });
+        }
+        
+        // 添加取消按钮功能
+        if (cancelAvatarBtn) {
+          cancelAvatarBtn.addEventListener('click', function() {
+            if (cropper) {
+              cropper.destroy();
+              cropper = null;
+            }
+            document.getElementById('avatar-crop-section').style.display = 'none';
+            document.getElementById('avatar-upload').value = '';
+          });
+        }
+        
+        const saveAvatarBtn = document.getElementById('save-avatar-btn');
+        if (saveAvatarBtn) {
+          saveAvatarBtn.addEventListener('click', function() {
+            if (cropper) {
+              const canvas = cropper.getCroppedCanvas({
+                width: 200,
+                height: 200
+              });
+              
+              // 添加圆形遮罩
+              const context = canvas.getContext('2d');
+              context.beginPath();
+              context.arc(100, 100, 100, 0, Math.PI * 2, true);
+              context.closePath();
+              context.clip();
+              
+              // 检查图片大小
+              canvas.toBlob(function(blob) {
+                if (blob.size > 150 * 1024) {
+                  showErrorMessage('裁剪后的头像大小不能超过150KB');
+                  return;
+                }
+                
+                const formData = new FormData();
+                formData.append('avatar', blob, 'avatar.png');
+                
+                const token = localStorage.getItem('token');
+                fetch('https://api.am-all.com.cn/api/user/avatar', {
+                  method: 'PUT',
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    updateUserInfo(data.user);
+                    document.getElementById('avatar-crop-section').style.display = 'none';
+                    document.getElementById('avatar-upload').value = '';
+                    showSuccessMessage('头像更新成功');
+                  } else {
+                    showErrorMessage('头像更新失败: ' + (data.error || '未知错误'));
+                  }
+                })
+                .catch(error => {
+                  console.error('头像更新错误:', error);
+                  showErrorMessage('头像更新失败');
+                });
+              }, 'image/png', 0.9); // 添加压缩质量参数
+            } else {
+              showErrorMessage('请先选择并裁剪头像');
+            }
+          });
+        }
+        
+        const saveProfileBtn = document.getElementById('save-profile-btn');
+        if (saveProfileBtn) {
+          saveProfileBtn.addEventListener('click', function() {
+            const nickname = document.getElementById('settings-nickname').value;
+            
+            if (nickname && (nickname.length < 6 || nickname.length > 20)) {
+              showErrorMessage('昵称长度需在6-20个字符之间');
+              return;
+            }
+            
+            const token = localStorage.getItem('token');
+            fetch('https://api.am-all.com.cn/api/user/profile', {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ nickname })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                updateUserInfo(data.user);
+                showSuccessMessage('个人信息更新成功');
+              } else {
+                showErrorMessage('个人信息更新失败: ' + (data.error || '未知错误'));
+              }
+            })
+            .catch(error => {
+              console.error('个人信息更新错误:', error);
+              showErrorMessage('个人信息更新失败');
+            });
+          });
+        }
+        
+        const savePasswordBtn = document.getElementById('save-password-btn');
+        if (savePasswordBtn) {
+          savePasswordBtn.addEventListener('click', function() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (newPassword !== confirmPassword) {
+              showErrorMessage('两次输入的新密码不一致');
+              return;
+            }
+            
+            if (newPassword.length < 8 || newPassword.length > 16) {
+              showErrorMessage('密码长度需在8-16个字符之间');
+              return;
+            }
+            
+            const token = localStorage.getItem('token');
+            fetch('https://api.am-all.com.cn/api/user/password', {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ currentPassword, newPassword })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                showSuccessMessage('密码更新成功');
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+              } else {
+                showErrorMessage('密码更新失败: ' + (data.error || '未知错误'));
+              }
+            })
+            .catch(error => {
+              console.error('密码更新错误:', error);
+              showErrorMessage('密码更新失败');
+            });
+          });
+        }
+      }
+      
+      if (pageId === 'fortune') {
+        setTimeout(() => {
+          const coverImg = document.getElementById('cover-img');
+          const songIdEl = document.getElementById('song-id');
+          const songCategoryEl = document.getElementById('song-category');
+          const songTitleEl = document.getElementById('song-title');
+          const songArtistEl = document.getElementById('song-artist');
+          const difficultiesContainer = document.querySelector('.difficulties');
+          const fortuneLuckEl = document.getElementById('fortune-luck');
+          const drawBtn = document.getElementById('draw-btn');
+          const fortuneHint = document.getElementById('fortune-hint');
+          const luckyActionEl = document.getElementById('lucky-action');
+          const unluckyActionEl = document.getElementById('unlucky-action');
+          
+          if (coverImg) {
+            if (window.innerWidth <= 768) {
+              coverImg.style.width = '190px';
+              coverImg.style.height = '190px';
+            } else {
+              coverImg.style.width = '';
+              coverImg.style.height = '';
+            }
+          }
+          
+          const luckTexts = ['大凶', '凶', '末吉', '吉', '小吉', '中吉', '大吉', '特大吉'];
+          
+          const lastDrawDate = localStorage.getItem('dailyFortuneDate');
+          const today = new Date().toDateString();
+          const dailyFortuneData = localStorage.getItem('dailyFortuneData');
+          
+          let songList = [];
+          
+          const dummySong = {
+            id: '???',
+            title: '???',
+            artist: '???',
+            catname: '???',
+            lev_bas: '?',
+            lev_adv: '?',
+            lev_exp: '?',
+            lev_mas: '?',
+            lev_ult: '?'
+          };
+          
+          updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+          
+          fetch('https://oss.am-all.com.cn/asset/img/main/data/music.json')
+            .then(response => response.json())
+            .then(data => {
+              songList = data;
+              
+              if (lastDrawDate === today && dailyFortuneData) {
+                try {
+                  const data = JSON.parse(dailyFortuneData);
+                  if (data && data.song) {
+                    displayFortune(data.song, data.luck, data.recommendations);
+                    if (drawBtn) {
+                      drawBtn.disabled = true;
+                      drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+                    }
+                    if (fortuneHint) {
+                      fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
+                    }
+                  }
+                } catch (e) {
+                  console.error('解析运势数据失败', e);
+                  localStorage.removeItem('dailyFortuneDate');
+                  localStorage.removeItem('dailyFortuneData');
+                  updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+                }
+              }
+            })
+            .catch(error => {
+              console.error('加载歌曲数据失败:', error);
+              if (fortuneHint) {
+                fortuneHint.textContent = '加载歌曲数据失败，请重试';
+              }
+              updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+            });
+          
+          if (drawBtn) {
+            drawBtn.addEventListener('click', () => {
+              if (!drawBtn) return;
+              
+              drawBtn.disabled = true;
+              drawBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>抽取中...';
+              if (fortuneHint) fortuneHint.textContent = '';
+              
+              if (coverImg) {
+                coverImg.style.display = 'none';
+                const animationContainer = contentContainer.querySelector('.fortune-animation');
+                const kuji01 = contentContainer.querySelector('#kuji-01');
+                const kuji02 = contentContainer.querySelector('#kuji-02');
+                
+                animationContainer.style.display = 'flex';
+                kuji01.style.display = 'block';
+                kuji01.classList.add('kuji-swing');
+                kuji02.style.display = 'none';
+                kuji02.classList.remove('kuji-fadein');
+              }
+              
+              setTimeout(() => {
+                let scrollCount = 0;
+                const scrollInterval = setInterval(() => {
+                  if (songList.length === 0) {
+                    clearInterval(scrollInterval);
+                    return;
+                  }
+                  
+                  const tempSong = songList[Math.floor(Math.random() * songList.length)];
+                  
+                  updateDisplay(tempSong, '???', {lucky: '?', unlucky: '?'});
+                  scrollCount++;
+                  
+                  if (scrollCount > 30) {
+                    clearInterval(scrollInterval);
+                    
+                    const selectedSong = songList[Math.floor(Math.random() * songList.length)];
+                    const luck = luckTexts[Math.floor(Math.random() * luckTexts.length)];
+                    const recommendations = getRandomRecommendations();
+                    
+                    if (coverImg) coverImg.classList.remove('scrolling');
+                    
+                    setTimeout(() => {
+                      const animationContainer = contentContainer.querySelector('.fortune-animation');
+                      const kuji01 = contentContainer.querySelector('#kuji-01');
+                      const kuji02 = contentContainer.querySelector('#kuji-02');
+                      
+                      if (animationContainer && kuji01 && kuji02) {
+                        kuji01.classList.remove('kuji-swing');
+                        kuji01.style.display = 'none';
+                        kuji02.style.display = 'block';
+                        kuji02.classList.add('kuji-fadein');
+                        
+                        setTimeout(() => {
+                          animationContainer.style.display = 'none';
+                          if (coverImg) coverImg.style.display = 'block';
+                          
+                          displayFortune(selectedSong, luck, recommendations);
+                          
+                          const today = new Date().toDateString();
+                          localStorage.setItem('dailyFortuneDate', today);
+                          localStorage.setItem('dailyFortuneData', JSON.stringify({
+                            song: selectedSong,
+                            luck: luck,
+                            recommendations: recommendations
+                          }));
+                          
+                          if (drawBtn) {
+                            drawBtn.disabled = true;
+                            drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+                          }
+                          if (fortuneHint) {
+                            fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
+                          }
+                        }, 100);
+                      }
+                    }, 0);
+                  }
+                }, 100);
+              }, 500);
+            });
+          }
+          
+          function updateDisplay(song, luck, recommendations) {
+            if (!song) return;
+            
+            if (difficultiesContainer) {
+              difficultiesContainer.innerHTML = '';
+            }
+            
+            if (coverImg) {
+              coverImg.src = song.image ? 
+                `https://oss.am-all.com.cn/asset/img/main/music/${song.image}` : 
+                'https://oss.am-all.com.cn/asset/img/main/music/dummy.jpg';
+            }
+            if (songIdEl) songIdEl.textContent = song.id || '???';
+            if (songTitleEl) songTitleEl.textContent = song.title || '???';
+            if (songArtistEl) songArtistEl.textContent = song.artist || '???';
+            if (fortuneLuckEl) fortuneLuckEl.textContent = luck || '???';
+            
+            if (luckyActionEl && unluckyActionEl) {
+              luckyActionEl.textContent = recommendations?.lucky || '?';
+              unluckyActionEl.textContent = recommendations?.unlucky || '?';
+            }
+            
+            const isDummy = song.id === '???';
+            
+            if (songCategoryEl) {
+              if (isDummy) {
+                songCategoryEl.textContent = '???';
+                songCategoryEl.className = 'song-category cat-dummy';
+              } else if (song.catname) {
+                songCategoryEl.textContent = song.catname;
+                songCategoryEl.className = 'song-category ' + getCategoryClass(song.catname);
+              } else {
+                songCategoryEl.textContent = '???';
+                songCategoryEl.className = 'song-category';
+              }
+            }
+            
+            const isWorldsEndSong = song.we_kanji || song.we_star;
+            
+            if (isWorldsEndSong && !isDummy) {
+              if (song.we_kanji || song.we_star) {
+                const weDiv = document.createElement('div');
+                weDiv.className = 'difficulty-tag lev-we';
+                weDiv.textContent = 'World\'s End: ';
+                
+                if (song.we_kanji) {
+                  weDiv.textContent += song.we_kanji;
+                }
+                
+                if (song.we_star) {
+                  const starsContainer = document.createElement('span');
+                  starsContainer.className = 'we-stars';
+                  
+                  const starCount = parseInt(song.we_star);
+                  const starDisplayCount = Math.ceil(starCount / 2);
+                  
+                  for (let i = 0; i < starDisplayCount; i++) {
+                    const star = document.createElement('i');
+                    star.className = 'fas fa-star star';
+                    starsContainer.appendChild(star);
+                  }
+                  
+                  weDiv.appendChild(starsContainer);
+                }
+                
+                if (difficultiesContainer) {
+                  difficultiesContainer.appendChild(weDiv);
+                }
+              }
+            } else {
+              if (song.lev_bas || isDummy) {
+                const basDiv = document.createElement('div');
+                basDiv.className = 'difficulty-tag lev-bas';
+                basDiv.setAttribute('data-level', 'BASIC');
+                const basSpan = document.createElement('span');
+                basSpan.textContent = isDummy ? '?' : song.lev_bas;
+                basDiv.appendChild(basSpan);
+                if (difficultiesContainer) difficultiesContainer.appendChild(basDiv);
+              }
+              
+              if (song.lev_adv || isDummy) {
+                const advDiv = document.createElement('div');
+                advDiv.className = 'difficulty-tag lev-adv';
+                advDiv.setAttribute('data-level', 'ADVANCE');
+                const advSpan = document.createElement('span');
+                advSpan.textContent = isDummy ? '?' : song.lev_adv;
+                advDiv.appendChild(advSpan);
+                if (difficultiesContainer) difficultiesContainer.appendChild(advDiv);
+              }
+              
+              if (song.lev_exp || isDummy) {
+                const expDiv = document.createElement('div');
+                expDiv.className = 'difficulty-tag lev-exp';
+                expDiv.setAttribute('data-level', 'EXPERT');
+                const expSpan = document.createElement('span');
+                expSpan.textContent = isDummy ? '?' : song.lev_exp;
+                expDiv.appendChild(expSpan);
+                if (difficultiesContainer) difficultiesContainer.appendChild(expDiv);
+              }
+              
+              if (song.lev_mas || isDummy) {
+                const masDiv = document.createElement('div');
+                masDiv.className = 'difficulty-tag lev-mas';
+                masDiv.setAttribute('data-level', 'MASTER');
+                const masSpan = document.createElement('span');
+                masSpan.textContent = isDummy ? '?' : song.lev_mas;
+                masDiv.appendChild(masSpan);
+                if (difficultiesContainer) difficultiesContainer.appendChild(masDiv);
+              }
+              
+              if (song.lev_ult || isDummy) {
+                const ultDiv = document.createElement('div');
+                ultDiv.className = 'difficulty-tag lev-ult';
+                ultDiv.setAttribute('data-level', 'ULTIMA');
+                const ultSpan = document.createElement('span');
+                ultSpan.textContent = isDummy ? '?' : song.lev_ult;
+                ultDiv.appendChild(ultSpan);
+                if (difficultiesContainer) difficultiesContainer.appendChild(ultDiv);
+              }
+            }
+          }
+      
+          function getCategoryClass(catname) {
+              switch (catname) {
+                  case 'POPS & ANIME': return 'cat-pops';
+                  case 'niconico': return 'cat-nico';
+                  case '東方Project': return 'cat-touhou';
+                  case 'VARIETY': return 'cat-variety';
+                  case 'イロドリミドリ': return 'cat-irodori';
+                  case 'ゲキマイ': return 'cat-gekimai';
+                  case 'ORIGINAL': return 'cat-original';
+                  default: return '';
+              }
+          }
+        }, 100);
+      }
+      
+      // ==================== 在 loadPage 函数中添加 ====================
+      if (pageId === 'order-entry') {
+        initOrderEntryPage();
+      }
+      
+      if (pageId === 'exchange') {
+        document.getElementById('redeem-order-btn').addEventListener('click', handleRedeemOrder);
+        document.getElementById('redeem-code-btn').addEventListener('click', () => {
+          showSuccessMessage('兑换码功能尚未开放');
+        });
+      }
+    } else {
+        contentContainer.innerHTML = `<div class="section"><h1>404 NO LEAK</h1><p>页面不存在</p></div>`;
+    }
+    
+    // 设置字符计数器
+    setupCharCounters();
+    
+    document.body.classList.remove('spa-loading');
+    updateActiveMenuItem(pageId);
+  }, 300);
+}
+
+// 显示成功消息
+function showSuccessMessage(message) {
+  const modal = document.getElementById('about-modal');
+  if (modal) {
+    document.getElementById('modal-title').textContent = '操作成功';
+    document.getElementById('modal-content').textContent = message;
+    modal.classList.add('show');
+    
+    document.querySelector('.modal-close').addEventListener('click', () => {
+      modal.classList.remove('show');
+    });
+    
+    document.getElementById('modal-ok').addEventListener('click', () => {
+      modal.classList.remove('show');
+    });
+  }
+}
+
+// 显示错误消息
+function showErrorMessage(message) {
+  const modal = document.getElementById('about-modal');
+  if (modal) {
+    document.getElementById('modal-title').textContent = '操作失败';
+    document.getElementById('modal-content').textContent = message;
+    modal.classList.add('show');
+    
+    document.querySelector('.modal-close').addEventListener('click', () => {
+      modal.classList.remove('show');
+    });
+    
+    document.getElementById('modal-ok').addEventListener('click', () => {
+      modal.classList.remove('show');
+    });
+  }
+}
+
+// 更新活动菜单项
+function updateActiveMenuItem(activePage) {
+    document.querySelectorAll('.sidebar-nav a').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    const activeLink = document.querySelector(`.sidebar-nav a[data-page="${activePage}"]`);
+    if (activeLink) {
+        activeLink.classList.add('active');
+    }
+    
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    if (activePage === 'home') {
+        const navDownload = document.getElementById('nav-download');
+        const navHome = document.getElementById('nav-home');
+        if (navDownload) navDownload.classList.add('active');
+        if (navHome) navHome.classList.add('active');
+    }
+}
+
+// ==================== 新增订单管理功能 ====================
+function initOrderEntryPage() {
+  loadOrders();
+  
+  document.getElementById('order-search-btn').addEventListener('click', () => {
+    currentPage = 1;
+    loadOrders();
+  });
+  
+  document.getElementById('order-search-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      currentPage = 1;
+      loadOrders();
+    }
+  });
+  
+  const addBtn = document.getElementById('add-order-btn');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      showOrderModal();
+    });
+  }
+  
+  const editBtn = document.getElementById('edit-order-btn');
+  if (editBtn) {
+    editBtn.addEventListener('click', () => {
+      if (selectedOrderIds.length === 1) {
+        const order = currentOrders.find(o => o.id === selectedOrderIds[0]);
+        if (order) {
+          showOrderModal(order);
+        }
+      } else {
+        showErrorMessage('请选择一条订单进行编辑');
+      }
+    });
+  }
+  
+  const deleteBtn = document.getElementById('delete-order-btn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
+      if (selectedOrderIds.length > 0) {
+        deleteOrders(selectedOrderIds);
+      } else {
+        showErrorMessage('请选择要删除的订单');
+      }
+    });
+  }
+  
+  const selectAll = document.getElementById('select-all');
+  if (selectAll) {
+    selectAll.addEventListener('change', (e) => {
+      const checkboxes = document.querySelectorAll('.order-checkbox');
+      checkboxes.forEach(cb => {
+        cb.checked = e.target.checked;
+        const orderId = parseInt(cb.dataset.id);
+        if (e.target.checked) {
+          if (!selectedOrderIds.includes(orderId)) {
+            selectedOrderIds.push(orderId);
+          }
+        } else {
+          selectedOrderIds = selectedOrderIds.filter(id => id !== orderId);
+        }
+      });
+      updateActionButtons();
+    });
+  }
+
+  const orderForm = document.getElementById('order-form');
+  if (orderForm) {
+    orderForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      saveOrder();
+    });
+  }
+  
+  // 添加兑换状态变更确认
+  const redeemedCheckbox = document.getElementById('redeemed');
+  if (redeemedCheckbox) {
+    redeemedCheckbox.addEventListener('change', function(e) {
+      if (e.target.checked && document.getElementById('order-id').value) {
+        if (!confirm('确定要将此订单标记为已兑换吗？此操作将影响积分计算！')) {
+          e.target.checked = false;
+        }
+      }
+    });
+  }
+
+  const closeBtn = document.querySelector('.order-modal .close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      closeOrderModal();
+    });
+  }
+  
+  window.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('order-modal')) {
+      closeOrderModal();
+    }
+  });
+}
+
+async function loadOrders() {
+  try {
+    const search = document.getElementById('order-search-input').value;
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      showLoginRequired('order-entry');
+      return;
+    }
+    
+    const response = await fetch(`https://api.am-all.com.cn/api/orders?page=${currentPage}&limit=${ordersPerPage}&search=${encodeURIComponent(search)}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('获取订单失败');
+    }
+    
+    const data = await response.json();
+    
+    // 确保价格字段是数字类型
+    currentOrders = data.orders.map(order => ({
+      ...order,
+      price: typeof order.price === 'string' ? parseFloat(order.price) : order.price
+    }));
+    
+    renderOrders(currentOrders);
+    renderPagination(data.pagination);
+    
+    // 重置选择
+    selectedOrderIds = [];
+    updateActionButtons();
+    const selectAll = document.getElementById('select-all');
+    if (selectAll) selectAll.checked = false;
+  } catch (error) {
+    console.error('加载订单错误:', error);
+    showErrorMessage('加载订单失败: ' + error.message);
+  }
+}
+
+function renderOrders(orders) {
+  const tbody = document.getElementById('orders-body');
+  if (!tbody) return;
+  
+  tbody.innerHTML = '';
+  
+  if (orders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center">没有找到订单</td></tr>`;
+    return;
+  }
+  
+  const sortedOrders = [...orders].sort((a, b) => a.id - b.id);
+  
+  sortedOrders.forEach((order, index) => {
+    const tr = document.createElement('tr');
+    
+    const price = typeof order.price === 'number' ? order.price : parseFloat(order.price || 0);
+    const formattedPrice = isNaN(price) ? '0.00' : price.toFixed(2);
+    
+    tr.innerHTML = `
+      <td><input type="checkbox" class="order-checkbox" data-id="${order.id}"></td>
+      <td>${index + 1}</td>
+      <td>${order.taobao_id}</td>
+      <td>${order.product_name}</td>
+      <td>${order.order_number}</td>
+      <td>${formattedPrice}</td>
+      <td>${
+        order.redeemed ? 
+        '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>已兑换</span>' : 
+        '<span class="badge bg-warning"><i class="fas fa-exclamation-circle me-1"></i>未兑换</span>'
+      }</td>
+    `;
+    tbody.appendChild(tr);
+    
+    const checkbox = tr.querySelector('.order-checkbox');
+    if (checkbox) {
+      checkbox.addEventListener('change', (e) => {
+        const orderId = parseInt(e.target.dataset.id);
+        if (e.target.checked) {
+          if (!selectedOrderIds.includes(orderId)) {
+            selectedOrderIds.push(orderId);
+          }
+        } else {
+          selectedOrderIds = selectedOrderIds.filter(id => id !== orderId);
+          const selectAll = document.getElementById('select-all');
+          if (selectAll) selectAll.checked = false;
+        }
+        updateActionButtons();
+      });
+    }
+  });
+}
+
+function renderPagination(pagination) {
+  const container = document.getElementById('pagination-controls');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (pagination.totalPages <= 1) return;
+  
+  const ul = document.createElement('ul');
+  ul.className = 'pagination';
+  
+  // 上一页
+  const prevLi = document.createElement('li');
+  prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+  prevLi.innerHTML = `<a class="page-link" href="#">&laquo;</a>`;
+  prevLi.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (currentPage > 1) {
+      currentPage--;
+      loadOrders();
+    }
+  });
+  ul.appendChild(prevLi);
+  
+  // 页码
+  const startPage = Math.max(1, currentPage - 2);
+  const endPage = Math.min(pagination.totalPages, currentPage + 2);
+  
+  if (startPage > 1) {
+    const li = document.createElement('li');
+    li.className = 'page-item';
+    li.innerHTML = `<a class="page-link" href="#">1</a>`;
+    li.addEventListener('click', (e) => {
+      e.preventDefault();
+      currentPage = 1;
+      loadOrders();
+    });
+    ul.appendChild(li);
+    
+    if (startPage > 2) {
+      const dotLi = document.createElement('li');
+      dotLi.className = 'page-item disabled';
+      dotLi.innerHTML = `<span class="page-link">...</span>`;
+      ul.appendChild(dotLi);
+    }
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    const li = document.createElement('li');
+    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+    li.addEventListener('click', (e) => {
+      e.preventDefault();
+      currentPage = i;
+      loadOrders();
+    });
+    ul.appendChild(li);
+  }
+  
+  if (endPage < pagination.totalPages) {
+    if (endPage < pagination.totalPages - 1) {
+      const dotLi = document.createElement('li');
+      dotLi.className = 'page-item disabled';
+      dotLi.innerHTML = `<span class="page-link">...</span>`;
+      ul.appendChild(dotLi);
+    }
+    
+    const li = document.createElement('li');
+    li.className = 'page-item';
+    li.innerHTML = `<a class="page-link" href="#">${pagination.totalPages}</a>`;
+    li.addEventListener('click', (e) => {
+      e.preventDefault();
+      currentPage = pagination.totalPages;
+      loadOrders();
+    });
+    ul.appendChild(li);
+  }
+  
+  // 下一页
+  const nextLi = document.createElement('li');
+  nextLi.className = `page-item ${currentPage === pagination.totalPages ? 'disabled' : ''}`;
+  nextLi.innerHTML = `<a class="page-link" href="#">&raquo;</a>`;
+  nextLi.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (currentPage < pagination.totalPages) {
+      currentPage++;
+      loadOrders();
+    }
+  });
+  ul.appendChild(nextLi);
+  
+  // 跳转输入
+  const jumpDiv = document.createElement('div');
+  jumpDiv.className = 'pagination-jump';
+  jumpDiv.innerHTML = `
+    <span>跳转到</span>
+    <input type="number" min="1" max="${pagination.totalPages}" value="${currentPage}" id="page-jump-input">
+    <span>页</span>
+    <button class="btn btn-sm btn-outline-primary" id="page-jump-btn">跳转</button>
+  `;
+  
+  const jumpBtn = document.getElementById('page-jump-btn');
+  if (jumpBtn) {
+    jumpBtn.addEventListener('click', () => {
+      const pageInput = document.getElementById('page-jump-input');
+      if (pageInput) {
+        const page = parseInt(pageInput.value);
+        if (page >= 1 && page <= pagination.totalPages) {
+          currentPage = page;
+          loadOrders();
+        }
+      }
+    });
+    
+    const pageInput = document.getElementById('page-jump-input');
+    if (pageInput) {
+      pageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          const page = parseInt(pageInput.value);
+          if (page >= 1 && page <= pagination.totalPages) {
+            currentPage = page;
+            loadOrders();
+          }
+        }
+      });
+    }
+  }
+  
+  container.appendChild(ul);
+  container.appendChild(jumpDiv);
+}
+
+function updateActionButtons() {
+  const deleteBtn = document.getElementById('delete-order-btn');
+  const editBtn = document.getElementById('edit-order-btn');
+  
+  if (deleteBtn) deleteBtn.disabled = selectedOrderIds.length === 0;
+  if (editBtn) editBtn.disabled = selectedOrderIds.length !== 1;
+}
+
+function showOrderModal(order = null) {
+  const modal = document.getElementById('order-modal');
+  const form = document.getElementById('order-form');
+  const title = document.getElementById('modal-title');
+  
+  if (!modal || !form || !title) return;
+  
+  if (order) {
+    title.textContent = '编辑订单';
+    document.getElementById('order-id').value = order.id;
+    document.getElementById('taobao-id').value = order.taobao_id;
+    document.getElementById('product-name').value = order.product_name;
+    document.getElementById('order-number').value = order.order_number;
+    document.getElementById('price').value = order.price;
+    document.getElementById('redeemed').checked = order.redeemed;
+  } else {
+    title.textContent = '添加订单';
+    form.reset();
+    document.getElementById('order-id').value = '';
+    document.getElementById('redeemed').checked = false;
+  }
+  
+  modal.style.display = 'block';
+  modal.classList.add('show');
+}
+
+function closeOrderModal() {
+  const modal = document.getElementById('order-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('show');
+  }
+}
+
+async function saveOrder() {
+  try {
+    const form = document.getElementById('order-form');
+    if (!form) return;
+    
+    const orderId = document.getElementById('order-id').value;
+    const taobaoId = document.getElementById('taobao-id').value;
+    const productName = document.getElementById('product-name').value;
+    const orderNumber = document.getElementById('order-number').value;
+    const price = parseFloat(document.getElementById('price').value);
+    const redeemed = document.getElementById('redeemed').checked;
+    const token = localStorage.getItem('token');
+    
+    if (!taobaoId || !productName || !orderNumber || isNaN(price)) {
+      showErrorMessage('请填写所有必填字段');
+      return;
+    }
+    
+    let url, method;
+    
+    if (orderId) {
+      url = `https://api.am-all.com.cn/api/orders/${orderId}`;
+      method = 'PUT';
+    } else {
+      url = 'https://api.am-all.com.cn/api/orders';
+      method = 'POST';
+    }
+    
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        taobao_id: taobaoId,
+        product_name: productName,
+        order_number: orderNumber,
+        price: price,
+        redeemed: redeemed  // 确保包含 redeemed 状态
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '保存订单失败');
+    }
+    
+    closeOrderModal();
+    loadOrders();
+    showSuccessMessage(`订单${orderId ? '更新' : '添加'}成功`);
+  } catch (error) {
+    console.error('保存订单错误:', error);
+    showErrorMessage(`保存订单失败: ${error.message}`);
+  }
+}
+
+async function deleteOrders(ids) {
+  try {
+    if (!ids || ids.length === 0) return;
+    
+    if (!confirm(`确定要删除选中的 ${ids.length} 个订单吗？此操作不可撤销！`)) {
+      return;
+    }
+    
+    const token = localStorage.getItem('token');
+    const promises = ids.map(id => 
+      fetch(`https://api.am-all.com.cn/api/orders/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+    );
+    
+    const results = await Promise.all(promises);
+    const allSuccess = results.every(res => res.ok);
+    
+    if (allSuccess) {
+      loadOrders();
+      showSuccessMessage(`成功删除 ${ids.length} 个订单`);
+    } else {
+      throw new Error('部分订单删除失败');
+    }
+  } catch (error) {
+    console.error('删除订单错误:', error);
+    showErrorMessage('删除订单失败: ' + error.message);
+  }
+}
+
+async function handleRedeemOrder() {
+  const orderNumber = document.getElementById('order-number-input').value;
+  const resultDiv = document.getElementById('exchange-result');
+  
+  if (!orderNumber) {
+    resultDiv.innerHTML = '<div class="error">请输入订单号</div>';
+    return;
+  }
+  
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch('https://api.am-all.com.cn/api/redeem-order', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ order_number: orderNumber })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '兑换失败');
+    }
+    
+    const data = await response.json();
+    
+    // 确保我们只显示本次兑换获得的积分
+    let pointsEarned = 0;
+    
+    // 尝试从不同可能的字段中获取本次获得的积分
+    if (data.pointsEarned !== undefined) {
+      pointsEarned = data.pointsEarned;
+    } else if (data.point2 !== undefined && currentUser?.point2 !== undefined) {
+      pointsEarned = data.point2 - currentUser.point2;
+    } else if (data.deltaPoints !== undefined) {
+      pointsEarned = data.deltaPoints;
+    } else if (data.points !== undefined) {
+      pointsEarned = data.points;
+    }
+    
+    // 显示兑换结果
+    resultDiv.innerHTML = `<div class="success">兑换成功！获得 ${pointsEarned} 鸽屋积分</div>`;
+    
+    // 更新用户信息
+    if (currentUser) {
+      // 确保更新用户积分
+      if (data.point2 !== undefined) {
+        currentUser.point2 = data.point2;
+      } else if (pointsEarned > 0) {
+        // 如果API没有返回point2，但返回了获得的积分，我们手动更新
+        currentUser.point2 = (currentUser.point2 || 0) + pointsEarned;
+      }
+      updateUserInfo(currentUser);
+    }
+    
+    // 清空输入框
+    document.getElementById('order-number-input').value = '';
+  } catch (error) {
+    console.error('兑换错误:', error);
+    resultDiv.innerHTML = `<div class="error">${error.message}</div>`;
+  }
+}
+
+// 增强的API请求函数 - 修复凭证问题
+function secureFetch(url, options = {}) {
+  const token = localStorage.getItem('token');
+  
+  // 确保始终包含凭证
+  const finalOptions = {
+    ...options,
+    credentials: 'include', // 关键修复：始终包含凭证
+    headers: {
+      ...(options.headers || {}),
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  };
+  
+  return fetch(url, finalOptions);
+}
+
+// 初始化SPA功能
+document.addEventListener("DOMContentLoaded", function() {
+    function checkAndResetDailyFortune() {
+        const lastDrawDate = localStorage.getItem('dailyFortuneDate');
+        const today = new Date().toDateString();
+        
+        if (lastDrawDate && lastDrawDate !== today) {
+            localStorage.removeItem('dailyFortuneDate');
+            localStorage.removeItem('dailyFortuneData');
+            
+            const activePage = document.querySelector('.sidebar-nav a.active')?.getAttribute('data-page');
+            if (activePage === 'fortune') {
+                const fortuneSection = document.querySelector('.fortume-section');
+                if (fortuneSection) {
+                    fortuneSection.classList.add('reset-fortune');
+                    setTimeout(() => {
+                        loadPage('fortune');
+                        fortuneSection.classList.remove('reset-fortune');
+                    }, 1000);
+                }
+            }
+        }
+    }
+
+    checkAndResetDailyFortune();
+    setInterval(checkAndResetDailyFortune, 60 * 60 * 1000);
+    
+    checkLoginStatus();
+    
+    document.getElementById('logout-pc')?.addEventListener('click', handleLogout);
+    document.getElementById('logout-mobile')?.addEventListener('click', handleLogout);
+    
+    document.body.addEventListener('click', function(e) {
+        const pageLink = e.target.closest('[data-page]');
+        if (pageLink) {
+            e.preventDefault();
+            const pageId = pageLink.getAttribute('data-page');
+            loadPage(pageId);
+            
+            // 移动端点击后自动关闭侧边栏
+            if (window.innerWidth <= 992) {
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) sidebar.classList.remove('show');
+                document.body.classList.remove('mobile-sidebar-open');
+                document.body.classList.add('mobile-sidebar-closed');
+            }
+        }
+        
+        // 登录按钮
+        if (e.target.closest('#login-btn')) {
+            e.preventDefault();
+            handleLogin();
+        }
+        
+        // 注册按钮
+        if (e.target.closest('#register-btn')) {
+            e.preventDefault();
+            handleRegister();
+        }
+        
+        // 发送验证码按钮 - 注册页面
+        if (e.target.closest('#send-verification-code')) {
+            e.preventDefault();
+            const emailInput = document.getElementById('register-email');
+            if (emailInput && emailInput.value) {
+                sendVerificationCode(emailInput.value, 'register')
+                    .then(() => {
+                        showSuccessMessage('验证码已发送');
+                    })
+                    .catch(error => {
+                        showErrorMessage(error.error || '发送验证码失败');
+                    });
+            } else {
+                showErrorMessage('请输入邮箱地址');
+            }
+        }
+
+        // 发送验证码按钮 - 重置密码页面
+        if (e.target.closest('#send-reset-code')) {
+            e.preventDefault();
+            const emailInput = document.getElementById('forgot-email');
+            if (emailInput && emailInput.value) {
+                sendVerificationCode(emailInput.value, 'reset')
+                    .then(() => {
+                        showSuccessMessage('验证码已发送');
+                    })
+                    .catch(error => {
+                        showErrorMessage(error.error || '发送验证码失败');
+                    });
+            } else {
+                showErrorMessage('请输入邮箱地址');
+            }
+        }
+
+        // 验证按钮 - 忘记密码页面
+        if (e.target.closest('#verify-code-btn')) {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+            const code = document.getElementById('forgot-verification-code').value;
+            const errorElement = document.getElementById('forgot-error');
+
+            if (!email || !code) {
+                showTempErrorMessage(errorElement, '邮箱和验证码不能为空');
+                return;
+            }
+
+            verifyCode(email, code, 'reset')
+                .then(data => {
+                    // 验证成功，跳转到重置密码页面
+                    localStorage.setItem('resetToken', data.resetToken);
+                    loadPage('reset-password');
+                })
+                .catch(error => {
+                    showTempErrorMessage(errorElement, error.error || '验证码验证失败');
+                });
+        }
+
+        // 重置密码按钮 - 重置密码页面
+        if (e.target.closest('#reset-password-btn')) {
+            e.preventDefault();
+            const newPassword = document.getElementById('reset-new-password').value;
+            const confirmPassword = document.getElementById('reset-confirm-password').value;
+            const resetToken = localStorage.getItem('resetToken');
+            const errorElement = document.getElementById('reset-error');
+
+            if (!newPassword || !confirmPassword) {
+                showTempErrorMessage(errorElement, '新密码和确认密码不能为空');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showTempErrorMessage(errorElement, '两次输入的密码不一致');
+                return;
+            }
+
+            if (newPassword.length < 8 || newPassword.length > 16) {
+                showTempErrorMessage(errorElement, '密码长度需在8-16个字符之间');
+                return;
+            }
+
+            resetPassword(resetToken, newPassword)
+                .then(() => {
+                    showSuccessMessage('密码重置成功');
+                    localStorage.removeItem('resetToken');
+                    setTimeout(() => {
+                        loadPage('login');
+                    }, 2000);
+                })
+                .catch(error => {
+                    showTempErrorMessage(errorElement, error.error || '密码重置失败');
+                });
+        }
+        
+        // 公告卡片点击事件
+        const announcementCard = e.target.closest('.announcement-card, .announcement-simple-item');
+        if (announcementCard) {
+            e.preventDefault();
+            const id = announcementCard.getAttribute('data-id');
+            showAnnouncementModal(id);
+        }
+        
+        const modalClose = e.target.closest('.modal-close, .modal-footer button');
+        if (modalClose) {
+            const modal = document.querySelector('.modal.show');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        }
+    });
+
+    // 移除PC版侧边栏的收折按钮
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    if (sidebarToggle) {
+        sidebarToggle.style.display = 'none';
+    }
+
+    loadPage('home');
+});

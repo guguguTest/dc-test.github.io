@@ -1,0 +1,680 @@
+/* ====== 用户认证全局样式 ====== */
+/* 顶部导航栏用户区域容器 */
+.user-area-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* 基础用户区域 */
+.user-area {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+/* 未登录状态链接 */
+.auth-links a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 0 8px;
+  transition: opacity 0.2s;
+}
+
+.auth-links a:hover {
+  opacity: 0.8;
+}
+
+.auth-links .divider {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 12px;
+}
+
+/* ====== PC端专属样式 ====== */
+/* 用户信息主容器 */
+#user-info-pc {
+  display: flex;
+  align-items: center;
+  padding: 8px 15px;
+  min-width: 200px;
+  min-height: 60px;
+  cursor: pointer;
+  position: relative;
+  overflow: visible;
+  border-radius: 6px;
+  --user-rank-bg: url('https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_normal.png');
+}
+
+/* 用户组背景图片 */
+#user-info-pc::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: var(--user-rank-bg);
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
+  opacity: 1;
+  border-radius: 6px;
+  transform: none;
+}
+
+#user-info-pc:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 用户头像 */
+#user-info-pc .user-avatar-pc {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 用户基本信息容器 */
+#user-info-pc .user-basic-info {
+  display: flex;
+  flex-direction: column;
+  margin-right: 30px;
+  max-width: 180px;
+  color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 单独控制的昵称样式 */
+#user-info-pc .user-nickname {
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+  margin-bottom: 4px;
+  position: relative;
+  padding-left: 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  margin-top: 12px;
+  /* 添加SVG黑色描边效果 */
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.7)) 
+          drop-shadow(0 0 1px rgba(0, 0, 0, 0.7)) 
+          drop-shadow(0 0 1px rgba(0, 0, 0, 0.7));
+}
+
+/* 单独控制的UID样式 */
+#user-info-pc .user-uid {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  position: relative;
+  padding-left: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  /* 添加SVG黑色描边效果 */
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.7)) 
+          drop-shadow(0 0 1px rgba(0, 0, 0, 0.7)) 
+          drop-shadow(0 0 1px rgba(0, 0, 0, 0.7));
+}
+
+/* 用户等级图标 */
+.user-rank-icon {
+  position: absolute;
+  right: 5px;
+  top: 32%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+/* 下拉菜单 */
+#user-info-pc .user-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  background: #2c3e50;
+  border-radius: 6px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  min-width: 100%;
+  display: none;
+  z-index: 1000;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: auto;
+}
+
+#user-info-pc .user-dropdown.show {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 下拉菜单项 */
+#user-info-pc .user-dropdown a {
+  display: block;
+  padding: 10px 15px;
+  color: #ecf0f1;
+  text-decoration: none;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+#user-info-pc .user-dropdown a:hover {
+  background: #34495e;
+}
+
+#user-info-pc .dropdown-rank {
+  padding: 8px 15px;
+  color: #f1c40f;
+  font-weight: bold;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+}
+
+#user-info-pc .dropdown-uid {
+  padding: 8px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+/* 积分显示样式 */
+#user-info-pc .dropdown-points {
+  padding: 8px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#user-info-pc .dropdown-uid i,
+#user-info-pc .dropdown-points i {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+/* ====== 移动端专属样式 ====== */
+.sidebar-user-area {
+  padding: 12px 15px;
+  background: white;
+  margin-bottom: 0;
+  position: relative; 
+  overflow: visible;
+  min-height: auto;
+}
+
+/* 用户组背景图片 - 向上调整位置 */
+.sidebar-user-area::after {
+  content: "";
+  position: absolute;
+  bottom: 152px; 
+  left: 0;
+  right: 0;
+  height: 64px; 
+  background-image: var(--user-rank-bg);
+  background-size: 100% 100%; 
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0; 
+  opacity: 1;
+  border-radius: 6px; 
+}
+
+/* 用户等级图标 */
+.sidebar-user-area .user-rank-icon-mobile {
+  position: absolute; 
+  top: -2px; 
+  right: 5px; 
+  width: 50px; 
+  height: 50px; 
+  object-fit: contain;
+  z-index: 2; 
+}
+
+.sidebar-user-area #user-info-mobile {
+  display: none;
+}
+
+.sidebar-user-area .user-basic {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px; 
+  position: relative; 
+  z-index: 2; 
+}
+
+/* 用户头像 */
+.sidebar-user-area .user-avatar-mobile {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+  border: 2px solid #eee;
+  position: relative; 
+  z-index: 2; 
+  margin-top: -38px; 
+}
+
+/* 用户信息文本区域 */
+.sidebar-user-area .user-info-text {
+  flex: 1;
+  overflow: visible;
+  position: relative; 
+  z-index: 2; 
+  padding-right: 55px; 
+}
+
+.sidebar-user-area #user-nickname-mobile {
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 10px);
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.7)) 
+          drop-shadow(0 0 1px rgba(255, 255, 255, 0.7)) 
+          drop-shadow(0 0 1px rgba(255, 255, 255, 0.7));
+}
+
+.sidebar-user-area #user-email-mobile {
+  color: #555;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 1px);
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.7)) 
+          drop-shadow(0 0 1px rgba(255, 255, 255, 0.7)) 
+          drop-shadow(0 0 1px rgba(255, 255, 255, 0.7));
+}
+
+.sidebar-user-area #user-uid-mobile {
+  color: #666;
+  background: #f5f5f5;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  display: inline-block;
+  margin-top: 4px;
+  position: relative; 
+  z-index: 2; 
+  margin-left: -75px;
+  padding-left: 9px;
+  padding-right: 6px;
+  overflow: visible;
+  white-space: nowrap;
+  max-width: none;
+}
+
+.sidebar-user-area #user-points-mobile {
+  color: #666;
+  background: #f5f5f5;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  display: inline-block;
+  margin-top: 4px;
+  position: relative;
+  z-index: 2;
+  margin-left: 8px;
+}
+
+/* 用户操作按钮区域 */
+.sidebar-user-area .user-actions {
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+  position: relative; 
+  z-index: 2;
+  gap: 8px;
+}
+
+/* 移动端登录注册按钮样式 */
+.sidebar-user-area .auth-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.sidebar-user-area .auth-links a.mobile-auth-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #3498db;
+  color: white;
+  border-radius: 6px;
+  padding: 12px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.3s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin: 0;
+}
+
+.sidebar-user-area .auth-links a.mobile-auth-btn:hover {
+  background: #2980b9;
+}
+
+.sidebar-user-area .auth-links a.mobile-auth-btn i {
+  margin-right: 8px;
+}
+
+/* 按钮样式 */
+.sidebar-user-area .mobile-user-action-btn {
+  display: block;
+  text-align: center;
+  background: #3498db;
+  color: white;
+  border-radius: 6px;
+  padding: 10px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.3s;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.sidebar-user-area .mobile-user-action-btn:hover {
+  background: #2980b9;
+}
+
+/* 退出登录按钮特殊样式 */
+.sidebar-user-area #logout-mobile.mobile-user-action-btn {
+  background: #e74c3c;
+}
+
+.sidebar-user-area #logout-mobile.mobile-user-action-btn:hover {
+  background: #c0392b;
+}
+
+/* 用户区域底部分割线 */
+.sidebar-user-area {
+  border-bottom: 1px solid #eee;
+}
+
+/* ====== 响应式调整 ====== */
+@media (max-width: 992px) {
+  .top-navbar .user-area {
+    display: none;
+  }
+  
+  #user-info-pc {
+    min-width: 160px;
+    padding: 6px 10px;
+  }
+  
+  #user-info-pc .user-avatar-pc {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+  }
+  
+  #user-info-pc .user-basic-info {
+    margin-right: 20px;
+  }
+}
+
+@media (min-width: 993px) {
+  .sidebar .sidebar-user-area {
+    display: none;
+  }
+}
+
+/* ====== 登录/注册表单 ====== */
+.auth-container {
+  max-width: 500px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+.auth-form {
+  background: #fff;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+/* 添加按钮样式确保一致性 */
+.auth-btn, .send-code-btn {
+  width: 100%;
+  padding: 12px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 10px;
+}
+
+.auth-btn:hover, .send-code-btn:hover {
+  background: #2980b9;
+}
+
+.send-code-btn {
+  background: #2c3e50;
+  margin-left: 10px;
+  width: auto;
+  min-width: 120px;
+}
+
+.send-code-btn:hover {
+  background: #1a252f;
+}
+
+.verification-code-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.verification-code-group input {
+  flex: 1;
+}
+
+/* ====== 用户设置页面 ====== */
+.user-avatar-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #3498db;
+  margin-bottom: 15px;
+}
+
+.setting-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+/* ====== 通用工具类 ====== */
+.error-message {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 15px;
+  text-align: center;
+}
+
+/* ====== 用户设置页面宽度调整 ====== */
+.user-settings-form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.setting-section {
+  margin-bottom: 30px;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.user-settings-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding-left: 20px;
+  color: #333;
+}
+
+/* 验证码输入组样式 */
+.verification-code-group {
+  display: flex;
+  gap: 10px;
+}
+
+.verification-code-group input {
+  flex: 1;
+}
+
+.verification-code-group button {
+  width: 120px;
+}
+
+/* 忘记密码链接样式 */
+.forgot-password {
+  margin-left: 15px;
+}
+
+.forgot-password a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}
+
+/* 错误消息样式 */
+.error-message {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 15px;
+  text-align: center;
+  transition: opacity 0.3s ease, max-height 0.3s ease;
+  max-height: 100px;
+  overflow: hidden;
+}
+
+.error-message:empty {
+  opacity: 0;
+  max-height: 0;
+  padding: 0;
+  margin: 0;
+  display: none;
+}
+
+.error-message.success {
+  color: #27ae60;
+  background: rgba(39, 174, 96, 0.1);
+}
+
+/* 添加字符计数器样式 */
+.char-counter {
+  text-align: right;
+  font-size: 12px;
+  color: #7f8c8d;
+  margin-top: 4px;
+}
+
+/* 登录提示界面样式 */
+.login-required-container {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.login-required-icon {
+  font-size: 60px;
+  color: #3498db;
+  margin-bottom: 20px;
+}
+
+.login-required-container h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.login-required-container p {
+  margin-bottom: 25px;
+  color: #666;
+  font-size: 16px;
+}
+
+.login-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.login-btn:hover {
+  background: #2980b9;
+}
+
+.login-btn i {
+  margin-right: 8px;
+}
+
+@media (max-width: 992px) {
+  .user-settings-form {
+    padding: 15px 0;
+  }
+  
+  .setting-section {
+    padding: 15px;
+  }
+  
+  .user-settings-title {
+    padding-left: 15px;
+  }
+}
