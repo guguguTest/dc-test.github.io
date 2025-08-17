@@ -1934,7 +1934,16 @@ function secureFetch(url, options = {}) {
     }
   };
   
-  return fetch(url, finalOptions);
+  return fetch(url, finalOptions).then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(err.error || '请求失败');
+      }).catch(() => {
+        throw new Error(`请求失败: ${response.status} ${response.statusText}`);
+      });
+    }
+    return response;
+  });
 }
 
 // 初始化SPA功能
