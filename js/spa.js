@@ -1012,62 +1012,182 @@ function loadPage(pageId) {
         }
       }
       
-      if (pageId === 'fortune') {
-        setTimeout(() => {
-          const coverImg = document.getElementById('cover-img');
-          const songIdEl = document.getElementById('song-id');
-          const songCategoryEl = document.getElementById('song-category');
-          const songTitleEl = document.getElementById('song-title');
-          const songArtistEl = document.getElementById('song-artist');
-          const difficultiesContainer = document.querySelector('.difficulties');
-          const fortuneLuckEl = document.getElementById('fortune-luck');
-          const drawBtn = document.getElementById('draw-btn');
-          const fortuneHint = document.getElementById('fortune-hint');
-          const luckyActionEl = document.getElementById('lucky-action');
-          const unluckyActionEl = document.getElementById('unlucky-action');
-          
-          if (coverImg) {
-            if (window.innerWidth <= 768) {
-              coverImg.style.width = '190px';
-              coverImg.style.height = '190px';
-            } else {
-              coverImg.style.width = '';
-              coverImg.style.height = '';
+if (pageId === 'fortune') {
+  setTimeout(() => {
+    const coverImg = document.getElementById('cover-img');
+    const songIdEl = document.getElementById('song-id');
+    const songCategoryEl = document.getElementById('song-category');
+    const songTitleEl = document.getElementById('song-title');
+    const songArtistEl = document.getElementById('song-artist');
+    const difficultiesContainer = document.querySelector('.difficulties');
+    const fortuneLuckEl = document.getElementById('fortune-luck');
+    const drawBtn = document.getElementById('draw-btn');
+    const fortuneHint = document.getElementById('fortune-hint');
+    const luckyActionEl = document.getElementById('lucky-action');
+    const unluckyActionEl = document.getElementById('unlucky-action');
+    
+    if (coverImg) {
+      if (window.innerWidth <= 768) {
+        coverImg.style.width = '190px';
+        coverImg.style.height = '190px';
+      } else {
+        coverImg.style.width = '';
+        coverImg.style.height = '';
+      }
+    }
+    
+    const luckTexts = ['大凶', '凶', '末吉', '吉', '小吉', '中吉', '大吉', '特大吉'];
+    
+    const lastDrawDate = localStorage.getItem('dailyFortuneDate');
+    const today = new Date().toDateString();
+    const dailyFortuneData = localStorage.getItem('dailyFortuneData');
+    
+    let songList = [];
+    
+    const dummySong = {
+      id: '???',
+      title: '???',
+      artist: '???',
+      catname: '???',
+      lev_bas: '?',
+      lev_adv: '?',
+      lev_exp: '?',
+      lev_mas: '?',
+      lev_ult: '?'
+    };
+    
+    updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+    
+    // 修改为尝试多个数据源
+    const fetchMusicData = async () => {
+      for (const url of MUSIC_DATA_URLS) {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) continue;
+          return await response.json();
+        } catch (e) {
+          console.log(`尝试从 ${url} 加载数据失败`, e);
+          continue;
+        }
+      }
+      throw new Error('所有数据源均不可用');
+    };
+    
+    fetchMusicData()
+      .then(data => {
+        songList = data;
+        
+        if (lastDrawDate === today && dailyFortuneData) {
+          try {
+            const data = JSON.parse(dailyFortuneData);
+            if (data && data.song) {
+              displayFortune(data.song, data.luck, data.recommendations);
+              if (drawBtn) {
+                drawBtn.disabled = true;
+                drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+              }
+              if (fortuneHint) {
+                fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
+              }
             }
+          } catch (e) {
+            console.error('解析运势数据失败', e);
+            localStorage.removeItem('dailyFortuneDate');
+            localStorage.removeItem('dailyFortuneData');
+            updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
           }
+        }
+      })
+      .catch(error => {
+        console.error('加载歌曲数据失败:', error);
+        if (fortuneHint) {
+          fortuneHint.textContent = '加载歌曲数据失败，使用备用数据';
+        }
+        // 使用本地备用数据
+        songList = [
+          {
+            id: '001',
+            title: '备用歌曲',
+            artist: '系统',
+            catname: 'ORIGINAL',
+            lev_bas: '3',
+            lev_adv: '5',
+            lev_exp: '7',
+            lev_mas: '9',
+            lev_ult: '12'
+          }
+        ];
+        updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+      });
+    
+    if (drawBtn) {
+      drawBtn.addEventListener('click', () => {
+        if (!drawBtn) return;
+        
+        drawBtn.disabled = true;
+        drawBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>抽取中...';
+        if (fortuneHint) fortuneHint.textContent = '';
+        
+        if (coverImg) {
+          coverImg.style.display = 'none';
+          const animationContainer = contentContainer.querySelector('.fortune-animation');
+          const kuji01 = contentContainer.querySelector('#kuji-01');
+          const kuji02 = contentContainer.querySelector('#kuji-02');
           
-          const luckTexts = ['大凶', '凶', '末吉', '吉', '小吉', '中吉', '大吉', '特大吉'];
-          
-          const lastDrawDate = localStorage.getItem('dailyFortuneDate');
-          const today = new Date().toDateString();
-          const dailyFortuneData = localStorage.getItem('dailyFortuneData');
-          
-          let songList = [];
-          
-          const dummySong = {
-            id: '???',
-            title: '???',
-            artist: '???',
-            catname: '???',
-            lev_bas: '?',
-            lev_adv: '?',
-            lev_exp: '?',
-            lev_mas: '?',
-            lev_ult: '?'
-          };
-          
-          updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-          
-          fetch('https://oss.am-all.com.cn/asset/img/main/data/music.json')
-            .then(response => response.json())
-            .then(data => {
-              songList = data;
+          animationContainer.style.display = 'flex';
+          kuji01.style.display = 'block';
+          kuji01.classList.add('kuji-swing');
+          kuji02.style.display = 'none';
+          kuji02.classList.remove('kuji-fadein');
+        }
+        
+        setTimeout(() => {
+          let scrollCount = 0;
+          const scrollInterval = setInterval(() => {
+            if (songList.length === 0) {
+              clearInterval(scrollInterval);
+              return;
+            }
+            
+            const tempSong = songList[Math.floor(Math.random() * songList.length)];
+            
+            updateDisplay(tempSong, '???', {lucky: '?', unlucky: '?'});
+            scrollCount++;
+            
+            if (scrollCount > 30) {
+              clearInterval(scrollInterval);
               
-              if (lastDrawDate === today && dailyFortuneData) {
-                try {
-                  const data = JSON.parse(dailyFortuneData);
-                  if (data && data.song) {
-                    displayFortune(data.song, data.luck, data.recommendations);
+              const selectedSong = songList[Math.floor(Math.random() * songList.length)];
+              const luck = luckTexts[Math.floor(Math.random() * luckTexts.length)];
+              const recommendations = getRandomRecommendations();
+              
+              if (coverImg) coverImg.classList.remove('scrolling');
+              
+              setTimeout(() => {
+                const animationContainer = contentContainer.querySelector('.fortune-animation');
+                const kuji01 = contentContainer.querySelector('#kuji-01');
+                const kuji02 = contentContainer.querySelector('#kuji-02');
+                
+                if (animationContainer && kuji01 && kuji02) {
+                  kuji01.classList.remove('kuji-swing');
+                  kuji01.style.display = 'none';
+                  kuji02.style.display = 'block';
+                  kuji02.classList.add('kuji-fadein');
+                  
+                  setTimeout(() => {
+                    animationContainer.style.display = 'none';
+                    if (coverImg) coverImg.style.display = 'block';
+                    
+                    displayFortune(selectedSong, luck, recommendations);
+                    
+                    const today = new Date().toDateString();
+                    localStorage.setItem('dailyFortuneDate', today);
+                    localStorage.setItem('dailyFortuneData', JSON.stringify({
+                      song: selectedSong,
+                      luck: luck,
+                      recommendations: recommendations
+                    }));
+                    
                     if (drawBtn) {
                       drawBtn.disabled = true;
                       drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
@@ -1075,106 +1195,14 @@ function loadPage(pageId) {
                     if (fortuneHint) {
                       fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
                     }
-                  }
-                } catch (e) {
-                  console.error('解析运势数据失败', e);
-                  localStorage.removeItem('dailyFortuneDate');
-                  localStorage.removeItem('dailyFortuneData');
-                  updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+                  }, 100);
                 }
-              }
-            })
-            .catch(error => {
-              console.error('加载歌曲数据失败:', error);
-              if (fortuneHint) {
-                fortuneHint.textContent = '加载歌曲数据失败，请重试';
-              }
-              updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-            });
-          
-          if (drawBtn) {
-            drawBtn.addEventListener('click', () => {
-              if (!drawBtn) return;
-              
-              drawBtn.disabled = true;
-              drawBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>抽取中...';
-              if (fortuneHint) fortuneHint.textContent = '';
-              
-              if (coverImg) {
-                coverImg.style.display = 'none';
-                const animationContainer = contentContainer.querySelector('.fortune-animation');
-                const kuji01 = contentContainer.querySelector('#kuji-01');
-                const kuji02 = contentContainer.querySelector('#kuji-02');
-                
-                animationContainer.style.display = 'flex';
-                kuji01.style.display = 'block';
-                kuji01.classList.add('kuji-swing');
-                kuji02.style.display = 'none';
-                kuji02.classList.remove('kuji-fadein');
-              }
-              
-              setTimeout(() => {
-                let scrollCount = 0;
-                const scrollInterval = setInterval(() => {
-                  if (songList.length === 0) {
-                    clearInterval(scrollInterval);
-                    return;
-                  }
-                  
-                  const tempSong = songList[Math.floor(Math.random() * songList.length)];
-                  
-                  updateDisplay(tempSong, '???', {lucky: '?', unlucky: '?'});
-                  scrollCount++;
-                  
-                  if (scrollCount > 30) {
-                    clearInterval(scrollInterval);
-                    
-                    const selectedSong = songList[Math.floor(Math.random() * songList.length)];
-                    const luck = luckTexts[Math.floor(Math.random() * luckTexts.length)];
-                    const recommendations = getRandomRecommendations();
-                    
-                    if (coverImg) coverImg.classList.remove('scrolling');
-                    
-                    setTimeout(() => {
-                      const animationContainer = contentContainer.querySelector('.fortune-animation');
-                      const kuji01 = contentContainer.querySelector('#kuji-01');
-                      const kuji02 = contentContainer.querySelector('#kuji-02');
-                      
-                      if (animationContainer && kuji01 && kuji02) {
-                        kuji01.classList.remove('kuji-swing');
-                        kuji01.style.display = 'none';
-                        kuji02.style.display = 'block';
-                        kuji02.classList.add('kuji-fadein');
-                        
-                        setTimeout(() => {
-                          animationContainer.style.display = 'none';
-                          if (coverImg) coverImg.style.display = 'block';
-                          
-                          displayFortune(selectedSong, luck, recommendations);
-                          
-                          const today = new Date().toDateString();
-                          localStorage.setItem('dailyFortuneDate', today);
-                          localStorage.setItem('dailyFortuneData', JSON.stringify({
-                            song: selectedSong,
-                            luck: luck,
-                            recommendations: recommendations
-                          }));
-                          
-                          if (drawBtn) {
-                            drawBtn.disabled = true;
-                            drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-                          }
-                          if (fortuneHint) {
-                            fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
-                          }
-                        }, 100);
-                      }
-                    }, 0);
-                  }
-                }, 100);
-              }, 500);
-            });
-          }
+              }, 0);
+            }
+          }, 100);
+        }, 500);
+      });
+    }
           
           function updateDisplay(song, luck, recommendations) {
             if (!song) return;
