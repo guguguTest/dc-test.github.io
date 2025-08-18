@@ -44,6 +44,154 @@ function getRandomRecommendations() {
   };
 }
 
+// 更新显示函数 (已移到全局作用域)
+function updateDisplay(song, luck, recommendations) {
+  // 通过ID直接获取元素
+  const difficultiesContainer = document.querySelector('.difficulties');
+  const coverImg = document.getElementById('cover-img');
+  const songIdEl = document.getElementById('song-id');
+  const songTitleEl = document.getElementById('song-title');
+  const songArtistEl = document.getElementById('song-artist');
+  const songCategoryEl = document.getElementById('song-category');
+  const fortuneLuckEl = document.getElementById('fortune-luck');
+  const luckyActionEl = document.getElementById('lucky-action');
+  const unluckyActionEl = document.getElementById('unlucky-action');
+  
+  if (!song) return;
+  
+  if (difficultiesContainer) {
+    difficultiesContainer.innerHTML = '';
+  }
+  
+  if (coverImg) {
+    coverImg.src = song.image ? 
+      `https://oss.am-all.com.cn/asset/img/main/music/${song.image}` : 
+      'https://oss.am-all.com.cn/asset/img/main/music/dummy.jpg';
+  }
+  if (songIdEl) songIdEl.textContent = song.id || '???';
+  if (songTitleEl) songTitleEl.textContent = song.title || '???';
+  if (songArtistEl) songArtistEl.textContent = song.artist || '???';
+  if (fortuneLuckEl) fortuneLuckEl.textContent = luck || '???';
+  
+  if (luckyActionEl && unluckyActionEl) {
+    luckyActionEl.textContent = recommendations?.lucky || '?';
+    unluckyActionEl.textContent = recommendations?.unlucky || '?';
+  }
+  
+  const isDummy = song.id === '???';
+  
+  if (songCategoryEl) {
+    if (isDummy) {
+      songCategoryEl.textContent = '???';
+      songCategoryEl.className = 'song-category cat-dummy';
+    } else if (song.catname) {
+      songCategoryEl.textContent = song.catname;
+      songCategoryEl.className = 'song-category ' + getCategoryClass(song.catname);
+    } else {
+      songCategoryEl.textContent = '???';
+      songCategoryEl.className = 'song-category';
+    }
+  }
+  
+  const isWorldsEndSong = song.we_kanji || song.we_star;
+  
+  if (isWorldsEndSong && !isDummy) {
+    if (song.we_kanji || song.we_star) {
+      const weDiv = document.createElement('div');
+      weDiv.className = 'difficulty-tag lev-we';
+      weDiv.textContent = 'World\'s End: ';
+      
+      if (song.we_kanji) {
+        weDiv.textContent += song.we_kanji;
+      }
+      
+      if (song.we_star) {
+        const starsContainer = document.createElement('span');
+        starsContainer.className = 'we-stars';
+        
+        const starCount = parseInt(song.we_star);
+        const starDisplayCount = Math.ceil(starCount / 2);
+        
+        for (let i = 0; i < starDisplayCount; i++) {
+          const star = document.createElement('i');
+          star.className = 'fas fa-star star';
+          starsContainer.appendChild(star);
+        }
+        
+        weDiv.appendChild(starsContainer);
+      }
+      
+      if (difficultiesContainer) {
+        difficultiesContainer.appendChild(weDiv);
+      }
+    }
+  } else {
+    if (song.lev_bas || isDummy) {
+      const basDiv = document.createElement('div');
+      basDiv.className = 'difficulty-tag lev-bas';
+      basDiv.setAttribute('data-level', 'BASIC');
+      const basSpan = document.createElement('span');
+      basSpan.textContent = isDummy ? '?' : song.lev_bas;
+      basDiv.appendChild(basSpan);
+      if (difficultiesContainer) difficultiesContainer.appendChild(basDiv);
+    }
+    
+    if (song.lev_adv || isDummy) {
+      const advDiv = document.createElement('div');
+      advDiv.className = 'difficulty-tag lev-adv';
+      advDiv.setAttribute('data-level', 'ADVANCE');
+      const advSpan = document.createElement('span');
+      advSpan.textContent = isDummy ? '?' : song.lev_adv;
+      advDiv.appendChild(advSpan);
+      if (difficultiesContainer) difficultiesContainer.appendChild(advDiv);
+    }
+    
+    if (song.lev_exp || isDummy) {
+      const expDiv = document.createElement('div');
+      expDiv.className = 'difficulty-tag lev-exp';
+      expDiv.setAttribute('data-level', 'EXPERT');
+      const expSpan = document.createElement('span');
+      expSpan.textContent = isDummy ? '?' : song.lev_exp;
+      expDiv.appendChild(expSpan);
+      if (difficultiesContainer) difficultiesContainer.appendChild(expDiv);
+    }
+    
+    if (song.lev_mas || isDummy) {
+      const masDiv = document.createElement('div');
+      masDiv.className = 'difficulty-tag lev-mas';
+      masDiv.setAttribute('data-level', 'MASTER');
+      const masSpan = document.createElement('span');
+      masSpan.textContent = isDummy ? '?' : song.lev_mas;
+      masDiv.appendChild(masSpan);
+      if (difficultiesContainer) difficultiesContainer.appendChild(masDiv);
+    }
+    
+    if (song.lev_ult || isDummy) {
+      const ultDiv = document.createElement('div');
+      ultDiv.className = 'difficulty-tag lev-ult';
+      ultDiv.setAttribute('data-level', 'ULTIMA');
+      const ultSpan = document.createElement('span');
+      ultSpan.textContent = isDummy ? '?' : song.lev_ult;
+      ultDiv.appendChild(ultSpan);
+      if (difficultiesContainer) difficultiesContainer.appendChild(ultDiv);
+    }
+  }
+}
+
+// 获取分类样式 (已移到全局作用域)
+function getCategoryClass(catname) {
+    switch (catname) {
+        case 'POPS & ANIME': return 'cat-pops';
+        case 'niconico': return 'cat-nico';
+        case '東方Project': return 'cat-touhou';
+        case 'VARIETY': return 'cat-variety';
+        case 'イロドリミドリ': return 'cat-irodori';
+        case 'ゲキマイ': return 'cat-gekimai';
+        case 'ORIGINAL': return 'cat-original';
+        default: return '';
+    }
+}
+
 // 显示临时错误消息
 function showTempErrorMessage(element, message, duration = 3000) {
   if (!element) return;
@@ -1247,143 +1395,8 @@ if (pageId === 'fortune') {
         }, 500);
       });
     }
-          
-          function updateDisplay(song, luck, recommendations) {
-            if (!song) return;
-            
-            if (difficultiesContainer) {
-              difficultiesContainer.innerHTML = '';
-            }
-            
-            if (coverImg) {
-              coverImg.src = song.image ? 
-                `https://oss.am-all.com.cn/asset/img/main/music/${song.image}` : 
-                'https://oss.am-all.com.cn/asset/img/main/music/dummy.jpg';
-            }
-            if (songIdEl) songIdEl.textContent = song.id || '???';
-            if (songTitleEl) songTitleEl.textContent = song.title || '???';
-            if (songArtistEl) songArtistEl.textContent = song.artist || '???';
-            if (fortuneLuckEl) fortuneLuckEl.textContent = luck || '???';
-            
-            if (luckyActionEl && unluckyActionEl) {
-              luckyActionEl.textContent = recommendations?.lucky || '?';
-              unluckyActionEl.textContent = recommendations?.unlucky || '?';
-            }
-            
-            const isDummy = song.id === '???';
-            
-            if (songCategoryEl) {
-              if (isDummy) {
-                songCategoryEl.textContent = '???';
-                songCategoryEl.className = 'song-category cat-dummy';
-              } else if (song.catname) {
-                songCategoryEl.textContent = song.catname;
-                songCategoryEl.className = 'song-category ' + getCategoryClass(song.catname);
-              } else {
-                songCategoryEl.textContent = '???';
-                songCategoryEl.className = 'song-category';
-              }
-            }
-            
-            const isWorldsEndSong = song.we_kanji || song.we_star;
-            
-            if (isWorldsEndSong && !isDummy) {
-              if (song.we_kanji || song.we_star) {
-                const weDiv = document.createElement('div');
-                weDiv.className = 'difficulty-tag lev-we';
-                weDiv.textContent = 'World\'s End: ';
-                
-                if (song.we_kanji) {
-                  weDiv.textContent += song.we_kanji;
-                }
-                
-                if (song.we_star) {
-                  const starsContainer = document.createElement('span');
-                  starsContainer.className = 'we-stars';
-                  
-                  const starCount = parseInt(song.we_star);
-                  const starDisplayCount = Math.ceil(starCount / 2);
-                  
-                  for (let i = 0; i < starDisplayCount; i++) {
-                    const star = document.createElement('i');
-                    star.className = 'fas fa-star star';
-                    starsContainer.appendChild(star);
-                  }
-                  
-                  weDiv.appendChild(starsContainer);
-                }
-                
-                if (difficultiesContainer) {
-                  difficultiesContainer.appendChild(weDiv);
-                }
-              }
-            } else {
-              if (song.lev_bas || isDummy) {
-                const basDiv = document.createElement('div');
-                basDiv.className = 'difficulty-tag lev-bas';
-                basDiv.setAttribute('data-level', 'BASIC');
-                const basSpan = document.createElement('span');
-                basSpan.textContent = isDummy ? '?' : song.lev_bas;
-                basDiv.appendChild(basSpan);
-                if (difficultiesContainer) difficultiesContainer.appendChild(basDiv);
-              }
-              
-              if (song.lev_adv || isDummy) {
-                const advDiv = document.createElement('div');
-                advDiv.className = 'difficulty-tag lev-adv';
-                advDiv.setAttribute('data-level', 'ADVANCE');
-                const advSpan = document.createElement('span');
-                advSpan.textContent = isDummy ? '?' : song.lev_adv;
-                advDiv.appendChild(advSpan);
-                if (difficultiesContainer) difficultiesContainer.appendChild(advDiv);
-              }
-              
-              if (song.lev_exp || isDummy) {
-                const expDiv = document.createElement('div');
-                expDiv.className = 'difficulty-tag lev-exp';
-                expDiv.setAttribute('data-level', 'EXPERT');
-                const expSpan = document.createElement('span');
-                expSpan.textContent = isDummy ? '?' : song.lev_exp;
-                expDiv.appendChild(expSpan);
-                if (difficultiesContainer) difficultiesContainer.appendChild(expDiv);
-              }
-              
-              if (song.lev_mas || isDummy) {
-                const masDiv = document.createElement('div');
-                masDiv.className = 'difficulty-tag lev-mas';
-                masDiv.setAttribute('data-level', 'MASTER');
-                const masSpan = document.createElement('span');
-                masSpan.textContent = isDummy ? '?' : song.lev_mas;
-                masDiv.appendChild(masSpan);
-                if (difficultiesContainer) difficultiesContainer.appendChild(masDiv);
-              }
-              
-              if (song.lev_ult || isDummy) {
-                const ultDiv = document.createElement('div');
-                ultDiv.className = 'difficulty-tag lev-ult';
-                ultDiv.setAttribute('data-level', 'ULTIMA');
-                const ultSpan = document.createElement('span');
-                ultSpan.textContent = isDummy ? '?' : song.lev_ult;
-                ultDiv.appendChild(ultSpan);
-                if (difficultiesContainer) difficultiesContainer.appendChild(ultDiv);
-              }
-            }
-          }
-      
-          function getCategoryClass(catname) {
-              switch (catname) {
-                  case 'POPS & ANIME': return 'cat-pops';
-                  case 'niconico': return 'cat-nico';
-                  case '東方Project': return 'cat-touhou';
-                  case 'VARIETY': return 'cat-variety';
-                  case 'イロドリミドリ': return 'cat-irodori';
-                  case 'ゲキマイ': return 'cat-gekimai';
-                  case 'ORIGINAL': return 'cat-original';
-                  default: return '';
-              }
-          }
-        }, 100);
-      }
+  }, 100);
+}
       
       if (pageId === 'order-entry') {
         initOrderEntryPage();
