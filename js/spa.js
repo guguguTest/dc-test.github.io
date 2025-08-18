@@ -12,6 +12,11 @@ const ordersPerPage = 50;
 // 受保护的页面
 const PROTECTED_PAGES = ['tools', 'dllpatcher', 'fortune', 'user-settings', 'order-entry', 'exchange'];
 
+// 数据源
+const MUSIC_DATA_URLS = [
+  'https://oss.am-all.com.cn/asset/img/main/data/music.json',
+];
+
 // 显示临时错误消息
 function showTempErrorMessage(element, message, duration = 3000) {
   if (!element) return;
