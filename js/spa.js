@@ -180,7 +180,11 @@ function getCategoryClass(catname) {
 
 // 显示临时错误消息
 function showTempErrorMessage(element, message, duration = 3000) {
-  if (!element) return;
+  if (!element) {
+    // 如果元素不存在，使用模态弹窗显示错误
+    showErrorMessage(message);
+    return;
+  }
   
   element.textContent = message;
   element.style.display = 'block';
@@ -2088,32 +2092,34 @@ document.addEventListener("DOMContentLoaded", function() {
         if (e.target.closest('#send-verification-code')) {
             e.preventDefault();
             const emailInput = document.getElementById('register-email');
+            const errorElement = document.getElementById('register-error');
             if (emailInput && emailInput.value) {
                 sendVerificationCode(emailInput.value, 'register')
                     .then(() => {
                         showSuccessMessage('验证码已发送');
                     })
                     .catch(error => {
-                        showErrorMessage(error.message || '发送验证码失败');
+                        showTempErrorMessage(errorElement, error.message || '发送验证码失败');
                     });
             } else {
-                showErrorMessage('请输入邮箱地址');
+                showTempErrorMessage(errorElement, '请输入邮箱地址');
             }
         }
 
         if (e.target.closest('#send-reset-code')) {
             e.preventDefault();
             const emailInput = document.getElementById('forgot-email');
+            const errorElement = document.getElementById('forgot-error');
             if (emailInput && emailInput.value) {
                 sendVerificationCode(emailInput.value, 'reset')
                     .then(() => {
                         showSuccessMessage('验证码已发送');
                     })
                     .catch(error => {
-                        showErrorMessage(error.message || '发送验证码失败');
+                        showTempErrorMessage(errorElement, error.message || '发送验证码失败');
                     });
             } else {
-                showErrorMessage('请输入邮箱地址');
+                showTempErrorMessage(errorElement, '请输入邮箱地址');
             }
         }
 
