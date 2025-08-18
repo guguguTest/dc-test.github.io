@@ -33,7 +33,17 @@ function showTempErrorMessage(element, message, duration = 3000) {
 function checkLoginStatus() {
   const token = localStorage.getItem('token');
   if (token) {
-    fetchUserInfo(token);
+    // 添加加载状态
+    document.body.classList.add('spa-loading');
+    
+    fetchUserInfo(token)
+      .catch(error => {
+        console.error('检查登录状态失败:', error);
+        showAuthLinks();
+      })
+      .finally(() => {
+        document.body.classList.remove('spa-loading');
+      });
   } else {
     showAuthLinks();
   }
@@ -89,28 +99,33 @@ function getUserRankInfo(userRank) {
 
 // 获取用户信息
 function fetchUserInfo(token) {
-  secureFetch('https://api.am-all.com.cn/api/user', {
+  return secureFetch('https://api.am-all.com.cn/api/user', {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`
     }
   })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('获取用户信息失败');
-    }
-    return response.json();
-  })
   .then(user => {
+    if (!user || user.error) {
+      throw new Error(user?.error || '获取用户信息失败');
+    }
+    
     currentUser = user;
     updateUserInfo(user);
     showUserInfo();
     setupUserDropdown();
+    return user;
   })
   .catch(error => {
-    console.error(error);
-    localStorage.removeItem('token');
+    console.error('获取用户信息错误:', error);
+    
+    // 如果token无效，清除本地存储
+    if (error.message.includes('401') || error.message.includes('无效的令牌')) {
+      localStorage.removeItem('token');
+    }
+    
     showAuthLinks();
+    throw error;
   });
 }
 
@@ -443,19 +458,23 @@ function handleLogin() {
   
   secureFetch('https://api.am-all.com.cn/api/login', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({ login, password })
   })
   .then(data => {
     console.log('登录成功:', data);
     
-    if (data.success) {
+    if (data.token && data.user) {
       localStorage.setItem('token', data.token);
-      updateUserInfo(data.user);
-      showUserInfo();
-      loadPage('home');
+      return fetchUserInfo(data.token); // 确保获取完整的用户信息
     } else {
       throw new Error(data.error || '登录失败');
     }
+  })
+  .then(() => {
+    loadPage('home');
   })
   .catch(error => {
     console.error('登录失败:', error);
@@ -1887,37 +1906,34 @@ function secureFetch(url, options = {}) {
   
   const headers = new Headers(options.headers || {});
   
-  headers.set('Content-Type', 'application/json');
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+  
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  headers.set('X-Requested-With', 'XMLHttpRequest');
   
-  // 添加 Origin 头
-  headers.set('Origin', window.location.origin);
+  headers.set('X-Requested-With', 'XMLHttpRequest');
   
   const finalOptions = {
     ...options,
     credentials: 'include',
-    mode: 'cors', // 明确指定 CORS 模式
+    mode: 'cors',
     headers
   };
   
-  console.log(`发起请求: ${url}`, {
-    method: finalOptions.method || 'GET',
-    headers: Object.fromEntries(headers.entries())
-  });
-  
   return fetch(url, finalOptions)
     .then(response => {
-      console.log(`响应状态: ${response.status} ${response.statusText}`);
-      
       if (!response.ok) {
         return response.json().then(errorData => {
-          console.error('API错误响应:', errorData);
-          throw new Error(errorData.error || `请求失败: ${response.status}`);
+          const error = new Error(errorData?.error || `请求失败: ${response.status}`);
+          error.status = response.status;
+          throw error;
         }).catch(() => {
-          throw new Error(`请求失败: ${response.status} ${response.statusText}`);
+          const error = new Error(`请求失败: ${response.status} ${response.statusText}`);
+          error.status = response.status;
+          throw error;
         });
       }
       
