@@ -3,13 +3,13 @@
 let currentUser = null;
 let cropper = null;
 
-// ==================== 新增变量 ====================
+// 新增变量
 let currentOrders = [];
 let selectedOrderIds = [];
 let currentPage = 1;
 const ordersPerPage = 50;
 
-// 受保护的页面，需要登录才能访问
+// 受保护的页面
 const PROTECTED_PAGES = ['tools', 'dllpatcher', 'fortune', 'user-settings', 'order-entry', 'exchange'];
 
 // 显示临时错误消息
@@ -19,12 +19,10 @@ function showTempErrorMessage(element, message, duration = 3000) {
   element.textContent = message;
   element.style.display = 'block';
   
-  // 清除之前的定时器（如果有）
   if (element._errorTimer) {
     clearTimeout(element._errorTimer);
   }
   
-  // 设置新的定时器
   element._errorTimer = setTimeout(() => {
     element.style.display = 'none';
     element.textContent = '';
@@ -233,16 +231,12 @@ function updateUserInfo(user) {
     document.getElementById('settings-nickname-counter').textContent = (user.nickname || '').length;
   }
   
-  // =============== 为移动端添加用户组背景和等级图标 =============== //
-  
-  // 获取移动端用户信息区域
+  // 为移动端添加用户组背景和等级图标
   const sidebarUserArea = document.querySelector('.sidebar-user-area');
   
   if (sidebarUserArea) {
-    // 设置背景图变量
     sidebarUserArea.style.setProperty('--user-rank-bg', `url(${rankInfo.background})`);
     
-    // 添加或更新等级图标
     let rankIconMobile = document.getElementById('user-rank-icon-mobile');
     if (!rankIconMobile) {
       rankIconMobile = document.createElement('img');
@@ -311,10 +305,8 @@ function showUserInfo() {
   if (authLinksMobile) authLinksMobile.style.display = 'none';
   if (userInfoMobile) userInfoMobile.style.display = 'block';
   
-  // ==================== 在 showUserInfo 函数中添加新菜单项 ====================
   // 添加新菜单项（仅对贵宾用户显示）
   if (currentUser && currentUser.user_rank >= 4) {
-    // 检查是否已添加，避免重复
     if (!document.querySelector('.sidebar-nav a[data-page="order-entry"]')) {
       const orderEntryItem = document.createElement('a');
       orderEntryItem.href = '#';
@@ -332,7 +324,6 @@ function showUserInfo() {
         <span>积分兑换</span>
       `;
       
-      // 在每日运势下方添加
       const fortuneItem = document.querySelector('.sidebar-nav a[data-page="fortune"]');
       if (fortuneItem) {
         fortuneItem.parentNode.insertBefore(orderEntryItem, fortuneItem.nextSibling);
@@ -371,6 +362,8 @@ function showAuthLinks() {
 
 // 发送验证码
 function sendVerificationCode(email, type) {
+  console.log(`发送验证码: ${email} (${type})`);
+  
   return fetch('https://api.am-all.com.cn/api/send-verification-code', {
     method: 'POST',
     headers: {
@@ -379,10 +372,20 @@ function sendVerificationCode(email, type) {
     body: JSON.stringify({ email, type })
   })
   .then(response => {
+    console.log(`验证码响应: ${response.status}`);
+    
     if (!response.ok) {
-      return response.json().then(err => { throw err; });
+      return response.json().then(err => { 
+        throw new Error(err.error || '发送验证码失败');
+      }).catch(() => {
+        throw new Error(`发送验证码失败: ${response.status}`);
+      });
     }
     return response.json();
+  })
+  .catch(error => {
+    console.error('验证码发送失败:', error);
+    throw error;
   });
 }
 
@@ -420,7 +423,7 @@ function resetPassword(resetToken, newPassword) {
   });
 }
 
-// 登录功能 - 使用修复后的安全请求
+// 登录功能
 function handleLogin() {
   const login = document.getElementById('login-username').value;
   const password = document.getElementById('login-password').value;
@@ -436,27 +439,27 @@ function handleLogin() {
     return;
   }
 
+  console.log('开始登录:', login);
+  
   secureFetch('https://api.am-all.com.cn/api/login', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
     body: JSON.stringify({ login, password })
   })
-  .then(response => {
-    if (!response.ok) {
-      return response.json().then(err => { throw err; });
-    }
-    return response.json();
-  })
   .then(data => {
-    localStorage.setItem('token', data.token);
-    updateUserInfo(data.user);
-    showUserInfo();
-    loadPage('home');
+    console.log('登录成功:', data);
+    
+    if (data.success) {
+      localStorage.setItem('token', data.token);
+      updateUserInfo(data.user);
+      showUserInfo();
+      loadPage('home');
+    } else {
+      throw new Error(data.error || '登录失败');
+    }
   })
   .catch(error => {
-    showTempErrorMessage(errorElement, error.error || '登录失败');
+    console.error('登录失败:', error);
+    showTempErrorMessage(errorElement, error.message || '登录失败');
   });
 }
 
@@ -480,13 +483,11 @@ function handleRegister() {
     return;
   }
 
-  // 验证用户名长度
   if (username.length < 6 || username.length > 20) {
     showTempErrorMessage(errorElement, '用户名长度需在6-20个字符之间');
     return;
   }
 
-  // 验证昵称长度
   if (nickname && (nickname.length < 6 || nickname.length > 20)) {
     showTempErrorMessage(errorElement, '昵称长度需在6-20个字符之间');
     return;
@@ -521,10 +522,14 @@ function handleRegister() {
     return response.json();
   })
   .then(data => {
-    localStorage.setItem('token', data.token);
-    updateUserInfo(data.user);
-    showUserInfo();
-    loadPage('home');
+    if (data.success) {
+      localStorage.setItem('token', data.token);
+      updateUserInfo(data.user);
+      showUserInfo();
+      loadPage('home');
+    } else {
+      throw new Error(data.error || '注册失败');
+    }
   })
   .catch(error => {
     showTempErrorMessage(errorElement, error.error || '注册失败');
@@ -663,7 +668,6 @@ function showLoginRequired(pageId) {
 
 // 设置字符计数器
 function setupCharCounters() {
-  // 注册页面
   const usernameInput = document.getElementById('register-username');
   const nicknameInput = document.getElementById('register-nickname');
   const passwordInput = document.getElementById('register-password');
@@ -686,7 +690,6 @@ function setupCharCounters() {
     });
   }
   
-  // 用户设置页面
   const settingsNicknameInput = document.getElementById('settings-nickname');
   const newPasswordInput = document.getElementById('new-password');
   
@@ -707,7 +710,6 @@ function setupCharCounters() {
 function displayFortune(song, luck, recommendations) {
   updateDisplay(song, luck, recommendations);
   
-  // 随机增加1-10积分
   const pointsEarned = Math.floor(Math.random() * 10) + 1;
   
   const token = localStorage.getItem('token');
@@ -726,7 +728,6 @@ function displayFortune(song, luck, recommendations) {
         currentUser.points = data.points;
         updateUserInfo(currentUser);
         
-        // 显示获得的积分
         const fortuneHint = document.getElementById('fortune-hint');
         if (fortuneHint) {
           const totalPoints = data.points + (currentUser.point2 || 0);
@@ -769,16 +770,6 @@ function loadPage(pageId) {
       }
       
       if (pageId === 'user-settings') {
-        const settingsContainer = contentContainer.querySelector('.section');
-        if (settingsContainer) {
-          settingsContainer.classList.add('user-settings-container');
-          const sections = settingsContainer.querySelectorAll('.setting-card');
-          sections.forEach(section => {
-            section.classList.add('user-settings-section');
-          });
-        }
-        
-        // 用户设置页面 - 头像上传功能
         const token = localStorage.getItem('token');
         if (token) {
           fetchUserInfo(token);
@@ -798,8 +789,7 @@ function loadPage(pageId) {
           avatarUpload.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-              // 检查文件大小
-              if (file.size > 150 * 1024) { // 150KB限制
+              if (file.size > 150 * 1024) {
                 showErrorMessage('头像大小不能超过150KB');
                 return;
               }
@@ -818,14 +808,11 @@ function loadPage(pageId) {
                 const img = document.createElement('img');
                 img.id = 'avatar-to-crop';
                 img.src = event.target.result;
-                
-                // 限制预览图片尺寸
                 img.style.maxWidth = '200px';
                 img.style.maxHeight = '200px';
                 
                 cropContainer.appendChild(img);
                 
-                // 初始化Cropper并设置圆形裁剪区域
                 cropper = new Cropper(img, {
                   aspectRatio: 1,
                   viewMode: 1,
@@ -841,7 +828,6 @@ function loadPage(pageId) {
                   minCropBoxWidth: 100,
                   minCropBoxHeight: 100,
                   crop: function(event) {
-                    // 圆形裁剪效果
                     const canvas = this.cropper.getCroppedCanvas({
                       width: 200,
                       height: 200
@@ -862,7 +848,6 @@ function loadPage(pageId) {
           });
         }
         
-        // 添加取消按钮功能
         if (cancelAvatarBtn) {
           cancelAvatarBtn.addEventListener('click', function() {
             if (cropper) {
@@ -883,14 +868,12 @@ function loadPage(pageId) {
                 height: 200
               });
               
-              // 添加圆形遮罩
               const context = canvas.getContext('2d');
               context.beginPath();
               context.arc(100, 100, 100, 0, Math.PI * 2, true);
               context.closePath();
               context.clip();
               
-              // 检查图片大小
               canvas.toBlob(function(blob) {
                 if (blob.size > 150 * 1024) {
                   showErrorMessage('裁剪后的头像大小不能超过150KB');
@@ -923,7 +906,7 @@ function loadPage(pageId) {
                   console.error('头像更新错误:', error);
                   showErrorMessage('头像更新失败');
                 });
-              }, 'image/png', 0.9); // 添加压缩质量参数
+              }, 'image/png', 0.9);
             } else {
               showErrorMessage('请先选择并裁剪头像');
             }
@@ -1311,7 +1294,6 @@ function loadPage(pageId) {
         }, 100);
       }
       
-      // ==================== 在 loadPage 函数中添加 ====================
       if (pageId === 'order-entry') {
         initOrderEntryPage();
       }
@@ -1326,7 +1308,6 @@ function loadPage(pageId) {
         contentContainer.innerHTML = `<div class="section"><h1>404 NO LEAK</h1><p>页面不存在</p></div>`;
     }
     
-    // 设置字符计数器
     setupCharCounters();
     
     document.body.classList.remove('spa-loading');
@@ -1393,7 +1374,7 @@ function updateActiveMenuItem(activePage) {
     }
 }
 
-// ==================== 新增订单管理功能 ====================
+// 新增订单管理功能
 function initOrderEntryPage() {
   loadOrders();
   
@@ -1468,7 +1449,6 @@ function initOrderEntryPage() {
     });
   }
   
-  // 添加兑换状态变更确认
   const redeemedCheckbox = document.getElementById('redeemed');
   if (redeemedCheckbox) {
     redeemedCheckbox.addEventListener('change', function(e) {
@@ -1516,7 +1496,6 @@ async function loadOrders() {
     
     const data = await response.json();
     
-    // 确保价格字段是数字类型
     currentOrders = data.orders.map(order => ({
       ...order,
       price: typeof order.price === 'string' ? parseFloat(order.price) : order.price
@@ -1525,7 +1504,6 @@ async function loadOrders() {
     renderOrders(currentOrders);
     renderPagination(data.pagination);
     
-    // 重置选择
     selectedOrderIds = [];
     updateActionButtons();
     const selectAll = document.getElementById('select-all');
@@ -1562,11 +1540,7 @@ function renderOrders(orders) {
       <td>${order.product_name}</td>
       <td>${order.order_number}</td>
       <td>${formattedPrice}</td>
-      <td>${
-        order.redeemed ? 
-        '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>已兑换</span>' : 
-        '<span class="badge bg-warning"><i class="fas fa-exclamation-circle me-1"></i>未兑换</span>'
-      }</td>
+      <td>${order.redeemed ? '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>已兑换</span>' : '<span class="badge bg-warning"><i class="fas fa-exclamation-circle me-1"></i>未兑换</span>'}</td>
     `;
     tbody.appendChild(tr);
     
@@ -1600,7 +1574,6 @@ function renderPagination(pagination) {
   const ul = document.createElement('ul');
   ul.className = 'pagination';
   
-  // 上一页
   const prevLi = document.createElement('li');
   prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
   prevLi.innerHTML = `<a class="page-link" href="#">&laquo;</a>`;
@@ -1613,7 +1586,6 @@ function renderPagination(pagination) {
   });
   ul.appendChild(prevLi);
   
-  // 页码
   const startPage = Math.max(1, currentPage - 2);
   const endPage = Math.min(pagination.totalPages, currentPage + 2);
   
@@ -1667,7 +1639,6 @@ function renderPagination(pagination) {
     ul.appendChild(li);
   }
   
-  // 下一页
   const nextLi = document.createElement('li');
   nextLi.className = `page-item ${currentPage === pagination.totalPages ? 'disabled' : ''}`;
   nextLi.innerHTML = `<a class="page-link" href="#">&raquo;</a>`;
@@ -1680,7 +1651,6 @@ function renderPagination(pagination) {
   });
   ul.appendChild(nextLi);
   
-  // 跳转输入
   const jumpDiv = document.createElement('div');
   jumpDiv.className = 'pagination-jump';
   jumpDiv.innerHTML = `
@@ -1802,7 +1772,7 @@ async function saveOrder() {
         product_name: productName,
         order_number: orderNumber,
         price: price,
-        redeemed: redeemed  // 确保包含 redeemed 状态
+        redeemed: redeemed
       })
     });
     
@@ -1881,10 +1851,8 @@ async function handleRedeemOrder() {
     
     const data = await response.json();
     
-    // 确保我们只显示本次兑换获得的积分
     let pointsEarned = 0;
     
-    // 尝试从不同可能的字段中获取本次获得的积分
     if (data.pointsEarned !== undefined) {
       pointsEarned = data.pointsEarned;
     } else if (data.point2 !== undefined && currentUser?.point2 !== undefined) {
@@ -1895,22 +1863,17 @@ async function handleRedeemOrder() {
       pointsEarned = data.points;
     }
     
-    // 显示兑换结果
     resultDiv.innerHTML = `<div class="success">兑换成功！获得 ${pointsEarned} 鸽屋积分</div>`;
     
-    // 更新用户信息
     if (currentUser) {
-      // 确保更新用户积分
       if (data.point2 !== undefined) {
         currentUser.point2 = data.point2;
       } else if (pointsEarned > 0) {
-        // 如果API没有返回point2，但返回了获得的积分，我们手动更新
         currentUser.point2 = (currentUser.point2 || 0) + pointsEarned;
       }
       updateUserInfo(currentUser);
     }
     
-    // 清空输入框
     document.getElementById('order-number-input').value = '';
   } catch (error) {
     console.error('兑换错误:', error);
@@ -1918,32 +1881,48 @@ async function handleRedeemOrder() {
   }
 }
 
-// 增强的API请求函数 - 修复凭证问题
+// 增强的API请求函数
 function secureFetch(url, options = {}) {
   const token = localStorage.getItem('token');
   
-  // 确保始终包含凭证
+  const headers = new Headers(options.headers || {});
+  
+  headers.set('Content-Type', 'application/json');
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  headers.set('X-Requested-With', 'XMLHttpRequest');
+  
   const finalOptions = {
     ...options,
-    credentials: 'include', // 关键修复：始终包含凭证
-    headers: {
-      ...(options.headers || {}),
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
-      'X-Requested-With': 'XMLHttpRequest'
-    }
+    credentials: 'include',
+    headers
   };
   
-  return fetch(url, finalOptions).then(response => {
-    if (!response.ok) {
-      return response.json().then(err => {
-        throw new Error(err.error || '请求失败');
-      }).catch(() => {
-        throw new Error(`请求失败: ${response.status} ${response.statusText}`);
-      });
-    }
-    return response;
+  console.log(`发起请求: ${url}`, {
+    method: finalOptions.method || 'GET',
+    headers: Object.fromEntries(headers.entries())
   });
+  
+  return fetch(url, finalOptions)
+    .then(response => {
+      console.log(`响应状态: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          console.error('API错误响应:', errorData);
+          throw new Error(errorData.error || `请求失败: ${response.status}`);
+        }).catch(() => {
+          throw new Error(`请求失败: ${response.status} ${response.statusText}`);
+        });
+      }
+      
+      return response.json();
+    })
+    .catch(error => {
+      console.error('请求处理错误:', error);
+      throw error;
+    });
 }
 
 // 初始化SPA功能
@@ -1985,7 +1964,6 @@ document.addEventListener("DOMContentLoaded", function() {
             const pageId = pageLink.getAttribute('data-page');
             loadPage(pageId);
             
-            // 移动端点击后自动关闭侧边栏
             if (window.innerWidth <= 992) {
                 const sidebar = document.querySelector('.sidebar');
                 if (sidebar) sidebar.classList.remove('show');
@@ -1994,19 +1972,16 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
         
-        // 登录按钮
         if (e.target.closest('#login-btn')) {
             e.preventDefault();
             handleLogin();
         }
         
-        // 注册按钮
         if (e.target.closest('#register-btn')) {
             e.preventDefault();
             handleRegister();
         }
         
-        // 发送验证码按钮 - 注册页面
         if (e.target.closest('#send-verification-code')) {
             e.preventDefault();
             const emailInput = document.getElementById('register-email');
@@ -2016,14 +1991,13 @@ document.addEventListener("DOMContentLoaded", function() {
                         showSuccessMessage('验证码已发送');
                     })
                     .catch(error => {
-                        showErrorMessage(error.error || '发送验证码失败');
+                        showErrorMessage(error.message || '发送验证码失败');
                     });
             } else {
                 showErrorMessage('请输入邮箱地址');
             }
         }
 
-        // 发送验证码按钮 - 重置密码页面
         if (e.target.closest('#send-reset-code')) {
             e.preventDefault();
             const emailInput = document.getElementById('forgot-email');
@@ -2033,14 +2007,13 @@ document.addEventListener("DOMContentLoaded", function() {
                         showSuccessMessage('验证码已发送');
                     })
                     .catch(error => {
-                        showErrorMessage(error.error || '发送验证码失败');
+                        showErrorMessage(error.message || '发送验证码失败');
                     });
             } else {
                 showErrorMessage('请输入邮箱地址');
             }
         }
 
-        // 验证按钮 - 忘记密码页面
         if (e.target.closest('#verify-code-btn')) {
             e.preventDefault();
             const email = document.getElementById('forgot-email').value;
@@ -2054,7 +2027,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
             verifyCode(email, code, 'reset')
                 .then(data => {
-                    // 验证成功，跳转到重置密码页面
                     localStorage.setItem('resetToken', data.resetToken);
                     loadPage('reset-password');
                 })
@@ -2063,7 +2035,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
         }
 
-        // 重置密码按钮 - 重置密码页面
         if (e.target.closest('#reset-password-btn')) {
             e.preventDefault();
             const newPassword = document.getElementById('reset-new-password').value;
@@ -2099,7 +2070,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
         }
         
-        // 公告卡片点击事件
         const announcementCard = e.target.closest('.announcement-card, .announcement-simple-item');
         if (announcementCard) {
             e.preventDefault();
@@ -2116,7 +2086,6 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // 移除PC版侧边栏的收折按钮
     const sidebarToggle = document.querySelector('.sidebar-toggle');
     if (sidebarToggle) {
         sidebarToggle.style.display = 'none';
