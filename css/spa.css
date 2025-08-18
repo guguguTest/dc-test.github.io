@@ -843,3 +843,132 @@ input:checked + .slider:before {
     min-width: auto;
   }
 }
+
+/* 公告弹窗样式 */
+#announcement-modal .modal-content {
+  max-width: 800px;
+}
+
+.announcement-meta {
+  margin-bottom: 15px;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.announcement-content {
+  line-height: 1.8;
+}
+
+.announcement-content p {
+  margin-bottom: 15px;
+}
+
+.announcement-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.announcement-content a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.announcement-content a:hover {
+  text-decoration: underline;
+}
+
+/* 消息弹窗样式 */
+#message-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+#message-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+#message-modal .modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transform: translateY(-20px);
+  transition: transform 0.3s ease;
+}
+
+#message-modal.show .modal-content {
+  transform: translateY(0);
+}
+
+#message-modal .modal-header {
+  background: linear-gradient(135deg, #1a1f2d, #2c3e50);
+  color: white;
+  padding: 15px 20px;
+  border-bottom: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#message-modal .modal-header h5 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+#message-modal .modal-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.8rem;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+  line-height: 1;
+}
+
+#message-modal .modal-close:hover {
+  opacity: 1;
+}
+
+#message-modal .modal-body {
+  padding: 20px;
+}
+
+#message-modal .modal-footer {
+  padding: 15px 20px;
+  text-align: right;
+  border-top: 1px solid #eee;
+}
+
+#message-modal .btn-ok {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+#message-modal .btn-ok:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}

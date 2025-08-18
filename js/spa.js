@@ -223,6 +223,7 @@ function checkLoginStatus() {
 function getUserRankInfo(userRank) {
   const rankInfo = {
     background: "",
+
     icon: "",
     text: ""
   };
@@ -757,8 +758,52 @@ function getAnnouncementById(id) {
 
 // 显示公告详情弹窗
 function showAnnouncementModal(id) {
-  const modal = document.getElementById('announcement-modal');
-  if (!modal) return;
+  // 确保消息弹窗不会干扰
+  const messageModal = document.getElementById('message-modal');
+  if (messageModal && messageModal.classList.contains('show')) {
+    messageModal.classList.remove('show');
+  }
+
+  // 创建或获取公告弹窗
+  let modal = document.getElementById('announcement-modal');
+  if (!modal) {
+    const modalHTML = `
+      <div id="announcement-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+          <div class="modal-header">
+            <h5 id="announcement-title"></h5>
+            <button type="button" class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="announcement-meta">
+              <span id="announcement-date"></span>
+            </div>
+            <div id="announcement-content" class="announcement-content"></div>
+          </div>
+          <div class="modal-footer">
+            <button id="announcement-close" class="btn-ok">关闭</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    modal = document.getElementById('announcement-modal');
+    
+    // 添加事件监听器
+    document.querySelector('#announcement-modal .modal-close').addEventListener('click', () => {
+      modal.classList.remove('show');
+    });
+    
+    document.getElementById('announcement-close').addEventListener('click', () => {
+      modal.classList.remove('show');
+    });
+    
+    modal.addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('show');
+      }
+    });
+  }
   
   const announcement = getAnnouncementById(id);
   
@@ -790,13 +835,6 @@ function showAnnouncementModal(id) {
         loadPage(this.getAttribute('data-page'));
       });
     });
-    
-    const closeBtn = document.getElementById('announcement-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', function() {
-        modal.classList.remove('show');
-      });
-    }
   }
 }
 
@@ -1415,38 +1453,94 @@ if (pageId === 'fortune') {
 
 // 显示成功消息
 function showSuccessMessage(message) {
-  const modal = document.getElementById('about-modal');
-  if (modal) {
-    document.getElementById('modal-title').textContent = '操作成功';
-    document.getElementById('modal-content').textContent = message;
-    modal.classList.add('show');
+  const modal = document.getElementById('message-modal');
+  if (!modal) {
+    // 如果模态框不存在，创建一个
+    const modalHTML = `
+      <div id="message-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="modal-title">操作成功</h5>
+            <button type="button" class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p id="modal-content">${message}</p>
+          </div>
+          <div class="modal-footer">
+            <button id="modal-ok" class="btn-ok">确定</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    document.querySelector('.modal-close').addEventListener('click', () => {
-      modal.classList.remove('show');
+    // 添加事件监听器
+    document.querySelector('#message-modal .modal-close').addEventListener('click', () => {
+      document.getElementById('message-modal').classList.remove('show');
     });
     
     document.getElementById('modal-ok').addEventListener('click', () => {
-      modal.classList.remove('show');
+      document.getElementById('message-modal').classList.remove('show');
     });
+    
+    document.getElementById('message-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('show');
+      }
+    });
+  } else {
+    // 更新现有模态框内容
+    document.getElementById('modal-title').textContent = '操作成功';
+    document.getElementById('modal-content').textContent = message;
   }
+  
+  document.getElementById('message-modal').classList.add('show');
 }
 
 // 显示错误消息
 function showErrorMessage(message) {
-  const modal = document.getElementById('about-modal');
-  if (modal) {
-    document.getElementById('modal-title').textContent = '操作失败';
-    document.getElementById('modal-content').textContent = message;
-    modal.classList.add('show');
+  const modal = document.getElementById('message-modal');
+  if (!modal) {
+    // 如果模态框不存在，创建一个
+    const modalHTML = `
+      <div id="message-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="modal-title">操作失败</h5>
+            <button type="button" class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p id="modal-content">${message}</p>
+          </div>
+          <div class="modal-footer">
+            <button id="modal-ok" class="btn-ok">确定</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    document.querySelector('.modal-close').addEventListener('click', () => {
-      modal.classList.remove('show');
+    // 添加事件监听器
+    document.querySelector('#message-modal .modal-close').addEventListener('click', () => {
+      document.getElementById('message-modal').classList.remove('show');
     });
     
     document.getElementById('modal-ok').addEventListener('click', () => {
-      modal.classList.remove('show');
+      document.getElementById('message-modal').classList.remove('show');
     });
+    
+    document.getElementById('message-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('show');
+      }
+    });
+  } else {
+    // 更新现有模态框内容
+    document.getElementById('modal-title').textContent = '操作失败';
+    document.getElementById('modal-content').textContent = message;
   }
+  
+  document.getElementById('message-modal').classList.add('show');
 }
 
 // 更新活动菜单项
