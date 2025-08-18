@@ -1893,9 +1893,13 @@ function secureFetch(url, options = {}) {
   }
   headers.set('X-Requested-With', 'XMLHttpRequest');
   
+  // 添加 Origin 头
+  headers.set('Origin', window.location.origin);
+  
   const finalOptions = {
     ...options,
     credentials: 'include',
+    mode: 'cors', // 明确指定 CORS 模式
     headers
   };
   
