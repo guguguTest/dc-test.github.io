@@ -498,14 +498,21 @@
   background: #1a252f;
 }
 
+.send-code-btn:disabled {
+  background-color: #95a5a6 !important;
+  cursor: not-allowed;
+}
+
 .verification-code-group {
   display: flex;
   gap: 10px;
   align-items: center;
+  margin-top: 15px;
 }
 
 .verification-code-group input {
   flex: 1;
+  min-width: 0;
 }
 
 /* ====== 用户设置页面 ====== */
@@ -676,5 +683,16 @@
   
   .user-settings-title {
     padding-left: 15px;
+  }
+}
+
+/* 响应式调整验证码按钮组 */
+@media (max-width: 576px) {
+  .verification-code-group {
+    flex-direction: column;
+  }
+  
+  .verification-code-group button {
+    width: 100%;
   }
 }

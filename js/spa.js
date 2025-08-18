@@ -550,6 +550,21 @@ function showAuthLinks() {
 function sendVerificationCode(email, type) {
   console.log(`发送验证码: ${email} (${type})`);
   
+  const sendBtn = document.getElementById(type === 'register' ? 'send-verification-code' : 'send-reset-code');
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    let seconds = 60;
+    const timer = setInterval(() => {
+      sendBtn.textContent = `${seconds}秒后重试`;
+      seconds--;
+      if (seconds < 0) {
+        clearInterval(timer);
+        sendBtn.textContent = '获取验证码';
+        sendBtn.disabled = false;
+      }
+    }, 1000);
+  }
+  
   return fetch('https://api.am-all.com.cn/api/send-verification-code', {
     method: 'POST',
     headers: {
@@ -2177,6 +2192,16 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
         
+        // 修复公告点击事件
+        const announcementCard = e.target.closest('.announcement-card, .announcement-simple-item, .announcement-item');
+        if (announcementCard) {
+            e.preventDefault();
+            const id = announcementCard.getAttribute('data-id');
+            if (id) {
+                showAnnouncementModal(id);
+            }
+        }
+        
         if (e.target.closest('#login-btn')) {
             e.preventDefault();
             handleLogin();
@@ -2275,13 +2300,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 .catch(error => {
                     showTempErrorMessage(errorElement, error.error || '密码重置失败');
                 });
-        }
-        
-        const announcementCard = e.target.closest('.announcement-card, .announcement-simple-item');
-        if (announcementCard) {
-            e.preventDefault();
-            const id = announcementCard.getAttribute('data-id');
-            showAnnouncementModal(id);
         }
         
         const modalClose = e.target.closest('.modal-close, .modal-footer button');

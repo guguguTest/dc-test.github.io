@@ -73,12 +73,13 @@
 .modal-content {
   background: white;
   border-radius: 12px;
-  width: 90%;
+  width: calc(100% - 40px);
   max-width: 500px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   overflow: hidden;
   transform: translateY(-20px);
   transition: transform 0.3s ease;
+  margin: 0 20px;
 }
 
 .modal.show .modal-content {
@@ -847,16 +848,21 @@ input:checked + .slider:before {
 /* 公告弹窗样式 */
 #announcement-modal .modal-content {
   max-width: 800px;
+  width: calc(100% - 40px);
 }
 
 .announcement-meta {
   margin-bottom: 15px;
   color: #7f8c8d;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .announcement-content {
   line-height: 1.8;
+  font-size: 15px;
 }
 
 .announcement-content p {
@@ -904,12 +910,13 @@ input:checked + .slider:before {
 #message-modal .modal-content {
   background: white;
   border-radius: 12px;
-  width: 90%;
+  width: calc(100% - 40px);
   max-width: 500px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   overflow: hidden;
   transform: translateY(-20px);
   transition: transform 0.3s ease;
+  margin: 0 20px;
 }
 
 #message-modal.show .modal-content {
@@ -971,4 +978,23 @@ input:checked + .slider:before {
   background: #2980b9;
   transform: translateY(-2px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 验证码按钮倒计时样式 */
+.send-code-btn:disabled {
+  background-color: #95a5a6 !important;
+  cursor: not-allowed;
+}
+
+/* 移动端弹窗优化 */
+@media (max-width: 576px) {
+  .modal-content {
+    width: calc(100% - 30px);
+    margin: 0 15px;
+  }
+  
+  #announcement-modal .modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
 }
