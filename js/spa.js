@@ -568,8 +568,13 @@ function sendVerificationCode(email, type) {
     }
     return response.json();
   })
+  .then(data => {
+    showSuccessMessage('验证码已发送');
+    return data;
+  })
   .catch(error => {
     console.error('验证码发送失败:', error);
+    showErrorMessage(error.message || '发送验证码失败');
     throw error;
   });
 }
@@ -768,6 +773,7 @@ function showAnnouncementModal(id) {
     
     modal.classList.add('show');
     
+    // 修复：添加点击事件监听器到弹窗内的链接
     const pageLinks = modal.querySelectorAll('[data-page]');
     pageLinks.forEach(link => {
       link.addEventListener('click', function(e) {
@@ -781,9 +787,7 @@ function showAnnouncementModal(id) {
           document.body.classList.add('mobile-sidebar-closed');
         }
         
-        if (typeof loadPage === 'function') {
-          loadPage(this.getAttribute('data-page'));
-        }
+        loadPage(this.getAttribute('data-page'));
       });
     });
     
