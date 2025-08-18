@@ -17,6 +17,33 @@ const MUSIC_DATA_URLS = [
   'https://oss.am-all.com.cn/asset/img/main/data/music.json',
 ];
 
+// 获取随机推荐行动
+function getRandomRecommendations() {
+  const luckyActions = [
+    '游玩MASTER难度', '游玩EXPERT难度', '游玩ADVANCE难度', '游玩BASIC难度',
+    '挑战ULTIMA难度', '挑战World\'s End', '进行多人游戏', '练习底力',
+    '尝试全连', '尝试AP', '尝试FC', '尝试游玩新曲', '尝试游玩旧曲',
+    '尝试游玩不同分类', '提升准确率', '游玩长曲', '游玩短曲', '调整速度',
+    '调整延迟', '更换皮肤', '更换打击音效'
+  ];
+  
+  const unluckyActions = [
+    '游玩ULTIMA难度', '游玩MASTER难度', '游玩EXPERT难度', '游玩ADVANCE难度',
+    '游玩BASIC难度', '挑战World\'s End', '进行单人游戏', '过度练习',
+    '尝试AP', '尝试FC', '游玩高BPM曲', '游玩低BPM曲', '游玩多押曲',
+    '游玩纵连曲', '游玩滑键曲', '游玩换手曲', '游玩变速曲', '游玩多动谱面',
+    '游玩高难度谱面', '游玩低难度谱面'
+  ];
+  
+  const randomLucky = luckyActions[Math.floor(Math.random() * luckyActions.length)];
+  const randomUnlucky = unluckyActions[Math.floor(Math.random() * unluckyActions.length)];
+  
+  return {
+    lucky: randomLucky,
+    unlucky: randomUnlucky
+  };
+}
+
 // 显示临时错误消息
 function showTempErrorMessage(element, message, duration = 3000) {
   if (!element) return;
