@@ -17,17 +17,16 @@ const MUSIC_DATA_URLS = [
   'https://oss.am-all.com.cn/asset/img/main/data/music.json',
 ];
 
-// 获取随机推荐行动
+// 获取随机推荐行动（修复重复问题）
 function getRandomRecommendations() {
-  const luckyActions = ['出勤', '家勤', '越级', '下埋', '理论'];
-  const unluckyActions = ['出勤', '家勤', '越级', '下埋', '理论'];
+  const actions = ['出勤', '家勤', '越级', '下埋', '理论'];
   
-  const randomLucky = luckyActions[Math.floor(Math.random() * luckyActions.length)];
-  const randomUnlucky = unluckyActions[Math.floor(Math.random() * unluckyActions.length)];
+  // 打乱数组
+  const shuffled = [...actions].sort(() => Math.random() - 0.5);
   
   return {
-    lucky: randomLucky,
-    unlucky: randomUnlucky
+    lucky: shuffled[0],
+    unlucky: shuffled[1]
   };
 }
 
