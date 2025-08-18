@@ -482,8 +482,20 @@ function handleLogin() {
     loadPage('home');
   })
   .catch(error => {
-    console.error('登录失败:', error);
-    showTempErrorMessage(errorElement, error.message || '登录失败');
+    console.error('登录失败:', {
+      error: error.message,
+      status: error.status,
+      details: error.details
+    });
+    
+    let userMessage = '登录失败';
+    if (error.status === 401) {
+      userMessage = '用户名或密码错误';
+    } else if (error.status === 500) {
+      userMessage = '服务器内部错误，请稍后再试';
+    }
+    
+    showTempErrorMessage(errorElement, userMessage);
   });
 }
 
@@ -1959,13 +1971,19 @@ function secureFetch(url, options = {}) {
   return fetch(url, finalOptions)
     .then(response => {
       if (!response.ok) {
-        return response.json().then(errorData => {
-          const error = new Error(errorData?.error || `请求失败: ${response.status}`);
-          error.status = response.status;
-          throw error;
-        }).catch(() => {
-          const error = new Error(`请求失败: ${response.status} ${response.statusText}`);
-          error.status = response.status;
+        // 处理HTTP错误状态
+        const error = new Error(`请求失败: ${response.status} ${response.statusText}`);
+        error.status = response.status;
+        
+        // 尝试解析错误信息
+        return response.text().then(text => {
+          try {
+            const errorData = JSON.parse(text);
+            error.message = errorData.error || error.message;
+            error.details = errorData.details;
+          } catch (e) {
+            error.message = text || error.message;
+          }
           throw error;
         });
       }
@@ -1974,6 +1992,12 @@ function secureFetch(url, options = {}) {
     })
     .catch(error => {
       console.error('请求处理错误:', error);
+      
+      // 添加特定错误处理
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        error.message = '网络连接失败，请检查网络设置';
+      }
+      
       throw error;
     });
 }
