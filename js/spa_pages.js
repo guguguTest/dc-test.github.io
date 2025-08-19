@@ -1,71 +1,3 @@
-// 公告详细数据
-const announcementsData = [
-  {
-    id: "1",
-    type: "dgr",
-    date: "2025/07/15",
-    title: "OneDrive下载渠道下线通知",
-    preview: "OneDrive下载渠道今日起已正式下线",
-    content: "由于一些原因本人不能再继续使用od账号上传新内容(权限变为只读了)，所以即日起将下架本站所有od下载链接，请知悉。替代渠道正在寻找中。"
-  },
-  {
-    id: "2",
-    type: "notice",
-    date: "2025/07/30",
-    title: "新增“每日运势”功能",
-    preview: "新增“每日运势”功能",
-    content: "可以从侧边栏进入“每日运势”页面，每天可以抽取一次CHUNITHM幸运歌曲和运势签(24h后重置)，来看看你的今日运势吧。(目前此功能在测试中，可能随时会修改或增减功能)"
-  },
-  {
-    id: "3",
-    type: "notice",
-    date: "2025/07/14",
-    title: "EvilLeaker 新下载站开放",
-    preview: "欢迎使用新的下载站",
-    content: "由于旧下载站属于临时页面，为了使用体验以及增加更多功能，所有下载资源已转至本站。另外本站整体还在测试中，如果在使用体验中有任何问题欢迎反馈。"
-  },
-  {
-    id: "4",
-    type: "notice",
-    date: "2025/07/21",
-    title: "AllsUnpacker上线",
-    preview: "实用工具界面新增工具「AllsUnpacker」",
-    content: "实用工具界面新增工具「AllsUnpacker」，此工具用于解包ALLS格式的数据包。请至“实用工具”页面进行下载。"
-  },
-  {
-    id: "5",
-    type: "notice",
-    date: "2025/07/21",
-    title: "Segatools Editor上线",
-    preview: "实用工具界面新增工具「Segatools Editor」",
-    content: "实用工具界面新增工具「Segatools Editor」，此工具仅用于修改segatools.ini的相关设置。请至“实用工具”页面进行下载。"
-  },
-  {
-    id: "6",
-    type: "notice",
-    date: "2025/07/14",
-    title: "新版ChunithmUnlocker上线",
-    preview: "实用工具界面新增工具「Chunlocker」",
-    content: "实用工具界面新增工具「Chunlocker」，此工具相比原先的ChunithmUnlocker使用更加便捷，软件支持多语言与在线更新。请至“实用工具”页面进行下载。"
-  },
-  {
-    id: "7",
-    type: "upd",
-    date: "2025/07/14",
-    title: "CHUNITHM VERSE option更新",
-    preview: "增加新的opt包",
-    content: "新增加 'A163~A191(Verse final)' ,请至下载页面进行下载。"
-  },
-  {
-    id: "8",
-    type: "upd",
-    date: "2025/07/14",
-    title: "maimai DX PRiSM Plus(SDEZ) opt更新",
-    preview: "增加新的opt包。",
-    content: "option数据包新增K021，请至下载页面进行下载"
-  }
-];
-
 // 帮助内容数据
 const helpContentData = {
   1: {
@@ -1152,47 +1084,8 @@ const pages = {
 	  <div class="section">
 		<h1 class="page-title" id="top-page">首页</h1>
 		
-		<!-- 公告栏 -->
-		<div class="announcements-section">
-		  <h2 class="section-title">
-			<i class="fas fa-bullhorn"></i>
-			<span id="announcements-title">最新公告</span>
-		  </h2>
-		  
-		  <div class="announcements-container">
-			<!-- 前四个公告：卡片样式 -->
-			${announcementsData.slice(0, 4).map(item => `
-			  <div class="announcement-card" data-id="${item.id}">
-				<div class="announcement-header">
-				  <span class="badge bg-${item.type === 'dgr' ? 'danger' : item.type === 'upd' ? 'success' : 'info'} announcement-badge" data-type="${item.type}"></span>
-				  <span class="announcement-date">${item.date}</span>
-				</div>
-				<h3 class="announcement-title">${item.title}</h3>
-				<div class="announcement-preview">
-				  <p>${item.preview}</p>
-				</div>
-				<div class="announcement-footer">
-				  <span class="more-link click-detail">查看详情 <i class="fas fa-chevron-right"></i></span>
-				</div>
-			  </div>
-			`).join('')}
-		  </div>
-		  
-		  <!-- 剩下的公告：简易列表样式 -->
-		  <div class="announcements-simple-list">
-			${announcementsData.slice(4).map(item => `
-			  <div class="announcement-simple-item" data-id="${item.id}">
-				<div class="announcement-simple-header">
-				  <span class="badge bg-${item.type === 'dgr' ? 'danger' : item.type === 'upd' ? 'success' : 'info'} announcement-badge" data-type="${item.type}"></span>
-				  <span class="announcement-simple-date">${item.date}</span>
-				  <span class="announcement-simple-title">${item.title}</span>
-				</div>
-			  </div>
-			`).join('')}
-		  </div>
-		</div>
-		
-		<!-- 其他内容 -->
+		<!-- footer -->
+		<hr>
 		<div class="welcome-section mt-5">
 		  <h2 class="section-title">
 			<i class="fas fa-star"></i>
