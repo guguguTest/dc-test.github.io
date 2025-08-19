@@ -74,138 +74,231 @@ const helpContentData = {
 // 页面内容定义
 const pages = {
 
-// 订单录入页面
-'order-entry': `
-  <div class="section">
-    <h1 class="page-title">订单录入</h1>
-    <button class="back-button" data-page="home">
-      <i class="fas fa-arrow-left me-2"></i>
-      <span>返回</span>
-    </button>
-    
-    <div class="order-search-box">
-      <div class="input-group">
-        <input type="text" id="order-search-input" class="form-control" placeholder="搜索订单...">
-        <button class="btn btn-primary" id="order-search-btn">
-          <i class="fas fa-search"></i>
-        </button>
-      </div>
-    </div>
-    
-    <div class="order-actions">
-      <button class="btn btn-success" id="add-order-btn">
-        <i class="fas fa-plus me-2"></i>添加
-      </button>
-      <button class="btn btn-danger" id="delete-order-btn" disabled>
-        <i class="fas fa-trash me-2"></i>删除
-      </button>
-      <button class="btn btn-warning" id="edit-order-btn" disabled>
-        <i class="fas fa-edit me-2"></i>修改
-      </button>
-    </div>
-    
-    <div class="table-responsive">
-      <table class="table table-hover" id="orders-table">
-        <thead>
-          <tr>
-            <th><input type="checkbox" id="select-all"></th>
-            <th>ID</th>
-            <th>淘宝ID</th>
-            <th>商品名称</th>
-            <th>订单号</th>
-            <th>价格(元)</th>
-            <th>兑换状态</th>
-          </tr>
-        </thead>
-        <tbody id="orders-body">
-          <!-- 订单数据将通过JavaScript动态填充 -->
-        </tbody>
-      </table>
-    </div>
-    
-    <div class="pagination-container">
-      <div id="pagination-controls"></div>
-    </div>
-  </div>
-  
-  <!-- 订单编辑模态框 -->
-  <div class="modal" id="order-modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2 id="modal-title">添加订单</h2>
-      <form id="order-form">
-        <input type="hidden" id="order-id">
-        <div class="form-group">
-          <label for="taobao-id">淘宝ID</label>
-          <input type="text" id="taobao-id" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label for="product-name">商品名称</label>
-          <input type="text" id="product-name" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label for="order-number">订单号</label>
-          <input type="text" id="order-number" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label for="price">价格(元)</label>
-          <input type="number" id="price" class="form-control" step="0.01" required>
-        </div>
-        <div class="form-group">
-          <label for="redeemed">兑换状态</label>
-          <select id="redeemed" class="form-control">
-            <option value="0">未兑换</option>
-            <option value="1">已兑换</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary">保存</button>
-      </form>
-    </div>
-  </div>
-`,
+	// 首页
+	home: `
+	  <div class="section">
+		<h1 class="page-title" id="top-page">首页</h1>
+		
+		<!-- 公告区域 -->
+		<div class="announcements-container" id="announcements-container">
+		  <div class="text-center">
+			<div class="spinner-border text-primary" role="status">
+			  <span class="visually-hidden">加载中...</span>
+			</div>
+			<p>公告加载中...</p>
+		  </div>
+		</div>
+		
+		<!-- footer -->
+		<hr>
+		<div class="welcome-section mt-5">
+		  <h2 class="section-title">
+			<i class="fas fa-star"></i>
+			<span>MAY THE LEAKER BE WITH YOU!</span>
+		  </h2>
+		  <p>请从左侧菜单选择功能</p>
+		</div>
+	  </div>
+	`,
 
-// 兑换页面
-'exchange': `
-  <div class="section">
-    <h1 class="page-title">兑换</h1>
-    <button class="back-button" data-page="home">
-      <i class="fas fa-arrow-left me-2"></i>
-      <span>返回</span>
-    </button>
-    
-    <div class="exchange-container">
-      <div class="exchange-card">
-        <h3><i class="fas fa-ticket-alt me-2"></i>兑换码</h3>
-        <p>请输入兑换码进行兑换</p>
-        <div class="input-group">
-          <input type="text" class="form-control" id="exchange-code" disabled>
-          <button class="btn btn-secondary" id="redeem-code-btn" disabled>
-            <i class="fas fa-gift me-2"></i>兑换
-          </button>
-        </div>
-        <div class="exchange-hint">
-          <p>兑换码功能尚未开放</p>
-        </div>
-      </div>
-      
-      <div class="exchange-divider">
-        <span>或</span>
-      </div>
-      
-      <div class="exchange-card">
-        <h3><i class="fas fa-coins me-2"></i>鸽屋积分兑换</h3>
-        <p>请输入淘宝订单号兑换积分</p>
-        <div class="input-group">
-          <input type="text" class="form-control" id="order-number-input">
-          <button class="btn btn-primary" id="redeem-order-btn">
-            <i class="fas fa-exchange-alt me-2"></i>兑换
-          </button>
-        </div>
-        <div class="exchange-result" id="exchange-result"></div>
-      </div>
-    </div>
-  </div>
-`,
+	// 公告管理页面
+	'announcement-admin': `
+	  <div class="section">
+		<h1 class="page-title">公告管理</h1>
+		<button class="back-button" data-page="home">
+		  <i class="fas fa-arrow-left me-2"></i>
+		  <span>返回</span>
+		</button>
+		
+		<div class="announcement-admin-container">
+		  <div class="announcement-admin-actions">
+			<button id="create-announcement-btn" class="btn btn-primary">
+			  <i class="fas fa-plus me-2"></i>新建公告
+			</button>
+		  </div>
+		  
+		  <div class="announcement-editor" id="announcement-editor" style="display: none;">
+			<h3 id="editor-title">新建公告</h3>
+			<div class="form-group">
+			  <label for="announcement-title">标题</label>
+			  <input type="text" id="announcement-title" class="form-control">
+			</div>
+			<div class="form-group">
+			  <label for="announcement-type">类型</label>
+			  <select id="announcement-type" class="form-control">
+				<option value="notice">通知</option>
+				<option value="important">重要</option>
+				<option value="update">更新</option>
+				<option value="top">置顶</option>
+			  </select>
+			</div>
+			<div class="form-group form-check">
+			  <input type="checkbox" id="announcement-pinned" class="form-check-input">
+			  <label for="announcement-pinned" class="form-check-label">置顶公告</label>
+			</div>
+			<div class="form-group">
+			  <label>内容</label>
+			  <div class="editor-toolbar">
+				<button type="button" data-command="bold"><i class="fas fa-bold"></i></button>
+				<button type="button" data-command="italic"><i class="fas fa-italic"></i></button>
+				<button type="button" data-command="underline"><i class="fas fa-underline"></i></button>
+				<button type="button" data-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
+				<button type="button" data-command="insertOrderedList"><i class="fas fa-list-ol"></i></button>
+				<button type="button" data-command="createLink"><i class="fas fa-link"></i></button>
+				<button type="button" data-command="insertImage"><i class="fas fa-image"></i></button>
+			  </div>
+			  <div id="announcement-editor-content" class="editor-content"></div>
+			</div>
+			<div class="form-group">
+			  <button id="save-announcement-btn" class="btn btn-primary">保存</button>
+			  <button id="cancel-announcement-btn" class="btn btn-secondary">取消</button>
+			</div>
+		  </div>
+		  
+		  <div id="admin-announcements-list" class="admin-announcements-list">
+			<div class="text-center">
+			  <div class="spinner-border text-primary" role="status">
+				<span class="visually-hidden">加载中...</span>
+			  </div>
+			  <p>公告加载中...</p>
+			</div>
+		  </div>
+		</div>
+	  </div>
+	`,
+
+	// 订单录入页面
+	'order-entry': `
+	  <div class="section">
+		<h1 class="page-title">订单录入</h1>
+		<button class="back-button" data-page="home">
+		  <i class="fas fa-arrow-left me-2"></i>
+		  <span>返回</span>
+		</button>
+		
+		<div class="order-search-box">
+		  <div class="input-group">
+			<input type="text" id="order-search-input" class="form-control" placeholder="搜索订单...">
+			<button class="btn btn-primary" id="order-search-btn">
+			  <i class="fas fa-search"></i>
+			</button>
+		  </div>
+		</div>
+		
+		<div class="order-actions">
+		  <button class="btn btn-success" id="add-order-btn">
+			<i class="fas fa-plus me-2"></i>添加
+		  </button>
+		  <button class="btn btn-danger" id="delete-order-btn" disabled>
+			<i class="fas fa-trash me-2"></i>删除
+		  </button>
+		  <button class="btn btn-warning" id="edit-order-btn" disabled>
+			<i class="fas fa-edit me-2"></i>修改
+		  </button>
+		</div>
+		
+		<div class="table-responsive">
+		  <table class="table table-hover" id="orders-table">
+			<thead>
+			  <tr>
+				<th><input type="checkbox" id="select-all"></th>
+				<th>ID</th>
+				<th>淘宝ID</th>
+				<th>商品名称</th>
+				<th>订单号</th>
+				<th>价格(元)</th>
+				<th>兑换状态</th>
+			  </tr>
+			</thead>
+			<tbody id="orders-body">
+			  <!-- 订单数据将通过JavaScript动态填充 -->
+			</tbody>
+		  </table>
+		</div>
+		
+		<div class="pagination-container">
+		  <div id="pagination-controls"></div>
+		</div>
+	  </div>
+	  
+	  <!-- 订单编辑模态框 -->
+	  <div class="modal" id="order-modal">
+		<div class="modal-content">
+		  <span class="close">&times;</span>
+		  <h2 id="modal-title">添加订单</h2>
+		  <form id="order-form">
+			<input type="hidden" id="order-id">
+			<div class="form-group">
+			  <label for="taobao-id">淘宝ID</label>
+			  <input type="text" id="taobao-id" class="form-control" required>
+			</div>
+			<div class="form-group">
+			  <label for="product-name">商品名称</label>
+			  <input type="text" id="product-name" class="form-control" required>
+			</div>
+			<div class="form-group">
+			  <label for="order-number">订单号</label>
+			  <input type="text" id="order-number" class="form-control" required>
+			</div>
+			<div class="form-group">
+			  <label for="price">价格(元)</label>
+			  <input type="number" id="price" class="form-control" step="0.01" required>
+			</div>
+			<div class="form-group">
+			  <label for="redeemed">兑换状态</label>
+			  <select id="redeemed" class="form-control">
+				<option value="0">未兑换</option>
+				<option value="1">已兑换</option>
+			  </select>
+			</div>
+			<button type="submit" class="btn btn-primary">保存</button>
+		  </form>
+		</div>
+	  </div>
+	`,
+
+	// 兑换页面
+	'exchange': `
+	  <div class="section">
+		<h1 class="page-title">兑换</h1>
+		<button class="back-button" data-page="home">
+		  <i class="fas fa-arrow-left me-2"></i>
+		  <span>返回</span>
+		</button>
+		
+		<div class="exchange-container">
+		  <div class="exchange-card">
+			<h3><i class="fas fa-ticket-alt me-2"></i>兑换码</h3>
+			<p>请输入兑换码进行兑换</p>
+			<div class="input-group">
+			  <input type="text" class="form-control" id="exchange-code" disabled>
+			  <button class="btn btn-secondary" id="redeem-code-btn" disabled>
+				<i class="fas fa-gift me-2"></i>兑换
+			  </button>
+			</div>
+			<div class="exchange-hint">
+			  <p>兑换码功能尚未开放</p>
+			</div>
+		  </div>
+		  
+		  <div class="exchange-divider">
+			<span>或</span>
+		  </div>
+		  
+		  <div class="exchange-card">
+			<h3><i class="fas fa-coins me-2"></i>鸽屋积分兑换</h3>
+			<p>请输入淘宝订单号兑换积分</p>
+			<div class="input-group">
+			  <input type="text" class="form-control" id="order-number-input">
+			  <button class="btn btn-primary" id="redeem-order-btn">
+				<i class="fas fa-exchange-alt me-2"></i>兑换
+			  </button>
+			</div>
+			<div class="exchange-result" id="exchange-result"></div>
+		  </div>
+		</div>
+	  </div>
+	`,
 
   // 登录页面 - 修改为包含忘记密码链接
   login: `
@@ -1078,23 +1171,6 @@ const pages = {
         </div>
       </div>
     `,
-
-    // 首页
-	home: `
-	  <div class="section">
-		<h1 class="page-title" id="top-page">首页</h1>
-		
-		<!-- footer -->
-		<hr>
-		<div class="welcome-section mt-5">
-		  <h2 class="section-title">
-			<i class="fas fa-star"></i>
-			<span>MAY THE LEAKER BE WITH YOU!</span>
-		  </h2>
-		  <p>请从左侧菜单选择功能</p>
-		</div>
-	  </div>
-	`,
 
     //CHUNITHM 补丁工具主页面
     dllpatcher: `

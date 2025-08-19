@@ -1,0 +1,253 @@
+/* 公告列表样式 */
+.announcements-container {
+  margin-top: 20px;
+}
+
+.announcement-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.announcement-item {
+  border-bottom: 1px solid #eee;
+  padding: 15px;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.announcement-item:hover {
+  background-color: #f8f9fa;
+}
+
+.announcement-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.announcement-type {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.announcement-type.top {
+  background-color: #ff4d4f;
+  color: white;
+}
+
+.announcement-type.important {
+  background-color: #fa8c16;
+  color: white;
+}
+
+.announcement-type.notice {
+  background-color: #1890ff;
+  color: white;
+}
+
+.announcement-type.update {
+  background-color: #52c41a;
+  color: white;
+}
+
+.announcement-title {
+  font-weight: 600;
+  font-size: 16px;
+  margin: 0;
+  flex: 1;
+}
+
+.announcement-date {
+  color: #8c8c8c;
+  font-size: 13px;
+}
+
+.announcement-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* 公告弹窗样式 */
+.announcement-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.announcement-modal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.announcement-modal-content {
+  background-color: #fff;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.announcement-modal-header {
+  background-color: #2c3e50;
+  color: white;
+  padding: 16px 20px;
+  position: relative;
+}
+
+.announcement-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.announcement-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.announcement-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  border-bottom: 1px solid #eee;
+}
+
+.announcement-modal-content html-content {
+  line-height: 1.6;
+}
+
+.announcement-modal-content html-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.announcement-modal-content html-content h1,
+.announcement-modal-content html-content h2,
+.announcement-modal-content html-content h3 {
+  margin-top: 1.2em;
+  margin-bottom: 0.6em;
+}
+
+.announcement-modal-content html-content p {
+  margin-bottom: 1em;
+}
+
+.announcement-modal-footer {
+  padding: 16px 20px;
+  text-align: right;
+  background-color: #f8f9fa;
+}
+
+.announcement-modal-ok {
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.announcement-modal-ok:hover {
+  background-color: #40a9ff;
+}
+
+/* 公告管理页面样式 */
+.announcement-admin-container {
+  margin-top: 20px;
+}
+
+.announcement-admin-actions {
+  margin-bottom: 20px;
+}
+
+.announcement-editor {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.announcement-editor h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.editor-toolbar {
+  margin-bottom: 15px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 5px;
+  background-color: #fafafa;
+}
+
+.editor-toolbar button {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 5px 10px;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.editor-toolbar button:hover {
+  background-color: #e6f7ff;
+  border-color: #91d5ff;
+}
+
+.editor-content {
+  min-height: 200px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .announcement-modal-content {
+    width: 95%;
+    height: 85vh;
+  }
+  
+  .announcement-item {
+    padding: 12px 10px;
+  }
+  
+  .announcement-header {
+    flex-wrap: wrap;
+  }
+  
+  .announcement-title {
+    font-size: 15px;
+    margin-top: 5px;
+    width: 100%;
+  }
+}

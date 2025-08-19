@@ -10,12 +10,16 @@ let currentPage = 1;
 const ordersPerPage = 50;
 
 // 受保护的页面
-const PROTECTED_PAGES = ['tools', 'dllpatcher', 'fortune', 'user-settings', 'order-entry', 'exchange'];
+const PROTECTED_PAGES = ['tools', 'dllpatcher', 'fortune', 'user-settings', 'order-entry', 'exchange', 'announcement-admin'];
 
 // 数据源
 const MUSIC_DATA_URLS = [
   'https://oss.am-all.com.cn/asset/img/main/data/music.json',
 ];
+
+// 公告数据（示例）
+let announcementsData = [];
+let helpContentData = {};
 
 // 获取随机推荐行动（修复重复问题）
 function getRandomRecommendations() {
@@ -504,7 +508,7 @@ function showUserInfo() {
       
       const exchangeItem = document.createElement('a');
       exchangeItem.href = '#';
-      exchangeItem.dataset.page = 'exchange';
+      exchangeItem.dataset page = 'exchange';
       exchangeItem.innerHTML = `
         <i class="fas fa-exchange-alt me-2"></i>
         <span>积分兑换</span>
@@ -514,6 +518,36 @@ function showUserInfo() {
       if (fortuneItem) {
         fortuneItem.parentNode.insertBefore(orderEntryItem, fortuneItem.nextSibling);
         fortuneItem.parentNode.insertBefore(exchangeItem, orderEntryItem.nextSibling);
+      }
+    }
+  }
+  
+  // 为管理员添加公告管理菜单项
+  if (currentUser && currentUser.user_rank >= 5) {
+    // 添加公告管理菜单项
+    if (!document.querySelector('.sidebar-nav a[data-page="announcement-admin"]')) {
+      const adminItem = document.createElement('li');
+      adminItem.innerHTML = `
+        <a href="#" data-page="announcement-admin">
+          <i class="fas fa-bullhorn me-2"></i>
+          <span>公告管理</span>
+        </a>
+      `;
+      
+      // 找到"其他"部分的父元素并添加菜单项
+      const otherSections = document.querySelectorAll('.sidebar-section-title');
+      let otherSection = null;
+      for (let section of otherSections) {
+        if (section.textContent.includes('其他')) {
+          otherSection = section;
+          break;
+        }
+      }
+      if (otherSection) {
+        const nav = otherSection.nextElementSibling;
+        if (nav && nav.classList.contains('sidebar-nav')) {
+          nav.appendChild(adminItem);
+        }
       }
     }
   }
@@ -892,7 +926,8 @@ function showLoginRequired(pageId) {
     'fortune': '每日运势',
     'user-settings': '用户设置',
     'order-entry': '订单录入',
-    'exchange': '积分兑换'
+    'exchange': '积分兑换',
+    'announcement-admin': '公告管理'
   };
   
   const pageName = pageNames[pageId] || '此功能';
@@ -1251,182 +1286,76 @@ function loadPage(pageId) {
         }
       }
       
-if (pageId === 'fortune') {
-  setTimeout(() => {
-    const coverImg = document.getElementById('cover-img');
-    const songIdEl = document.getElementById('song-id');
-    const songCategoryEl = document.getElementById('song-category');
-    const songTitleEl = document.getElementById('song-title');
-    const songArtistEl = document.getElementById('song-artist');
-    const difficultiesContainer = document.querySelector('.difficulties');
-    const fortuneLuckEl = document.getElementById('fortune-luck');
-    const drawBtn = document.getElementById('draw-btn');
-    const fortuneHint = document.getElementById('fortune-hint');
-    const luckyActionEl = document.getElementById('lucky-action');
-    const unluckyActionEl = document.getElementById('unlucky-action');
-    
-    if (coverImg) {
-      if (window.innerWidth <= 768) {
-        coverImg.style.width = '190px';
-        coverImg.style.height = '190px';
-      } else {
-        coverImg.style.width = '';
-        coverImg.style.height = '';
-      }
-    }
-    
-    const luckTexts = ['大凶', '凶', '末吉', '吉', '小吉', '中吉', '大吉', '特大吉'];
-    
-    const lastDrawDate = localStorage.getItem('dailyFortuneDate');
-    const today = new Date().toDateString();
-    const dailyFortuneData = localStorage.getItem('dailyFortuneData');
-    
-    let songList = [];
-    
-    const dummySong = {
-      id: '???',
-      title: '???',
-      artist: '???',
-      catname: '???',
-      lev_bas: '?',
-      lev_adv: '?',
-      lev_exp: '?',
-      lev_mas: '?',
-      lev_ult: '?'
-    };
-    
-    updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-    
-    // 修改为尝试多个数据源
-    const fetchMusicData = async () => {
-      for (const url of MUSIC_DATA_URLS) {
-        try {
-          const response = await fetch(url);
-          if (!response.ok) continue;
-          return await response.json();
-        } catch (e) {
-          console.log(`尝试从 ${url} 加载数据失败`, e);
-          continue;
-        }
-      }
-      throw new Error('所有数据源均不可用');
-    };
-    
-    fetchMusicData()
-      .then(data => {
-        songList = data;
-        
-        if (lastDrawDate === today && dailyFortuneData) {
-          try {
-            const data = JSON.parse(dailyFortuneData);
-            if (data && data.song) {
-              displayFortune(data.song, data.luck, data.recommendations);
-              if (drawBtn) {
-                drawBtn.disabled = true;
-                drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-              }
-              if (fortuneHint) {
-                fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
-              }
-            }
-          } catch (e) {
-            console.error('解析运势数据失败', e);
-            localStorage.removeItem('dailyFortuneDate');
-            localStorage.removeItem('dailyFortuneData');
-            updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-          }
-        }
-      })
-      .catch(error => {
-        console.error('加载歌曲数据失败:', error);
-        if (fortuneHint) {
-          fortuneHint.textContent = '加载歌曲数据失败，使用备用数据';
-        }
-        // 使用本地备用数据
-        songList = [
-          {
-            id: '001',
-            title: '备用歌曲',
-            artist: '系统',
-            catname: 'ORIGINAL',
-            lev_bas: '3',
-            lev_adv: '5',
-            lev_exp: '7',
-            lev_mas: '9',
-            lev_ult: '12'
-          }
-        ];
-        updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-      });
-    
-    if (drawBtn) {
-      drawBtn.addEventListener('click', () => {
-        if (!drawBtn) return;
-        
-        drawBtn.disabled = true;
-        drawBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>抽取中...';
-        if (fortuneHint) fortuneHint.textContent = '';
-        
-        if (coverImg) {
-          coverImg.style.display = 'none';
-          const animationContainer = contentContainer.querySelector('.fortune-animation');
-          const kuji01 = contentContainer.querySelector('#kuji-01');
-          const kuji02 = contentContainer.querySelector('#kuji-02');
-          
-          animationContainer.style.display = 'flex';
-          kuji01.style.display = 'block';
-          kuji01.classList.add('kuji-swing');
-          kuji02.style.display = 'none';
-          kuji02.classList.remove('kuji-fadein');
-        }
-        
+      if (pageId === 'fortune') {
         setTimeout(() => {
-          let scrollCount = 0;
-          const scrollInterval = setInterval(() => {
-            if (songList.length === 0) {
-              clearInterval(scrollInterval);
-              return;
+          const coverImg = document.getElementById('cover-img');
+          const songIdEl = document.getElementById('song-id');
+          const songCategoryEl = document.getElementById('song-category');
+          const songTitleEl = document.getElementById('song-title');
+          const songArtistEl = document.getElementById('song-artist');
+          const difficultiesContainer = document.querySelector('.difficulties');
+          const fortuneLuckEl = document.getElementById('fortune-luck');
+          const drawBtn = document.getElementById('draw-btn');
+          const fortuneHint = document.getElementById('fortune-hint');
+          const luckyActionEl = document.getElementById('lucky-action');
+          const unluckyActionEl = document.getElementById('unlucky-action');
+          
+          if (coverImg) {
+            if (window.innerWidth <= 768) {
+              coverImg.style.width = '190px';
+              coverImg.style.height = '190px';
+            } else {
+              coverImg.style.width = '';
+              coverImg.style.height = '';
             }
-            
-            const tempSong = songList[Math.floor(Math.random() * songList.length)];
-            
-            updateDisplay(tempSong, '???', {lucky: '?', unlucky: '?'});
-            scrollCount++;
-            
-            if (scrollCount > 30) {
-              clearInterval(scrollInterval);
+          }
+          
+          const luckTexts = ['大凶', '凶', '末吉', '吉', '小吉', '中吉', '大吉', '特大吉'];
+          
+          const lastDrawDate = localStorage.getItem('dailyFortuneDate');
+          const today = new Date().toDateString();
+          const dailyFortuneData = localStorage.getItem('dailyFortuneData');
+          
+          let songList = [];
+          
+          const dummySong = {
+            id: '???',
+            title: '???',
+            artist: '???',
+            catname: '???',
+            lev_bas: '?',
+            lev_adv: '?',
+            lev_exp: '?',
+            lev_mas: '?',
+            lev_ult: '?'
+          };
+          
+          updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+          
+          // 修改为尝试多个数据源
+          const fetchMusicData = async () => {
+            for (const url of MUSIC_DATA_URLS) {
+              try {
+                const response = await fetch(url);
+                if (!response.ok) continue;
+                return await response.json();
+              } catch (e) {
+                console.log(`尝试从 ${url} 加载数据失败`, e);
+                continue;
+              }
+            }
+            throw new Error('所有数据源均不可用');
+          };
+          
+          fetchMusicData()
+            .then(data => {
+              songList = data;
               
-              const selectedSong = songList[Math.floor(Math.random() * songList.length)];
-              const luck = luckTexts[Math.floor(Math.random() * luckTexts.length)];
-              const recommendations = getRandomRecommendations();
-              
-              if (coverImg) coverImg.classList.remove('scrolling');
-              
-              setTimeout(() => {
-                const animationContainer = contentContainer.querySelector('.fortune-animation');
-                const kuji01 = contentContainer.querySelector('#kuji-01');
-                const kuji02 = contentContainer.querySelector('#kuji-02');
-                
-                if (animationContainer && kuji01 && kuji02) {
-                  kuji01.classList.remove('kuji-swing');
-                  kuji01.style.display = 'none';
-                  kuji02.style.display = 'block';
-                  kuji02.classList.add('kuji-fadein');
-                  
-                  setTimeout(() => {
-                    animationContainer.style.display = 'none';
-                    if (coverImg) coverImg.style.display = 'block';
-                    
-                    displayFortune(selectedSong, luck, recommendations);
-                    
-                    const today = new Date().toDateString();
-                    localStorage.setItem('dailyFortuneDate', today);
-                    localStorage.setItem('dailyFortuneData', JSON.stringify({
-                      song: selectedSong,
-                      luck: luck,
-                      recommendations: recommendations
-                    }));
-                    
+              if (lastDrawDate === today && dailyFortuneData) {
+                try {
+                  const data = JSON.parse(dailyFortuneData);
+                  if (data && data.song) {
+                    displayFortune(data.song, data.luck, data.recommendations);
                     if (drawBtn) {
                       drawBtn.disabled = true;
                       drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
@@ -1434,17 +1363,143 @@ if (pageId === 'fortune') {
                     if (fortuneHint) {
                       fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
                     }
-                  }, 100);
+                  }
+                } catch (e) {
+                  console.error('解析运势数据失败', e);
+                  localStorage.removeItem('dailyFortuneDate');
+                  localStorage.removeItem('dailyFortuneData');
+                  updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
                 }
-              }, 0);
-            }
-          }, 100);
-        }, 500);
-      });
-    }
-  }, 100);
-}
+              }
+            })
+            .catch(error => {
+              console.error('加载歌曲数据失败:', error);
+              if (fortuneHint) {
+                fortuneHint.textContent = '加载歌曲数据失败，使用备用数据';
+              }
+              // 使用本地备用数据
+              songList = [
+                {
+                  id: '001',
+                  title: '备用歌曲',
+                  artist: '系统',
+                  catname: 'ORIGINAL',
+                  lev_bas: '3',
+                  lev_adv: '5',
+                  lev_exp: '7',
+                  lev_mas: '9',
+                  lev_ult: '12'
+                }
+              ];
+              updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+            });
+          
+          if (drawBtn) {
+            drawBtn.addEventListener('click', () => {
+              if (!drawBtn) return;
+              
+              drawBtn.disabled = true;
+              drawBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>抽取中...';
+              if (fortuneHint) fortuneHint.textContent = '';
+              
+              if (coverImg) {
+                coverImg.style.display = 'none';
+                const animationContainer = contentContainer.querySelector('.fortune-animation');
+                const kuji01 = contentContainer.querySelector('#kuji-01');
+                const kuji02 = contentContainer.querySelector('#kuji-02');
+                
+                animationContainer.style.display = 'flex';
+                kuji01.style.display = 'block';
+                kuji01.classList.add('kuji-swing');
+                kuji02.style.display = 'none';
+                kuji02.classList.remove('kuji-fadein');
+              }
+              
+              setTimeout(() => {
+                let scrollCount = 0;
+                const scrollInterval = setInterval(() => {
+                  if (songList.length === 0) {
+                    clearInterval(scrollInterval);
+                    return;
+                  }
+                  
+                  const tempSong = songList[Math.floor(Math.random() * songList.length)];
+                  
+                  updateDisplay(tempSong, '???', {lucky: '?', unlucky: '?'});
+                  scrollCount++;
+                  
+                  if (scrollCount > 30) {
+                    clearInterval(scrollInterval);
+                    
+                    const selectedSong = songList[Math.floor(Math.random() * songList.length)];
+                    const luck = luckTexts[Math.floor(Math.random() * luckTexts.length)];
+                    const recommendations = getRandomRecommendations();
+                    
+                    if (coverImg) coverImg.classList.remove('scrolling');
+                    
+                    setTimeout(() => {
+                      const animationContainer = contentContainer.querySelector('.fortune-animation');
+                      const kuji01 = contentContainer.querySelector('#kuji-01');
+                      const kuji02 = contentContainer.querySelector('#kuji-02');
+                      
+                      if (animationContainer && kuji01 && kuji02) {
+                        kuji01.classList.remove('kuji-swing');
+                        kuji01.style.display = 'none';
+                        kuji02.style.display = 'block';
+                        kuji02.classList.add('kuji-fadein');
+                        
+                        setTimeout(() => {
+                          animationContainer.style.display = 'none';
+                          if (coverImg) coverImg.style.display = 'block';
+                          
+                          displayFortume(selectedSong, luck, recommendations);
+                          
+                          const today = new Date().toDateString();
+                          localStorage.setItem('dailyFortuneDate', today);
+                          localStorage.setItem('dailyFortuneData', JSON.stringify({
+                            song: selectedSong,
+                            luck: luck,
+                            recommendations: recommendations
+                          }));
+                          
+                          if (drawBtn) {
+                            drawBtn.disabled = true;
+                            drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+                          }
+                          if (fortuneHint) {
+                            fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
+                          }
+                        }, 100);
+                      }
+                    }, 0);
+                  }
+                }, 100);
+              }, 500);
+            });
+          }
+        }, 100);
+      }
       
+      if (pageId === 'home') {
+        // 初始化公告系统
+        if (typeof initAnnouncementSystem === 'function') {
+          setTimeout(initAnnouncementSystem, 100);
+        }
+      }
+
+      // 在公告管理页面的处理部分添加：
+      if (pageId === 'announcement-admin') {
+        // 检查用户权限
+        if (currentUser && currentUser.user_rank >= 5) {
+          // 初始化公告管理系统
+          if (typeof initAnnouncementAdminSystem === 'function') {
+            setTimeout(initAnnouncementAdminSystem, 100);
+          }
+        } else {
+          showLoginRequired('announcement-admin');
+        }
+      }
+
       if (pageId === 'order-entry') {
         initOrderEntryPage();
       }
@@ -1819,7 +1874,7 @@ function renderPagination(pagination) {
     const li = document.createElement('li');
     li.className = `page-item ${i === currentPage ? 'active' : ''}`;
     li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-    li.addEventListener('click', (e) => {
+    li.addEventListener('click', (e) {
       e.preventDefault();
       currentPage = i;
       loadOrders();
