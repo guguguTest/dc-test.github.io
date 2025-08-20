@@ -1607,7 +1607,7 @@ function showErrorMessage(message) {
             <button type="button" class="modal-close">&times;</button>
           </div>
           <div class="modal-body">
-            <p id="modal-content">${message</p>
+            <p id="modal-content">${message}</p>
           </div>
           <div class="modal-footer">
             <button id="modal-ok" class="btn-ok">确定</button>
