@@ -495,7 +495,7 @@ function showUserInfo() {
   if (userInfoMobile) userInfoMobile.style.display = 'block';
   
   // 添加新菜单项（仅对贵宾用户显示）
-  if (currentUser && currentUser.user_rank >= 1) {
+  if (currentUser && currentUser.user_rank >= 4) {
     if (!document.querySelector('.sidebar-nav a[data-page="order-entry"]')) {
       const orderEntryItem = document.createElement('a');
       orderEntryItem.href = '#';
