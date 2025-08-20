@@ -494,29 +494,45 @@ function showUserInfo() {
   if (authLinksMobile) authLinksMobile.style.display = 'none';
   if (userInfoMobile) userInfoMobile.style.display = 'block';
   
-  // 添加新菜单项（仅对贵宾用户显示）
-  if (currentUser && currentUser.user_rank >= 4) {
-    if (!document.querySelector('.sidebar-nav a[data-page="order-entry"]')) {
-      const orderEntryItem = document.createElement('a');
-      orderEntryItem.href = '#';
-      orderEntryItem.dataset.page = 'order-entry';
-      orderEntryItem.innerHTML = `
-        <i class="fas fa-file-invoice me-2"></i>
-        <span>订单录入</span>
-      `;
-      
-      const exchangeItem = document.createElement('a');
-      exchangeItem.href = '#';
-      exchangeItem.dataset.page = 'exchange';
-      exchangeItem.innerHTML = `
-        <i class="fas fa-exchange-alt me-2"></i>
-        <span>积分兑换</span>
-      `;
-      
-      const fortuneItem = document.querySelector('.sidebar-nav a[data-page="fortune"]');
-      if (fortuneItem) {
-        fortuneItem.parentNode.insertBefore(orderEntryItem, fortuneItem.nextSibling);
-        fortuneItem.parentNode.insertBefore(exchangeItem, orderEntryItem.nextSibling);
+  // 添加新菜单项（订单录入需要贵宾用户以上，积分兑换需要初级用户以上）
+  if (currentUser) {
+    // 添加订单录入菜单项（贵宾用户及以上）
+    if (currentUser.user_rank >= 4) {
+      if (!document.querySelector('.sidebar-nav a[data-page="order-entry"]')) {
+        const orderEntryItem = document.createElement('a');
+        orderEntryItem.href = '#';
+        orderEntryItem.dataset.page = 'order-entry';
+        orderEntryItem.innerHTML = `
+          <i class="fas fa-file-invoice me-2"></i>
+          <span>订单录入</span>
+        `;
+
+        const fortuneItem = document.querySelector('.sidebar-nav a[data-page="fortune"]');
+        if (fortuneItem) {
+          fortuneItem.parentNode.insertBefore(orderEntryItem, fortuneItem.nextSibling);
+        }
+      }
+    }
+
+    // 添加积分兑换菜单项（初级用户及以上）
+    if (currentUser.user_rank >= 1) {
+      if (!document.querySelector('.sidebar-nav a[data-page="exchange"]')) {
+        const exchangeItem = document.createElement('a');
+        exchangeItem.href = '#';
+        exchangeItem.dataset.page = 'exchange';
+        exchangeItem.innerHTML = `
+          <i class="fas fa-exchange-alt me-2"></i>
+          <span>积分兑换</span>
+        `;
+
+        // 尝试找到订单录入菜单项，如果存在则插入到订单录入后面，否则插入到运势后面
+        const orderEntryItem = document.querySelector('.sidebar-nav a[data-page="order-entry"]');
+        const fortuneItem = document.querySelector('.sidebar-nav a[data-page="fortune"]');
+        if (orderEntryItem) {
+          orderEntryItem.parentNode.insertBefore(exchangeItem, orderEntryItem.nextSibling);
+        } else if (fortuneItem) {
+          fortuneItem.parentNode.insertBefore(exchangeItem, fortuneItem.nextSibling);
+        }
       }
     }
   }
@@ -1591,7 +1607,7 @@ function showErrorMessage(message) {
             <button type="button" class="modal-close">&times;</button>
           </div>
           <div class="modal-body">
-            <p id="modal-content">${message}</p>
+            <p id="modal-content">${message</p>
           </div>
           <div class="modal-footer">
             <button id="modal-ok" class="btn-ok">确定</button>
