@@ -14,16 +14,18 @@ class AnnouncementSystem {
   }
 
   // 设置事件监听器
-setupEventListeners() {
-  document.addEventListener('click', (e) => {
-    const announcementItem = e.target.closest('.announcement-item, .announcement-card, .announcement-simple-item');
-    if (announcementItem) {
-      const id = announcementItem.dataset.id;
-      if (id) {
-        e.preventDefault();
-        this.showAnnouncementDetail(id);
+  setupEventListeners() {
+    // 使用事件委托来处理动态生成的公告项
+    document.addEventListener('click', (e) => {
+      // 检查点击的是否是公告项或其中的元素
+      const announcementItem = e.target.closest('.announcement-item, .announcement-card, .announcement-simple-item');
+      if (announcementItem) {
+        const id = announcementItem.dataset.id;
+        if (id) {
+          e.preventDefault();
+          this.showAnnouncementDetail(id);
+        }
       }
-    }
 
       // 关闭公告弹窗
       if (e.target.classList.contains('announcement-modal-close') || 
@@ -49,44 +51,44 @@ setupEventListeners() {
   }
 
   // 加载公告列表
-	async loadAnnouncements() {
-	  try {
-		const container = document.getElementById('announcements-container');
-		if (!container) {
-		  console.error('公告容器不存在');
-		  return;
-		}
-		
-		// 显示加载状态
-		container.innerHTML = '<div class="loading-announcements">加载公告中...</div>';
-		
-		const response = await fetch(`https://api.am-all.com.cn/api/announcements?page=${this.currentPage}&limit=10`);
-		
-		if (!response.ok) {
-		  throw new Error(`HTTP错误: ${response.status}`);
-		}
-		
-		const data = await response.json();
-		
-		if (data.error) {
-		  console.error('加载公告失败:', data.error);
-		  container.innerHTML = '<div class="no-announcements">加载公告失败</div>';
-		  return;
-		}
-		
-		this.pinnedAnnouncements = data.pinned || [];
-		this.announcements = data.announcements || [];
-		this.totalPages = data.pagination?.totalPages || 1;
-		
-		this.renderAnnouncements();
-	  } catch (error) {
-		console.error('加载公告失败:', error);
-		const container = document.getElementById('announcements-container');
-		if (container) {
-		  container.innerHTML = '<div class="no-announcements">加载公告失败，请刷新重试</div>';
-		}
-	  }
-	}
+  async loadAnnouncements() {
+    try {
+      const container = document.getElementById('announcements-container');
+      if (!container) {
+        console.error('公告容器不存在');
+        return;
+      }
+      
+      // 显示加载状态
+      container.innerHTML = '<div class="loading-announcements">加载公告中...</div>';
+      
+      const response = await fetch(`https://api.am-all.com.cn/api/announcements?page=${this.currentPage}&limit=10`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP错误: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error('加载公告失败:', data.error);
+        container.innerHTML = '<div class="no-announcements">加载公告失败</div>';
+        return;
+      }
+      
+      this.pinnedAnnouncements = data.pinned || [];
+      this.announcements = data.announcements || [];
+      this.totalPages = data.pagination?.totalPages || 1;
+      
+      this.renderAnnouncements();
+    } catch (error) {
+      console.error('加载公告失败:', error);
+      const container = document.getElementById('announcements-container');
+      if (container) {
+        container.innerHTML = '<div class="no-announcements">加载公告失败，请刷新重试</div>';
+      }
+    }
+  }
 
   // 渲染公告列表
   renderAnnouncements() {
@@ -201,67 +203,68 @@ setupEventListeners() {
     }
   }
 
-// 显示公告弹窗
-showAnnouncementModal(announcement) {
-  // 创建或获取弹窗
-  let modal = document.getElementById('announcement-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'announcement-modal';
-    modal.className = 'announcement-modal';
-    modal.innerHTML = `
-      <div class="announcement-modal-content">
-        <div class="announcement-modal-header">
-          <h3 class="announcement-modal-title"></h3>
-          <button class="announcement-modal-close">&times;</button>
+  // 显示公告弹窗
+  showAnnouncementModal(announcement) {
+    // 创建或获取弹窗
+    let modal = document.getElementById('announcement-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'announcement-modal';
+      modal.className = 'announcement-modal';
+      modal.innerHTML = `
+        <div class="announcement-modal-content">
+          <div class="announcement-modal-header">
+            <h3 class="announcement-modal-title"></h3>
+            <button class="announcement-modal-close">&times;</button>
+          </div>
+          <div class="announcement-modal-body">
+            <div class="announcement-modal-content html-content"></div>
+          </div>
+          <div class="announcement-modal-footer">
+            <button class="announcement-modal-ok">关闭</button>
+          </div>
         </div>
-        <div class="announcement-modal-body">
-          <div class="announcement-modal-content html-content"></div>
-        </div>
-        <div class="announcement-modal-footer">
-          <button class="announcement-modal-ok">关闭</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-    
-    // 添加关闭事件监听
-    modal.querySelector('.announcement-modal-close').addEventListener('click', () => {
-      this.hideAnnouncementModal();
-    });
-    
-    modal.querySelector('.announcement-modal-ok').addEventListener('click', () => {
-      this.hideAnnouncementModal();
-    });
-    
-    // 点击外部关闭
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
+      `;
+      document.body.appendChild(modal);
+      
+      // 添加关闭事件监听
+      modal.querySelector('.announcement-modal-close').addEventListener('click', () => {
         this.hideAnnouncementModal();
-      }
-    });
+      });
+      
+      modal.querySelector('.announcement-modal-ok').addEventListener('click', () => {
+        this.hideAnnouncementModal();
+      });
+      
+      // 点击外部关闭
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.hideAnnouncementModal();
+        }
+      });
+    }
+    
+    // 填充内容
+    const titleElement = modal.querySelector('.announcement-modal-title');
+    const contentElement = modal.querySelector('.announcement-modal-content.html-content');
+    
+    if (titleElement) titleElement.textContent = announcement.title;
+    if (contentElement) contentElement.innerHTML = announcement.content;
+    
+    // 显示弹窗
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // 防止背景滚动
   }
-  
-  // 填充内容
-  const titleElement = modal.querySelector('.announcement-modal-title');
-  const contentElement = modal.querySelector('.announcement-modal-content.html-content');
-  
-  if (titleElement) titleElement.textContent = announcement.title;
-  if (contentElement) contentElement.innerHTML = announcement.content;
-  
-  // 显示弹窗
-  modal.classList.add('show');
-  document.body.style.overflow = 'hidden'; // 防止背景滚动
-}
 
-	// 隐藏公告弹窗
-	hideAnnouncementModal() {
-	  const modal = document.getElementById('announcement-modal');
-	  if (modal) {
-		modal.classList.remove('show');
-		document.body.style.overflow = ''; // 恢复背景滚动
-	  }
-	}
+  // 隐藏公告弹窗
+  hideAnnouncementModal() {
+    const modal = document.getElementById('announcement-modal');
+    if (modal) {
+      modal.classList.remove('show');
+      document.body.style.overflow = ''; // 恢复背景滚动
+    }
+  }
+}
 
 // 公告管理系统（管理员功能）
 class AnnouncementAdminSystem {
@@ -537,12 +540,13 @@ class AnnouncementAdminSystem {
 let announcementSystem = null;
 let announcementAdminSystem = null;
 
+// 确保这些函数被正确导出到全局作用域
 window.initAnnouncementSystem = function() {
   announcementSystem = new AnnouncementSystem();
   announcementSystem.init();
-}
+};
 
 window.initAnnouncementAdminSystem = function() {
   announcementAdminSystem = new AnnouncementAdminSystem();
   announcementAdminSystem.init();
-}
+};

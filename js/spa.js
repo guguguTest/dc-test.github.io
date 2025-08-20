@@ -1482,10 +1482,10 @@ function loadPage(pageId) {
 		if (pageId === 'home') {
 		  // 初始化公告系统
 		  try {
-			if (typeof initAnnouncementSystem === 'function') {
+			if (typeof window.initAnnouncementSystem === 'function') {
 			  setTimeout(() => {
 				try {
-				  initAnnouncementSystem();
+				  window.initAnnouncementSystem();
 				} catch (e) {
 				  console.error('初始化公告系统失败:', e);
 				}
