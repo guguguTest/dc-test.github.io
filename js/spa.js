@@ -19,7 +19,6 @@ const MUSIC_DATA_URLS = [
 
 // 公告数据（示例）
 let announcementsData = [];
-let helpContentData = {};
 
 // 获取随机推荐行动（修复重复问题）
 function getRandomRecommendations() {
@@ -508,7 +507,7 @@ function showUserInfo() {
       
       const exchangeItem = document.createElement('a');
       exchangeItem.href = '#';
-      exchangeItem.dataset page = 'exchange';
+      exchangeItem.dataset.page = 'exchange';
       exchangeItem.innerHTML = `
         <i class="fas fa-exchange-alt me-2"></i>
         <span>积分兑换</span>
@@ -1452,7 +1451,7 @@ function loadPage(pageId) {
                           animationContainer.style.display = 'none';
                           if (coverImg) coverImg.style.display = 'block';
                           
-                          displayFortume(selectedSong, luck, recommendations);
+                          displayFortune(selectedSong, luck, recommendations);
                           
                           const today = new Date().toDateString();
                           localStorage.setItem('dailyFortuneDate', today);
@@ -1480,12 +1479,24 @@ function loadPage(pageId) {
         }, 100);
       }
       
-      if (pageId === 'home') {
-        // 初始化公告系统
-        if (typeof initAnnouncementSystem === 'function') {
-          setTimeout(initAnnouncementSystem, 100);
-        }
-      }
+		if (pageId === 'home') {
+		  // 初始化公告系统
+		  try {
+			if (typeof initAnnouncementSystem === 'function') {
+			  setTimeout(() => {
+				try {
+				  initAnnouncementSystem();
+				} catch (e) {
+				  console.error('初始化公告系统失败:', e);
+				}
+			  }, 100);
+			} else {
+			  console.warn('initAnnouncementSystem 不是函数');
+			}
+		  } catch (e) {
+			console.error('公告系统初始化异常:', e);
+		  }
+		}
 
       // 在公告管理页面的处理部分添加：
       if (pageId === 'announcement-admin') {
@@ -1870,17 +1881,18 @@ function renderPagination(pagination) {
     }
   }
   
-  for (let i = startPage; i <= endPage; i++) {
-    const li = document.createElement('li');
-    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-    li.addEventListener('click', (e) {
-      e.preventDefault();
-      currentPage = i;
-      loadOrders();
-    });
-    ul.appendChild(li);
-  }
+	for (let i = startPage; i <= endPage; i++) {
+	  const li = document.createElement('li');
+	  li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+	  li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+	  li.addEventListener('click', (e) => {
+		e.preventDefault();
+		currentPage = i;
+		loadOrders();
+	  });
+	  
+	  ul.appendChild(li);
+	}
   
   if (endPage < pagination.totalPages) {
     if (endPage < pagination.totalPages - 1) {
@@ -2232,20 +2244,22 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('logout-pc')?.addEventListener('click', handleLogout);
     document.getElementById('logout-mobile')?.addEventListener('click', handleLogout);
     
-    document.body.addEventListener('click', function(e) {
-        const pageLink = e.target.closest('[data-page]');
-        if (pageLink) {
-            e.preventDefault();
-            const pageId = pageLink.getAttribute('data-page');
-            loadPage(pageId);
-            
-            if (window.innerWidth <= 992) {
-                const sidebar = document.querySelector('.sidebar');
-                if (sidebar) sidebar.classList.remove('show');
-                document.body.classList.remove('mobile-sidebar-open');
-                document.body.classList.add('mobile-sidebar-closed');
-            }
-        }
+	document.body.addEventListener('click', function(e) {
+	  // 处理所有带有 data-page 属性的链接
+	  const pageLink = e.target.closest('[data-page]');
+	  if (pageLink) {
+		e.preventDefault();
+		const pageId = pageLink.getAttribute('data-page');
+		loadPage(pageId);
+		
+		if (window.innerWidth <= 992) {
+		  const sidebar = document.querySelector('.sidebar');
+		  if (sidebar) sidebar.classList.remove('show');
+		  document.body.classList.remove('mobile-sidebar-open');
+		  document.body.classList.add('mobile-sidebar-closed');
+		}
+		return;
+	  }
         
         // 修复公告点击事件
         const announcementCard = e.target.closest('.announcement-card, .announcement-simple-item, .announcement-item');
@@ -2356,7 +2370,19 @@ document.addEventListener("DOMContentLoaded", function() {
                     showTempErrorMessage(errorElement, error.error || '密码重置失败');
                 });
         }
-        
+
+		  // 处理外部链接
+		  if (e.target.closest('a[href^="http"]') && !e.target.closest('a[href*="am-all.com.cn"]')) {
+			// 外部链接，允许正常跳转
+			return;
+		  }
+		  
+		  // 阻止其他链接的默认行为
+		  if (e.target.closest('a[href]')) {
+			e.preventDefault();
+			console.log('链接被阻止:', e.target.closest('a[href]').href);
+		  }
+
         const modalClose = e.target.closest('.modal-close, .modal-footer button');
         if (modalClose) {
             const modal = document.querySelector('.modal.show');

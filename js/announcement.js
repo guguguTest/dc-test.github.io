@@ -47,25 +47,44 @@ class AnnouncementSystem {
   }
 
   // 加载公告列表
-  async loadAnnouncements() {
-    try {
-      const response = await fetch(`https://api.am-all.com.cn/api/announcements?page=${this.currentPage}&limit=10`);
-      const data = await response.json();
-      
-      if (data.error) {
-        console.error('加载公告失败:', data.error);
-        return;
-      }
-      
-      this.pinnedAnnouncements = data.pinned || [];
-      this.announcements = data.announcements || [];
-      this.totalPages = data.pagination?.totalPages || 1;
-      
-      this.renderAnnouncements();
-    } catch (error) {
-      console.error('加载公告失败:', error);
-    }
-  }
+	async loadAnnouncements() {
+	  try {
+		const container = document.getElementById('announcements-container');
+		if (!container) {
+		  console.error('公告容器不存在');
+		  return;
+		}
+		
+		// 显示加载状态
+		container.innerHTML = '<div class="loading-announcements">加载公告中...</div>';
+		
+		const response = await fetch(`https://api.am-all.com.cn/api/announcements?page=${this.currentPage}&limit=10`);
+		
+		if (!response.ok) {
+		  throw new Error(`HTTP错误: ${response.status}`);
+		}
+		
+		const data = await response.json();
+		
+		if (data.error) {
+		  console.error('加载公告失败:', data.error);
+		  container.innerHTML = '<div class="no-announcements">加载公告失败</div>';
+		  return;
+		}
+		
+		this.pinnedAnnouncements = data.pinned || [];
+		this.announcements = data.announcements || [];
+		this.totalPages = data.pagination?.totalPages || 1;
+		
+		this.renderAnnouncements();
+	  } catch (error) {
+		console.error('加载公告失败:', error);
+		const container = document.getElementById('announcements-container');
+		if (container) {
+		  container.innerHTML = '<div class="no-announcements">加载公告失败，请刷新重试</div>';
+		}
+	  }
+	}
 
   // 渲染公告列表
   renderAnnouncements() {
@@ -499,12 +518,12 @@ class AnnouncementAdminSystem {
 let announcementSystem = null;
 let announcementAdminSystem = null;
 
-function initAnnouncementSystem() {
+window.initAnnouncementSystem = function() {
   announcementSystem = new AnnouncementSystem();
   announcementSystem.init();
 }
 
-function initAnnouncementAdminSystem() {
+window.initAnnouncementAdminSystem = function() {
   announcementAdminSystem = new AnnouncementAdminSystem();
   announcementAdminSystem.init();
 }
