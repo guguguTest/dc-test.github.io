@@ -14,14 +14,16 @@ class AnnouncementSystem {
   }
 
   // 设置事件监听器
-  setupEventListeners() {
-    // 公告项点击事件
-    document.addEventListener('click', (e) => {
-      const announcementItem = e.target.closest('.announcement-item');
-      if (announcementItem) {
-        const id = announcementItem.dataset.id;
+setupEventListeners() {
+  document.addEventListener('click', (e) => {
+    const announcementItem = e.target.closest('.announcement-item, .announcement-card, .announcement-simple-item');
+    if (announcementItem) {
+      const id = announcementItem.dataset.id;
+      if (id) {
+        e.preventDefault();
         this.showAnnouncementDetail(id);
       }
+    }
 
       // 关闭公告弹窗
       if (e.target.classList.contains('announcement-modal-close') || 
@@ -199,50 +201,67 @@ class AnnouncementSystem {
     }
   }
 
-  // 显示公告弹窗
-  showAnnouncementModal(announcement) {
-    // 创建或获取弹窗
-    let modal = document.getElementById('announcement-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'announcement-modal';
-      modal.className = 'announcement-modal';
-      modal.innerHTML = `
-        <div class="announcement-modal-content">
-          <div class="announcement-modal-header">
-            <h3 class="announcement-modal-title"></h3>
-            <button class="announcement-modal-close">&times;</button>
-          </div>
-          <div class="announcement-modal-body">
-            <div class="announcement-modal-content html-content"></div>
-          </div>
-          <div class="announcement-modal-footer">
-            <button class="announcement-modal-ok">关闭</button>
-          </div>
+// 显示公告弹窗
+showAnnouncementModal(announcement) {
+  // 创建或获取弹窗
+  let modal = document.getElementById('announcement-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'announcement-modal';
+    modal.className = 'announcement-modal';
+    modal.innerHTML = `
+      <div class="announcement-modal-content">
+        <div class="announcement-modal-header">
+          <h3 class="announcement-modal-title"></h3>
+          <button class="announcement-modal-close">&times;</button>
         </div>
-      `;
-      document.body.appendChild(modal);
-    }
+        <div class="announcement-modal-body">
+          <div class="announcement-modal-content html-content"></div>
+        </div>
+        <div class="announcement-modal-footer">
+          <button class="announcement-modal-ok">关闭</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
     
-    // 填充内容
-    const titleElement = modal.querySelector('.announcement-modal-title');
-    const contentElement = modal.querySelector('.announcement-modal-content.html-content');
+    // 添加关闭事件监听
+    modal.querySelector('.announcement-modal-close').addEventListener('click', () => {
+      this.hideAnnouncementModal();
+    });
     
-    if (titleElement) titleElement.textContent = announcement.title;
-    if (contentElement) contentElement.innerHTML = announcement.content;
+    modal.querySelector('.announcement-modal-ok').addEventListener('click', () => {
+      this.hideAnnouncementModal();
+    });
     
-    // 显示弹窗
-    modal.classList.add('show');
+    // 点击外部关闭
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.hideAnnouncementModal();
+      }
+    });
   }
-
-  // 隐藏公告弹窗
-  hideAnnouncementModal() {
-    const modal = document.getElementById('announcement-modal');
-    if (modal) {
-      modal.classList.remove('show');
-    }
-  }
+  
+  // 填充内容
+  const titleElement = modal.querySelector('.announcement-modal-title');
+  const contentElement = modal.querySelector('.announcement-modal-content.html-content');
+  
+  if (titleElement) titleElement.textContent = announcement.title;
+  if (contentElement) contentElement.innerHTML = announcement.content;
+  
+  // 显示弹窗
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden'; // 防止背景滚动
 }
+
+	// 隐藏公告弹窗
+	hideAnnouncementModal() {
+	  const modal = document.getElementById('announcement-modal');
+	  if (modal) {
+		modal.classList.remove('show');
+		document.body.style.overflow = ''; // 恢复背景滚动
+	  }
+	}
 
 // 公告管理系统（管理员功能）
 class AnnouncementAdminSystem {

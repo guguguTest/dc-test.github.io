@@ -2262,6 +2262,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	  }
         
         // 修复公告点击事件
+		/*
         const announcementCard = e.target.closest('.announcement-card, .announcement-simple-item, .announcement-item');
         if (announcementCard) {
             e.preventDefault();
@@ -2269,7 +2270,7 @@ document.addEventListener("DOMContentLoaded", function() {
             if (id) {
                 showAnnouncementModal(id);
             }
-        }
+        }*/
         
         if (e.target.closest('#login-btn')) {
             e.preventDefault();
