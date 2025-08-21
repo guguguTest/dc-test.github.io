@@ -1,6 +1,7 @@
 // download-admin.js - 下载管理功能
 
 let currentDownloads = [];
+const API_BASE_URL = 'https://api.am-all.com.cn'; // 添加API基础URL
 
 // 初始化下载管理页面
 function initDownloadAdminPage() {
@@ -46,7 +47,8 @@ async function loadDownloads() {
       return;
     }
     
-    const response = await fetch('/api/admin/downloads', {
+    // 修改API请求路径
+    const response = await fetch(`${API_BASE_URL}/api/admin/downloads`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -196,10 +198,12 @@ async function saveDownload() {
     let url, method;
     
     if (id) {
-      url = `/api/admin/downloads/${id}`;
+      // 修改API请求路径
+      url = `${API_BASE_URL}/api/admin/downloads/${id}`;
       method = 'PUT';
     } else {
-      url = '/api/admin/downloads';
+      // 修改API请求路径
+      url = `${API_BASE_URL}/api/admin/downloads`;
       method = 'POST';
     }
     
@@ -248,7 +252,8 @@ async function deleteDownload(id) {
     }
     
     const token = localStorage.getItem('token');
-    const response = await fetch(`/api/admin/downloads/${id}`, {
+    // 修改API请求路径
+    const response = await fetch(`${API_BASE_URL}/api/admin/downloads/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`

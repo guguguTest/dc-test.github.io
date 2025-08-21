@@ -1,4 +1,5 @@
 // downloads.js - 动态加载下载内容
+const API_BASE_URL = 'https://api.am-all.com.cn'; // 添加API基础URL
 
 // 初始化下载页面
 function initDownloadPage() {
@@ -15,7 +16,8 @@ async function loadDownloadContent() {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const response = await fetch('/api/downloads', {
+    // 修改API请求路径
+    const response = await fetch(`${API_BASE_URL}/api/downloads`, {
       headers: headers
     });
     
@@ -115,7 +117,8 @@ async function loadDownloadDetail(downloadId) {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const response = await fetch(`/api/downloads/${downloadId}`, {
+    // 修改API请求路径
+    const response = await fetch(`${API_BASE_URL}/api/downloads/${downloadId}`, {
       headers: headers
     });
     
