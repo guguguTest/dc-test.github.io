@@ -315,37 +315,7 @@ class AnnouncementAdminSystem {
     if (editor) {
       // 设置为可编辑
       editor.contentEditable = true;
-      
-      // 修复：为编辑器工具栏按钮添加事件处理
-      this.setupEditorToolbar();
     }
-  }
-  
-  // 修复：设置编辑器工具栏按钮事件
-  setupEditorToolbar() {
-    const toolbarButtons = document.querySelectorAll('.editor-toolbar button');
-    toolbarButtons.forEach(button => {
-      button.addEventListener('click', (e) => {
-        e.preventDefault();
-        const command = button.getAttribute('data-command');
-        const value = button.getAttribute('data-value') || null;
-        
-        if (command) {
-          // 特殊处理链接和图片命令
-          if (command === 'createLink' || command === 'insertImage') {
-            const url = prompt('请输入URL:', 'https://');
-            if (url) {
-              document.execCommand(command, false, url);
-            }
-          } else {
-            document.execCommand(command, false, value);
-          }
-          
-          // 聚焦回编辑器
-          document.getElementById('announcement-editor-content').focus();
-        }
-      });
-    });
   }
 
   // 加载公告列表
@@ -383,7 +353,6 @@ class AnnouncementAdminSystem {
       const typeText = this.getTypeText(announcement.type);
       const pinnedIcon = announcement.is_pinned ? '<i class="fas fa-thumbtack"></i> ' : '';
       
-      // 修复：为编辑和删除按钮添加正确的样式类
       html += `
         <div class="admin-announcement-item" data-id="${announcement.id}">
           <div class="admin-announcement-header">
@@ -392,8 +361,8 @@ class AnnouncementAdminSystem {
             <span class="admin-announcement-date">${date}</span>
           </div>
           <div class="admin-announcement-actions">
-            <button class="btn btn-sm btn-outline-primary me-2 btn-edit" data-id="${announcement.id}">编辑</button>
-            <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${announcement.id}">删除</button>
+            <button class="btn-edit" data-id="${announcement.id}">编辑</button>
+            <button class="btn-delete" data-id="${announcement.id}">删除</button>
           </div>
         </div>
       `;
