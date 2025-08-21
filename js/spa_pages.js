@@ -510,7 +510,7 @@ download: `
 	  </div>
 	`,
 
-  // 登录页面 - 修改为包含忘记密码链接
+  // 登录页面
   login: `
     <div class="auth-container">
       <h1 class="page-title">登录</h1>
@@ -537,7 +537,7 @@ download: `
     </div>
   `,
 
-  // 注册页面 - 修改为包含验证码输入
+  // 注册页面
 	register: `
 	  <div class="auth-container">
 		<h1 class="page-title">注册</h1>
@@ -585,7 +585,7 @@ download: `
 	  </div>
 	`,
 
-  // 新增忘记密码页面
+  // 忘记密码页面
   'forgot-password': `
     <div class="auth-container">
       <h1 class="page-title">找回密码</h1>
@@ -611,7 +611,7 @@ download: `
     </div>
   `,
 
-  // 新增重置密码页面
+  // 重置密码页面
   'reset-password': `
     <div class="auth-container">
       <h1 class="page-title">重置密码</h1>

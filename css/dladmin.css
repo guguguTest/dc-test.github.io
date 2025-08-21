@@ -33,23 +33,6 @@
   margin-right: 0;
 }
 
-/* 模态框样式 */
-#download-modal .modal-content {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-#download-modal .close {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  font-size: 24px;
-  cursor: pointer;
-}
-
 #download-form .form-row {
   margin-bottom: 15px;
 }
