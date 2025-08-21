@@ -1,5 +1,7 @@
 // downloads.js - 动态加载下载内容
-const API_BASE_URL = 'https://api.am-all.com.cn'; // 添加API基础URL
+if (typeof window.API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = 'https://api.am-all.com.cn';
+}
 
 // 初始化下载页面
 function initDownloadPage() {
@@ -9,6 +11,7 @@ function initDownloadPage() {
 // 加载下载内容
 async function loadDownloadContent() {
   try {
+    console.log('开始加载下载内容...');
     const token = localStorage.getItem('token');
     const headers = {};
     
@@ -16,16 +19,19 @@ async function loadDownloadContent() {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    // 修改API请求路径
-    const response = await fetch(`${API_BASE_URL}/api/downloads`, {
+    const response = await fetch(`${window.API_BASE_URL}/api/downloads`, {
       headers: headers
     });
     
+    console.log('下载内容响应状态:', response.status);
+    
     if (!response.ok) {
-      throw new Error('获取下载内容失败');
+      throw new Error(`获取下载内容失败: ${response.status} ${response.statusText}`);
     }
     
     const downloads = await response.json();
+    console.log('下载内容数据:', downloads);
+    
     renderDownloadContent(downloads);
   } catch (error) {
     console.error('加载下载内容错误:', error);
@@ -35,10 +41,14 @@ async function loadDownloadContent() {
 
 // 渲染下载内容
 function renderDownloadContent(downloads) {
+  console.log('开始渲染下载内容，数量:', downloads.length);
+  
   // 按分类分组
   const gameDownloads = downloads.filter(d => d.category === 'game');
   const archiveDownloads = downloads.filter(d => d.category === 'archive');
   const otherDownloads = downloads.filter(d => d.category === 'other');
+  
+  console.log('游戏下载:', gameDownloads.length, '存档下载:', archiveDownloads.length, '其他:', otherDownloads.length);
   
   // 渲染游戏下载
   renderDownloadSection('game-downloads', gameDownloads, 'game-last-update');
@@ -53,12 +63,16 @@ function renderDownloadContent(downloads) {
 // 渲染下载部分
 function renderDownloadSection(containerId, downloads, lastUpdateId) {
   const container = document.getElementById(containerId);
-  if (!container) return;
+  if (!container) {
+    console.error('容器不存在:', containerId);
+    return;
+  }
   
   container.innerHTML = '';
   
   if (downloads.length === 0) {
     container.innerHTML = '<p>暂无内容</p>';
+    console.log('没有内容用于:', containerId);
     return;
   }
   
@@ -71,7 +85,10 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
   
   // 更新最后更新时间显示
   if (lastUpdate > new Date(0)) {
-    document.getElementById(lastUpdateId).textContent = lastUpdate.toLocaleDateString('zh-CN');
+    const lastUpdateElement = document.getElementById(lastUpdateId);
+    if (lastUpdateElement) {
+      lastUpdateElement.textContent = lastUpdate.toLocaleDateString('zh-CN');
+    }
   }
   
   // 创建表格
@@ -105,11 +122,14 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
       loadDownloadDetail(downloadId);
     });
   });
+  
+  console.log('渲染完成:', containerId, '项目数:', downloads.length);
 }
 
 // 加载下载详情
 async function loadDownloadDetail(downloadId) {
   try {
+    console.log('加载下载详情:', downloadId);
     const token = localStorage.getItem('token');
     const headers = {};
     
@@ -117,16 +137,19 @@ async function loadDownloadDetail(downloadId) {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    // 修改API请求路径
-    const response = await fetch(`${API_BASE_URL}/api/downloads/${downloadId}`, {
+    const response = await fetch(`${window.API_BASE_URL}/api/downloads/${downloadId}`, {
       headers: headers
     });
+    
+    console.log('下载详情响应状态:', response.status);
     
     if (!response.ok) {
       throw new Error('获取下载详情失败');
     }
     
     const download = await response.json();
+    console.log('下载详情数据:', download);
+    
     renderDownloadDetail(download);
   } catch (error) {
     console.error('加载下载详情错误:', error);
@@ -136,6 +159,8 @@ async function loadDownloadDetail(downloadId) {
 
 // 渲染下载详情
 function renderDownloadDetail(download) {
+  console.log('渲染下载详情:', download.title);
+  
   // 切换到下载详情页面
   loadPage('download-detail');
   

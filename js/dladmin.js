@@ -1,7 +1,10 @@
 // download-admin.js - 下载管理功能
+if (typeof window.API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = 'https://api.am-all.com.cn';
+}
 
 let currentDownloads = [];
-const API_BASE_URL = 'https://api.am-all.com.cn'; // 添加API基础URL
+let isSaving = false;
 
 // 初始化下载管理页面
 function initDownloadAdminPage() {
@@ -47,8 +50,7 @@ async function loadDownloads() {
       return;
     }
     
-    // 修改API请求路径
-    const response = await fetch(`${API_BASE_URL}/api/admin/downloads`, {
+    const response = await fetch(`${window.API_BASE_URL}/api/admin/downloads`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -59,6 +61,7 @@ async function loadDownloads() {
     }
     
     currentDownloads = await response.json();
+    console.log('下载管理数据加载成功:', currentDownloads.length, '条记录');
     renderDownloads(currentDownloads);
   } catch (error) {
     console.error('加载下载项目错误:', error);
@@ -172,7 +175,19 @@ function closeDownloadModal() {
 
 // 保存下载项目
 async function saveDownload() {
+  if (isSaving) {
+    console.log('正在保存中，请勿重复提交');
+    return;
+  }
+  
   try {
+    isSaving = true;
+    const saveBtn = document.querySelector('#download-form button[type="submit"]');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
+    }
+    
     const form = document.getElementById('download-form');
     if (!form) return;
     
@@ -189,6 +204,8 @@ async function saveDownload() {
     const image_url = document.getElementById('download-image-url').value;
     const is_active = document.getElementById('download-status').value === '1';
     
+    console.log('保存下载项目:', { id, title, page_id });
+    
     if (!title || !category || !page_id) {
       showErrorMessage('标题、分类和页面ID不能为空');
       return;
@@ -198,12 +215,10 @@ async function saveDownload() {
     let url, method;
     
     if (id) {
-      // 修改API请求路径
-      url = `${API_BASE_URL}/api/admin/downloads/${id}`;
+      url = `${window.API_BASE_URL}/api/admin/downloads/${id}`;
       method = 'PUT';
     } else {
-      // 修改API请求路径
-      url = `${API_BASE_URL}/api/admin/downloads`;
+      url = `${window.API_BASE_URL}/api/admin/downloads`;
       method = 'POST';
     }
     
@@ -239,6 +254,13 @@ async function saveDownload() {
   } catch (error) {
     console.error('保存下载项目错误:', error);
     showErrorMessage(`保存下载项目失败: ${error.message}`);
+  } finally {
+    isSaving = false;
+    const saveBtn = document.querySelector('#download-form button[type="submit"]');
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '保存';
+    }
   }
 }
 
@@ -252,8 +274,7 @@ async function deleteDownload(id) {
     }
     
     const token = localStorage.getItem('token');
-    // 修改API请求路径
-    const response = await fetch(`${API_BASE_URL}/api/admin/downloads/${id}`, {
+    const response = await fetch(`${window.API_BASE_URL}/api/admin/downloads/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
