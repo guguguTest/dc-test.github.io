@@ -537,39 +537,46 @@ function showUserInfo() {
     }
   }
   
-  // 为管理员添加公告管理菜单项
-  if (currentUser && currentUser.user_rank >= 5) {
-    // 添加公告管理菜单项
-    if (!document.querySelector('.sidebar-nav a[data-page="announcement-admin"]')) {
-      const adminItem = document.createElement('li');
-      adminItem.innerHTML = `
-        <a href="#" data-page="announcement-admin">
-          <i class="fas fa-bullhorn me-2"></i>
-          <span>公告管理</span>
-        </a>
-      `;
-      
-      // 找到"其他"部分的父元素并添加菜单项
-      const otherSections = document.querySelectorAll('.sidebar-section-title');
-      let otherSection = null;
-      for (let section of otherSections) {
-        if (section.textContent.includes('其他')) {
-          otherSection = section;
-          break;
-        }
-      }
-      if (otherSection) {
-        const nav = otherSection.nextElementSibling;
-        if (nav && nav.classList.contains('sidebar-nav')) {
-          // 检查是否已存在下载管理项
-          if (!nav.querySelector('a[data-page="download-admin"]')) {
-            nav.appendChild(adminItem);
-          }
-        }
+	// 为管理员添加公告管理和下载管理菜单项
+	if (currentUser && currentUser.user_rank >= 5) {
+	  // 添加公告管理菜单项
+	  if (!document.querySelector('.sidebar-nav a[data-page="announcement-admin"]')) {
+		const adminItem = document.createElement('li');
+		adminItem.innerHTML = `
+		  <a href="#" data-page="announcement-admin">
+			<i class="fas fa-bullhorn me-2"></i>
+			<span>公告管理</span>
+		  </a>
+		`;
+		
+		// 添加下载管理菜单项
+		const downloadAdminItem = document.createElement('li');
+		downloadAdminItem.innerHTML = `
+		  <a href="#" data-page="download-admin">
+			<i class="fas fa-download me-2"></i>
+			<span>下载管理</span>
+		  </a>
+		`;
+		
+		// 找到"其他"部分的父元素并添加菜单项
+		const otherSections = document.querySelectorAll('.sidebar-section-title');
+		let otherSection = null;
+		for (let section of otherSections) {
+		  if (section.textContent.includes('其他')) {
+			otherSection = section;
+			break;
+		  }
+		}
+		if (otherSection) {
+		  const nav = otherSection.nextElementSibling;
+		  if (nav && nav.classList.contains('sidebar-nav')) {
+			nav.appendChild(adminItem);
+			nav.appendChild(downloadAdminItem);
+		  }
+		}
 	  }
-    }
+	}
   }
-}
 
 // 显示登录/注册链接
 function showAuthLinks() {
@@ -1305,8 +1312,18 @@ function loadPage(pageId) {
       }
 
 		if (pageId === 'download') {
+		  // 普通下载页面
 		  if (typeof initDownloadPage === 'function') {
 			setTimeout(initDownloadPage, 100);
+		  }
+		} else if (pageId === 'download-admin') {
+		  // 下载管理页面 - 需要管理员权限
+		  if (currentUser && currentUser.user_rank >= 5) {
+			if (typeof initDownloadAdminPage === 'function') {
+			  setTimeout(initDownloadAdminPage, 100);
+			}
+		  } else {
+			showLoginRequired('download-admin');
 		  }
 		}
 

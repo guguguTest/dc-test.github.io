@@ -8,7 +8,16 @@ function initDownloadPage() {
 // 加载下载内容
 async function loadDownloadContent() {
   try {
-    const response = await fetch('/api/downloads');
+    const token = localStorage.getItem('token');
+    const headers = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    const response = await fetch('/api/downloads', {
+      headers: headers
+    });
     
     if (!response.ok) {
       throw new Error('获取下载内容失败');
@@ -99,7 +108,16 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
 // 加载下载详情
 async function loadDownloadDetail(downloadId) {
   try {
-    const response = await fetch(`/api/downloads/page/${downloadId}`);
+    const token = localStorage.getItem('token');
+    const headers = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    const response = await fetch(`/api/downloads/${downloadId}`, {
+      headers: headers
+    });
     
     if (!response.ok) {
       throw new Error('获取下载详情失败');
