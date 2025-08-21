@@ -101,6 +101,216 @@ const pages = {
 	  </div>
 	`,
 
+// 下载页面
+download: `
+  <h1 class="page-title" id="download-heading">下载中心</h1>
+  <div class="section">
+    <h2 class="section-title">
+      <i class="fas fa-gamepad"></i>
+      <span id="game-heading">游戏下载</span>
+    </h2>
+    <div class="warning">
+      <strong><i class="fas fa-exclamation-circle me-2"></i> <span id="warning-text">重要提示：</span></strong>
+      <span id="warning-detail">OneDrive下载渠道已下线</span>
+    </div>
+    <p class="mb-4"><strong><span id="latest-update-text">最后更新</span>: <span id="game-last-update"></span></strong></p>
+    <div class="table-container" id="game-downloads">
+      <!-- 游戏下载内容将通过JavaScript动态填充 -->
+    </div>
+  </div>
+  
+  <div class="section">
+    <h2 class="section-title">
+      <i class="fas fa-archive"></i>
+      <span id="archive-heading">存档下载</span>
+    </h2>
+    <p class="mb-4"><strong><span id="latest-update-text-archive">最后更新</span>: <span id="archive-last-update"></span></strong></p>
+    <div class="table-container" id="archive-downloads">
+      <!-- 存档下载内容将通过JavaScript动态填充 -->
+    </div>
+  </div>
+  
+  <div class="section">
+    <h2 class="section-title">
+      <i class="fas fa-folder-plus"></i>
+      <span id="other-heading">其他资源</span>
+    </h2>
+    <p class="mb-4"><strong><span id="latest-update-text-other">最后更新</span>: <span id="other-last-update"></span></strong></p>
+    <div class="table-container" id="other-downloads">
+      <!-- 其他资源内容将通过JavaScript动态填充 -->
+    </div>
+    <div class="warning mt-4">
+      <strong><i class="fas fa-info-circle me-2"></i> <span id="download-info-text">下载说明：</span></strong>
+      <span id="download-info-detail">目前本站全部资源仅提供「百度网盘」作为下载方式</span>
+    </div>
+  </div>
+  
+  <footer>
+    <p>SEGAY FEIWU</p>
+    <p>1145141919810</p>
+  </footer>
+`,
+
+// 通用下载详情页面
+'download-detail': `
+  <div class="game-detail">
+    <h1 class="page-title" id="detail-title">下载详情</h1>
+    <button class="back-button" data-page="download">
+      <i class="fas fa-arrow-left me-2"></i>
+      <span id="back-to-download">返回下载中心</span>
+    </button>
+    
+    <div class="section">
+      <h2 class="section-title">
+        <i class="fas fa-download"></i>
+        <span id="download-list-title">下载列表</span>
+      </h2>
+      
+      <div class="mb-4">
+        <p><span id="last-update-label">最后更新</span>: <span id="detail-last-update"></span></p>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <td id="download-method">下载方式</td>
+                <td id="file-count">文件数</td>
+                <td id="access-code">提取码/访问密码</td>
+                <td id="validity">资源有效期</td>
+              </tr>
+            </thead>
+            <tbody id="detail-download-info">
+              <!-- 下载信息将通过JavaScript动态填充 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <p>SEGAY FEIWU</p>
+      <p>1145141919810</p>
+    </footer>
+  </div>
+`,
+
+// 下载管理页面
+'download-admin': `
+  <div class="section">
+    <h1 class="page-title">下载管理</h1>
+    <button class="back-button" data-page="home">
+      <i class="fas fa-arrow-left me-2"></i>
+      <span>返回</span>
+    </button>
+    
+    <div class="admin-actions mb-4">
+      <button id="create-download-btn" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>新建下载项目
+      </button>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table table-hover" id="downloads-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>标题</th>
+            <th>分类</th>
+            <th>页面ID</th>
+            <th>版本</th>
+            <th>文件数</th>
+            <th>最后更新</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="downloads-body">
+          <!-- 下载项目数据将通过JavaScript动态填充 -->
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- 下载项目编辑模态框 -->
+    <div class="modal" id="download-modal">
+      <div class="modal-content" style="max-width: 800px;">
+        <span class="close">&times;</span>
+        <h2 id="modal-title">新建下载项目</h2>
+        <form id="download-form">
+          <input type="hidden" id="download-id">
+          
+          <div class="form-row">
+            <div class="form-group col-md-8">
+              <label for="download-title">标题</label>
+              <input type="text" id="download-title" class="form-control" required>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="download-category">分类</label>
+              <select id="download-category" class="form-control" required>
+                <option value="game">游戏下载</option>
+                <option value="archive">存档下载</option>
+                <option value="other">其他资源</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="download-page-id">页面ID</label>
+              <input type="text" id="download-page-id" class="form-control" required>
+              <small class="form-text text-muted">用于URL的唯一标识符（英文、数字、短横线）</small>
+            </div>
+            <div class="form-group col-md-6">
+              <label for="download-status">状态</label>
+              <select id="download-status" class="form-control">
+                <option value="1">激活</option>
+                <option value="0">禁用</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label for="download-version">版本</label>
+              <input type="text" id="download-version" class="form-control">
+            </div>
+            <div class="form-group col-md-4">
+              <label for="download-file-count">文件数</label>
+              <input type="number" id="download-file-count" class="form-control" min="0">
+            </div>
+            <div class="form-group col-md-4">
+              <label for="download-last-update">最后更新</label>
+              <input type="date" id="download-last-update" class="form-control">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="download-baidu-url">百度网盘链接</label>
+              <input type="url" id="download-baidu-url" class="form-control">
+            </div>
+            <div class="form-group col-md-6">
+              <label for="download-baidu-code">提取码</label>
+              <input type="text" id="download-baidu-code" class="form-control">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="download-image-url">图片URL</label>
+            <input type="url" id="download-image-url" class="form-control">
+          </div>
+          
+          <div class="form-group">
+            <label for="download-description">描述</label>
+            <textarea id="download-description" class="form-control" rows="3"></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn-primary">保存</button>
+          <button type="button" class="btn btn-secondary" id="cancel-download-btn">取消</button>
+        </form>
+      </div>
+    </div>
+  </div>
+`,
+
 	// 公告管理页面
 	'announcement-admin': `
 	  <div class="section">
@@ -624,353 +834,6 @@ const pages = {
             <!-- 内容将根据主题动态加载 -->
           </div>
         </div>
-      </div>
-    `,
-	
-	// 下载页
-    download: `
-      <h1 class="page-title" id="download-heading">下载中心</h1>
-      <div class="section">
-        <h2 class="section-title">
-          <i class="fas fa-gamepad"></i>
-          <span id="game-heading">游戏下载</span>
-        </h2>
-        <div class="warning">
-          <strong><i class="fas fa-exclamation-circle me-2"></i> <span id="warning-text">重要提示：</span></strong>
-          <span id="warning-detail">OneDrive下载渠道已下线</span>
-        </div>
-        <p class="mb-4"><strong><span id="latest-update-text">最后更新</span>: 2025/07/15</strong></p>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th id="game-title">游戏名称</th>
-                <th id="game-version">版本</th>
-                <th id="game-files">文件数</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><a href="#" data-page="sdhd"><i class="fas fa-link me-2"></i> CHUNITHM VERSE (SDHD)</a></td>
-                <td>2.30</td>
-                <td>7</td>
-              </tr>
-              <tr>
-                <td><a href="#" data-page="sdez"><i class="fas fa-link me-2"></i> maimai DX PRiSM PLUS (SDEZ)</a></td>
-                <td>1.56</td>
-                <td>14</td>
-              </tr>
-              <tr>
-                <td><a href="#" data-page="sddt"><i class="fas fa-link me-2"></i> O.N.G.E.K.I Re:Fresh</a></td>
-                <td>1.50</td>
-                <td>3</td>
-              </tr>
-              <tr>
-                <td><a href="#" data-page="sded"><i class="fas fa-link me-2"></i> CARD MAKER</a></td>
-                <td>1.39</td>
-                <td>3</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      
-      <div class="section">
-        <h2 class="section-title">
-          <i class="fas fa-archive"></i>
-          <span id="archive-heading">存档下载</span>
-        </h2>
-        <p class="mb-4"><strong><span id="latest-update-text-archive">最后更新</span>: 2025/03/02</strong></p>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th id="archive-title">游戏名称</th>
-                <th id="archive-filetype">文件格式</th>
-                <th id="archive-version">版本</th>
-                <th id="archive-files">文件数</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><a href="#" data-page="sdbt"><i class="fas fa-link me-2"></i> CHUNITHM (SDBT)</a></td>
-                <td>vhd</td>
-                <td>1.00~1.51</td>
-                <td>11</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      
-      <div class="section">
-        <h2 class="section-title">
-          <i class="fas fa-folder-plus"></i>
-          <span id="other-heading">其他资源</span>
-        </h2>
-        <p class="mb-4"><strong><span id="latest-update-text-other">最后更新</span>: 2024/12/16</strong></p>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th id="other-title">资源名称</th>
-                <th id="other-filetype">文件格式</th>
-                <th id="other-files">文件数</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>NONE</td>
-                <td>N/A</td>
-                <td>N/A</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="warning mt-4">
-          <strong><i class="fas fa-info-circle me-2"></i> <span id="download-info-text">下载说明：</span></strong>
-          <span id="download-info-detail">目前本站全部资源仅提供「百度网盘」作为下载方式</span>
-        </div>
-      </div>
-      
-      <footer>
-        <p>SEGAY FEIWU</p>
-        <p>1145141919810</p>
-      </footer>
-    `,
-    
-    // Chusan
-    sdhd: `
-      <div class="game-detail">
-        <h1 class="page-title">CHUNITHM VERSE</h1>
-        <button class="back-button" data-page="download">
-          <i class="fas fa-arrow-left me-2"></i>
-          <span id="back-to-home">返回</span>
-        </button>
-        
-        <div class="section">
-          <h2 class="section-title">
-            <i class="fas fa-download"></i>
-            <span id="download-list-title">下载列表</span>
-          </h2>
-          
-          <div class="mb-4">
-            <p><span id="last-update-label">最后更新</span>: 2025/07/15</p>
-            <div class="table-container">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <td id="download-method">下载方式</td>
-                    <td id="file-count">文件数</td>
-                    <td id="access-code">提取码/访问密码</td>
-                    <td id="validity">资源有效期</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th><a href="https://pan.baidu.com/s/1lblVy58yMv5r-5vJXr55Hg" target="_blank">百度网盘</a></th>
-                    <td>7</td>
-                    <td>vrse</td>
-                    <td id="unlimited">无期限</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        
-        <footer>
-          <p>SEGAY FEIWU</p>
-          <p>1145141919810</p>
-        </footer>
-      </div>
-    `,
-    
-    // maimai DX
-    sdez: `
-      <div class="game-detail">
-        <h1 class="page-title">maimai DX PRiSM Plus</h1>
-        <button class="back-button" data-page="download">
-          <i class="fas fa-arrow-left me-2"></i>
-          <span id="back-to-home">返回</span>
-        </button>
-        
-        <div class="section">
-          <h2 class="section-title">
-            <i class="fas fa-download"></i>
-            <span id="download-list-title">下载列表</span>
-          </h2>
-          
-          <div class="mb-4">
-            <p><span id="last-update-label">最后更新</span>: 2025/07/15</p>
-            <div class="table-container">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <td id="download-method">下载方式</td>
-                    <td id="file-count">文件数</td>
-                    <td id="access-code">提取码/访问密码</td>
-                    <td id="validity">资源有效期</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th><a href="https://pan.baidu.com/s/1PZ063rVUacNHkA6Z50mAdg" target="_blank">百度网盘</a></th>
-                    <td>15</td>
-                    <td>sdez</td>
-                    <td id="unlimited">无期限</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        
-        <footer>
-          <p>SEGAY FEIWU</p>
-          <p>1145141919810</p>
-        </footer>
-      </div>
-    `,
-
-    // ongeki
-    sddt: `
-      <div class="game-detail">
-        <h1 class="page-title">O.N.G.E.K.I Re:Fresh</h1>
-        <button class="back-button" data-page="download">
-          <i class="fas fa-arrow-left me-2"></i>
-          <span id="back-to-home">返回</span>
-        </button>
-        
-        <div class="section">
-          <h2 class="section-title">
-            <i class="fas fa-download"></i>
-            <span id="download-list-title">下载列表</span>
-          </h2>
-          
-          <div class="mb-4">
-            <p><span id="last-update-label">最后更新</span>: 2025/03/28</p>
-            <div class="table-container">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <td id="download-method">下载方式</td>
-                    <td id="file-count">文件数</td>
-                    <td id="access-code">提取码/访问密码</td>
-                    <td id="validity">资源有效期</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th><a href="https://pan.baidu.com/s/1zjY3OAwxdtK5K3G2c2QgnQ" target="_blank">百度网盘</a></th>
-                    <td>3</td>
-                    <td>sddt</td>
-                    <td id="unlimited">无期限</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        
-        <footer>
-          <p>SEGAY FEIWU</p>
-          <p>1145141919810</p>
-        </footer>
-      </div>
-    `,
-	
-	// CARD MAKER
-	sded: `
-      <div class="game-detail">
-        <h1 class="page-title">CARD MAKER</h1>
-        <button class="back-button" data-page="download">
-          <i class="fas fa-arrow-left me-2"></i>
-          <span id="back-to-home">返回</span>
-        </button>
-        
-        <div class="section">
-          <h2 class="section-title">
-            <i class="fas fa-download"></i>
-            <span id="download-list-title">下载列表</span>
-          </h2>
-          
-          <div class="mb-4">
-            <p><span id="last-update-label">最后更新</span>: 2025/03/28</p>
-            <div class="table-container">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <td id="download-method">下载方式</td>
-                    <td id="file-count">文件数</td>
-                    <td id="access-code">提取码/访问密码</td>
-                    <td id="validity">资源有效期</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th><a href="https://pan.baidu.com/s/1rkKLqWKckMtKbbbrEYN8HA" target="_blank">百度网盘</a></th>
-                    <td>3</td>
-                    <td>cdmk</td>
-                    <td id="unlimited">无期限</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        
-        <footer>
-          <p>SEGAY FEIWU</p>
-          <p>1145141919810</p>
-        </footer>
-      </div>
-    `,
-
-	// Archive相关页面
-	sdbt: `
-      <div class="game-detail">
-        <h1 class="page-title">CHUNITHM OLD (SDBT)</h1>
-        <button class="back-button" data-page="download">
-          <i class="fas fa-arrow-left me-2"></i>
-          <span id="back-to-home">返回</span>
-        </button>
-        
-        <div class="section">
-          <h2 class="section-title">
-            <i class="fas fa-download"></i>
-            <span id="download-list-title">下载列表</span>
-          </h2>
-          
-          <div class="mb-4">
-            <p><span id="last-update-label">最后更新</span>: 2025/03/28</p>
-            <div class="table-container">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <td id="download-method">下载方式</td>
-                    <td id="file-count">文件数</td>
-                    <td id="access-code">提取码/访问密码</td>
-                    <td id="validity">资源有效期</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th><a href="https://pan.baidu.com/s/17M-tfyYGJ5wRwHAnjsyLRg" target="_blank">百度网盘</a></th>
-                    <td>11</td>
-                    <td>sdbt</td>
-                    <td id="unlimited">无期限</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        
-        <footer>
-          <p>SEGAY FEIWU</p>
-          <p>1145141919810</p>
-        </footer>
       </div>
     `,
 

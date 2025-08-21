@@ -561,9 +561,12 @@ function showUserInfo() {
       if (otherSection) {
         const nav = otherSection.nextElementSibling;
         if (nav && nav.classList.contains('sidebar-nav')) {
-          nav.appendChild(adminItem);
+          // 检查是否已存在下载管理项
+          if (!nav.querySelector('a[data-page="download-admin"]')) {
+            nav.appendChild(adminItem);
+          }
         }
-      }
+	  }
     }
   }
 }
@@ -1300,7 +1303,35 @@ function loadPage(pageId) {
           });
         }
       }
-      
+
+		if (pageId === 'download') {
+		  if (typeof initDownloadPage === 'function') {
+			setTimeout(initDownloadPage, 100);
+		  }
+		}
+
+		if (pageId === 'download-detail') {
+		  // 从URL参数获取下载ID
+		  const urlParams = new URLSearchParams(window.location.search);
+		  const downloadId = urlParams.get('id');
+		  
+		  if (downloadId && typeof loadDownloadDetail === 'function') {
+			setTimeout(() => loadDownloadDetail(downloadId), 100);
+		  }
+		}
+
+		if (pageId === 'download-admin') {
+		  // 检查用户权限
+		  if (currentUser && currentUser.user_rank >= 5) {
+			// 初始化下载管理系统
+			if (typeof initDownloadAdminPage === 'function') {
+			  setTimeout(initDownloadAdminPage, 100);
+			}
+		  } else {
+			showLoginRequired('download-admin');
+		  }
+		}
+
       if (pageId === 'fortune') {
         setTimeout(() => {
           const coverImg = document.getElementById('cover-img');
