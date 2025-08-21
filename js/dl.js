@@ -91,26 +91,26 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
     }
   }
   
-  // 创建表格
-  const table = document.createElement('table');
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th>游戏名称</th>
-        <th>版本</th>
-        <th>文件数</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${downloads.map(download => `
-        <tr>
-          <td><a href="#" data-page="download-detail" data-download-id="${download.page_id}"><i class="fas fa-link me-2"></i> ${download.title}</a></td>
-          <td>${download.version || '-'}</td>
-          <td>${download.file_count || '0'}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  `;
+	// 创建表格
+	const table = document.createElement('table');
+	table.innerHTML = `
+	  <thead>
+		<tr>
+		  <th>游戏名称</th>
+		  <th>版本</th>
+		  <th>文件数</th>
+		</tr>
+	  </thead>
+	  <tbody>
+		${downloads.map(download => `
+		  <tr>
+			<td><a href="#" data-page="download-detail" data-download-id="${download.id}"><i class="fas fa-link me-2"></i> ${download.title}</a></td>
+			<td>${download.version || '-'}</td>
+			<td>${download.file_count || '0'}</td>
+		  </tr>
+		`).join('')}
+	  </tbody>
+	`;
   
   container.appendChild(table);
   
@@ -137,9 +137,9 @@ async function loadDownloadDetail(downloadId) {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const response = await fetch(`${window.API_BASE_URL}/api/downloads/${downloadId}`, {
-      headers: headers
-    });
+	const response = await fetch(`${window.API_BASE_URL}/api/downloads/${downloadId}`, {
+	  headers: headers
+	});
     
     console.log('下载详情响应状态:', response.status);
     
