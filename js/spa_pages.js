@@ -101,6 +101,129 @@ const pages = {
 	  </div>
 	`,
 
+// 下载管理页面
+'download-admin': `
+  <div class="section">
+    <h1 class="page-title">下载管理</h1>
+    <button class="back-button" data-page="home">
+      <i class="fas fa-arrow-left me-2"></i>
+      <span>返回</span>
+    </button>
+    
+    <div class="admin-actions mb-4">
+      <button id="create-download-btn" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>新建下载项目
+      </button>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table table-hover" id="downloads-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>标题</th>
+            <th>分类</th>
+            <th>版本</th>
+            <th>文件数</th>
+            <th>最后更新</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="downloads-body">
+          <!-- 下载项目数据将通过JavaScript动态填充 -->
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- 下载项目编辑模态框 -->
+    <div class="modal" id="download-modal">
+      <div class="modal-content" style="max-width: 800px;">
+        <span class="close">&times;</span>
+        <h2 id="modal-title">新建下载项目</h2>
+        <form id="download-form">
+          <input type="hidden" id="download-id">
+          
+          <div class="form-row">
+            <div class="form-group col-md-8">
+              <label for="download-title">标题</label>
+              <input type="text" id="download-title" class="form-control" required>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="download-category">分类</label>
+              <select id="download-category" class="form-control" required>
+                <option value="game">游戏下载</option>
+                <option value="archive">存档下载</option>
+                <option value="other">其他资源</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label for="download-version">版本</label>
+              <input type="text" id="download-version" class="form-control">
+            </div>
+            <div class="form-group col-md-4">
+              <label for="download-file-count">文件数</label>
+              <input type="number" id="download-file-count" class="form-control" min="0">
+            </div>
+            <div class="form-group col-md-4">
+              <label for="download-last-update">最后更新</label>
+              <input type="date" id="download-last-update" class="form-control">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="download-baidu-url">百度网盘链接</label>
+              <input type="url" id="download-baidu-url" class="form-control">
+            </div>
+            <div class="form-group col-md-6">
+              <label for="download-baidu-code">提取码</label>
+              <input type="text" id="download-baidu-code" class="form-control">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="download-image-url">图片URL</label>
+            <input type="url" id="download-image-url" class="form-control">
+          </div>
+          
+          <div class="form-group">
+            <label for="download-description">描述</label>
+            <textarea id="download-description" class="form-control" rows="3"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="download-page-id">页面ID</label>
+              <input type="text" id="download-page-id" class="form-control">
+              <small class="form-text text-muted">用于URL的唯一标识符（英文、数字、短横线）</small>
+            </div>
+            <div class="form-group col-md-6">
+              <label for="download-status">状态</label>
+              <select id="download-status" class="form-control">
+                <option value="1">激活</option>
+                <option value="0">禁用</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="download-content">详情页面内容</label>
+            <textarea id="download-content" class="form-control" rows="10"></textarea>
+            <small class="form-text text-muted">使用HTML格式编写详情页面内容</small>
+          </div>
+          
+          <button type="submit" class="btn btn-primary">保存</button>
+          <button type="button" class="btn btn-secondary" id="cancel-download-btn">取消</button>
+        </form>
+      </div>
+    </div>
+  </div>
+`,
+
 	// 公告管理页面
 	'announcement-admin': `
 	  <div class="section">

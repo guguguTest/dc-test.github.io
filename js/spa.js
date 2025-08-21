@@ -10,7 +10,7 @@ let currentPage = 1;
 const ordersPerPage = 50;
 
 // 受保护的页面
-const PROTECTED_PAGES = ['tools', 'dllpatcher', 'fortune', 'user-settings', 'order-entry', 'exchange', 'announcement-admin'];
+const PROTECTED_PAGES = ['tools', 'dllpatcher', 'fortune', 'user-settings', 'order-entry', 'exchange', 'announcement-admin', 'download-admin'];
 
 // 数据源
 const MUSIC_DATA_URLS = [
@@ -1300,7 +1300,19 @@ function loadPage(pageId) {
           });
         }
       }
-      
+
+	if (pageId === 'download-admin') {
+	  // 检查用户权限
+	  if (currentUser && currentUser.user_rank >= 5) {
+		// 初始化下载管理系统
+		if (typeof initDownloadAdminPage === 'function') {
+		  setTimeout(initDownloadAdminPage, 100);
+		}
+	  } else {
+		showLoginRequired('download-admin');
+	  }
+	}
+
       if (pageId === 'fortune') {
         setTimeout(() => {
           const coverImg = document.getElementById('cover-img');
