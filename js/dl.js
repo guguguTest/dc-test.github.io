@@ -164,7 +164,7 @@ async function loadDownloadDetail(downloadId) {
 }
 
 // 渲染下载详情
-function renderDownloadDetail(download) {
+function renderDownloadDetail(download, retryCount = 0) {
   console.log('渲染下载详情:', download.title);
   
   // 获取页面元素
@@ -174,9 +174,16 @@ function renderDownloadDetail(download) {
   
   // 检查元素是否存在
   if (!detailTitle || !detailLastUpdate || !container) {
-    console.error('必要的DOM元素未找到');
-    // 如果元素不存在，稍后重试
-    setTimeout(() => renderDownloadDetail(download), 100);
+    console.error('必要的DOM元素未找到，尝试重试', retryCount);
+    
+    if (retryCount < 5) {
+      // 稍后重试
+      setTimeout(() => {
+        renderDownloadDetail(download, retryCount + 1);
+      }, 100 * (retryCount + 1));
+    } else {
+      console.error('无法找到必要的DOM元素，请检查页面结构');
+    }
     return;
   }
   
@@ -185,7 +192,9 @@ function renderDownloadDetail(download) {
   
   // 设置最后更新时间
   if (download.last_update) {
-    detailLastUpdate.textContent = download.last_update;
+    // 格式化日期显示
+    const date = new Date(download.last_update);
+    detailLastUpdate.textContent = date.toLocaleDateString('zh-CN');
   }
   
   // 渲染下载信息

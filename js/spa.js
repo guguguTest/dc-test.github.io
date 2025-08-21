@@ -1311,6 +1311,25 @@ function loadPage(pageId) {
         }
       }
 
+		if (pageId === 'settings') {
+		  // 初始化设置值
+		  const languageSelect = document.getElementById('language-select');
+		  const themeSelect = document.getElementById('theme-select');
+		  
+		  if (languageSelect) {
+			languageSelect.value = localStorage.getItem('language') || 'zh-cn';
+		  }
+		  if (themeSelect) {
+			themeSelect.value = localStorage.getItem('theme') || 'light';
+		  }
+		  
+		  // 添加保存按钮事件
+		  const saveBtn = document.getElementById('save-settings');
+		  if (saveBtn) {
+			saveBtn.addEventListener('click', saveSettings);
+		  }
+		}
+
 		if (pageId === 'download') {
 		  // 普通下载页面
 		  if (typeof initDownloadPage === 'function') {
@@ -2217,6 +2236,20 @@ async function handleRedeemOrder() {
     console.error('兑换错误:', error);
     resultDiv.innerHTML = `<div class="error">${error.message}</div>`;
   }
+}
+
+// 设置保存功能
+function saveSettings() {
+  const language = document.getElementById('language-select').value;
+  const theme = document.getElementById('theme-select').value;
+  
+  localStorage.setItem('language', language);
+  localStorage.setItem('theme', theme);
+  
+  showSuccessMessage('设置已保存');
+  setTimeout(() => {
+    window.location.reload();
+  }, 1500);
 }
 
 // 增强的API请求函数
