@@ -91,26 +91,26 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
     }
   }
   
-	// 创建表格
-	const table = document.createElement('table');
-	table.innerHTML = `
-	  <thead>
-		<tr>
-		  <th>游戏名称</th>
-		  <th>版本</th>
-		  <th>文件数</th>
-		</tr>
-	  </thead>
-	  <tbody>
-		${downloads.map(download => `
-		  <tr>
-			<td><a href="#" data-page="download-detail" data-download-id="${download.id}"><i class="fas fa-link me-2"></i> ${download.title}</a></td>
-			<td>${download.version || '-'}</td>
-			<td>${download.file_count || '0'}</td>
-		  </tr>
-		`).join('')}
-	  </tbody>
-	`;
+  // 创建表格
+  const table = document.createElement('table');
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>游戏名称</th>
+        <th>版本</th>
+        <th>文件数</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${downloads.map(download => `
+        <tr>
+          <td><a href="#" data-page="download-detail" data-download-id="${download.id}"><i class="fas fa-link me-2"></i> ${download.title}</a></td>
+          <td>${download.version || '-'}</td>
+          <td>${download.file_count || '0'}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  `;
   
   container.appendChild(table);
   
@@ -137,9 +137,9 @@ async function loadDownloadDetail(downloadId) {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-	const response = await fetch(`${window.API_BASE_URL}/api/downloads/${downloadId}`, {
-	  headers: headers
-	});
+    const response = await fetch(`${window.API_BASE_URL}/api/downloads/${downloadId}`, {
+      headers: headers
+    });
     
     console.log('下载详情响应状态:', response.status);
     
@@ -150,7 +150,13 @@ async function loadDownloadDetail(downloadId) {
     const download = await response.json();
     console.log('下载详情数据:', download);
     
-    renderDownloadDetail(download);
+    // 先加载页面，等待页面渲染完成后再填充内容
+    loadPage('download-detail');
+    
+    // 使用 setTimeout 确保 DOM 元素已经渲染
+    setTimeout(() => {
+      renderDownloadDetail(download);
+    }, 100);
   } catch (error) {
     console.error('加载下载详情错误:', error);
     showErrorMessage('加载下载详情失败: ' + error.message);
@@ -161,27 +167,34 @@ async function loadDownloadDetail(downloadId) {
 function renderDownloadDetail(download) {
   console.log('渲染下载详情:', download.title);
   
-  // 切换到下载详情页面
-  loadPage('download-detail');
+  // 获取页面元素
+  const detailTitle = document.getElementById('detail-title');
+  const detailLastUpdate = document.getElementById('detail-last-update');
+  const container = document.getElementById('detail-download-info');
+  
+  // 检查元素是否存在
+  if (!detailTitle || !detailLastUpdate || !container) {
+    console.error('必要的DOM元素未找到');
+    // 如果元素不存在，稍后重试
+    setTimeout(() => renderDownloadDetail(download), 100);
+    return;
+  }
   
   // 设置页面标题
-  document.getElementById('detail-title').textContent = download.title;
+  detailTitle.textContent = download.title;
   
   // 设置最后更新时间
   if (download.last_update) {
-    document.getElementById('detail-last-update').textContent = download.last_update;
+    detailLastUpdate.textContent = download.last_update;
   }
   
   // 渲染下载信息
-  const container = document.getElementById('detail-download-info');
-  if (container) {
-    container.innerHTML = `
-      <tr>
-        <th><a href="${download.baidu_url}" target="_blank">百度网盘</a></th>
-        <td>${download.file_count || '0'}</td>
-        <td>${download.baidu_code || '无'}</td>
-        <td>无期限</td>
-      </tr>
-    `;
-  }
+  container.innerHTML = `
+    <tr>
+      <th><a href="${download.baidu_url}" target="_blank">百度网盘</a></th>
+      <td>${download.file_count || '0'}</td>
+      <td>${download.baidu_code || '无'}</td>
+      <td>无期限</td>
+    </tr>
+  `;
 }
