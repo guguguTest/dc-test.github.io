@@ -858,6 +858,14 @@ download: `
 			<span id="lang-option">语言设置</span>
 		  </div>
 		  <div class="setting-body">
+			<div class="form-group">
+			  <label for="language-select">界面语言</label>
+			  <select id="language-select" class="form-control">
+				<option value="zh-cn">简体中文</option>
+				<option value="en-us">English</option>
+				<option value="ja-jp">日本語</option>
+			  </select>
+			</div>
 			<div class="setting-item">
 			  <div>
 				<span id="option-item">记住语言偏好</span>

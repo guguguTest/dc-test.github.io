@@ -1314,19 +1314,54 @@ function loadPage(pageId) {
 		if (pageId === 'settings') {
 		  // 初始化设置值
 		  const languageSelect = document.getElementById('language-select');
-		  const themeSelect = document.getElementById('theme-select');
+		  const rememberLanguage = document.getElementById('remember-language');
 		  
 		  if (languageSelect) {
 			languageSelect.value = localStorage.getItem('language') || 'zh-cn';
 		  }
-		  if (themeSelect) {
-			themeSelect.value = localStorage.getItem('theme') || 'light';
+		  if (rememberLanguage) {
+			rememberLanguage.checked = localStorage.getItem('rememberLanguage') === 'true';
 		  }
 		  
-		  // 添加保存按钮事件
+		  // 添加语言切换事件监听器
+		  if (languageSelect) {
+			languageSelect.addEventListener('change', function() {
+			  const lang = this.value;
+			  const remember = document.getElementById('remember-language').checked;
+			  
+			  if (remember) {
+				localStorage.setItem('language', lang);
+			  }
+			  
+			  // 更新URL参数并重新加载页面（与顶部导航栏相同的机制）
+			  const url = new URL(window.location);
+			  url.searchParams.set('lang', lang);
+			  window.history.replaceState({}, '', url);
+			  
+			  // 重新加载页面以应用语言更改
+			  window.location.reload();
+			});
+		  }
+		  
+		  // 记住语言偏好开关事件
+		  if (rememberLanguage) {
+			rememberLanguage.addEventListener('change', function() {
+			  localStorage.setItem('rememberLanguage', this.checked);
+			});
+		  }
+		  
+		  // 修改保存按钮事件
 		  const saveBtn = document.getElementById('save-settings');
 		  if (saveBtn) {
-			saveBtn.addEventListener('click', saveSettings);
+			saveBtn.addEventListener('click', function() {
+			  const language = document.getElementById('language-select').value;
+			  const rememberLanguage = document.getElementById('remember-language').checked;
+			  
+			  localStorage.setItem('language', language);
+			  localStorage.setItem('rememberLanguage', rememberLanguage);
+			  
+			  showSuccessMessage('设置已保存');
+			});
 		  }
 		}
 
@@ -2240,11 +2275,15 @@ async function handleRedeemOrder() {
 
 // 设置保存功能
 function saveSettings() {
-  const language = document.getElementById('language-select').value;
-  const theme = document.getElementById('theme-select').value;
+  const languageSelect = document.getElementById('language-select');
+  const rememberLanguage = document.getElementById('remember-language');
   
-  localStorage.setItem('language', language);
-  localStorage.setItem('theme', theme);
+  if (languageSelect) {
+    localStorage.setItem('language', languageSelect.value);
+  }
+  if (rememberLanguage) {
+    localStorage.setItem('rememberLanguage', rememberLanguage.checked);
+  }
   
   showSuccessMessage('设置已保存');
   setTimeout(() => {
