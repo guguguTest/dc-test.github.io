@@ -2469,25 +2469,37 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
         }
 
-		  // 处理外部链接
-		  if (e.target.closest('a[href^="http"]') && !e.target.closest('a[href*="am-all.com.cn"]')) {
-			// 外部链接，允许正常跳转
-			return;
-		  }
-		  
-		  // 阻止其他链接的默认行为
-		  if (e.target.closest('a[href]')) {
-			e.preventDefault();
-			console.log('链接被阻止:', e.target.closest('a[href]').href);
-		  }
+		// 处理外部链接
+		if (e.target.closest('a[href^="http"]') && !e.target.closest('a[href*="am-all.com.cn"]')) {
+		  // 外部链接，允许正常跳转
+		  return;
+		}
 
-        const modalClose = e.target.closest('.modal-close, .modal-footer button');
-        if (modalClose) {
-            const modal = document.querySelector('.modal.show');
-            if (modal) {
-                modal.classList.remove('show');
-            }
-        }
+		// 允许语言切换链接正常跳转
+		const languageLink = e.target.closest('a[href*="lang="]');
+		if (languageLink) {
+		  // 允许语言切换链接正常行为
+		  return;
+		}
+
+		// 允许下载链接正常跳转
+		const downloadLink = e.target.closest('a[href*="/download/"]') || 
+							 e.target.closest('a[href$=".zip"]') || 
+							 e.target.closest('a[href$=".rar"]') || 
+							 e.target.closest('a[href$=".7z"]') || 
+							 e.target.closest('a[href$=".exe"]');
+		if (downloadLink) {
+		  // 允许下载链接正常行为
+		  return;
+		}
+
+		// 阻止其他链接的默认行为（仅限SPA内部导航）
+		const spaLink = e.target.closest('a[href^="#"]') || 
+						e.target.closest('a[href^="/"]') && !e.target.closest('a[href^="http"]');
+		if (spaLink) {
+		  e.preventDefault();
+		  console.log('SPA链接被阻止:', spaLink.href);
+		}
     });
 
     const sidebarToggle = document.querySelector('.sidebar-toggle');
