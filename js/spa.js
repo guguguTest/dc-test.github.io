@@ -313,7 +313,6 @@ function updateUserInfo(user) {
   const userNicknamePc = document.getElementById('user-nickname-pc');
   const userUidPc = document.getElementById('user-uid-pc');
   const userInfoPc = document.getElementById('user-info-pc');
-  const userAvatarPc = document.getElementById('user-avatar-pc');
   
   if (userInfoPc) {
     userInfoPc.style.setProperty('--user-rank-bg', `url(${rankInfo.background})`);
@@ -384,7 +383,6 @@ function updateUserInfo(user) {
   const userEmailMobile = document.getElementById('user-email-mobile');
   const userUidMobile = document.getElementById('user-uid-mobile');
   const userPointsMobile = document.getElementById('user-points-mobile');
-  const userAvatarMobile = document.getElementById('user-avatar-mobile');
   
   if (userAvatarMobile) {
     // 移除旧的容器（如果存在）
