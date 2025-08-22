@@ -2343,20 +2343,20 @@ document.addEventListener("DOMContentLoaded", function() {
     
 	document.body.addEventListener('click', function(e) {
 	  // 处理所有带有 data-page 属性的链接
-	  const pageLink = e.target.closest('[data-page]');
-	  if (pageLink) {
-		e.preventDefault();
-		const pageId = pageLink.getAttribute('data-page');
-		loadPage(pageId);
-		
-		if (window.innerWidth <= 992) {
-		  const sidebar = document.querySelector('.sidebar');
-		  if (sidebar) sidebar.classList.remove('show');
-		  document.body.classList.remove('mobile-sidebar-open');
-		  document.body.classList.add('mobile-sidebar-closed');
+		const pageLink = e.target.closest('[data-page]');
+		if (pageLink) {
+		  e.preventDefault();
+		  const pageId = pageLink.getAttribute('data-page');
+		  loadPage(pageId);
+		  
+		  if (window.innerWidth <= 992) {
+			const sidebar = document.querySelector('.sidebar');
+			if (sidebar) sidebar.classList.remove('show');
+			document.body.classList.remove('mobile-sidebar-open');
+			document.body.classList.add('mobile-sidebar-closed');
+		  }
+		  return;
 		}
-		return;
-	  }
         
         // 修复公告点击事件
 		/*
