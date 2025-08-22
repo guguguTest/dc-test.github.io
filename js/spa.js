@@ -313,6 +313,7 @@ function updateUserInfo(user) {
   const userNicknamePc = document.getElementById('user-nickname-pc');
   const userUidPc = document.getElementById('user-uid-pc');
   const userInfoPc = document.getElementById('user-info-pc');
+  const userAvatarPc = document.getElementById('user-avatar-pc');
   
   if (userInfoPc) {
     userInfoPc.style.setProperty('--user-rank-bg', `url(${rankInfo.background})`);
@@ -328,7 +329,29 @@ function updateUserInfo(user) {
   }
   
   if (userAvatarPc) {
-    userAvatarPc.src = user.avatar || defaultAvatarUrl;
+    // 移除旧的容器（如果存在）
+    const oldContainer = userAvatarPc.parentElement;
+    if (oldContainer.classList.contains('user-avatar-container-pc')) {
+      userAvatarPc.src = user.avatar || defaultAvatarUrl;
+    } else {
+      // 创建新的容器
+      const container = document.createElement('div');
+      container.className = 'user-avatar-container-pc';
+      userAvatarPc.parentNode.insertBefore(container, userAvatarPc);
+      container.appendChild(userAvatarPc);
+      
+      // 添加特效元素
+      const effect = document.createElement('div');
+      effect.className = 'avatar-effect-rainbow';
+      effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
+      container.appendChild(effect);
+    }
+    
+    // 更新特效显示状态
+    const effect = userAvatarPc.parentElement.querySelector('.avatar-effect-rainbow');
+    if (effect) {
+      effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
+    }
   }
   
   if (userNicknamePc) {
@@ -361,11 +384,32 @@ function updateUserInfo(user) {
   const userEmailMobile = document.getElementById('user-email-mobile');
   const userUidMobile = document.getElementById('user-uid-mobile');
   const userPointsMobile = document.getElementById('user-points-mobile');
+  const userAvatarMobile = document.getElementById('user-avatar-mobile');
   
   if (userAvatarMobile) {
-    userAvatarMobile.src = user.avatar || defaultAvatarUrl;
-    userAvatarMobile.style.width = '50px';
-    userAvatarMobile.style.height = '50px';
+    // 移除旧的容器（如果存在）
+    const oldContainer = userAvatarMobile.parentElement;
+    if (oldContainer.classList.contains('user-avatar-container-mobile')) {
+      userAvatarMobile.src = user.avatar || defaultAvatarUrl;
+    } else {
+      // 创建新的容器
+      const container = document.createElement('div');
+      container.className = 'user-avatar-container-mobile';
+      userAvatarMobile.parentNode.insertBefore(container, userAvatarMobile);
+      container.appendChild(userAvatarMobile);
+      
+      // 添加特效元素
+      const effect = document.createElement('div');
+      effect.className = 'avatar-effect-rainbow';
+      effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
+      container.appendChild(effect);
+    }
+    
+    // 更新特效显示状态
+    const effect = userAvatarMobile.parentElement.querySelector('.avatar-effect-rainbow');
+    if (effect) {
+      effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
+    }
   }
   if (userNicknameMobile) {
     userNicknameMobile.textContent = user.nickname || user.username;

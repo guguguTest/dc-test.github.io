@@ -660,3 +660,56 @@
     width: 100%;
   }
 }
+
+/* ====== 用户组特效样式 ====== */
+/* PC端头像容器 */
+.user-avatar-container-pc {
+  position: relative;
+  display: inline-block;
+  margin-right: 15px;
+}
+
+/* 移动端头像容器 */
+.user-avatar-container-mobile {
+  position: relative;
+  display: inline-block;
+  margin-right: 12px;
+}
+
+/* 七彩光环效果 - 用于maimoller用户(rankSp=1) */
+.avatar-effect-rainbow {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  background: linear-gradient(
+    45deg, 
+    #ff0000, #ff7f00, #ffff00, #00ff00, 
+    #0000ff, #4b0082, #8b00ff, #ff0000
+  );
+  background-size: 800% 800%;
+  animation: rainbow-effect 3s linear infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 七彩光环动画 */
+@keyframes rainbow-effect {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* PC端头像调整 */
+#user-info-pc .user-avatar-pc {
+  position: relative;
+  z-index: 2;
+}
+
+/* 移动端头像调整 */
+.sidebar-user-area .user-avatar-mobile {
+  position: relative;
+  z-index: 2;
+}
