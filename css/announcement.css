@@ -234,7 +234,7 @@
 @media (max-width: 768px) {
   .announcement-modal-content {
     width: 95%;
-    height: 85vh;
+    height: auto;
   }
   
   .announcement-item {
