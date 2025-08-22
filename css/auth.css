@@ -676,14 +676,34 @@
   margin-right: 12px;
 }
 
+/* ====== 用户组特效样式 ====== */
+/* PC端头像容器 */
+.user-avatar-container-pc {
+  position: relative;
+  display: inline-block;
+  margin-right: 15px;
+  width: 55px; /* 添加固定宽度 */
+  height: 55px; /* 添加固定高度 */
+}
+
+/* 移动端头像容器 */
+.user-avatar-container-mobile {
+  position: relative;
+  display: inline-block;
+  margin-right: 12px;
+  width: 55px; /* 添加固定宽度 */
+  height: 55px; /* 添加固定高度 */
+}
+
 /* 七彩光环效果 - 用于maimoller用户(rankSp=1) */
 .avatar-effect-rainbow {
   position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
-  border-radius: 50%;
+  top: 50%; /* 居中定位 */
+  left: 50%; /* 居中定位 */
+  transform: translate(-50%, -50%); /* 精确居中 */
+  width: 63px; /* 比头像大8px (55+8) */
+  height: 63px; /* 保持与宽度相同以确保圆形 */
+  border-radius: 50%; /* 确保圆形 */
   background: linear-gradient(
     45deg, 
     #ff0000, #ff7f00, #ffff00, #00ff00, 
@@ -706,10 +726,15 @@
 #user-info-pc .user-avatar-pc {
   position: relative;
   z-index: 2;
+  width: 55px; /* 确保明确尺寸 */
+  height: 55px; /* 确保明确尺寸 */
 }
 
 /* 移动端头像调整 */
 .sidebar-user-area .user-avatar-mobile {
   position: relative;
   z-index: 2;
+  width: 55px; /* 确保明确尺寸 */
+  height: 55px; /* 确保明确尺寸 */
+  margin-top: -38px; 
 }
