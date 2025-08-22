@@ -348,15 +348,15 @@ download: `
 			</div>
 			<div class="form-group">
 			  <label>内容</label>
-			  <div class="editor-toolbar">
-				<button type="button" data-command="bold"><i class="fas fa-bold"></i></button>
-				<button type="button" data-command="italic"><i class="fas fa-italic"></i></button>
-				<button type="button" data-command="underline"><i class="fas fa-underline"></i></button>
-				<button type="button" data-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
-				<button type="button" data-command="insertOrderedList"><i class="fas fa-list-ol"></i></button>
-				<button type="button" data-command="createLink"><i class="fas fa-link"></i></button>
-				<button type="button" data-command="insertImage"><i class="fas fa-image"></i></button>
-			  </div>
+			<div class="editor-toolbar">
+			  <button type="button" data-command="bold"><i class="fas fa-bold"></i></button>
+			  <button type="button" data-command="italic"><i class="fas fa-italic"></i></button>
+			  <button type="button" data-command="underline"><i class="fas fa-underline"></i></button>
+			  <button type="button" data-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
+			  <button type="button" data-command="insertOrderedList"><i class="fas fa-list-ol"></i></button>
+			  <button type="button" data-command="createLink"><i class="fas fa-link"></i></button>
+			  <button type="button" data-command="insertImage"><i class="fas fa-image"></i></button>
+			</div>
 			  <div id="announcement-editor-content" class="editor-content"></div>
 			</div>
 			<div class="form-group">

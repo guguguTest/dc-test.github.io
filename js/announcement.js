@@ -307,16 +307,35 @@ class AnnouncementAdminSystem {
     }
   }
 
-  // 设置编辑器
-  setupEditor() {
-    // 这里可以集成一个富文本编辑器，如TinyMCE或Quill
-    // 由于时间限制，这里使用简单的内容可编辑div
-    const editor = document.getElementById('announcement-editor-content');
-    if (editor) {
-      // 设置为可编辑
-      editor.contentEditable = true;
-    }
-  }
+	// 设置编辑器
+	setupEditor() {
+	  const editor = document.getElementById('announcement-editor-content');
+	  if (editor) {
+		editor.contentEditable = true;
+		
+		// 添加工具栏功能
+		const toolbar = document.querySelector('.editor-toolbar');
+		if (toolbar) {
+		  toolbar.querySelectorAll('button').forEach(button => {
+			button.addEventListener('click', (e) => {
+			  e.preventDefault();
+			  const command = button.dataset.command;
+			  
+			  if (command === 'createLink' || command === 'insertImage') {
+				const url = prompt('请输入URL:');
+				if (url) {
+				  document.execCommand(command, false, url);
+				}
+			  } else {
+				document.execCommand(command, false, null);
+			  }
+			  
+			  editor.focus();
+			});
+		  });
+		}
+	  }
+	}
 
   // 加载公告列表
   async loadAnnouncements() {

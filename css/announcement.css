@@ -251,3 +251,75 @@
     width: 100%;
   }
 }
+
+/* 公告管理页面按钮样式修复 */
+.admin-announcement-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-edit, .btn-delete {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit {
+  background-color: #1890ff;
+  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #40a9ff;
+}
+
+.btn-delete {
+  background-color: #ff4d4f;
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #ff7875;
+}
+
+/* 编辑器工具栏样式修复 */
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background-color: #fafafa;
+}
+
+.editor-toolbar button {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.editor-toolbar button:hover {
+  background-color: #e6f7ff;
+  border-color: #91d5ff;
+}
+
+.editor-content {
+  min-height: 200px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 12px;
+  outline: none;
+}
