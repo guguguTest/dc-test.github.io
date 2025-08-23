@@ -667,21 +667,6 @@
   position: relative;
   display: inline-block;
   margin-right: 15px;
-}
-
-/* 移动端头像容器 */
-.user-avatar-container-mobile {
-  position: relative;
-  display: inline-block;
-  margin-right: 12px;
-}
-
-/* ====== 用户组特效样式 ====== */
-/* PC端头像容器 */
-.user-avatar-container-pc {
-  position: relative;
-  display: inline-block;
-  margin-right: 15px;
   width: 55px; /* 添加固定宽度 */
   height: 55px; /* 添加固定高度 */
 }
@@ -698,9 +683,8 @@
 /* 七彩光环效果 - 用于maimoller用户(rankSp=1) */
 .avatar-effect-rainbow {
   position: absolute;
-  top: 50%; /* 居中定位 */
-  left: 50%; /* 居中定位 */
-  transform: translate(-50%, -50%); /* 精确居中 */
+  top: -4px; /* 调整位置使其围绕头像 */
+  left: -4px; /* 调整位置使其围绕头像 */
   width: 63px; /* 比头像大8px (55+8) */
   height: 63px; /* 保持与宽度相同以确保圆形 */
   border-radius: 50%; /* 确保圆形 */
@@ -713,6 +697,8 @@
   animation: rainbow-effect 3s linear infinite;
   z-index: 1;
   pointer-events: none;
+  /* 移除之前的居中变换 */
+  transform: none;
 }
 
 /* 七彩光环动画 */
