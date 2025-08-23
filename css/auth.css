@@ -683,8 +683,8 @@
 /* 七彩光环效果 - 用于maimoller用户(rankSp=1) */
 .avatar-effect-rainbow {
   position: absolute;
-  top: -4px; /* 调整位置使其围绕头像 */
-  left: -4px; /* 调整位置使其围绕头像 */
+  top: -6px; /* 从-4px调整为-6px，使光环向上移动 */
+  left: -6px; /* 从-4px调整为-6px，使光环向左移动 */
   width: 63px; /* 比头像大8px (55+8) */
   height: 63px; /* 保持与宽度相同以确保圆形 */
   border-radius: 50%; /* 确保圆形 */
@@ -723,4 +723,16 @@
   width: 55px; /* 确保明确尺寸 */
   height: 55px; /* 确保明确尺寸 */
   margin-top: -38px; 
+}
+
+/* 为PC端单独调整 */
+.user-avatar-container-pc .avatar-effect-rainbow {
+  top: -6px; /* 从-4px调整为-6px，使光环向上移动 */
+  left: -4px; /* 从-4px调整为-4px，保持原样 */
+}
+
+/* 为移动端单独调整 */
+.user-avatar-container-mobile .avatar-effect-rainbow {
+  top: -8px; /* 从-4px调整为-8px，使光环更向上移动 */
+  left: -6px; /* 从-4px调整为-6px，使光环向左移动 */
 }
