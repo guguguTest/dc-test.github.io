@@ -1805,7 +1805,7 @@ if (pageId === 'fortune') {
               .then(response => response.json())
               .then(data => {
                 if (data.success) {
-                  // 确保传递正确的参数
+                  // 修复：确保传递正确的参数格式
                   displayFortune(data.song, data.luck, data.recommendations);
                   
                   // 保存到本地存储，用于页面刷新后显示
