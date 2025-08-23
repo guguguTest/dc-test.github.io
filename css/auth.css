@@ -683,8 +683,8 @@
 /* 七彩光环效果 - 用于maimoller用户(rankSp=1) */
 .avatar-effect-rainbow {
   position: absolute;
-  top: -6px; /* 从-4px调整为-6px，使光环向上移动 */
-  left: -6px; /* 从-4px调整为-6px，使光环向左移动 */
+  top: -4px; /* 默认位置，会被特定选择器覆盖 */
+  left: -4px; /* 默认位置，会被特定选择器覆盖 */
   width: 63px; /* 比头像大8px (55+8) */
   height: 63px; /* 保持与宽度相同以确保圆形 */
   border-radius: 50%; /* 确保圆形 */
@@ -697,8 +697,6 @@
   animation: rainbow-effect 3s linear infinite;
   z-index: 1;
   pointer-events: none;
-  /* 移除之前的居中变换 */
-  transform: none;
 }
 
 /* 七彩光环动画 */
@@ -725,14 +723,14 @@
   margin-top: -38px; 
 }
 
-/* 为PC端单独调整 */
-.user-avatar-container-pc .avatar-effect-rainbow {
-  top: -6px; /* 从-4px调整为-6px，使光环向上移动 */
-  left: -4px; /* 从-4px调整为-4px，保持原样 */
+/* PC端特定调整 - 使用更具体的选择器 */
+#user-info-pc .avatar-effect-rainbow {
+  top: 6px !important; /* 使光环向上移动 */
+  left: 11px !important; /* 保持原样 */
 }
 
-/* 为移动端单独调整 */
-.user-avatar-container-mobile .avatar-effect-rainbow {
-  top: -8px; /* 从-4px调整为-8px，使光环更向上移动 */
-  left: -6px; /* 从-4px调整为-6px，使光环向左移动 */
+/* 移动端特定调整 - 使用更具体的选择器 */
+.sidebar-user-area .avatar-effect-rainbow {
+  top: -10px !important; /* 使光环更向上移动 */
+  left: -4px !important; /* 使光环向左移动 */
 }
