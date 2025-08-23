@@ -288,14 +288,34 @@ function fetchUserInfo(token) {
     updateUserInfo(user);
     showUserInfo();
     setupUserDropdown();
+    
+    // 保存用户信息到本地存储
+    localStorage.setItem('userInfo', JSON.stringify(user));
+    
     return user;
   })
   .catch(error => {
     console.error('获取用户信息错误:', error);
     
+    // 尝试从本地存储恢复用户信息
+    const savedUserInfo = localStorage.getItem('userInfo');
+    if (savedUserInfo) {
+      try {
+        const user = JSON.parse(savedUserInfo);
+        currentUser = user;
+        updateUserInfo(user);
+        showUserInfo();
+        setupUserDropdown();
+        return user;
+      } catch (e) {
+        console.error('从本地存储恢复用户信息失败:', e);
+      }
+    }
+    
     // 如果token无效，清除本地存储
     if (error.message.includes('401') || error.message.includes('无效的令牌')) {
       localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
     }
     
     showAuthLinks();
@@ -307,6 +327,9 @@ function fetchUserInfo(token) {
 function updateUserInfo(user) {
   const defaultAvatarUrl = 'https://api.am-all.com.cn/avatars/default_avatar.png';
   const rankInfo = getUserRankInfo(user.user_rank || 0);
+  
+  // 使用用户自定义头像或默认头像
+  const avatarUrl = user.avatar || defaultAvatarUrl;
   
   // PC视图
   const userAvatarPc = document.getElementById('user-avatar-pc');
@@ -328,31 +351,17 @@ function updateUserInfo(user) {
   }
   
   if (userAvatarPc) {
-    // 移除旧的容器（如果存在）
-    const oldContainer = userAvatarPc.parentElement;
-    if (oldContainer.classList.contains('user-avatar-container-pc')) {
-      userAvatarPc.src = user.avatar || defaultAvatarUrl;
-    } else {
-      // 创建新的容器
-      const container = document.createElement('div');
-      container.className = 'user-avatar-container-pc';
-      userAvatarPc.parentNode.insertBefore(container, userAvatarPc);
-      container.appendChild(userAvatarPc);
-      
-      // 添加特效元素
-      const effect = document.createElement('div');
+    userAvatarPc.src = avatarUrl;
+    // 确保特效元素存在
+    let effect = userAvatarPc.parentElement.querySelector('.avatar-effect-rainbow');
+    if (!effect) {
+      effect = document.createElement('div');
       effect.className = 'avatar-effect-rainbow';
-      effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
-      container.appendChild(effect);
+      userAvatarPc.parentElement.appendChild(effect);
     }
-    
-    // 更新特效显示状态
-    const effect = userAvatarPc.parentElement.querySelector('.avatar-effect-rainbow');
-    if (effect) {
-      effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
-    }
+    effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
   }
-  
+    
   if (userNicknamePc) {
     userNicknamePc.textContent = user.nickname || user.username;
   }
@@ -385,30 +394,17 @@ function updateUserInfo(user) {
   const userPointsMobile = document.getElementById('user-points-mobile');
   
   if (userAvatarMobile) {
-    // 移除旧的容器（如果存在）
-    const oldContainer = userAvatarMobile.parentElement;
-    if (oldContainer.classList.contains('user-avatar-container-mobile')) {
-      userAvatarMobile.src = user.avatar || defaultAvatarUrl;
-    } else {
-      // 创建新的容器
-      const container = document.createElement('div');
-      container.className = 'user-avatar-container-mobile';
-      userAvatarMobile.parentNode.insertBefore(container, userAvatarMobile);
-      container.appendChild(userAvatarMobile);
-      
-      // 添加特效元素
-      const effect = document.createElement('div');
+    userAvatarMobile.src = avatarUrl;
+    // 确保特效元素存在
+    let effect = userAvatarMobile.parentElement.querySelector('.avatar-effect-rainbow');
+    if (!effect) {
+      effect = document.createElement('div');
       effect.className = 'avatar-effect-rainbow';
-      effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
-      container.appendChild(effect);
+      userAvatarMobile.parentElement.appendChild(effect);
     }
-    
-    // 更新特效显示状态
-    const effect = userAvatarMobile.parentElement.querySelector('.avatar-effect-rainbow');
-    if (effect) {
-      effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
-    }
+    effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
   }
+  
   if (userNicknameMobile) {
     userNicknameMobile.textContent = user.nickname || user.username;
   }
@@ -862,6 +858,7 @@ function handleRegister() {
 // 退出登录
 function handleLogout() {
   localStorage.removeItem('token');
+  localStorage.removeItem('userInfo');
   currentUser = null;
   showAuthLinks();
   loadPage('home');
@@ -2392,30 +2389,49 @@ function secureFetch(url, options = {}) {
 
 // 初始化SPA功能
 document.addEventListener("DOMContentLoaded", function() {
-    function checkAndResetDailyFortune() {
-        const lastDrawDate = localStorage.getItem('dailyFortuneDate');
-        const today = new Date().toDateString();
-        
-        if (lastDrawDate && lastDrawDate !== today) {
-            localStorage.removeItem('dailyFortuneDate');
-            localStorage.removeItem('dailyFortuneData');
-            
-            const activePage = document.querySelector('.sidebar-nav a.active')?.getAttribute('data-page');
-            if (activePage === 'fortune') {
-                const fortuneSection = document.querySelector('.fortume-section');
-                if (fortuneSection) {
-                    fortuneSection.classList.add('reset-fortune');
-                    setTimeout(() => {
-                        loadPage('fortune');
-                        fortuneSection.classList.remove('reset-fortune');
-                    }, 1000);
-                }
-            }
-        }
+  function checkAndResetDailyFortune() {
+    const lastDrawDate = localStorage.getItem('dailyFortuneDate');
+    const today = new Date().toDateString();
+    const token = localStorage.getItem('token');
+    const savedUserInfo = localStorage.getItem('userInfo');
+
+    // 先尝试从本地存储恢复用户信息
+    if (token && savedUserInfo) {
+      try {
+        const user = JSON.parse(savedUserInfo);
+        currentUser = user;
+        updateUserInfo(user);
+        showUserInfo();
+        setupUserDropdown();
+      } catch (e) {
+        console.error('从本地存储恢复用户信息失败:', e);
+        checkLoginStatus();
+      }
+    } else {
+      checkLoginStatus();
     }
 
-    checkAndResetDailyFortune();
-    setInterval(checkAndResetDailyFortune, 60 * 60 * 1000);
+    // 其余代码保持不变...
+    if (lastDrawDate && lastDrawDate !== today) {
+      localStorage.removeItem('dailyFortuneDate');
+      localStorage.removeItem('dailyFortuneData');
+      
+      const activePage = document.querySelector('.sidebar-nav a.active')?.getAttribute('data-page');
+      if (activePage === 'fortune') {
+        const fortuneSection = document.querySelector('.fortume-section');
+        if (fortuneSection) {
+          fortuneSection.classList.add('reset-fortune');
+          setTimeout(() => {
+            loadPage('fortune');
+            fortuneSection.classList.remove('reset-fortune');
+          }, 1000);
+        }
+      }
+    }
+  }
+
+  checkAndResetDailyFortune();
+  setInterval(checkAndResetDailyFortune, 60 * 60 * 1000);
     
     checkLoginStatus();
     
@@ -2438,17 +2454,6 @@ document.addEventListener("DOMContentLoaded", function() {
 		  }
 		  return;
 		}
-        
-        // 修复公告点击事件
-		/*
-        const announcementCard = e.target.closest('.announcement-card, .announcement-simple-item, .announcement-item');
-        if (announcementCard) {
-            e.preventDefault();
-            const id = announcementCard.getAttribute('data-id');
-            if (id) {
-                showAnnouncementModal(id);
-            }
-        }*/
         
         if (e.target.closest('#login-btn')) {
             e.preventDefault();
