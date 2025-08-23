@@ -49,6 +49,11 @@ document.addEventListener("DOMContentLoaded", function() {
             if (window.innerWidth <= 992) {
                 document.body.classList.toggle('mobile-sidebar-open', sidebar.classList.contains('show'));
                 document.body.classList.toggle('mobile-sidebar-closed', !sidebar.classList.contains('show'));
+                
+                // 修复：每次打开侧边栏时滚动到顶部，确保用户信息可见
+                if (sidebar.classList.contains('show')) {
+                    sidebar.scrollTop = 0;
+                }
             }
         });
     }

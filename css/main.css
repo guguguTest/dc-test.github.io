@@ -148,6 +148,10 @@ body {
   z-index: 900;
   transition: all 0.4s ease;
   overflow-y: auto;
+  /* 修复：防止左右滑动 */
+  overflow-x: hidden;
+  /* 修复：添加安全区域 padding 防止底部被遮挡 */
+  padding-bottom: env(safe-area-inset-bottom, 20px);
 }
 
 .sidebar.collapsed {

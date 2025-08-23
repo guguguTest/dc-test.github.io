@@ -1103,7 +1103,14 @@ function displayFortune(song, luck, recommendations) {
 function loadPage(pageId) {
   const contentContainer = document.getElementById('content-container');
   if (!contentContainer) return;
-  
+
+  if (window.innerWidth <= 992) {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+      sidebar.scrollTop = 0;
+    }
+  }
+
   if (PROTECTED_PAGES.includes(pageId)) {
     const token = localStorage.getItem('token');
     if (!token) {
