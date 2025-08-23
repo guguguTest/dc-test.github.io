@@ -1148,16 +1148,29 @@ function displayFortune(song, luck, recommendations) {
   
   if (coverImg) {
     coverImg.style.display = 'block';
-    coverImg.src = song.image ? 
-      `https://oss.am-all.com.cn/asset/img/main/music/${song.image}` : 
-      'https://oss.am-all.com.cn/asset/img/main/music/dummy.jpg';
+    // 修复：安全地访问song.image属性
+    const imagePath = song && song.image ? song.image : 'dummy.jpg';
+    coverImg.src = `https://oss.am-all.com.cn/asset/img/main/music/${imagePath}`;
   }
   
   if (animationContainer) {
     animationContainer.style.display = 'none';
   }
   
-  updateDisplay(song, luck, recommendations);
+  // 确保song对象存在，否则使用dummy数据
+  const displaySong = song || {
+    id: '???',
+    title: '???',
+    artist: '???',
+    catname: '???',
+    lev_bas: '?',
+    lev_adv: '?',
+    lev_exp: '?',
+    lev_mas: '?',
+    lev_ult: '?'
+  };
+  
+  updateDisplay(displaySong, luck, recommendations);
   
   const pointsEarned = Math.floor(Math.random() * 10) + 1;
   
@@ -1734,36 +1747,36 @@ if (pageId === 'fortune') {
       });
     
     if (drawBtn) {
-		drawBtn.addEventListener('click', () => {
-		  if (!drawBtn) return;
-		  
-		  const token = localStorage.getItem('token');
-		  if (!token) {
-			showErrorMessage('请先登录');
-			return;
-		  }
-		  
-		  drawBtn.disabled = true;
-		  drawBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>抽取中...';
-		  if (fortuneHint) fortuneHint.textContent = '';
-		  
-		  // 隐藏封面，显示动画
-		  const coverImg = document.getElementById('cover-img');
-		  const animationContainer = contentContainer.querySelector('.fortune-animation');
-		  const kuji01 = contentContainer.querySelector('#kuji-01');
-		  const kuji02 = contentContainer.querySelector('#kuji-02');
-		  
-		  if (coverImg) {
-			coverImg.style.display = 'none';
-		  }
-		  
-		  if (animationContainer) {
-			animationContainer.style.display = 'flex';
-			kuji01.style.display = 'block';
-			kuji01.classList.add('kuji-swing');
-			kuji02.style.display = 'none';
-			kuji02.classList.remove('kuji-fadein');
-		  }
+      drawBtn.addEventListener('click', () => {
+        if (!drawBtn) return;
+        
+        const token = localStorage.getItem('token');
+        if (!token) {
+          showErrorMessage('请先登录');
+          return;
+        }
+        
+        drawBtn.disabled = true;
+        drawBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>抽取中...';
+        if (fortuneHint) fortuneHint.textContent = '';
+        
+        // 隐藏封面，显示动画
+        const coverImg = document.getElementById('cover-img');
+        const animationContainer = contentContainer.querySelector('.fortune-animation');
+        const kuji01 = contentContainer.querySelector('#kuji-01');
+        const kuji02 = contentContainer.querySelector('#kuji-02');
+        
+        if (coverImg) {
+          coverImg.style.display = 'none';
+        }
+        
+        if (animationContainer) {
+          animationContainer.style.display = 'flex';
+          kuji01.style.display = 'block';
+          kuji01.classList.add('kuji-swing');
+          kuji02.style.display = 'none';
+          kuji02.classList.remove('kuji-fadein');
+        }
         
         setTimeout(() => {
           let scrollCount = 0;
@@ -1782,62 +1795,62 @@ if (pageId === 'fortune') {
               clearInterval(scrollInterval);
               
               // 调用后端API抽取运势
-			fetch('https://api.am-all.com.cn/api/fortune/draw', {
-			  method: 'POST',
-			  headers: {
-				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json'
-			  }
-			})
-			.then(response => response.json())
-			.then(data => {
-			  if (data.success) {
-				// 确保传递正确的参数
-				displayFortune(data.song, data.luck, data.recommendations);
-				
-				// 保存到本地存储，用于页面刷新后显示
-				const today = new Date().toDateString();
-				localStorage.setItem('dailyFortuneDate', today);
-				localStorage.setItem('dailyFortuneData', JSON.stringify({
-				  song: data.song,
-				  luck: data.luck,
-				  recommendations: data.recommendations
-				}));
+              fetch('https://api.am-all.com.cn/api/fortune/draw', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  // 确保传递正确的参数
+                  displayFortune(data.song, data.luck, data.recommendations);
                   
-				if (drawBtn) {
-				  drawBtn.disabled = true;
-				  drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-				}
-				if (fortuneHint) {
-				  const totalPoints = data.points + data.point2;
-				  fortuneHint.textContent = `恭喜获得 ${data.pointsEarned} 积分！当前积分: ${totalPoints}`;
-				  fortuneHint.style.color = '#27ae60';
-				}
-				
-				// 更新用户信息
-				if (currentUser) {
-				  currentUser.points = data.points;
-				  currentUser.point2 = data.point2;
-				  updateUserInfo(currentUser);
-				}
-			  } else {
-				// 抽取失败，显示错误信息
-				if (drawBtn) {
-				  drawBtn.disabled = false;
-				  drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
-				}
-				if (fortuneHint) {
-				  fortuneHint.textContent = data.error || '抽取运势失败';
-				  fortuneHint.style.color = '#e74c3c';
-				}
-				
-				// 失败时也要恢复封面显示
-				const coverImg = document.getElementById('cover-img');
-				const animationContainer = document.querySelector('.fortune-animation');
-				if (coverImg) coverImg.style.display = 'block';
-				if (animationContainer) animationContainer.style.display = 'none';
-			  }
-			})
+                  // 保存到本地存储，用于页面刷新后显示
+                  const today = new Date().toDateString();
+                  localStorage.setItem('dailyFortuneDate', today);
+                  localStorage.setItem('dailyFortuneData', JSON.stringify({
+                    song: data.song,
+                    luck: data.luck,
+                    recommendations: data.recommendations
+                  }));
+                  
+                  if (drawBtn) {
+                    drawBtn.disabled = true;
+                    drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+                  }
+                  if (fortuneHint) {
+                    const totalPoints = data.points + data.point2;
+                    fortuneHint.textContent = `恭喜获得 ${data.pointsEarned} 积分！当前积分: ${totalPoints}`;
+                    fortuneHint.style.color = '#27ae60';
+                  }
+                  
+                  // 更新用户信息
+                  if (currentUser) {
+                    currentUser.points = data.points;
+                    currentUser.point2 = data.point2;
+                    updateUserInfo(currentUser);
+                  }
+                } else {
+                  // 抽取失败，显示错误信息
+                  if (drawBtn) {
+                    drawBtn.disabled = false;
+                    drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
+                  }
+                  if (fortuneHint) {
+                    fortuneHint.textContent = data.error || '抽取运势失败';
+                    fortuneHint.style.color = '#e74c3c';
+                  }
+                  
+                  // 失败时也要恢复封面显示
+                  const coverImg = document.getElementById('cover-img');
+                  const animationContainer = document.querySelector('.fortune-animation');
+                  if (coverImg) coverImg.style.display = 'block';
+                  if (animationContainer) animationContainer.style.display = 'none';
+                }
+              })
               .catch(error => {
                 console.error('抽取运势失败:', error);
                 if (drawBtn) {
@@ -1848,6 +1861,12 @@ if (pageId === 'fortune') {
                   fortuneHint.textContent = '网络错误，请重试';
                   fortuneHint.style.color = '#e74c3c';
                 }
+                
+                // 失败时恢复封面显示并隐藏动画
+                const coverImg = document.getElementById('cover-img');
+                const animationContainer = document.querySelector('.fortune-animation');
+                if (coverImg) coverImg.style.display = 'block';
+                if (animationContainer) animationContainer.style.display = 'none';
               });
             }
           }, 100);
