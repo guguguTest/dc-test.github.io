@@ -540,3 +540,19 @@ html, body {
   transform: translateY(-2px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
+
+.sidebar {
+  position: fixed;
+  top: 70px;
+  left: 0;
+  width: var(--sidebar-width);
+  height: calc(100vh - 70px);
+  background: white;
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.08);
+  z-index: 900;
+  transition: all 0.4s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* 确保底部有安全区域 */
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}

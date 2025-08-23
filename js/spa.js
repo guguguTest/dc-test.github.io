@@ -33,6 +33,44 @@ function getRandomRecommendations() {
   };
 }
 
+// 添加一个函数来强制重新渲染用户信息
+function refreshUserInfoDisplay() {
+  const userInfoMobile = document.getElementById('user-info-mobile');
+  if (userInfoMobile && userInfoMobile.offsetParent === null) {
+    // 如果用户信息不在可视区域内，暂时显示然后隐藏以触发渲染
+    const originalDisplay = userInfoMobile.style.display;
+    userInfoMobile.style.display = 'block';
+    
+    // 强制重绘
+    void userInfoMobile.offsetWidth;
+    
+    setTimeout(() => {
+      userInfoMobile.style.display = originalDisplay;
+    }, 50);
+  }
+}
+
+// 在侧边栏显示/隐藏时调用这个函数
+document.addEventListener("DOMContentLoaded", function() {
+  const sidebar = document.querySelector('.sidebar');
+  if (sidebar) {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.attributeName === 'class') {
+          if (sidebar.classList.contains('show')) {
+            setTimeout(refreshUserInfoDisplay, 300);
+          }
+        }
+      });
+    });
+    
+    observer.observe(sidebar, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+  }
+});
+
 // 更新显示函数 (已移到全局作用域)
 function updateDisplay(song, luck, recommendations) {
   // 通过ID直接获取元素
@@ -215,6 +253,7 @@ function checkLoginStatus() {
         showAuthLinks();
       })
       .finally(() => {
+		restoreSidebarScroll();
         document.body.classList.remove('spa-loading');
       });
   } else {
@@ -1104,6 +1143,22 @@ function loadPage(pageId) {
   const contentContainer = document.getElementById('content-container');
   if (!contentContainer) return;
 
+  // 保存当前侧边栏滚动位置
+  const sidebar = document.querySelector('.sidebar');
+  let sidebarScrollTop = 0;
+  if (sidebar) {
+    sidebarScrollTop = sidebar.scrollTop;
+  }
+
+  // 恢复侧边栏滚动位置
+  const restoreSidebarScroll = () => {
+    if (sidebar && sidebarScrollTop > 0) {
+      setTimeout(() => {
+        sidebar.scrollTop = sidebarScrollTop;
+      }, 100);
+    }
+  };
+
   if (window.innerWidth <= 992) {
     const sidebar = document.querySelector('.sidebar');
     if (sidebar) {
@@ -1690,7 +1745,8 @@ function loadPage(pageId) {
     }
     
     setupCharCounters();
-    
+	restoreSidebarScroll();
+	
     document.body.classList.remove('spa-loading');
     updateActiveMenuItem(pageId);
   }, 300);

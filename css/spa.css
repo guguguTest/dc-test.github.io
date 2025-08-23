@@ -650,3 +650,13 @@ input:checked + .slider:before {
   background-color: #95a5a6 !important;
   cursor: not-allowed;
 }
+
+@media (max-width: 992px) {
+  .sidebar {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0));
+  }
+  
+  .sidebar-nav {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0));
+  }
+}

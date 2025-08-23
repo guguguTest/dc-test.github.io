@@ -734,3 +734,19 @@
   top: -10px !important; /* 使光环更向上移动 */
   left: -4px !important; /* 使光环向左移动 */
 }
+
+.sidebar-user-area {
+  padding: 12px 15px;
+  background: white;
+  margin-bottom: 0;
+  position: relative; 
+  overflow: visible;
+  min-height: auto;
+  /* 添加底部安全区域 */
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
+}
+
+/* 确保侧边栏底部有足够空间 */
+.sidebar-nav {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}

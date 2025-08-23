@@ -689,7 +689,24 @@ download: `
 			  <button id="save-profile-btn" class="btn btn-primary">保存个人信息</button>
 			</div>
 		  </div>
-		  
+
+		  <!-- 积分显示 -->
+		  <div class="setting-section">
+			<h3><i class="fas fa-coins me-2"></i>积分</h3>
+			<div class="form-group">
+			  <label>总积分</label>
+			  <div id="settings-total-points" class="form-control-static"></div>
+			</div>
+			<div class="form-group">
+			  <label>普通积分</label>
+			  <div id="settings-points" class="form-control-static"></div>
+			</div>
+			<div class="form-group">
+			  <label>鸽屋积分</label>
+			  <div id="settings-point2" class="form-control-static"></div>
+			</div>
+		  </div>
+
 		  <!-- 密码设置 -->
 		  <div class="setting-section">
 			<h3><i class="fas fa-lock me-2"></i>修改密码</h3>
@@ -708,23 +725,6 @@ download: `
 			</div>
 			<div class="setting-actions">
 			  <button id="save-password-btn" class="btn btn-primary">保存密码</button>
-			</div>
-		  </div>
-		  
-		  <!-- 积分显示 -->
-		  <div class="setting-section">
-			<h3><i class="fas fa-coins me-2"></i>积分</h3>
-			<div class="form-group">
-			  <label>总积分</label>
-			  <div id="settings-total-points" class="form-control-static"></div>
-			</div>
-			<div class="form-group">
-			  <label>普通积分</label>
-			  <div id="settings-points" class="form-control-static"></div>
-			</div>
-			<div class="form-group">
-			  <label>鸽屋积分</label>
-			  <div id="settings-point2" class="form-control-static"></div>
 			</div>
 		  </div>
 		</div>
