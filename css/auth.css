@@ -223,7 +223,7 @@
 .sidebar-user-area::after {
   content: "";
   position: absolute;
-  bottom: 152px; 
+  bottom: calc(152px + env(safe-area-inset-bottom, 0px)); 
   left: 0;
   right: 0;
   height: 64px; 
@@ -278,7 +278,9 @@
   overflow: visible;
   position: relative; 
   z-index: 2; 
-  padding-right: 55px; 
+  padding-right: 55px;
+  /* 添加底部边距考虑安全区域 */
+  margin-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .sidebar-user-area #user-nickname-mobile {
@@ -766,8 +768,8 @@
   position: relative; 
   overflow: visible;
   min-height: auto;
-  /* 添加底部安全区域 */
-  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
+  /* 修改安全区域处理 */
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
 
 /* 确保侧边栏底部有足够空间 */

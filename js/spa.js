@@ -44,6 +44,27 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
+// 防止侧边栏滑动时主页面滚动
+document.addEventListener('DOMContentLoaded', function() {
+  const sidebar = document.querySelector('.sidebar');
+  
+  if (sidebar) {
+    sidebar.addEventListener('touchstart', function(e) {
+      // 只有当侧边栏可见时才阻止事件传播
+      if (window.innerWidth <= 992 && sidebar.classList.contains('show')) {
+        e.stopPropagation();
+      }
+    });
+    
+    sidebar.addEventListener('touchmove', function(e) {
+      // 只有当侧边栏可见时才阻止事件传播
+      if (window.innerWidth <= 992 && sidebar.classList.contains('show')) {
+        e.stopPropagation();
+      }
+    });
+  }
+});
+
 // 获取随机推荐行动（修复重复问题）
 function getRandomRecommendations() {
   const actions = ['出勤', '家勤', '越级', '下埋', '理论'];
