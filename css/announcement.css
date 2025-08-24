@@ -323,3 +323,196 @@
   padding: 12px;
   outline: none;
 }
+
+/* 公告容器宽度调整 */
+.announcements-container {
+  margin-top: 20px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 置顶公告区域样式 */
+.pinned-announcements-section {
+  background: linear-gradient(135deg, #fff9e6 0%, #ffe9c8 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  border: 1px solid #ffd89c;
+  box-shadow: 0 4px 12px rgba(255, 184, 0, 0.15);
+}
+
+.pinned-announcements-section .announcement-list {
+  margin-bottom: 0;
+}
+
+.pinned-announcements-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #ffd89c;
+}
+
+.pinned-announcements-header i {
+  color: #ff9900;
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.pinned-announcements-header h3 {
+  margin: 0;
+  color: #e67e00;
+  font-weight: 600;
+}
+
+/* 普通公告区域样式 */
+.normal-announcements-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.normal-announcements-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.normal-announcements-header i {
+  color: #6c757d;
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.normal-announcements-header h3 {
+  margin: 0;
+  color: #495057;
+  font-weight: 600;
+}
+
+/* 公告项样式优化 */
+.announcement-item {
+  border-bottom: 1px solid #eee;
+  padding: 15px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: white;
+}
+
+.announcement-item:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 管理页面公告项样式 */
+.admin-announcement-item {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #eee;
+  transition: all 0.2s ease;
+}
+
+.admin-announcement-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.admin-announcement-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.admin-announcement-title {
+  font-weight: 600;
+  font-size: 18px;
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+}
+
+.admin-announcement-date {
+  color: #8c8c8c;
+  font-size: 14px;
+  margin-left: 15px;
+}
+
+.admin-announcement-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+/* 分页样式优化 */
+.announcement-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.pagination {
+  display: flex;
+  gap: 8px;
+}
+
+.page-item {
+  display: inline-block;
+}
+
+.page-link {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #1890ff;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.page-link:hover {
+  background-color: #e6f7ff;
+  border-color: #91d5ff;
+}
+
+.page-item.active .page-link {
+  background-color: #1890ff;
+  border-color: #1890ff;
+  color: white;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .announcements-container {
+    padding: 0 10px;
+  }
+  
+  .pinned-announcements-section,
+  .normal-announcements-section {
+    padding: 15px;
+  }
+  
+  .admin-announcement-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .admin-announcement-date {
+    margin-left: 0;
+    margin-top: 5px;
+  }
+  
+  .admin-announcement-actions {
+    justify-content: flex-start;
+  }
+}

@@ -13,122 +13,157 @@ class AnnouncementSystem {
     this.setupEventListeners();
   }
 
-  // 设置事件监听器
-  setupEventListeners() {
-    // 使用事件委托来处理动态生成的公告项
-    document.addEventListener('click', (e) => {
-      // 检查点击的是否是公告项或其中的元素
-      const announcementItem = e.target.closest('.announcement-item, .announcement-card, .announcement-simple-item');
-      if (announcementItem) {
-        const id = announcementItem.dataset.id;
-        if (id) {
-          e.preventDefault();
-          this.showAnnouncementDetail(id);
-        }
-      }
+	// 设置事件监听器
+	setupEventListeners() {
+	  // 使用事件委托来处理动态生成的公告项
+	  document.addEventListener('click', (e) => {
+		// 检查点击的是否是公告项或其中的元素
+		const announcementItem = e.target.closest('.announcement-item, .announcement-card, .announcement-simple-item');
+		if (announcementItem) {
+		  const id = announcementItem.dataset.id;
+		  if (id) {
+			e.preventDefault();
+			this.showAnnouncementDetail(id);
+		  }
+		}
 
-      // 关闭公告弹窗
-      if (e.target.classList.contains('announcement-modal-close') || 
-          e.target.classList.contains('announcement-modal-ok')) {
-        this.hideAnnouncementModal();
-      }
+		// 关闭公告弹窗
+		if (e.target.classList.contains('announcement-modal-close') || 
+			e.target.classList.contains('announcement-modal-ok')) {
+		  this.hideAnnouncementModal();
+		}
 
-      // 点击弹窗外部关闭
-      if (e.target.classList.contains('announcement-modal')) {
-        this.hideAnnouncementModal();
-      }
+		// 点击弹窗外部关闭
+		if (e.target.classList.contains('announcement-modal')) {
+		  this.hideAnnouncementModal();
+		}
 
-      // 分页点击事件
-      if (e.target.classList.contains('page-link')) {
-        e.preventDefault();
-        const page = parseInt(e.target.dataset.page);
-        if (page && page !== this.currentPage) {
-          this.currentPage = page;
-          this.loadAnnouncements();
-        }
-      }
-    });
-  }
+		// 分页点击事件 - 修复：确保完全阻止默认行为
+		if (e.target.classList.contains('page-link')) {
+		  e.preventDefault();
+		  e.stopPropagation(); // 添加阻止事件冒泡
+		  const page = parseInt(e.target.dataset.page);
+		  if (page && page !== this.currentPage) {
+			this.currentPage = page;
+			this.loadAnnouncements();
+			
+			// 滚动到公告容器顶部
+			const container = document.getElementById('announcements-container');
+			if (container) {
+			  container.scrollIntoView({ behavior: 'smooth' });
+			}
+		  }
+		}
+	  });
+	}
 
-  // 加载公告列表
-  async loadAnnouncements() {
-    try {
-      const container = document.getElementById('announcements-container');
-      if (!container) {
-        console.error('公告容器不存在');
-        return;
-      }
-      
-      // 显示加载状态
-      container.innerHTML = '<div class="loading-announcements">加载公告中...</div>';
-      
-      const response = await fetch(`https://api.am-all.com.cn/api/announcements?page=${this.currentPage}&limit=10`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP错误: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        console.error('加载公告失败:', data.error);
-        container.innerHTML = '<div class="no-announcements">加载公告失败</div>';
-        return;
-      }
-      
-      this.pinnedAnnouncements = data.pinned || [];
-      this.announcements = data.announcements || [];
-      this.totalPages = data.pagination?.totalPages || 1;
-      
-      this.renderAnnouncements();
-    } catch (error) {
-      console.error('加载公告失败:', error);
-      const container = document.getElementById('announcements-container');
-      if (container) {
-        container.innerHTML = '<div class="no-announcements">加载公告失败，请刷新重试</div>';
-      }
-    }
-  }
-
-  // 渲染公告列表
-  renderAnnouncements() {
+// 加载公告列表 - 添加错误处理和边界检查
+async loadAnnouncements() {
+  try {
     const container = document.getElementById('announcements-container');
-    if (!container) return;
-    
-    let html = '';
-    
-    // 渲染置顶公告
-    if (this.pinnedAnnouncements.length > 0) {
-      html += '<div class="announcement-list">';
-      this.pinnedAnnouncements.forEach(announcement => {
-        html += this.renderAnnouncementItem(announcement);
-      });
-      html += '</div>';
-      
-      // 添加分隔线
-      if (this.announcements.length > 0) {
-        html += '<div class="announcement-divider"><span>最新公告</span></div>';
-      }
+    if (!container) {
+      console.error('公告容器不存在');
+      return;
     }
     
-    // 渲染普通公告
-    if (this.announcements.length > 0) {
-      html += '<div class="announcement-list">';
-      this.announcements.forEach(announcement => {
-        html += this.renderAnnouncementItem(announcement);
-      });
-      html += '</div>';
-    } else {
-      html += '<div class="no-announcements">暂无公告</div>';
+    // 显示加载状态
+    container.innerHTML = '<div class="loading-announcements">加载公告中...</div>';
+    
+    // 修改：每页显示5条普通公告
+    const response = await fetch(`https://api.am-all.com.cn/api/announcements?page=${this.currentPage}&limit=5`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP错误: ${response.status}`);
     }
+    
+    const data = await response.json();
+    
+    if (data.error) {
+      console.error('加载公告失败:', data.error);
+      container.innerHTML = '<div class="no-announcements">加载公告失败</div>';
+      return;
+    }
+    
+    this.pinnedAnnouncements = data.pinned || [];
+    this.announcements = data.announcements || [];
+    this.totalPages = data.pagination?.totalPages || 1;
+    
+    // 修改：添加分页边界检查
+    if (this.currentPage > this.totalPages && this.totalPages > 0) {
+      this.currentPage = this.totalPages;
+      await this.loadAnnouncements(); // 使用await确保重新加载完成
+      return;
+    }
+    
+    this.renderAnnouncements();
+  } catch (error) {
+    console.error('加载公告失败:', error);
+    const container = document.getElementById('announcements-container');
+    if (container) {
+      container.innerHTML = '<div class="no-announcements">加载公告失败，请刷新重试</div>';
+    }
+  }
+}
+
+// 渲染公告列表
+renderAnnouncements() {
+  const container = document.getElementById('announcements-container');
+  if (!container) return;
+  
+  let html = '';
+  
+  // 渲染置顶公告
+  if (this.pinnedAnnouncements.length > 0) {
+    html += `
+      <div class="pinned-announcements-section">
+        <div class="pinned-announcements-header">
+          <i class="fas fa-thumbtack"></i>
+          <h3>置顶公告</h3>
+        </div>
+        <div class="announcement-list">
+    `;
+    
+    this.pinnedAnnouncements.forEach(announcement => {
+      html += this.renderAnnouncementItem(announcement);
+    });
+    
+    html += `
+        </div>
+      </div>
+    `;
+  }
+  
+  // 渲染普通公告
+  if (this.announcements.length > 0) {
+    html += `
+      <div class="normal-announcements-section">
+        <div class="normal-announcements-header">
+          <i class="fas fa-list"></i>
+          <h3>最新公告</h3>
+        </div>
+        <div class="announcement-list">
+    `;
+    
+    this.announcements.forEach(announcement => {
+      html += this.renderAnnouncementItem(announcement);
+    });
+    
+    html += `
+        </div>
+    `;
     
     // 渲染分页
     if (this.totalPages > 1) {
       html += this.renderPagination();
     }
     
-    container.innerHTML = html;
+    html += `</div>`;
+  } else {
+    html += '<div class="no-announcements">暂无公告</div>';
   }
+  
+  container.innerHTML = html;
+}
 
   // 渲染单个公告项
   renderAnnouncementItem(announcement) {
@@ -158,33 +193,33 @@ class AnnouncementSystem {
     return typeMap[type] || '通知';
   }
 
-  // 渲染分页
-  renderPagination() {
-    let html = '<div class="announcement-pagination"><ul class="pagination">';
-    
-    // 上一页
-    if (this.currentPage > 1) {
-      html += `<li class="page-item"><a class="page-link" href="#" data-page="${this.currentPage - 1}">上一页</a></li>`;
-    }
-    
-    // 页码
-    const startPage = Math.max(1, this.currentPage - 2);
-    const endPage = Math.min(this.totalPages, startPage + 4);
-    
-    for (let i = startPage; i <= endPage; i++) {
-      html += `<li class="page-item ${i === this.currentPage ? 'active' : ''}">
-        <a class="page-link" href="#" data-page="${i}">${i}</a>
-      </li>`;
-    }
-    
-    // 下一页
-    if (this.currentPage < this.totalPages) {
-      html += `<li class="page-item"><a class="page-link" href="#" data-page="${this.currentPage + 1}">下一页</a></li>`;
-    }
-    
-    html += '</ul></div>';
-    return html;
-  }
+	// 渲染分页 - 修复分页链接的href属性
+	renderPagination() {
+	  let html = '<div class="announcement-pagination"><ul class="pagination">';
+	  
+	  // 上一页
+	  if (this.currentPage > 1) {
+		html += `<li class="page-item"><a class="page-link" href="javascript:void(0);" data-page="${this.currentPage - 1}">上一页</a></li>`;
+	  }
+	  
+	  // 页码
+	  const startPage = Math.max(1, this.currentPage - 2);
+	  const endPage = Math.min(this.totalPages, startPage + 4);
+	  
+	  for (let i = startPage; i <= endPage; i++) {
+		html += `<li class="page-item ${i === this.currentPage ? 'active' : ''}">
+		  <a class="page-link" href="javascript:void(0);" data-page="${i}">${i}</a>
+		</li>`;
+	  }
+	  
+	  // 下一页
+	  if (this.currentPage < this.totalPages) {
+		html += `<li class="page-item"><a class="page-link" href="javascript:void(0);" data-page="${this.currentPage + 1}">下一页</a></li>`;
+	  }
+	  
+	  html += '</ul></div>';
+	  return html;
+	}
 
   // 显示公告详情
   async showAnnouncementDetail(id) {
@@ -359,51 +394,62 @@ class AnnouncementAdminSystem {
     }
   }
 
-  // 渲染公告列表
-  renderAnnouncements(announcements) {
-    const container = document.getElementById('admin-announcements-list');
-    if (!container) return;
-    
-    let html = '';
-    
+// 渲染公告列表
+renderAnnouncements(announcements) {
+  const container = document.getElementById('admin-announcements-list');
+  if (!container) return;
+  
+  let html = '';
+  
+  if (announcements.length === 0) {
+    html = '<div class="no-announcements text-center py-4">暂无公告</div>';
+  } else {
     announcements.forEach(announcement => {
       const date = new Date(announcement.created_at).toLocaleDateString('zh-CN');
       const typeClass = announcement.type || 'notice';
       const typeText = this.getTypeText(announcement.type);
-      const pinnedIcon = announcement.is_pinned ? '<i class="fas fa-thumbtack"></i> ' : '';
+      const pinnedIcon = announcement.is_pinned ? '<i class="fas fa-thumbtack text-warning me-1"></i>' : '';
       
       html += `
-        <div class="admin-announcement-item" data-id="${announcement.id}">
+        <div class="admin-announcement-item">
           <div class="admin-announcement-header">
             <span class="announcement-type ${typeClass}">${pinnedIcon}${typeText}</span>
             <h4 class="admin-announcement-title">${announcement.title}</h4>
             <span class="admin-announcement-date">${date}</span>
           </div>
+          <div class="admin-announcement-content">
+            ${announcement.content.substring(0, 100)}${announcement.content.length > 100 ? '...' : ''}
+          </div>
           <div class="admin-announcement-actions">
-            <button class="btn-edit" data-id="${announcement.id}">编辑</button>
-            <button class="btn-delete" data-id="${announcement.id}">删除</button>
+            <button class="btn-edit" data-id="${announcement.id}">
+              <i class="fas fa-edit me-1"></i>编辑
+            </button>
+            <button class="btn-delete" data-id="${announcement.id}">
+              <i class="fas fa-trash me-1"></i>删除
+            </button>
           </div>
         </div>
       `;
     });
-    
-    container.innerHTML = html;
-    
-    // 添加编辑和删除事件
-    container.querySelectorAll('.btn-edit').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = e.target.dataset.id;
-        this.editAnnouncement(id);
-      });
-    });
-    
-    container.querySelectorAll('.btn-delete').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = e.target.dataset.id;
-        this.deleteAnnouncement(id);
-      });
-    });
   }
+  
+  container.innerHTML = html;
+  
+  // 添加编辑和删除事件
+  container.querySelectorAll('.btn-edit').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.closest('.btn-edit').dataset.id;
+      this.editAnnouncement(id);
+    });
+  });
+  
+  container.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.closest('.btn-delete').dataset.id;
+      this.deleteAnnouncement(id);
+    });
+  });
+}
 
   // 获取类型文本
   getTypeText(type) {
