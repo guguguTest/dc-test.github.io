@@ -1654,78 +1654,87 @@ if (pageId === 'fortune') {
         // 检查是否可以抽取运势
         const token = localStorage.getItem('token');
         if (token) {
-          fetch('https://api.am-all.com.cn/api/fortune/last-draw', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.canDraw) {
-              if (drawBtn) {
-                drawBtn.disabled = false;
-                drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
-              }
-              if (fortuneHint) {
-                fortuneHint.textContent = '今日运势待抽取';
-              }
-            } else {
-              // 已经抽取过，显示上次抽取的结果
-				fetch('https://api.am-all.com.cn/api/fortune/last-draw', {
-				  headers: {
-					'Authorization': `Bearer ${token}`
+			// 在获取上次抽取时间的代码部分，添加错误处理
+			fetch('https://api.am-all.com.cn/api/fortune/last-draw', {
+			  headers: {
+				'Authorization': `Bearer ${token}`
+			  }
+			})
+			.then(response => {
+			  if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			  }
+			  return response.json();
+			})
+			.then(data => {
+			  if (data.canDraw) {
+				if (drawBtn) {
+				  drawBtn.disabled = false;
+				  drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
+				}
+				if (fortuneHint) {
+				  fortuneHint.textContent = '今日运势待抽取';
+				}
+			  } else {
+				// 已经抽取过，显示上次抽取的结果
+				if (data.lastFortune) {
+				  displayFortune(
+					data.lastFortune.song_data,
+					data.lastFortune.luck,
+					data.lastFortune.recommendations
+				  );
+				}
+				
+				if (drawBtn) {
+				  drawBtn.disabled = true;
+				  drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+				}
+				
+				if (fortuneHint) {
+				  if (data.nextDrawTime) {
+					const nextDraw = new Date(data.nextDrawTime);
+					const now = new Date();
+					const hoursLeft = Math.ceil((nextDraw - now) / (1000 * 60 * 60));
+					fortuneHint.textContent = `今日运势已抽取，${hoursLeft}小时后可再次抽取`;
+				  } else {
+					fortuneHint.textContent = `今日运势已抽取，请明天再来`;
 				  }
-				})
-				.then(response => response.json())
-				.then(data => {
-				  if (!data.canDraw && data.lastFortune) {
-					displayFortune(
-					  data.lastFortune.song_data,
-					  data.lastFortune.luck,
-					  data.lastFortune.recommendations
-					);
+				}
+			  }
+			})
+			.catch(error => {
+			  console.error('检查运势抽取状态失败:', error);
+			  // 使用本地逻辑作为后备
+			  if (lastDrawDate === today && dailyFortuneData) {
+				try {
+				  const data = JSON.parse(dailyFortuneData);
+				  if (data && data.song) {
+					displayFortune(data.song, data.luck, data.recommendations);
+					if (drawBtn) {
+					  drawBtn.disabled = true;
+					  drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+					}
+					if (fortuneHint) {
+					  fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
+					}
 				  }
-				})
-				.catch(error => {
-				  console.error('获取上次运势结果失败:', error);
-				});
-              
-              if (drawBtn) {
-                drawBtn.disabled = true;
-                drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-              }
-              if (fortuneHint) {
-                const nextDraw = new Date(data.nextDrawTime);
-                const now = new Date();
-                const hoursLeft = Math.ceil((nextDraw - now) / (1000 * 60 * 60));
-                fortuneHint.textContent = `今日运势已抽取，${hoursLeft}小时后可再次抽取`;
-              }
-            }
-          })
-          .catch(error => {
-            console.error('检查运势抽取状态失败:', error);
-            // 使用本地逻辑作为后备
-            if (lastDrawDate === today && dailyFortuneData) {
-              try {
-                const data = JSON.parse(dailyFortuneData);
-                if (data && data.song) {
-                  displayFortune(data.song, data.luck, data.recommendations);
-                  if (drawBtn) {
-                    drawBtn.disabled = true;
-                    drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-                  }
-                  if (fortuneHint) {
-                    fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
-                  }
-                }
-              } catch (e) {
-                console.error('解析运势数据失败', e);
-                localStorage.removeItem('dailyFortuneDate');
-                localStorage.removeItem('dailyFortuneData');
-                updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-              }
-            }
-          });
+				} catch (e) {
+				  console.error('解析运势数据失败', e);
+				  localStorage.removeItem('dailyFortuneDate');
+				  localStorage.removeItem('dailyFortuneData');
+				  updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+				}
+			  } else {
+				// 显示通用错误信息，而不是NaN
+				if (fortuneHint) {
+				  fortuneHint.textContent = '无法获取抽取状态，请稍后重试';
+				}
+				if (drawBtn) {
+				  drawBtn.disabled = false;
+				  drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
+				}
+			  }
+			});
         }
       })
       .catch(error => {
