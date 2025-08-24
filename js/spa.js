@@ -1671,16 +1671,24 @@ if (pageId === 'fortune') {
               }
             } else {
               // 已经抽取过，显示上次抽取的结果
-              if (lastDrawDate === today && dailyFortuneData) {
-                try {
-                  const data = JSON.parse(dailyFortuneData);
-                  if (data && data.song) {
-                    displayFortune(data.song, data.luck, data.recommendations);
-                  }
-                } catch (e) {
-                  console.error('解析运势数据失败', e);
-                }
-              }
+				fetch('https://api.am-all.com.cn/api/fortune/last-draw', {
+				  headers: {
+					'Authorization': `Bearer ${token}`
+				  }
+				})
+				.then(response => response.json())
+				.then(data => {
+				  if (!data.canDraw && data.lastFortune) {
+					displayFortune(
+					  data.lastFortune.song_data,
+					  data.lastFortune.luck,
+					  data.lastFortune.recommendations
+					);
+				  }
+				})
+				.catch(error => {
+				  console.error('获取上次运势结果失败:', error);
+				});
               
               if (drawBtn) {
                 drawBtn.disabled = true;
