@@ -2729,20 +2729,27 @@ document.addEventListener("DOMContentLoaded", function() {
     
 	document.body.addEventListener('click', function(e) {
 	  // 处理所有带有 data-page 属性的链接
-		const pageLink = e.target.closest('[data-page]');
-		if (pageLink) {
-		  e.preventDefault();
-		  const pageId = pageLink.getAttribute('data-page');
-		  loadPage(pageId);
-		  
-		  if (window.innerWidth <= 992) {
-			const sidebar = document.querySelector('.sidebar');
-			if (sidebar) sidebar.classList.remove('show');
-			document.body.classList.remove('mobile-sidebar-open');
-			document.body.classList.add('mobile-sidebar-closed');
+		  const pageLink = e.target.closest('[data-page]');
+		  if (pageLink) {
+			e.preventDefault();
+			const pageId = pageLink.getAttribute('data-page');
+			loadPage(pageId);
+			
+			if (window.innerWidth <= 992) {
+			  const sidebar = document.querySelector('.sidebar');
+			  if (sidebar) sidebar.classList.remove('show');
+			  document.body.classList.remove('mobile-sidebar-open');
+			  document.body.classList.add('mobile-sidebar-closed');
+			}
+			return;
 		  }
-		  return;
-		}
+
+		  // 新增：排除公告分页链接
+		  const announcementPageLink = e.target.closest('[data-announcement-page]');
+		  if (announcementPageLink) {
+			// 不阻止默认行为，让公告系统处理
+			return;
+		  }
         
         if (e.target.closest('#login-btn')) {
             e.preventDefault();

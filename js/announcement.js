@@ -38,11 +38,13 @@ class AnnouncementSystem {
 		  this.hideAnnouncementModal();
 		}
 
-		// 分页点击事件 - 修复：确保完全阻止默认行为
+		// 分页点击事件 - 修复：使用不同的data属性名称避免与SPA路由冲突
 		if (e.target.classList.contains('page-link')) {
 		  e.preventDefault();
-		  e.stopPropagation(); // 添加阻止事件冒泡
-		  const page = parseInt(e.target.dataset.page);
+		  e.stopPropagation();
+		  
+		  // 修改：使用 data-announcement-page 而不是 data-page
+		  const page = parseInt(e.target.dataset.announcementPage);
 		  if (page && page !== this.currentPage) {
 			this.currentPage = page;
 			this.loadAnnouncements();
@@ -193,13 +195,14 @@ renderAnnouncements() {
     return typeMap[type] || '通知';
   }
 
-	// 渲染分页 - 修复分页链接的href属性
+	// 渲染分页 - 修复：使用不同的data属性名称避免与SPA路由冲突
 	renderPagination() {
 	  let html = '<div class="announcement-pagination"><ul class="pagination">';
 	  
 	  // 上一页
 	  if (this.currentPage > 1) {
-		html += `<li class="page-item"><a class="page-link" href="javascript:void(0);" data-page="${this.currentPage - 1}">上一页</a></li>`;
+		// 修改：使用 data-announcement-page 而不是 data-page
+		html += `<li class="page-item"><a class="page-link" href="javascript:void(0);" data-announcement-page="${this.currentPage - 1}">上一页</a></li>`;
 	  }
 	  
 	  // 页码
@@ -207,14 +210,16 @@ renderAnnouncements() {
 	  const endPage = Math.min(this.totalPages, startPage + 4);
 	  
 	  for (let i = startPage; i <= endPage; i++) {
+		// 修改：使用 data-announcement-page 而不是 data-page
 		html += `<li class="page-item ${i === this.currentPage ? 'active' : ''}">
-		  <a class="page-link" href="javascript:void(0);" data-page="${i}">${i}</a>
+		  <a class="page-link" href="javascript:void(0);" data-announcement-page="${i}">${i}</a>
 		</li>`;
 	  }
 	  
 	  // 下一页
 	  if (this.currentPage < this.totalPages) {
-		html += `<li class="page-item"><a class="page-link" href="javascript:void(0);" data-page="${this.currentPage + 1}">下一页</a></li>`;
+		// 修改：使用 data-announcement-page 而不是 data-page
+		html += `<li class="page-item"><a class="page-link" href="javascript:void(0);" data-announcement-page="${this.currentPage + 1}">下一页</a></li>`;
 	  }
 	  
 	  html += '</ul></div>';
