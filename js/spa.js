@@ -725,15 +725,21 @@ function sendVerificationCode(email, type) {
   console.log(`发送验证码: ${email} (${type})`);
   
   const sendBtn = document.getElementById(type === 'register' ? 'send-verification-code' : 'send-reset-code');
+  const originalText = sendBtn.innerHTML;
+  
   if (sendBtn) {
     sendBtn.disabled = true;
     let seconds = 60;
+    
+    // 添加加载动画
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>发送中...';
+    
     const timer = setInterval(() => {
-      sendBtn.textContent = `${seconds}秒后重试`;
+      sendBtn.innerHTML = `<i class="fas fa-clock me-2"></i>${seconds}秒后重试`;
       seconds--;
       if (seconds < 0) {
         clearInterval(timer);
-        sendBtn.textContent = '获取验证码';
+        sendBtn.innerHTML = originalText;
         sendBtn.disabled = false;
       }
     }, 1000);
@@ -759,11 +765,40 @@ function sendVerificationCode(email, type) {
     return response.json();
   })
   .then(data => {
-    showSuccessMessage('验证码已发送');
+    // 添加成功动画效果
+    const sendBtn = document.getElementById(type === 'register' ? 'send-verification-code' : 'send-reset-code');
+    if (sendBtn) {
+      sendBtn.innerHTML = '<i class="fas fa-check me-2"></i>已发送';
+      sendBtn.classList.add('btn-success');
+      
+      // 3秒后恢复原状
+      setTimeout(() => {
+        if (sendBtn._timer) {
+          clearInterval(sendBtn._timer);
+        }
+        sendBtn.innerHTML = '获取验证码';
+        sendBtn.disabled = false;
+        sendBtn.classList.remove('btn-success');
+      }, 3000);
+    }
+    
+    showSuccessMessage('验证码已发送至您的邮箱');
     return data;
   })
   .catch(error => {
     console.error('验证码发送失败:', error);
+    
+    // 恢复按钮状态
+    const sendBtn = document.getElementById(type === 'register' ? 'send-verification-code' : 'send-reset-code');
+    if (sendBtn) {
+      if (sendBtn._timer) {
+        clearInterval(sendBtn._timer);
+      }
+      sendBtn.innerHTML = '获取验证码';
+      sendBtn.disabled = false;
+      sendBtn.classList.remove('btn-success');
+    }
+    
     showErrorMessage(error.message || '发送验证码失败');
     throw error;
   });

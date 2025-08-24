@@ -660,3 +660,28 @@ input:checked + .slider:before {
     padding-bottom: calc(20px + env(safe-area-inset-bottom, 0));
   }
 }
+
+/* 按钮动画效果 */
+.btn-success {
+  background-color: #28a745 !important;
+  border-color: #28a745 !important;
+}
+
+/* 旋转动画 */
+.fa-spin {
+  animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 验证码输入框样式 */
+.verification-input {
+  letter-spacing: 8px;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px 15px;
+}
