@@ -1197,7 +1197,7 @@ function setupCharCounters() {
 }
 
 // 显示每日运势结果
-function displayFortune(song, luck, recommendations) {
+function displayFortune(song, luck, recommendations, pointsEarned) {
   // 确保封面图片显示，动画隐藏
   const coverImg = document.getElementById('cover-img');
   const animationContainer = document.querySelector('.fortune-animation');
@@ -1227,6 +1227,8 @@ function displayFortune(song, luck, recommendations) {
   };
   
   updateDisplay(displaySong, luck, recommendations);
+
+}
 
 // 加载页面内容
 function loadPage(pageId) {
@@ -1719,6 +1721,23 @@ if (pageId === 'fortune') {
 					}
 				  }
 				}
+				
+				if (drawBtn) {
+				  drawBtn.disabled = true;
+				  drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+				}
+				
+				if (fortuneHint) {
+				  if (data.nextDrawTime) {
+					const nextDraw = new Date(data.nextDrawTime);
+					const now = new Date();
+					const hoursLeft = Math.ceil((nextDraw - now) / (1000 * 60 * 60));
+					fortuneHint.textContent = `今日运势已抽取，${hoursLeft}小时后可再次抽取`;
+				  } else {
+					fortuneHint.textContent = `今日运势已抽取，请明天再来`;
+				  }
+				}
+			  }
 			})
 			.catch(error => {
 			  console.error('检查运势抽取状态失败:', error);
