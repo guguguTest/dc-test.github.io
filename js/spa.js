@@ -712,6 +712,57 @@ function showUserInfo() {
 		}
 	  }
 	}
+
+	if (currentUser) {
+	  // 添加游戏查分菜单项
+	  if (!document.querySelector('.sidebar-nav a[data-page="ccb"]')) {
+		const ccbItem = document.createElement('li');
+		ccbItem.innerHTML = `
+		  <a href="#" data-page="ccb">
+			<i class="fas fa-chart-line me-2"></i>
+			<span>游戏查分</span>
+		  </a>
+		`;
+		
+		// 添加到"功能"分类下
+		const toolsSection = document.querySelector('.sidebar-section-title');
+		if (toolsSection && toolsSection.textContent.includes('功能')) {
+		  const nav = toolsSection.nextElementSibling;
+		  if (nav && nav.classList.contains('sidebar-nav')) {
+			nav.appendChild(ccbItem);
+		  }
+		}
+	  }
+	  
+	  // 为管理员添加网站管理菜单项
+	  if (currentUser.user_rank >= 5) {
+		if (!document.querySelector('.sidebar-nav a[data-page="website-admin"]')) {
+		  const adminItem = document.createElement('li');
+		  adminItem.innerHTML = `
+			<a href="#" data-page="website-admin">
+			  <i class="fas fa-cogs me-2"></i>
+			  <span>网站管理</span>
+			</a>
+		  `;
+		  
+		  // 添加到"其他"分类下
+		  const otherSections = document.querySelectorAll('.sidebar-section-title');
+		  let otherSection = null;
+		  for (let section of otherSections) {
+			if (section.textContent.includes('其他')) {
+			  otherSection = section;
+			  break;
+			}
+		  }
+		  if (otherSection) {
+			const nav = otherSection.nextElementSibling;
+			if (nav && nav.classList.contains('sidebar-nav')) {
+			  nav.appendChild(adminItem);
+			}
+		  }
+		}
+	  }
+	}
   }
 
 // 显示登录/注册链接
@@ -1593,6 +1644,20 @@ function loadPage(pageId) {
 			}
 		  } else {
 			showLoginRequired('download-admin');
+		  }
+		}
+
+		if (pageId === 'ccb') {
+		  // 确保ccb.js已加载
+		  if (typeof initCCBPage === 'function') {
+			setTimeout(initCCBPage, 100);
+		  }
+		}
+
+		if (pageId === 'website-admin') {
+		  // 确保ccb.js已加载（网站管理功能也在ccb.js中）
+		  if (typeof initWebsiteAdminPage === 'function') {
+			setTimeout(initWebsiteAdminPage, 100);
 		  }
 		}
 

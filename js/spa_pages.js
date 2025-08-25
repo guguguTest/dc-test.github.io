@@ -510,6 +510,153 @@ download: `
 	  </div>
 	`,
 
+// 游戏查分页面
+ccb: `
+  <div class="section">
+    <h1 class="page-title">游戏查分系统</h1>
+    
+    <div id="ccb-bind-section" style="display: none;">
+      <div class="card">
+        <div class="card-header">
+          <h5><i class="fas fa-gamepad me-2"></i>绑定游戏信息</h5>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">请先绑定您的游戏服务器信息，然后才能进行查分操作</p>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="game-server" class="form-label">选择服务器</label>
+              <select id="game-server" class="form-select">
+                <option value="">请选择服务器...</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="game-title" class="form-label">选择游戏</label>
+              <select id="game-title" class="form-select">
+                <option value="">请选择游戏...</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="keychip" class="form-label">KeyChip</label>
+              <input type="text" id="keychip" class="form-control" placeholder="请输入KeyChip">
+            </div>
+            <div class="col-md-6">
+              <label for="guid" class="form-label">游戏卡号</label>
+              <input type="text" id="guid" class="form-control" placeholder="请输入游戏卡号">
+            </div>
+          </div>
+          
+          <button id="bind-game-info" class="btn btn-primary">
+            <i class="fas fa-link me-2"></i>绑定信息
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div id="ccb-query-section" style="display: none;">
+      <div class="card">
+        <div class="card-header">
+          <h5><i class="fas fa-search me-2"></i>查询游戏分数</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-8">
+              <label for="query-game-title" class="form-label">选择游戏</label>
+              <select id="query-game-title" class="form-select">
+                <option value="">请选择游戏...</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">所需积分</label>
+              <div class="form-control">5 积分/次</div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <button id="query-score" class="btn btn-primary">
+              <i class="fas fa-search me-2"></i>查询分数
+            </button>
+            <button id="change-bind" class="btn btn-outline-secondary ms-2">
+              <i class="fas fa-edit me-2"></i>修改绑定信息
+            </button>
+          </div>
+          
+          <div id="query-result" class="mt-4" style="display: none;">
+            <h6>查询结果:</h6>
+            <div id="score-image" class="text-center"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+`,
+
+// 网站管理页面 (管理员)
+'website-admin': `
+  <div class="section">
+    <h1 class="page-title">网站管理</h1>
+    <button class="back-button" data-page="home">
+      <i class="fas fa-arrow-left me-2"></i>
+      <span>返回</span>
+    </button>
+    
+    <div class="admin-sections">
+      <!-- 查分设置 -->
+      <div class="card admin-card">
+        <div class="card-header">
+          <h5><i class="fas fa-server me-2"></i>查分设置</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <button id="add-server" class="btn btn-primary">
+              <i class="fas fa-plus me-2"></i>添加服务器
+            </button>
+          </div>
+          
+          <div id="server-editor" class="server-editor" style="display: none;">
+            <h6 id="server-editor-title">添加服务器</h6>
+            <input type="hidden" id="server-id">
+            
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label for="editor-server-name" class="form-label">服务器名称</label>
+                <input type="text" id="editor-server-name" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label for="editor-server-url" class="form-label">服务器地址</label>
+                <input type="text" id="editor-server-url" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label for="editor-game-title" class="form-label">游戏标题</label>
+                <input type="text" id="editor-game-title" class="form-control">
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <button id="save-server" class="btn btn-primary">保存</button>
+              <button id="cancel-server" class="btn btn-secondary">取消</button>
+            </div>
+          </div>
+          
+          <div id="servers-list" class="servers-list">
+            <div class="text-center">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+              </div>
+              <p>服务器加载中...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 可以添加其他管理功能 -->
+    </div>
+  </div>
+`,
+
   // 登录页面
   login: `
     <div class="auth-container">

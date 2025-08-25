@@ -1,0 +1,94 @@
+/* ccb.css - 游戏查分系统样式 */
+
+/* 通用样式 */
+.admin-card {
+  margin-bottom: 20px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+}
+
+.admin-card .card-header {
+  background: linear-gradient(135deg, #1a1f2d, #2c3e50);
+  color: white;
+  border-bottom: none;
+}
+
+.server-editor {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  border: 1px solid #dee2e6;
+}
+
+.servers-list .list-group-item {
+  border-left: none;
+  border-right: none;
+}
+
+.servers-list .list-group-item:first-child {
+  border-top: none;
+}
+
+.servers-list .list-group-item:last-child {
+  border-bottom: none;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .servers-list .list-group-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .servers-list .list-group-item > div:last-child {
+    margin-top: 10px;
+    align-self: flex-end;
+  }
+}
+
+/* 游戏查分页面特定样式 */
+#ccb-bind-section,
+#ccb-query-section {
+  transition: opacity 0.3s ease;
+}
+
+#query-result {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+#score-image img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+/* 按钮样式 */
+#bind-game-info,
+#query-score,
+#change-bind {
+  min-width: 120px;
+}
+
+/* 表单样式 */
+.form-label {
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.form-select,
+.form-control {
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  padding: 8px 12px;
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
