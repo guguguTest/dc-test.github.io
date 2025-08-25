@@ -1227,38 +1227,6 @@ function displayFortune(song, luck, recommendations) {
   };
   
   updateDisplay(displaySong, luck, recommendations);
-  
-  const pointsEarned = Math.floor(Math.random() * 10) + 1;
-  
-  const token = localStorage.getItem('token');
-  if (token) {
-    fetch('https://api.am-all.com.cn/api/user/add-points', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ points: pointsEarned })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        currentUser.points = data.points;
-        updateUserInfo(currentUser);
-        
-        const fortuneHint = document.getElementById('fortune-hint');
-        if (fortuneHint) {
-          const totalPoints = data.points + (currentUser.point2 || 0);
-          fortuneHint.textContent = `恭喜获得 ${pointsEarned} 积分！当前积分: ${totalPoints}`;
-          fortuneHint.style.color = '#27ae60';
-        }
-      }
-    })
-    .catch(error => {
-      console.error('增加积分失败:', error);
-    });
-  }
-}
 
 // 加载页面内容
 function loadPage(pageId) {
@@ -1739,24 +1707,18 @@ if (pageId === 'fortune') {
 					data.lastFortune.luck,
 					data.lastFortune.recommendations
 				  );
-				}
-				
-				if (drawBtn) {
-				  drawBtn.disabled = true;
-				  drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-				}
-				
-				if (fortuneHint) {
-				  if (data.nextDrawTime) {
-					const nextDraw = new Date(data.nextDrawTime);
-					const now = new Date();
-					const hoursLeft = Math.ceil((nextDraw - now) / (1000 * 60 * 60));
-					fortuneHint.textContent = `今日运势已抽取，${hoursLeft}小时后可再次抽取`;
-				  } else {
-					fortuneHint.textContent = `今日运势已抽取，请明天再来`;
+				  
+				  // 显示历史获得的积分
+				  if (data.lastFortune.points_earned) {
+					const fortuneHint = document.getElementById('fortune-hint');
+					if (fortuneHint) {
+					  // 使用当前用户积分显示，而不是历史积分
+					  const totalPoints = (currentUser.points || 0) + (currentUser.point2 || 0);
+					  fortuneHint.textContent = `昨日获得 ${data.lastFortune.points_earned} 积分，当前积分: ${totalPoints}`;
+					  fortuneHint.style.color = '#7f8c8d'; // 使用灰色表示历史记录
+					}
 				  }
 				}
-			  }
 			})
 			.catch(error => {
 			  console.error('检查运势抽取状态失败:', error);
@@ -1878,8 +1840,18 @@ if (pageId === 'fortune') {
 			.then(response => response.json())
 			.then(data => {
 			  if (data.success) {
-				// 修复：传递正确的参数
-				displayFortune(data.song, data.luck, data.recommendations, data.pointsEarned);
+				// 修复：传递正确的参数，包括获得的积分
+				displayFortune(data.song, data.luck, data.recommendations);
+				
+				// 显示获得的积分信息
+				if (data.pointsEarned) {
+				  const fortuneHint = document.getElementById('fortune-hint');
+				  if (fortuneHint) {
+					const totalPoints = data.points + (data.point2 || 0);
+					fortuneHint.textContent = `恭喜获得 ${data.pointsEarned} 积分！当前积分: ${totalPoints}`;
+					fortuneHint.style.color = '#27ae60';
+				  }
+				}
 				
 				// 保存到本地存储，用于页面刷新后显示
 				const today = new Date().toDateString();
