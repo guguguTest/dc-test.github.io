@@ -707,6 +707,29 @@ download: `
 			</div>
 		  </div>
 
+			<div class="settings-section" id="ccb-binding-section" style="display: none;">
+				<h3><i class="fas fa-gamepad me-2"></i>游戏查分绑定信息</h3>
+				<div class="ccb-binding-info">
+					<div class="info-row">
+						<label>服务器:</label>
+						<span id="ccb-server-info"></span>
+					</div>
+					<div class="info-row">
+						<label>KeyChip:</label>
+						<span id="ccb-keychip-info"></span>
+					</div>
+					<div class="info-row">
+						<label>游戏卡号:</label>
+						<span id="ccb-guid-info"></span>
+					</div>
+					<div class="ccb-actions">
+						<button type="button" class="btn btn-danger" id="ccb-unbind-settings-btn">
+							<i class="fas fa-unlink me-2"></i>解绑查分信息
+						</button>
+					</div>
+				</div>
+			</div>
+
 		  <!-- 密码设置 -->
 		  <div class="setting-section">
 			<h3><i class="fas fa-lock me-2"></i>修改密码</h3>

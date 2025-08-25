@@ -65,6 +65,66 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// 在用户设置页面显示查分绑定信息
+function displayCCBBindingInfo() {
+    const bindingSection = document.getElementById('ccb-binding-section');
+    if (!bindingSection) return;
+    
+    if (currentUser && currentUser.game_server && currentUser.keychip && currentUser.guid) {
+        bindingSection.style.display = 'block';
+        document.getElementById('ccb-server-info').textContent = currentUser.game_server;
+        document.getElementById('ccb-keychip-info').textContent = currentUser.keychip;
+        document.getElementById('ccb-guid-info').textContent = currentUser.guid;
+        
+        // 添加解绑事件
+        const unbindBtn = document.getElementById('ccb-unbind-settings-btn');
+        if (unbindBtn) {
+            // 先移除旧的监听器，再添加新的
+            unbindBtn.replaceWith(unbindBtn.cloneNode(true));
+            document.getElementById('ccb-unbind-settings-btn').addEventListener('click', handleUnbindFromSettings);
+        }
+    } else {
+        bindingSection.style.display = 'none';
+    }
+}
+
+// 从设置页面解绑
+function handleUnbindFromSettings() {
+    if (!confirm('确定要解绑查分信息吗？解绑后需要重新绑定才能使用查分功能。')) {
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    
+    secureFetch('https://api.am-all.com.cn/api/ccb/unbind', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(result => {
+        if (result.success) {
+            showSuccessMessage('解绑成功');
+            // 更新当前用户信息
+            currentUser.game_server = null;
+            currentUser.keychip = null;
+            currentUser.guid = null;
+            
+            // 保存更新后的用户信息到本地存储
+            localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            
+            // 隐藏绑定信息卡片
+            document.getElementById('ccb-binding-section').style.display = 'none';
+        } else {
+            showErrorMessage(result.error || '解绑失败');
+        }
+    })
+    .catch(error => {
+        console.error('解绑失败:', error);
+        showErrorMessage('解绑失败: ' + (error.error || '服务器错误'));
+    });
+}
+
 // 获取随机推荐行动（修复重复问题）
 function getRandomRecommendations() {
   const actions = ['出勤', '家勤', '越级', '下埋', '理论'];
@@ -1280,13 +1340,13 @@ function loadPage(pageId) {
         languageModule.initLanguage();
       }
       
-      if (pageId === 'user-settings') {
-        const token = localStorage.getItem('token');
-        if (token) {
-          fetchUserInfo(token);
-        } else {
-          loadPage('login');
-        }
+	if (pageId === 'user-settings') {
+		const token = localStorage.getItem('token');
+		if (token) {
+			fetchUserInfo(token);
+		} else {
+			loadPage('login');
+		}
         
         const changeAvatarBtn = document.getElementById('change-avatar-btn');
         const avatarUpload = document.getElementById('avatar-upload');
@@ -1459,6 +1519,9 @@ function loadPage(pageId) {
           });
         }
         
+		// 显示查分绑定信息
+		setTimeout(displayCCBBindingInfo, 100);
+		
         const savePasswordBtn = document.getElementById('save-password-btn');
         if (savePasswordBtn) {
           savePasswordBtn.addEventListener('click', function() {
