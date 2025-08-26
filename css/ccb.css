@@ -106,11 +106,38 @@
     margin-top: 10px;
     color: #7f8c8d;
     font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.refresh-points-btn {
+    background: none;
+    border: none;
+    color: #3498db;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.refresh-points-btn:hover {
+    background: #f8f9fa;
+}
+
+.refresh-points-btn:disabled {
+    color: #95a5a6;
+    cursor: not-allowed;
 }
 
 /* 网站管理样式 */
 .admin-container {
-    max-width: 1000px;
+    max-width: 500px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -128,45 +155,163 @@
     color: #2c3e50;
     border-bottom: 1px solid #eee;
     padding-bottom: 10px;
+    margin-bottom: 20px;
 }
 
+/* 修改管理表单为竖向排列 */
 .admin-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 15px;
     margin-bottom: 20px;
+}
+
+.admin-form .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.admin-form label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.admin-form input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-form button {
+    align-self: flex-start;
+    padding: 10px 20px;
 }
 
 .admin-list {
     margin-top: 20px;
 }
 
+.admin-list h4 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
 .admin-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
+    flex-direction: column;
+    padding: 15px;
     border-bottom: 1px solid #eee;
+    gap: 10px;
 }
 
 .admin-item:last-child {
     border-bottom: none;
 }
 
+.admin-item-info {
+    flex: 1;
+}
+
+.admin-item-info strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 16px;
+}
+
 .admin-item-actions {
     display: flex;
     gap: 10px;
+    justify-content: flex-end;
 }
 
-/* 响应式设计 */
+/* 响应式设计调整 */
 @media (max-width: 768px) {
-    .ccb-form,
-    .admin-form {
-        grid-template-columns: 1fr;
+    .admin-container {
+        padding: 15px;
     }
     
-    .ccb-actions {
-        grid-column: span 1;
-        flex-direction: column;
+    .admin-card {
+        padding: 15px;
     }
+    
+    .admin-item {
+        flex-direction: column;
+        padding: 12px;
+    }
+    
+    .admin-item-actions {
+        justify-content: flex-start;
+        margin-top: 10px;
+    }
+    
+    .admin-item-actions .ccb-btn {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+/* 提示框样式 */
+.ccb-notice {
+    grid-column: span 2;
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 6px;
+    padding: 12px 15px;
+    margin: 10px 0;
+}
+
+.ccb-notice-title {
+    color: #856404;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+}
+
+.ccb-notice-title:before {
+    content: "!";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background-color: #856404;
+    color: white;
+    border-radius: 50%;
+    margin-right: 8px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.ccb-notice-content {
+    color: #856404;
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* 响应式设计调整 */
+@media (max-width: 768px) {
+    .ccb-notice {
+        grid-column: span 1;
+    }
+}
+
+/* 保存按钮样式 */
+.ccb-save-action {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.ccb-save-action .ccb-btn {
+    padding: 8px 16px;
+    font-size: 14px;
 }

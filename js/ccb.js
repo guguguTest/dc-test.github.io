@@ -172,7 +172,7 @@ function renderQueryPage(user) {
     
     contentContainer.innerHTML = `
         <div class="section">
-            <h1 class="page-title">游戏查分系统</h1>
+            <h1 class="page-title">游戏查分</h1>
             <div class="ccb-container">
                 <div class="ccb-section">
                     <h2 class="ccb-title">查询分数</h2>
@@ -187,13 +187,25 @@ function renderQueryPage(user) {
                             </select>
                         </div>
                         
+                        <!-- 添加提示框 -->
+                        <div class="ccb-notice">
+                            <h4 class="ccb-notice-title">提示</h4>
+                            <p class="ccb-notice-content">
+                                每次查分将消耗<b>5点普通积分</b>，查询结果以图片形式展示。<br>
+                                每次查分后需要等待10秒后才能再次查询。
+                            </p>
+                        </div>
+                        
                         <div class="ccb-actions">
-                            <button type="submit" class="ccb-btn ccb-btn-primary" id="query-btn">查询分数 (消耗5积分)</button>
-                            <button type="button" class="ccb-btn ccb-btn-secondary" id="unbind-btn">解绑信息</button>
+                            <button type="submit" class="ccb-btn ccb-btn-primary" id="query-btn">查分</button>
+                            <button type="button" class="ccb-btn ccb-btn-secondary" id="unbind-btn">解绑</button>
                         </div>
                         
                         <div class="ccb-points-info">
                             当前积分: ${user.points || 0}  <!-- 只显示普通积分 -->
+                            <button id="refresh-points-btn" class="refresh-points-btn">
+                                <i class="fas fa-redo"></i>刷新积分
+                            </button>
                         </div>
                         
                         <div class="ccb-cooldown" id="cooldown-message" style="display: none;"></div>
@@ -201,6 +213,7 @@ function renderQueryPage(user) {
                 </div>
                 
                 <div class="ccb-section">
+					<h2 class="ccb-title">查询结果</h2>
                     <div class="ccb-result" id="query-result">
                         <!-- 查询结果将显示在这里 -->
                     </div>
@@ -217,6 +230,69 @@ function renderQueryPage(user) {
     
     // 绑定解绑按钮事件
     document.getElementById('unbind-btn').addEventListener('click', handleUnbind);
+    
+    // 绑定刷新积分按钮事件
+    document.getElementById('refresh-points-btn').addEventListener('click', refreshPoints);
+}
+
+// 刷新积分函数
+function refreshPoints() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showErrorMessage('请先登录');
+        return;
+    }
+    
+    const refreshBtn = document.getElementById('refresh-points-btn');
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>刷新中...';
+    
+    secureFetch('https://api.am-all.com.cn/api/user', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(user => {
+        // 更新当前用户信息
+        currentUser = user;
+        // 保存更新后的用户信息到本地存储
+        localStorage.setItem('userInfo', JSON.stringify(user));
+        
+        // 更新页面上的积分显示
+        const pointsInfo = document.querySelector('.ccb-points-info');
+        if (pointsInfo) {
+            pointsInfo.innerHTML = `当前积分: ${user.points || 0}
+                <button id="refresh-points-btn" class="refresh-points-btn">
+                    <i class="fas fa-redo"></i>刷新积分
+                </button>`;
+            
+            // 创建并显示成功提示
+            const successMsg = document.createElement('span');
+            successMsg.textContent = '刷新积分成功';
+            successMsg.style.color = '#e74c3c';
+            successMsg.style.fontSize = '14px';
+            successMsg.style.fontWeight = '500';
+            successMsg.style.marginLeft = '10px';
+            pointsInfo.appendChild(successMsg);
+            
+            // 2秒后移除提示
+            setTimeout(() => {
+                successMsg.remove();
+            }, 2000);
+            
+            // 重新绑定事件
+            document.getElementById('refresh-points-btn').addEventListener('click', refreshPoints);
+        }
+    })
+    .catch(error => {
+        console.error('刷新积分失败:', error);
+        showErrorMessage('刷新积分失败');
+    })
+    .finally(() => {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = '<i class="fas fa-redo"></i>刷新积分';
+    });
 }
 
 // 加载游戏列表
@@ -278,14 +354,20 @@ function handleQuerySubmit(e) {
     })
     .then(result => {
         queryBtn.disabled = false;
-        queryBtn.textContent = '查询分数 (消耗5积分)';
+        queryBtn.textContent = '查分';
         
 		if (result.success) {
 			if (result.status === 'ok' && result.image_base64) {
 				// 显示查询结果
 				document.getElementById('query-result').innerHTML = `
 					<img src="data:image/png;base64,${result.image_base64}" alt="查分结果">
+					<div class="ccb-save-action">
+						<button id="save-image-btn" class="ccb-btn ccb-btn-primary">保存图片</button>
+					</div>
 				`;
+
+				// 绑定保存按钮事件
+				document.getElementById('save-image-btn').addEventListener('click', saveCCBImage);
                 
 				// 更新用户积分（只更新普通积分）
 				currentUser.points -= 5;
@@ -302,7 +384,7 @@ function handleQuerySubmit(e) {
     })
     .catch(error => {
         queryBtn.disabled = false;
-        queryBtn.textContent = '查询分数 (消耗5积分)';
+        queryBtn.textContent = '查分';
         console.error('查询失败:', error);
         showErrorMessage('查询失败: ' + (error.error || '服务器错误'));
     });
@@ -315,11 +397,11 @@ function startCooldown() {
     let seconds = 10;
     
     cooldownMessage.style.display = 'block';
-    cooldownMessage.textContent = `冷却时间: ${seconds}秒`;
+    cooldownMessage.textContent = `${seconds}秒后可再次查分`;
     
     cooldownTimer = setInterval(() => {
         seconds--;
-        cooldownMessage.textContent = `冷却时间: ${seconds}秒`;
+        cooldownMessage.textContent = `${seconds}秒后可再次查分`;
         
         if (seconds <= 0) {
             clearInterval(cooldownTimer);
@@ -673,6 +755,31 @@ function deleteGame(id) {
         console.error('删除游戏失败:', error);
         showErrorMessage('删除游戏失败: ' + (error.error || '服务器错误'));
     });
+}
+
+// 保存查分图片
+function saveCCBImage() {
+    const resultImg = document.querySelector('#query-result img');
+    if (!resultImg) {
+        showErrorMessage('没有可保存的图片');
+        return;
+    }
+    
+    // 创建时间戳文件名
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `ccb_${timestamp}.png`;
+    
+    // 创建下载链接
+    const link = document.createElement('a');
+    link.href = resultImg.src;
+    link.download = filename;
+    
+    // 模拟点击下载
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showSuccessMessage('图片已保存');
 }
 
 // 在SPA加载页面时初始化
