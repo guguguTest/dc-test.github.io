@@ -233,6 +233,39 @@
 
 /* 响应式设计调整 */
 @media (max-width: 768px) {
+    .ccb-container {
+        padding: 15px;
+    }
+    
+    .ccb-form {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .ccb-actions {
+        grid-column: span 1;
+        flex-direction: column;
+    }
+    
+    .ccb-notice {
+        grid-column: span 1;
+        order: 1; /* 确保提示框在表单元素之后显示 */
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .ccb-points-info {
+        order: 2; /* 确保积分信息在提示框之后显示 */
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        margin-top: 15px;
+    }
+    
+    .ccb-cooldown {
+        order: 3; /* 确保冷却提示在积分信息之后显示 */
+    }
+    
     .admin-container {
         padding: 15px;
     }
