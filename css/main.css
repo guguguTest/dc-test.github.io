@@ -502,45 +502,6 @@ html, body {
   }
 }
 
-/* 修复弹窗标题样式 */
-.modal-header {
-  background: linear-gradient(135deg, var(--dark-bg), var(--primary-color));
-  color: white;
-  padding: 15px 20px;
-  border-bottom: none;
-}
-
-/* 修复关闭按钮样式 */
-.modal-close {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 1.8rem;
-  opacity: 0.8;
-  transition: opacity 0.3s ease;
-}
-
-.modal-close:hover {
-  opacity: 1;
-}
-
-/* 修复弹窗底部按钮样式 */
-.modal-footer .btn-ok {
-  background: var(--secondary-color);
-  color: white;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.modal-footer .btn-ok:hover {
-  background: #2980b9;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-}
-
 .sidebar {
   position: fixed;
   top: 70px;
