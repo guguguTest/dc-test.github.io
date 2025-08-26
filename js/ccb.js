@@ -193,7 +193,7 @@ function renderQueryPage(user) {
                         </div>
                         
                         <div class="ccb-points-info">
-                            当前积分: ${(user.points || 0) + (user.point2 || 0)}
+                            当前积分: ${user.points || 0}  <!-- 只显示普通积分 -->
                         </div>
                         
                         <div class="ccb-cooldown" id="cooldown-message" style="display: none;"></div>
@@ -254,12 +254,11 @@ function handleQuerySubmit(e) {
         return;
     }
     
-    // 检查积分
-    const totalPoints = (currentUser.points || 0) + (currentUser.point2 || 0);
-    if (totalPoints < 5) {
-        showErrorMessage('积分不足，需要5积分才能查询');
-        return;
-    }
+    // 检查积分（只检查普通积分）
+	if ((currentUser.points || 0) < 5) {
+		showErrorMessage('积分不足，需要5积分才能查询');
+		return;
+	}
     
     const token = localStorage.getItem('token');
     const queryBtn = document.getElementById('query-btn');
@@ -281,29 +280,22 @@ function handleQuerySubmit(e) {
         queryBtn.disabled = false;
         queryBtn.textContent = '查询分数 (消耗5积分)';
         
-        if (result.success) {
-            if (result.status === 'ok' && result.image_base64) {
-                // 显示查询结果
-                document.getElementById('query-result').innerHTML = `
-                    <img src="data:image/png;base64,${result.image_base64}" alt="查分结果">
-                `;
+		if (result.success) {
+			if (result.status === 'ok' && result.image_base64) {
+				// 显示查询结果
+				document.getElementById('query-result').innerHTML = `
+					<img src="data:image/png;base64,${result.image_base64}" alt="查分结果">
+				`;
                 
-                // 更新用户积分
-                if (currentUser.points >= 5) {
-                    currentUser.points -= 5;
-                } else {
-                    const remaining = 5 - currentUser.points;
-                    currentUser.points = 0;
-                    currentUser.point2 -= remaining;
-                }
+				// 更新用户积分（只更新普通积分）
+				currentUser.points -= 5;
+				updateUserInfo(currentUser);
                 
-                updateUserInfo(currentUser);
+                // 启动冷却计时器
+                startCooldown();
             } else {
                 showErrorMessage(result.error || '查询失败');
             }
-            
-            // 启动冷却计时器
-            startCooldown();
         } else {
             showErrorMessage(result.error || '查询失败');
         }
