@@ -1,0 +1,143 @@
+/* 积分兑换页面样式 */
+.exchange-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.exchange-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  padding: 25px;
+  width: 100%;
+  max-width: 500px;
+  border: 1px solid #eaeaea;
+}
+
+.exchange-card h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+}
+
+.exchange-card p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.exchange-divider {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+  width: 100%;
+  max-width: 500px;
+}
+
+.exchange-divider::before,
+.exchange-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.exchange-divider span {
+  padding: 0 15px;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.exchange-hint {
+  margin-top: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #6c757d;
+}
+
+.exchange-hint p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.exchange-result {
+  margin-top: 15px;
+  min-height: 24px;
+}
+
+.exchange-result .success {
+  color: #28a745;
+  padding: 10px;
+  background: #f0fff4;
+  border-radius: 6px;
+  border-left: 4px solid #28a745;
+}
+
+.exchange-result .error {
+  color: #dc3545;
+  padding: 10px;
+  background: #fff5f5;
+  border-radius: 6px;
+  border-left: 4px solid #dc3545;
+}
+
+/* 输入组样式 */
+.input-group {
+  display: flex;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.input-group .form-control {
+  flex: 1;
+  min-width: 0; /* 防止输入框溢出 */
+  margin-right: 10px; /* PC端增加右边距 */
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  padding: 10px 15px;
+  font-size: 1rem;
+}
+
+.input-group .btn {
+  white-space: nowrap;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-weight: 500;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .exchange-container {
+    padding: 15px;
+    gap: 20px;
+  }
+  
+  .exchange-card {
+    padding: 20px;
+  }
+  
+  .input-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .input-group .form-control {
+    margin-right: 0;
+    margin-bottom: 10px;
+    width: 100%; /* 移动端输入框宽度100% */
+    min-width: auto; /* 重置最小宽度 */
+  }
+  
+  .input-group .btn {
+    width: 100%;
+  }
+}
