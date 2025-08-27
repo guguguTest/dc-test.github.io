@@ -1,6 +1,6 @@
 /* ccb.css - 游戏查分系统样式 */
 .ccb-container {
-    max-width: 800px;
+    max-width: 600px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -8,9 +8,9 @@
 .ccb-section {
     background: white;
     border-radius: 8px;
-    padding: 20px;
+    padding: 25px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .ccb-title {
@@ -22,43 +22,96 @@
 }
 
 .ccb-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .ccb-form .form-group {
     margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
 }
 
 .ccb-form label {
     display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
 }
 
 .ccb-form select,
 .ccb-form input {
     width: 100%;
-    padding: 10px;
+    padding: 12px 15px;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.ccb-form select:focus,
+.ccb-form input:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.checkbox-group input {
+    width: auto;
+    margin-right: 10px;
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+    font-weight: normal;
+}
+
+/* 新增提示框样式 */
+.ccb-notice {
+    background-color: #e8f4fc; /* 浅蓝色背景 */
+    border: 1px solid #b8daff;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.ccb-notice-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #0c5460;
+}
+
+.ccb-notice-content {
     font-size: 14px;
+    color: #0c5460;
+    line-height: 1.5;
+}
+
+.ccb-notice-content b {
+    color: #e74c3c;
 }
 
 .ccb-actions {
     display: flex;
-    gap: 10px;
+    gap: 15px;
     margin-top: 20px;
-    grid-column: span 2;
 }
 
 .ccb-btn {
-    padding: 10px 20px;
+    padding: 12px 25px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 16px;
     transition: all 0.3s;
 }
 
@@ -94,6 +147,12 @@
     max-width: 100%;
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 新增保存按钮容器样式 */
+.ccb-save-action {
+    margin-top: 20px; /* 增加与图片的间距 */
+    text-align: center;
 }
 
 .ccb-cooldown {
@@ -135,100 +194,15 @@
     cursor: not-allowed;
 }
 
-/* 网站管理样式 */
-.admin-container {
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 20px;
+/* 修复移动端滚动问题 */
+html, body {
+    height: 100%;
+    overflow: auto;
 }
 
-.admin-card {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 30px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.admin-card h3 {
-    margin-top: 0;
-    color: #2c3e50;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
-
-/* 修改管理表单为竖向排列 */
-.admin-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.admin-form .form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-}
-
-.admin-form label {
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: #2c3e50;
-}
-
-.admin-form input {
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.admin-form button {
-    align-self: flex-start;
-    padding: 10px 20px;
-}
-
-.admin-list {
-    margin-top: 20px;
-}
-
-.admin-list h4 {
-    margin-bottom: 15px;
-    color: #2c3e50;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-}
-
-.admin-item {
-    display: flex;
-    flex-direction: column;
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-    gap: 10px;
-}
-
-.admin-item:last-child {
-    border-bottom: none;
-}
-
-.admin-item-info {
-    flex: 1;
-}
-
-.admin-item-info strong {
-    display: block;
-    margin-bottom: 5px;
-    font-size: 16px;
-}
-
-.admin-item-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
+#content-container {
+    min-height: 100%;
+    padding-bottom: 20px; /* 添加底部内边距防止触底反弹 */
 }
 
 /* 响应式设计调整 */
@@ -237,114 +211,170 @@
         padding: 15px;
     }
     
-    .ccb-form {
-        grid-template-columns: 1fr;
-        gap: 10px;
+    .ccb-section {
+        padding: 20px;
     }
     
     .ccb-actions {
-        grid-column: span 1;
         flex-direction: column;
     }
     
-    .ccb-notice {
-        grid-column: span 1;
-        order: 1; /* 确保提示框在表单元素之后显示 */
-        margin-top: 10px;
-        margin-bottom: 10px;
+    .ccb-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .ccb-section {
+        padding: 15px;
     }
     
-    .ccb-points-info {
-        order: 2; /* 确保积分信息在提示框之后显示 */
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-        margin-top: 15px;
+    .ccb-form select,
+    .ccb-form input {
+        padding: 10px;
+        font-size: 14px;
     }
     
-    .ccb-cooldown {
-        order: 3; /* 确保冷却提示在积分信息之后显示 */
+    /* 移动端特定修复 */
+    body {
+        -webkit-overflow-scrolling: touch; /* 改善移动端滚动 */
+        overscroll-behavior-y: contain; /* 防止滚动溢出 */
     }
-    
+}
+
+/* 网站管理页面样式 */
+.admin-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    max-width: 800px; /* 限制最大宽度使布局更紧凑 */
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.admin-card {
+    background: white;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    width: 100%; /* 确保卡片宽度填充容器 */
+}
+
+.admin-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.admin-card h3 {
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.admin-form .form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.admin-form input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.admin-form input:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.admin-list {
+    margin-top: 20px;
+}
+
+.admin-list h4 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+.admin-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+.admin-item:hover {
+    background-color: #f8f9fa;
+}
+
+.admin-item:last-child {
+    border-bottom: none;
+}
+
+.admin-item-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* 响应式设计调整 */
+@media (max-width: 768px) {
     .admin-container {
         padding: 15px;
+        gap: 20px; /* 移动端减小间距 */
+    }
+    
+    .admin-card {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-container {
+        padding: 10px;
+        gap: 15px;
     }
     
     .admin-card {
         padding: 15px;
     }
     
+    .admin-form input {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
     .admin-item {
         flex-direction: column;
-        padding: 12px;
+        align-items: flex-start;
+        gap: 10px;
     }
     
     .admin-item-actions {
-        justify-content: flex-start;
-        margin-top: 10px;
+        align-self: flex-end;
     }
-    
-    .admin-item-actions .ccb-btn {
-        flex: 1;
-        text-align: center;
-    }
-}
-
-/* 提示框样式 */
-.ccb-notice {
-    grid-column: span 2;
-    background-color: #fff3cd;
-    border: 1px solid #ffeaa7;
-    border-radius: 6px;
-    padding: 12px 15px;
-    margin: 10px 0;
-}
-
-.ccb-notice-title {
-    color: #856404;
-    font-size: 14px;
-    font-weight: bold;
-    margin: 0 0 8px 0;
-    display: flex;
-    align-items: center;
-}
-
-.ccb-notice-title:before {
-    content: "!";
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    background-color: #856404;
-    color: white;
-    border-radius: 50%;
-    margin-right: 8px;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.ccb-notice-content {
-    color: #856404;
-    font-size: 15px;
-    line-height: 1.5;
-    margin: 0;
-}
-
-/* 响应式设计调整 */
-@media (max-width: 768px) {
-    .ccb-notice {
-        grid-column: span 1;
-    }
-}
-
-/* 保存按钮样式 */
-.ccb-save-action {
-    margin-top: 15px;
-    text-align: center;
-}
-
-.ccb-save-action .ccb-btn {
-    padding: 8px 16px;
-    font-size: 14px;
 }

@@ -690,89 +690,53 @@ function showUserInfo() {
   if (authLinksMobile) authLinksMobile.style.display = 'none';
   if (userInfoMobile) userInfoMobile.style.display = 'block';
   
-  // 添加新菜单项（订单录入需要贵宾用户以上，积分兑换需要初级用户以上）
-  if (currentUser) {
-    // 添加订单录入菜单项（贵宾用户及以上）
-    if (currentUser.user_rank >= 4) {
-      if (!document.querySelector('.sidebar-nav a[data-page="order-entry"]')) {
-        const orderEntryItem = document.createElement('a');
-        orderEntryItem.href = '#';
-        orderEntryItem.dataset.page = 'order-entry';
-        orderEntryItem.innerHTML = `
-          <i class="fas fa-file-invoice me-2"></i>
-          <span>订单录入</span>
-        `;
-
-        const fortuneItem = document.querySelector('.sidebar-nav a[data-page="fortune"]');
-        if (fortuneItem) {
-          fortuneItem.parentNode.insertBefore(orderEntryItem, fortuneItem.nextSibling);
-        }
-      }
-    }
-
-    // 添加积分兑换菜单项（初级用户及以上）
-    if (currentUser.user_rank >= 1) {
-      if (!document.querySelector('.sidebar-nav a[data-page="exchange"]')) {
-        const exchangeItem = document.createElement('a');
-        exchangeItem.href = '#';
-        exchangeItem.dataset.page = 'exchange';
-        exchangeItem.innerHTML = `
-          <i class="fas fa-exchange-alt me-2"></i>
-          <span>积分兑换</span>
-        `;
-
-        // 尝试找到订单录入菜单项，如果存在则插入到订单录入后面，否则插入到运势后面
-        const orderEntryItem = document.querySelector('.sidebar-nav a[data-page="order-entry"]');
-        const fortuneItem = document.querySelector('.sidebar-nav a[data-page="fortune"]');
-        if (orderEntryItem) {
-          orderEntryItem.parentNode.insertBefore(exchangeItem, orderEntryItem.nextSibling);
-        } else if (fortuneItem) {
-          fortuneItem.parentNode.insertBefore(exchangeItem, fortuneItem.nextSibling);
-        }
-      }
-    }
+  // 显示游戏查分菜单（用户组级别>0）
+  if (currentUser && currentUser.user_rank > 0) {
+    document.getElementById('sidebar-ccb').style.display = 'block';
+  } else {
+    document.getElementById('sidebar-ccb').style.display = 'none';
   }
   
-	// 为管理员添加公告管理和下载管理菜单项
-	if (currentUser && currentUser.user_rank >= 5) {
-	  // 添加公告管理菜单项
-	  if (!document.querySelector('.sidebar-nav a[data-page="announcement-admin"]')) {
-		const adminItem = document.createElement('li');
-		adminItem.innerHTML = `
-		  <a href="#" data-page="announcement-admin">
-			<i class="fas fa-bullhorn me-2"></i>
-			<span>公告管理</span>
-		  </a>
-		`;
-		
-		// 添加下载管理菜单项
-		const downloadAdminItem = document.createElement('li');
-		downloadAdminItem.innerHTML = `
-		  <a href="#" data-page="download-admin">
-			<i class="fas fa-download me-2"></i>
-			<span>下载管理</span>
-		  </a>
-		`;
-		
-		// 找到"其他"部分的父元素并添加菜单项
-		const otherSections = document.querySelectorAll('.sidebar-section-title');
-		let otherSection = null;
-		for (let section of otherSections) {
-		  if (section.textContent.includes('其他')) {
-			otherSection = section;
-			break;
-		  }
-		}
-		if (otherSection) {
-		  const nav = otherSection.nextElementSibling;
-		  if (nav && nav.classList.contains('sidebar-nav')) {
-			nav.appendChild(adminItem);
-			nav.appendChild(downloadAdminItem);
-		  }
-		}
-	  }
-	}
+  // 显示积分兑换菜单（用户组级别>=1）
+  if (currentUser && currentUser.user_rank >= 1) {
+    document.getElementById('sidebar-exchange').style.display = 'block';
+  } else {
+    document.getElementById('sidebar-exchange').style.display = 'none';
   }
+  
+  // 显示管理分类和菜单（用户组级别>=4）
+  if (currentUser && currentUser.user_rank >= 4) {
+    document.getElementById('admin-section-title').style.display = 'block';
+    document.getElementById('admin-section-nav').style.display = 'block';
+    
+    // 显示公告管理菜单（用户组级别>=5）
+    if (currentUser.user_rank >= 5) {
+      document.getElementById('sidebar-announcement-admin').style.display = 'block';
+    } else {
+      document.getElementById('sidebar-announcement-admin').style.display = 'none';
+    }
+    
+    // 显示网站管理菜单（用户组级别>=5）
+    if (currentUser.user_rank >= 5) {
+      document.getElementById('sidebar-site-admin').style.display = 'block';
+    } else {
+      document.getElementById('sidebar-site-admin').style.display = 'none';
+    }
+    
+    // 显示下载管理菜单（用户组级别>=5）
+    if (currentUser.user_rank >= 5) {
+      document.getElementById('sidebar-download-admin').style.display = 'block';
+    } else {
+      document.getElementById('sidebar-download-admin').style.display = 'none';
+    }
+    
+    // 显示订单录入菜单（用户组级别>=4）
+    document.getElementById('sidebar-order-entry').style.display = 'block';
+  } else {
+    document.getElementById('admin-section-title').style.display = 'none';
+    document.getElementById('admin-section-nav').style.display = 'none';
+  }
+}
 
 // 显示登录/注册链接
 function showAuthLinks() {
@@ -799,6 +763,12 @@ function showAuthLinks() {
       rankIconMobile.remove();
     }
   }
+  
+  // 隐藏所有需要登录才能访问的菜单项
+  document.getElementById('sidebar-ccb').style.display = 'none';
+  document.getElementById('sidebar-exchange').style.display = 'none';
+  document.getElementById('admin-section-title').style.display = 'none';
+  document.getElementById('admin-section-nav').style.display = 'none';
 }
 
 // 发送验证码

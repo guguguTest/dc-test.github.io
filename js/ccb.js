@@ -56,7 +56,7 @@ function renderBindingPage() {
     
     contentContainer.innerHTML = `
         <div class="section">
-            <h1 class="page-title">游戏查分系统 - 绑定信息</h1>
+            <h1 class="page-title">游戏查分 - 绑定信息</h1>
             <div class="ccb-container">
                 <div class="ccb-section">
                     <h2 class="ccb-title">绑定查分信息</h2>
@@ -72,13 +72,17 @@ function renderBindingPage() {
                         </div>
                         
                         <div class="form-group">
-                            <label for="keychip-input">KeyChip</label>
-                            <input type="text" id="keychip-input" required placeholder="请输入KeyChip">
+                            <label for="guid-input">游戏卡号</label>
+                            <input type="text" id="guid-input" required placeholder="请输入游戏卡号">
                         </div>
                         
                         <div class="form-group">
-                            <label for="guid-input">游戏卡号</label>
-                            <input type="text" id="guid-input" required placeholder="请输入游戏卡号">
+                            <label for="keychip-input">KeyChip</label>
+                            <input type="text" id="keychip-input" required placeholder="请输入KeyChip">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="default-keychip">
+                                <label for="default-keychip">使用默认KeyChip</label>
+                            </div>
                         </div>
                         
                         <div class="ccb-actions">
@@ -95,6 +99,18 @@ function renderBindingPage() {
     
     // 绑定表单提交事件
     document.getElementById('ccb-binding-form').addEventListener('submit', handleBindingSubmit);
+    
+    // 绑定默认KeyChip复选框事件
+    document.getElementById('default-keychip').addEventListener('change', function() {
+        const keychipInput = document.getElementById('keychip-input');
+        if (this.checked) {
+            keychipInput.value = 'A63E01A8888';
+            keychipInput.disabled = true;
+        } else {
+            keychipInput.value = '';
+            keychipInput.disabled = false;
+        }
+    });
 }
 
 // 加载服务器列表
@@ -213,7 +229,7 @@ function renderQueryPage(user) {
                 </div>
                 
                 <div class="ccb-section">
-					<h2 class="ccb-title">查询结果</h2>
+                    <h2 class="ccb-title">查询结果</h2>
                     <div class="ccb-result" id="query-result">
                         <!-- 查询结果将显示在这里 -->
                     </div>
@@ -331,10 +347,10 @@ function handleQuerySubmit(e) {
     }
     
     // 检查积分（只检查普通积分）
-	if ((currentUser.points || 0) < 5) {
-		showErrorMessage('积分不足，需要5积分才能查询');
-		return;
-	}
+    if ((currentUser.points || 0) < 5) {
+        showErrorMessage('积分不足，需要5积分才能查询');
+        return;
+    }
     
     const token = localStorage.getItem('token');
     const queryBtn = document.getElementById('query-btn');
@@ -356,22 +372,22 @@ function handleQuerySubmit(e) {
         queryBtn.disabled = false;
         queryBtn.textContent = '查分';
         
-		if (result.success) {
-			if (result.status === 'ok' && result.image_base64) {
-				// 显示查询结果
-				document.getElementById('query-result').innerHTML = `
-					<img src="data:image/png;base64,${result.image_base64}" alt="查分结果">
-					<div class="ccb-save-action">
-						<button id="save-image-btn" class="ccb-btn ccb-btn-primary">保存图片</button>
-					</div>
-				`;
+        if (result.success) {
+            if (result.status === 'ok' && result.image_base64) {
+                // 显示查询结果
+                document.getElementById('query-result').innerHTML = `
+                    <img src="data:image/png;base64,${result.image_base64}" alt="查分结果">
+                    <div class="ccb-save-action">
+                        <button id="save-image-btn" class="ccb-btn ccb-btn-primary">保存图片</button>
+                    </div>
+                `;
 
-				// 绑定保存按钮事件
-				document.getElementById('save-image-btn').addEventListener('click', saveCCBImage);
+                // 绑定保存按钮事件
+                document.getElementById('save-image-btn').addEventListener('click', saveCCBImage);
                 
-				// 更新用户积分（只更新普通积分）
-				currentUser.points -= 5;
-				updateUserInfo(currentUser);
+                // 更新用户积分（只更新普通积分）
+                currentUser.points -= 5;
+                updateUserInfo(currentUser);
                 
                 // 启动冷却计时器
                 startCooldown();
@@ -790,8 +806,10 @@ document.addEventListener("DOMContentLoaded", function() {
     window.loadPage = function(pageId) {
         if (pageId === 'ccb') {
             initCCBPage();
+            updateActiveMenuItem(pageId); // 添加这一行
         } else if (pageId === 'site-admin') {
             initSiteAdminPage();
+            updateActiveMenuItem(pageId); // 添加这一行
         } else {
             originalLoadPage(pageId);
             
