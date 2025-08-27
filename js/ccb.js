@@ -205,10 +205,13 @@ function renderQueryPage(user) {
                         
                         <!-- 添加提示框 -->
                         <div class="ccb-notice">
-                            <h4 class="ccb-notice-title">提示</h4>
+                            <h4 class="ccb-notice-title"><i class="fas fa-exclamation-circle"></i>&ensp;提示</h4>
                             <p class="ccb-notice-content">
                                 每次查分将消耗<b>5点普通积分</b>，查询结果以图片形式展示。<br>
-                                每次查分后需要等待10秒后才能再次查询。
+                                每次查分后需要等待10秒后才能再次查询。<br>
+								<br>
+								保存图片按钮在移动端某些浏览器可能会无效。<br>
+								如果点击后无法正常保存图片，请长按图片选择保存到相册即可。
                             </p>
                         </div>
                         
