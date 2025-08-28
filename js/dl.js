@@ -173,12 +173,12 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
     <tbody>
       ${downloads.map(download => {
         // 修复权限检查逻辑
-        const hasAccess = (
-          userRank >= (download.access_level || 0) && 
-          (!download.special_group || 
-           download.special_group === '' || 
-           download.special_group === userSpecialGroup.toString())
-        );
+        let hasAccess = userRank >= (download.access_level || 0);
+        
+        // 如果有特殊用户组要求，需要额外检查
+        if (download.special_group && download.special_group !== '') {
+          hasAccess = hasAccess && (download.special_group === userSpecialGroup.toString());
+        }
         
         const accessLevelNames = {
           0: '普通用户',
@@ -349,13 +349,22 @@ function renderDownloadDetail(download, retryCount = 0) {
     detailLastUpdate.textContent = date.toLocaleDateString('zh-CN');
   }
   
-  // 渲染下载信息
+  // 渲染下载信息 - 修复HTML结构
   container.innerHTML = `
     <tr>
-      <th><a href="${download.baidu_url}" target="_blank">百度网盘</a></th>
-      <td>${download.file_count || '0'}</td>
-      <td>${download.baidu_code || '无'}</td>
-      <td>无期限</td>
+      <td data-label="下载方式"><a href="${download.baidu_url}" target="_blank">百度网盘</a></td>
+      <td data-label="文件数">${download.file_count || '0'}</td>
+      <td data-label="提取码/访问密码">${download.baidu_code || '无'}</td>
+      <td data-label="资源有效期">无期限</td>
     </tr>
   `;
+  
+  // 添加事件监听器，防止链接点击触发页面跳转
+  const baiduLink = container.querySelector('a[href*="baidu"]');
+  if (baiduLink) {
+    baiduLink.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // 允许默认行为（打开链接）
+    });
+  }
 }
