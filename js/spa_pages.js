@@ -144,7 +144,16 @@ download: `
       <span id="download-info-detail">目前本站全部资源仅提供「百度网盘」作为下载方式</span>
     </div>
   </div>
-  
+
+  <script>
+    // 页面加载完成后初始化下载内容
+    setTimeout(function() {
+      if (typeof initDownloadPage === 'function') {
+        initDownloadPage();
+      }
+    }, 100);
+  </script>
+
   <footer>
     <p>SEGAY FEIWU</p>
     <p>1145141919810</p>

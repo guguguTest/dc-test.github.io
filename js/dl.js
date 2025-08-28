@@ -70,6 +70,19 @@ async function loadDownloadContent() {
     
     console.log('下载内容响应状态:', response.status);
     
+    if (response.status === 401) {
+      // Token 无效或过期
+      localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
+      showLoginRequired('download');
+      return;
+    }
+    
+    if (response.status === 403) {
+      // 权限不足，但仍尝试显示内容
+      console.warn('权限不足，但尝试显示可用内容');
+    }
+    
     if (!response.ok) {
       throw new Error(`获取下载内容失败: ${response.status} ${response.statusText}`);
     }
@@ -81,6 +94,9 @@ async function loadDownloadContent() {
   } catch (error) {
     console.error('加载下载内容错误:', error);
     showErrorMessage('加载下载内容失败: ' + error.message);
+    
+    // 即使出错也显示空内容，而不是空白页面
+    renderDownloadContent([]);
   }
 }
 
@@ -156,10 +172,12 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
     </thead>
     <tbody>
       ${downloads.map(download => {
-        // 检查用户是否有访问权限
+        // 修复权限检查逻辑
         const hasAccess = (
-          (userRank >= (download.access_level || 0)) && 
-          (!download.special_group || download.special_group === userSpecialGroup)
+          userRank >= (download.access_level || 0) && 
+          (!download.special_group || 
+           download.special_group === '' || 
+           download.special_group === userSpecialGroup.toString())
         );
         
         const accessLevelNames = {
@@ -188,7 +206,7 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
             <td data-label="访问权限">
               <span class="access-badge rank-${download.access_level || 0}">
                 ${accessLevelNames[download.access_level || 0]}
-                ${download.special_group ? `(${download.special_group})` : ''}
+                ${download.special_group ? `<br><small>(${download.special_group})</small>` : ''}
               </span>
               ${download.required_points > 0 ? 
                 `<span class="points-cost">(${download.required_points}积分)</span>` : 
@@ -204,57 +222,60 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
   container.appendChild(table);
   
   // 添加点击事件 - 只对有权限的项目添加
-	container.querySelectorAll('a[data-page="download-detail"]').forEach(link => {
-	  link.addEventListener('click', async (e) => {
-		e.preventDefault();
-		const downloadId = e.currentTarget.getAttribute('data-download-id');
-		
-		// 检查是否需要积分
-		const download = downloads.find(d => d.id == downloadId);
-		if (download && download.required_points > 0) {
-		  // 确认是否扣除积分
-		  if (!confirm(`访问此资源需要 ${download.required_points} 积分，确定要继续吗？`)) {
-			return;
-		  }
-		  
-		  try {
-			const token = localStorage.getItem('token');
-			const response = await fetch(`${window.API_BASE_URL}/api/downloads/${downloadId}/access`, {
-			  method: 'POST',
-			  headers: {
-				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json'
-			  }
-			});
-			
-			if (!response.ok) {
-			  const errorData = await response.json();
-			  throw new Error(errorData.error || '访问资源失败');
-			}
-			
-			const result = await response.json();
-			
-			if (result.success) {
-			  // 更新用户积分信息
-			  if (currentUser) {
-				currentUser.points = result.new_points;
-				updateUserInfo(currentUser);
-			  }
-			  
-			  showSuccessMessage(`已扣除 ${download.required_points} 积分`);
-			  loadDownloadDetail(downloadId);
-			} else {
-			  showErrorMessage(result.error || '访问资源失败');
-			}
-		  } catch (error) {
-			console.error('访问资源错误:', error);
-			showErrorMessage('访问资源失败: ' + error.message);
-		  }
-		} else {
-		  loadDownloadDetail(downloadId);
-		}
-	  });
-	});
+  container.querySelectorAll('a[data-page="download-detail"]').forEach(link => {
+    link.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const downloadId = e.currentTarget.getAttribute('data-download-id');
+      
+      // 检查是否需要积分
+      const download = downloads.find(d => d.id == downloadId);
+      if (download && download.required_points > 0) {
+        // 确认是否扣除积分
+        if (!confirm(`访问此资源需要 ${download.required_points} 积分，确定要继续吗？`)) {
+          return;
+        }
+        
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${window.API_BASE_URL}/api/downloads/${downloadId}/access`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '访问资源失败');
+          }
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            // 更新用户积分信息
+            if (currentUser) {
+              currentUser.points = result.new_points;
+              updateUserInfo(currentUser);
+            }
+            
+            showSuccessMessage(`已扣除 ${download.required_points} 积分`);
+            // 添加短暂延迟确保消息显示
+            setTimeout(() => {
+              loadDownloadDetail(downloadId);
+            }, 1500);
+          } else {
+            showErrorMessage(result.error || '访问资源失败');
+          }
+        } catch (error) {
+          console.error('访问资源错误:', error);
+          showErrorMessage('访问资源失败: ' + error.message);
+        }
+      } else {
+        loadDownloadDetail(downloadId);
+      }
+    });
+  });
 }
 
 // 加载下载详情

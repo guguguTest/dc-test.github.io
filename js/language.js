@@ -49,11 +49,6 @@ const languageModule = (function() {
                 'notice-text': '注意：',
                 'notice-detail': '此页面暂为临时下载页面',
                 
-                // 弹窗文本
-                'modal-title': '关于 EVIL LEAKER',
-                'modal-content': '所有资源仅供学习交流使用，请勿用于商业用途。下载后请于24小时内删除。',
-                'modal-ok': '确定',
-                
                 // SPA新增翻译
                 'back-to-home': '返回',
                 'download-list-title': '下载列表',
@@ -134,11 +129,6 @@ const languageModule = (function() {
                 'notice-text': 'Notice:',
                 'notice-detail': 'This page is a temporary download page, the official page is under development',
                 
-                // 弹窗文本
-                'modal-title': 'About EVIL LEAKER',
-                'modal-content': 'All resources are for learning and exchange purposes only. Do not use for commercial purposes. Please delete within 24 hours after download.',
-                'modal-ok': 'OK',
-                
                 // SPA新增翻译
                 'back-to-home': 'BACK',
                 'download-list-title': 'Download List',
@@ -218,11 +208,6 @@ const languageModule = (function() {
                 'download-info-detail': '当サイトのすべてのリソースは「百度网盘」でのみ提供されます',
                 'notice-text': '注意:',
                 'notice-detail': 'このページは一時的なダウンロードページです。公式ページは開発中です',
-                
-                // 弹窗文本
-                'modal-title': 'EVIL LEAKER について',
-                'modal-content': 'すべてのリソースは学習と交流目的のみで使用し、商用利用は禁止です。ダウンロード後24時間以内に削除してください。',
-                'modal-ok': '確認',
                 
                 // SPA新增翻译
                 'back-to-home': '戻る',

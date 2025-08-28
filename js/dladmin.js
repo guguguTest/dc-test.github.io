@@ -240,22 +240,22 @@ async function saveDownload() {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-		body: JSON.stringify({
-		  title,
-		  version,
-		  file_count: file_count ? parseInt(file_count) : null,
-		  category,
-		  baidu_url,
-		  baidu_code,
-		  last_update,
-		  page_id,
-		  description,
-		  image_url,
-		  is_active,
-		  access_level: parseInt(access_level) || 0, // 确保有默认值
-		  special_group: special_group || null, // 确保有默认值
-		  required_points: parseInt(required_points) || 0 // 确保有默认值
-		})
+      body: JSON.stringify({
+        title,
+        version,
+        file_count: file_count ? parseInt(file_count) : null,
+        category,
+        baidu_url,
+        baidu_code,
+        last_update,
+        page_id,
+        description,
+        image_url,
+        is_active,
+        access_level: parseInt(access_level) || 0,
+        special_group: special_group || null,
+        required_points: parseInt(required_points) || 0
+      })
     });
     
     if (!response.ok) {
@@ -265,6 +265,7 @@ async function saveDownload() {
     
     closeDownloadModal();
     loadDownloads();
+    // 确保显示正确的成功消息
     showSuccessMessage(`下载项目${id ? '更新' : '创建'}成功`);
   } catch (error) {
     console.error('保存下载项目错误:', error);

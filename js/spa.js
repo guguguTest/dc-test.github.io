@@ -1610,11 +1610,21 @@ function loadPage(pageId) {
 
 		  // 从本地存储获取用户信息
 		  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+		  
+		  // 即使权限不足也尝试加载内容，因为可能有公开内容
 		  if (userInfo.user_rank <= 0) {
-			// 改为显示权限不足而不是重定向
+			// 显示权限不足提示，但不阻止页面加载
 			showPermissionDenied();
-			return;
 		  }
+		  
+		  // 确保页面加载完成后再初始化下载内容
+		  setTimeout(() => {
+			if (typeof initDownloadPage === 'function') {
+			  initDownloadPage();
+			} else {
+			  console.error('initDownloadPage 函数未定义');
+			}
+		  }, 100);
 		}
 
 		if (pageId === 'download-detail') {
@@ -2037,7 +2047,6 @@ if (pageId === 'fortune') {
 function showSuccessMessage(message) {
   const modal = document.getElementById('message-modal');
   if (!modal) {
-    // 如果模态框不存在，创建一个
     const modalHTML = `
       <div id="message-modal" class="modal">
         <div class="modal-content">
@@ -2071,7 +2080,7 @@ function showSuccessMessage(message) {
       }
     });
   } else {
-    // 更新现有模态框内容
+    // 确保标题正确
     document.getElementById('modal-title').textContent = '操作成功';
     document.getElementById('modal-content').textContent = message;
   }
@@ -2083,7 +2092,6 @@ function showSuccessMessage(message) {
 function showErrorMessage(message) {
   const modal = document.getElementById('message-modal');
   if (!modal) {
-    // 如果模态框不存在，创建一个
     const modalHTML = `
       <div id="message-modal" class="modal">
         <div class="modal-content">
@@ -2117,7 +2125,7 @@ function showErrorMessage(message) {
       }
     });
   } else {
-    // 更新现有模态框内容
+    // 确保标题正确
     document.getElementById('modal-title').textContent = '操作失败';
     document.getElementById('modal-content').textContent = message;
   }
