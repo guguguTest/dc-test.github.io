@@ -80,3 +80,56 @@
     padding: 15px;
   }
 }
+
+/* 下载管理页面响应式调整 */
+@media (max-width: 992px) {
+  #downloads-table {
+    font-size: 0.9rem;
+  }
+  
+  #downloads-table th,
+  #downloads-table td {
+    padding: 8px 10px;
+  }
+  
+  #downloads-table th:nth-child(1),
+  #downloads-table td:nth-child(1),
+  #downloads-table th:nth-child(5),
+  #downloads-table td:nth-child(5),
+  #downloads-table th:nth-child(6),
+  #downloads-table td:nth-child(6) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  #downloads-table {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .admin-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  #create-download-btn {
+    margin-bottom: 10px;
+  }
+  
+  #download-modal .modal-content {
+    margin: 10px;
+    padding: 15px;
+    width: calc(100% - 20px);
+  }
+  
+  .form-row {
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+    width: 100%;
+  }
+}

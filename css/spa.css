@@ -726,3 +726,21 @@ input:checked + .slider:before {
     width: 100%;
   }
 }
+
+  .disabled-menu-item {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+  }
+  .disabled-menu-item::after {
+    content: "需要初级及以上权限";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.1);
+    padding: 2px 5px;
+    border-radius: 3px;
+  }

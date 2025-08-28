@@ -5,7 +5,51 @@ if (typeof window.API_BASE_URL === 'undefined') {
 
 // 初始化下载页面
 function initDownloadPage() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    showLoginRequired('download');
+    return;
+  }
+
+  // 获取用户信息
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  if (userInfo.user_rank <= 0) {
+    // 显示权限不足提示，但不阻止页面加载
+    showPermissionDenied();
+    // 仍然尝试加载内容，因为可能有些内容是公开的
+  }
+
   loadDownloadContent();
+}
+
+// 显示权限不足提示
+function showPermissionDenied() {
+  const contentContainer = document.getElementById('content-container');
+  if (!contentContainer) return;
+  
+  contentContainer.innerHTML = `
+    <div class="section">
+      <div class="login-required-container">
+        <div class="login-required-icon">
+          <i class="fas fa-ban"></i>
+        </div>
+        <h2>权限不足</h2>
+        <p>您的用户组级别无法访问下载页面</p>
+        <button class="login-btn" data-page="home">
+          <i class="fas fa-home me-2"></i>
+          返回首页
+        </button>
+      </div>
+    </div>
+  `;
+  
+  const backBtn = contentContainer.querySelector('.login-btn');
+  if (backBtn) {
+    backBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      loadPage('home');
+    });
+  }
 }
 
 // 加载下载内容
@@ -19,8 +63,9 @@ async function loadDownloadContent() {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const response = await fetch(`${window.API_BASE_URL}/api/downloads`, {
-      headers: headers
+    const response = await fetch(`${window.API_BASE_URL}/api/downloads?t=${Date.now()}`, {
+      headers: headers,
+      cache: 'no-cache'
     });
     
     console.log('下载内容响应状态:', response.status);
@@ -90,40 +135,126 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
       lastUpdateElement.textContent = lastUpdate.toLocaleDateString('zh-CN');
     }
   }
-  
+
   // 创建表格
   const table = document.createElement('table');
+  table.className = 'download-table'; // 添加新样式类
+  
+  // 获取用户信息
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  const userRank = userInfo.user_rank || 0;
+  const userSpecialGroup = userInfo.rankSp || '';
+  
   table.innerHTML = `
     <thead>
       <tr>
         <th>游戏名称</th>
         <th>版本</th>
         <th>文件数</th>
+        <th>访问权限</th>
       </tr>
     </thead>
     <tbody>
-      ${downloads.map(download => `
-        <tr>
-          <td><a href="#" data-page="download-detail" data-download-id="${download.id}"><i class="fas fa-link me-2"></i> ${download.title}</a></td>
-          <td>${download.version || '-'}</td>
-          <td>${download.file_count || '0'}</td>
-        </tr>
-      `).join('')}
+      ${downloads.map(download => {
+        // 检查用户是否有访问权限
+        const hasAccess = (
+          (userRank >= (download.access_level || 0)) && 
+          (!download.special_group || download.special_group === userSpecialGroup)
+        );
+        
+        const accessLevelNames = {
+          0: '普通用户',
+          1: '初级用户',
+          2: '中级用户',
+          3: '高级用户',
+          4: '贵宾用户',
+          5: '管理员'
+        };
+        
+        return `
+          <tr>
+            <td data-label="游戏名称">
+              ${hasAccess ? 
+                `<a href="#" data-page="download-detail" data-download-id="${download.id}">
+                  <i class="fas fa-link me-2"></i> ${download.title}
+                </a>` : 
+                `<span class="text-muted">
+                  <i class="fas fa-lock me-2"></i> ${download.title}
+                </span>`
+              }
+            </td>
+            <td data-label="版本">${download.version || '-'}</td>
+            <td data-label="文件数">${download.file_count || '0'}</td>
+            <td data-label="访问权限">
+              <span class="access-badge rank-${download.access_level || 0}">
+                ${accessLevelNames[download.access_level || 0]}
+                ${download.special_group ? `(${download.special_group})` : ''}
+              </span>
+              ${download.required_points > 0 ? 
+                `<span class="points-cost">(${download.required_points}积分)</span>` : 
+                ''
+              }
+            </td>
+          </tr>
+        `;
+      }).join('')}
     </tbody>
   `;
   
   container.appendChild(table);
   
-  // 添加点击事件
-  container.querySelectorAll('a[data-page="download-detail"]').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const downloadId = e.currentTarget.getAttribute('data-download-id');
-      loadDownloadDetail(downloadId);
-    });
-  });
-  
-  console.log('渲染完成:', containerId, '项目数:', downloads.length);
+  // 添加点击事件 - 只对有权限的项目添加
+	container.querySelectorAll('a[data-page="download-detail"]').forEach(link => {
+	  link.addEventListener('click', async (e) => {
+		e.preventDefault();
+		const downloadId = e.currentTarget.getAttribute('data-download-id');
+		
+		// 检查是否需要积分
+		const download = downloads.find(d => d.id == downloadId);
+		if (download && download.required_points > 0) {
+		  // 确认是否扣除积分
+		  if (!confirm(`访问此资源需要 ${download.required_points} 积分，确定要继续吗？`)) {
+			return;
+		  }
+		  
+		  try {
+			const token = localStorage.getItem('token');
+			const response = await fetch(`${window.API_BASE_URL}/api/downloads/${downloadId}/access`, {
+			  method: 'POST',
+			  headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			  }
+			});
+			
+			if (!response.ok) {
+			  const errorData = await response.json();
+			  throw new Error(errorData.error || '访问资源失败');
+			}
+			
+			const result = await response.json();
+			
+			if (result.success) {
+			  // 更新用户积分信息
+			  if (currentUser) {
+				currentUser.points = result.new_points;
+				updateUserInfo(currentUser);
+			  }
+			  
+			  showSuccessMessage(`已扣除 ${download.required_points} 积分`);
+			  loadDownloadDetail(downloadId);
+			} else {
+			  showErrorMessage(result.error || '访问资源失败');
+			}
+		  } catch (error) {
+			console.error('访问资源错误:', error);
+			showErrorMessage('访问资源失败: ' + error.message);
+		  }
+		} else {
+		  loadDownloadDetail(downloadId);
+		}
+	  });
+	});
 }
 
 // 加载下载详情

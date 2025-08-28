@@ -212,7 +212,7 @@ download: `
       <table class="table table-hover" id="downloads-table">
         <thead>
           <tr>
-            <th>ID</th>
+            <th>序号</th>
             <th>标题</th>
             <th>分类</th>
             <th>页面ID</th>
@@ -264,6 +264,33 @@ download: `
                 <option value="1">激活</option>
                 <option value="0">禁用</option>
               </select>
+            </div>
+          </div>
+          
+          <!-- 新增：权限和积分设置 -->
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label for="download-access-level">访问权限</label>
+              <select id="download-access-level" class="form-control">
+                <option value="0">普通用户</option>
+                <option value="1">初级用户</option>
+                <option value="2">中级用户</option>
+                <option value="3">高级用户</option>
+                <option value="4">贵宾用户</option>
+                <option value="5">管理员</option>
+              </select>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="download-special-group">特殊用户组</label>
+              <select id="download-special-group" class="form-control">
+                <option value="">无</option>
+                <option value="maimoller">maimoller</option>
+              </select>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="download-required-points">所需积分</label>
+              <input type="number" id="download-required-points" class="form-control" min="0" value="0">
+              <small class="form-text text-muted">普通积分(非鸽屋积分)</small>
             </div>
           </div>
           

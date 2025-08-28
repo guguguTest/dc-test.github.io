@@ -736,6 +736,16 @@ function showUserInfo() {
     document.getElementById('admin-section-title').style.display = 'none';
     document.getElementById('admin-section-nav').style.display = 'none';
   }
+  
+    // 显示下载菜单（用户组级别>0）
+	if (currentUser && currentUser.user_rank > 0) {
+	  document.querySelector('a[data-page="download"]').parentElement.style.display = 'block';
+	} else {
+	  // 改为始终显示，但添加特殊样式表示权限不足
+	  const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
+	  downloadMenuItem.style.display = 'block';
+	  downloadMenuItem.classList.add('disabled-menu-item');
+	}
 }
 
 // 显示登录/注册链接
@@ -1592,18 +1602,18 @@ function loadPage(pageId) {
 		}
 
 		if (pageId === 'download') {
-		  // 普通下载页面
-		  if (typeof initDownloadPage === 'function') {
-			setTimeout(initDownloadPage, 100);
+		  const token = localStorage.getItem('token');
+		  if (!token) {
+			showLoginRequired('download');
+			return;
 		  }
-		} else if (pageId === 'download-admin') {
-		  // 下载管理页面 - 需要管理员权限
-		  if (currentUser && currentUser.user_rank >= 5) {
-			if (typeof initDownloadAdminPage === 'function') {
-			  setTimeout(initDownloadAdminPage, 100);
-			}
-		  } else {
-			showLoginRequired('download-admin');
+
+		  // 从本地存储获取用户信息
+		  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+		  if (userInfo.user_rank <= 0) {
+			// 改为显示权限不足而不是重定向
+			showPermissionDenied();
+			return;
 		  }
 		}
 

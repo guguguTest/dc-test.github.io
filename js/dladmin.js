@@ -87,11 +87,14 @@ function renderDownloads(downloads) {
     'other': '其他资源'
   };
   
-  downloads.forEach(download => {
+  // 按ID排序，确保显示顺序一致
+  const sortedDownloads = [...downloads].sort((a, b) => a.id - b.id);
+  
+  sortedDownloads.forEach((download, index) => {
     const tr = document.createElement('tr');
     
     tr.innerHTML = `
-      <td>${download.id}</td>
+      <td>${index + 1}</td>  <!-- 使用自然序号 -->
       <td>${download.title}</td>
       <td>${categoryNames[download.category] || download.category}</td>
       <td>${download.page_id}</td>
@@ -153,11 +156,17 @@ function showDownloadModal(download = null) {
     document.getElementById('download-description').value = download.description || '';
     document.getElementById('download-image-url').value = download.image_url || '';
     document.getElementById('download-status').value = download.is_active ? '1' : '0';
+    document.getElementById('download-access-level').value = download.access_level || '0';
+	document.getElementById('download-special-group').value = download.special_group || '';
+	document.getElementById('download-required-points').value = download.required_points || 0;
   } else {
     title.textContent = '新建下载项目';
     form.reset();
     document.getElementById('download-id').value = '';
     document.getElementById('download-status').value = '1';
+    document.getElementById('download-access-level').value = '0';
+    document.getElementById('download-special-group').value = '';
+    document.getElementById('download-required-points').value = 0;
   }
   
   modal.style.display = 'block';
@@ -203,6 +212,9 @@ async function saveDownload() {
     const description = document.getElementById('download-description').value;
     const image_url = document.getElementById('download-image-url').value;
     const is_active = document.getElementById('download-status').value === '1';
+	const access_level = document.getElementById('download-access-level').value;
+	const special_group = document.getElementById('download-special-group').value;
+	const required_points = document.getElementById('download-required-points').value;
     
     console.log('保存下载项目:', { id, title, page_id });
     
@@ -228,19 +240,22 @@ async function saveDownload() {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        title,
-        version,
-        file_count: file_count ? parseInt(file_count) : null,
-        category,
-        baidu_url,
-        baidu_code,
-        last_update,
-        page_id,
-        description,
-        image_url,
-        is_active
-      })
+		body: JSON.stringify({
+		  title,
+		  version,
+		  file_count: file_count ? parseInt(file_count) : null,
+		  category,
+		  baidu_url,
+		  baidu_code,
+		  last_update,
+		  page_id,
+		  description,
+		  image_url,
+		  is_active,
+		  access_level: parseInt(access_level) || 0, // 确保有默认值
+		  special_group: special_group || null, // 确保有默认值
+		  required_points: parseInt(required_points) || 0 // 确保有默认值
+		})
     });
     
     if (!response.ok) {
