@@ -36,6 +36,11 @@ function restoreSidebarScroll() {
   }
 }
 
+window.handleExternalLink = function(e) {
+  e.stopPropagation();
+  // 允许默认行为（打开链接）
+};
+
 // 在DOM加载完成后添加滚动事件监听器
 document.addEventListener("DOMContentLoaded", function() {
   const sidebar = document.querySelector('.sidebar');

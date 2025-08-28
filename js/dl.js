@@ -159,7 +159,7 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
   // 获取用户信息
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
   const userRank = userInfo.user_rank || 0;
-  const userSpecialGroup = userInfo.rankSp || '';
+  const userSpecialGroup = userInfo.rankSp || 0; // 确保这是数字
   
   table.innerHTML = `
     <thead>
@@ -172,14 +172,28 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
     </thead>
     <tbody>
       ${downloads.map(download => {
-		// 修复权限检查逻辑
-		let hasAccess = userRank >= (download.access_level || 0);
-
-		// 如果有特殊用户组要求，需要额外检查
-		if (download.special_group && download.special_group !== '') {
-			// 将用户的 rankSp 转换为字符串进行比较
-			hasAccess = hasAccess && (download.special_group === userSpecialGroup.toString());
-		}
+        // 修复权限检查逻辑
+        let hasAccess = userRank >= (download.access_level || 0);
+        
+        // 如果有特殊用户组要求，需要额外检查
+        if (download.special_group && download.special_group !== '') {
+          // 将用户的 rankSp 转换为字符串进行比较
+          // 注意：这里假设 special_group 存储的是数字字符串，如 "1"
+          hasAccess = hasAccess && (download.special_group === userSpecialGroup.toString());
+          
+          // 如果特殊用户组是字符串标识（如 "maimoller"），则需要不同的比较逻辑
+          // hasAccess = hasAccess && (download.special_group === getSpecialGroupName(userSpecialGroup));
+        }
+        
+        // 调试输出
+        console.log('权限检查:', {
+          title: download.title,
+          userRank,
+          accessLevel: download.access_level,
+          userSpecialGroup,
+          downloadSpecialGroup: download.special_group,
+          hasAccess
+        });
         
         const accessLevelNames = {
           0: '普通用户',
@@ -207,7 +221,7 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
             <td data-label="访问权限">
               <span class="access-badge rank-${download.access_level || 0}">
                 ${accessLevelNames[download.access_level || 0]}
-                ${download.special_group ? `<br><small>(${download.special_group})</small>` : ''}
+                ${download.special_group ? `<br><small>(${getSpecialGroupDisplayName(download.special_group)})</small>` : ''}
               </span>
               ${download.required_points > 0 ? 
                 `<span class="points-cost">(${download.required_points}积分)</span>` : 
@@ -279,6 +293,16 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
   });
 }
 
+// 添加辅助函数
+function getSpecialGroupDisplayName(specialGroup) {
+  const specialGroupMap = {
+    '1': 'maimoller',
+    // 添加其他特殊用户组映射
+  };
+  
+  return specialGroupMap[specialGroup] || specialGroup;
+}
+
 // 加载下载详情
 async function loadDownloadDetail(downloadId) {
   try {
@@ -309,6 +333,17 @@ async function loadDownloadDetail(downloadId) {
     // 使用 setTimeout 确保 DOM 元素已经渲染
     setTimeout(() => {
       renderDownloadDetail(download);
+      
+      // 添加返回按钮事件监听
+      const backButton = document.querySelector('.back-button[data-page="download"]');
+      if (backButton) {
+        // 先移除旧的监听器，再添加新的
+        backButton.replaceWith(backButton.cloneNode(true));
+        document.querySelector('.back-button[data-page="download"]').addEventListener('click', function(e) {
+          e.preventDefault();
+          loadPage('download');
+        });
+      }
     }, 100);
   } catch (error) {
     console.error('加载下载详情错误:', error);
@@ -353,19 +388,25 @@ function renderDownloadDetail(download, retryCount = 0) {
   // 渲染下载信息 - 修复HTML结构
   container.innerHTML = `
     <tr>
-      <td data-label="下载方式"><a href="${download.baidu_url}" target="_blank">百度网盘</a></td>
+      <td data-label="下载方式">
+        <a href="${download.baidu_url}" target="_blank" class="external-link" onclick="event.stopPropagation();">
+          <i class="fas fa-external-link-alt me-2"></i>百度网盘
+        </a>
+      </td>
       <td data-label="文件数">${download.file_count || '0'}</td>
       <td data-label="提取码/访问密码">${download.baidu_code || '无'}</td>
       <td data-label="资源有效期">无期限</td>
     </tr>
   `;
   
-	// 添加事件监听器，防止链接点击触发页面跳转
-	const baiduLink = container.querySelector('a[href*="baidu"]');
-	if (baiduLink) {
-		baiduLink.addEventListener('click', (e) => {
-			// 只阻止事件冒泡，不阻止默认行为（打开链接）
-			e.stopPropagation();
-		});
-	}
+  // 添加事件监听器，防止链接点击触发页面跳转
+  const baiduLink = container.querySelector('.external-link');
+  if (baiduLink) {
+    // 先移除旧的监听器，再添加新的
+    baiduLink.replaceWith(baiduLink.cloneNode(true));
+    container.querySelector('.external-link').addEventListener('click', function(e) {
+      // 只阻止事件冒泡，不阻止默认行为（打开链接）
+      e.stopPropagation();
+    });
+  }
 }
