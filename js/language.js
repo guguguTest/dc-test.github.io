@@ -21,7 +21,7 @@ const languageModule = (function() {
                 'sidebar-archive': '资源存档',
 				'sidebar-tools': '实用工具',
 				'sidebar-patcher': '补丁工具',
-				'sidebar-fortune': '每日运势',
+				'sidebar-fortune': '每日签到',
                 
                 // 主内容-下载
                 'download-heading': '下载',

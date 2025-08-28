@@ -1150,7 +1150,7 @@ function showLoginRequired(pageId) {
   const pageNames = {
     'tools': '实用工具',
     'dllpatcher': '补丁工具',
-    'fortune': '每日运势',
+    'fortune': '每日签到',
     'user-settings': '用户设置',
     'order-entry': '订单录入',
     'exchange': '积分兑换',

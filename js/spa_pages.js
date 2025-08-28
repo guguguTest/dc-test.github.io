@@ -756,7 +756,7 @@ download: `
     // 每日运势页面
 	fortune: `
 	  <div class="fortune-container">
-		<h1 class="page-title">每日运势(测试版)</h1>
+		<h1 class="page-title">每日签到</h1>
 		<button class="back-button" data-page="home">
 		  <i class="fas fa-arrow-left me-2"></i>
 		  <span>返回主页</span>
@@ -810,7 +810,7 @@ download: `
 		  
 		  <button id="draw-btn" class="fortune-btn">
 			<i class="fas fa-star me-2"></i>
-			<span>抽取</span>
+			<span>签到</span>
 		  </button>
 		  
 		  <div id="fortune-hint" class="fortune-hint"></div>
