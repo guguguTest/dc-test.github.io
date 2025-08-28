@@ -172,13 +172,14 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
     </thead>
     <tbody>
       ${downloads.map(download => {
-        // 修复权限检查逻辑
-        let hasAccess = userRank >= (download.access_level || 0);
-        
-        // 如果有特殊用户组要求，需要额外检查
-        if (download.special_group && download.special_group !== '') {
-          hasAccess = hasAccess && (download.special_group === userSpecialGroup.toString());
-        }
+		// 修复权限检查逻辑
+		let hasAccess = userRank >= (download.access_level || 0);
+
+		// 如果有特殊用户组要求，需要额外检查
+		if (download.special_group && download.special_group !== '') {
+			// 将用户的 rankSp 转换为字符串进行比较
+			hasAccess = hasAccess && (download.special_group === userSpecialGroup.toString());
+		}
         
         const accessLevelNames = {
           0: '普通用户',
@@ -359,12 +360,12 @@ function renderDownloadDetail(download, retryCount = 0) {
     </tr>
   `;
   
-  // 添加事件监听器，防止链接点击触发页面跳转
-  const baiduLink = container.querySelector('a[href*="baidu"]');
-  if (baiduLink) {
-    baiduLink.addEventListener('click', (e) => {
-      e.stopPropagation();
-      // 允许默认行为（打开链接）
-    });
-  }
+	// 添加事件监听器，防止链接点击触发页面跳转
+	const baiduLink = container.querySelector('a[href*="baidu"]');
+	if (baiduLink) {
+		baiduLink.addEventListener('click', (e) => {
+			// 只阻止事件冒泡，不阻止默认行为（打开链接）
+			e.stopPropagation();
+		});
+	}
 }
