@@ -3,6 +3,11 @@ if (typeof window.API_BASE_URL === 'undefined') {
     window.API_BASE_URL = 'https://api.am-all.com.cn';
 }
 
+const SPECIAL_GROUP_MAP = {
+  'maimoller': 1,
+  // 可以添加其他特殊用户组映射
+};
+
 // 初始化下载页面
 function initDownloadPage() {
   const token = localStorage.getItem('token');
@@ -13,10 +18,18 @@ function initDownloadPage() {
 
   // 获取用户信息
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  
+  // 调试输出 - 添加在这里
+  console.log('用户信息:', {
+    userInfo: userInfo,
+    userRank: userInfo.user_rank,
+    userSpecialGroup: userInfo.rankSp,
+    token: localStorage.getItem('token')
+  });
+  
+  // 即使权限不足也加载内容，因为可能有公开内容
   if (userInfo.user_rank <= 0) {
-    // 显示权限不足提示，但不阻止页面加载
     showPermissionDenied();
-    // 仍然尝试加载内容，因为可能有些内容是公开的
   }
 
   loadDownloadContent();
@@ -52,7 +65,6 @@ function showPermissionDenied() {
   }
 }
 
-// 加载下载内容
 async function loadDownloadContent() {
   try {
     console.log('开始加载下载内容...');
@@ -70,17 +82,20 @@ async function loadDownloadContent() {
     
     console.log('下载内容响应状态:', response.status);
     
+    // 调试输出 - 添加在这里
+    console.log('API响应详情:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url,
+      headers: Object.fromEntries([...response.headers])
+    });
+    
     if (response.status === 401) {
       // Token 无效或过期
       localStorage.removeItem('token');
       localStorage.removeItem('userInfo');
       showLoginRequired('download');
       return;
-    }
-    
-    if (response.status === 403) {
-      // 权限不足，但仍尝试显示内容
-      console.warn('权限不足，但尝试显示可用内容');
     }
     
     if (!response.ok) {
@@ -159,7 +174,7 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
   // 获取用户信息
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
   const userRank = userInfo.user_rank || 0;
-  const userSpecialGroup = userInfo.rankSp || 0; // 确保这是数字
+  const userSpecialGroup = userInfo.rankSp || 0;
   
   table.innerHTML = `
     <thead>
@@ -172,27 +187,33 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
     </thead>
     <tbody>
       ${downloads.map(download => {
-        // 修复权限检查逻辑
+        // 权限检查逻辑
         let hasAccess = userRank >= (download.access_level || 0);
         
         // 如果有特殊用户组要求，需要额外检查
         if (download.special_group && download.special_group !== '') {
-          // 将用户的 rankSp 转换为字符串进行比较
-          // 注意：这里假设 special_group 存储的是数字字符串，如 "1"
-          hasAccess = hasAccess && (download.special_group === userSpecialGroup.toString());
+          // 将数据库中的字符串映射为数字，然后与用户的 rankSp 比较
+          const requiredSpecialGroup = SPECIAL_GROUP_MAP[download.special_group] || 0;
+          hasAccess = hasAccess && (userSpecialGroup === requiredSpecialGroup);
           
-          // 如果特殊用户组是字符串标识（如 "maimoller"），则需要不同的比较逻辑
-          // hasAccess = hasAccess && (download.special_group === getSpecialGroupName(userSpecialGroup));
+          // 调试输出 - 添加在这里
+          console.log('特殊用户组权限检查:', {
+            title: download.title,
+            userRank,
+            accessLevel: download.access_level,
+            userSpecialGroup,
+            downloadSpecialGroup: download.special_group,
+            requiredSpecialGroup,
+            hasAccess
+          });
         }
         
-        // 调试输出
-        console.log('权限检查:', {
+        // 调试输出 - 添加在这里（普通权限检查）
+        console.log('普通权限检查:', {
           title: download.title,
           userRank,
           accessLevel: download.access_level,
-          userSpecialGroup,
-          downloadSpecialGroup: download.special_group,
-          hasAccess
+          hasAccess: userRank >= (download.access_level || 0)
         });
         
         const accessLevelNames = {
@@ -221,7 +242,7 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
             <td data-label="访问权限">
               <span class="access-badge rank-${download.access_level || 0}">
                 ${accessLevelNames[download.access_level || 0]}
-                ${download.special_group ? `<br><small>(${getSpecialGroupDisplayName(download.special_group)})</small>` : ''}
+                ${download.special_group ? `<br><small>(${download.special_group})</small>` : ''}
               </span>
               ${download.required_points > 0 ? 
                 `<span class="points-cost">(${download.required_points}积分)</span>` : 
@@ -389,7 +410,7 @@ function renderDownloadDetail(download, retryCount = 0) {
   container.innerHTML = `
     <tr>
       <td data-label="下载方式">
-        <a href="${download.baidu_url}" target="_blank" class="external-link" onclick="event.stopPropagation();">
+        <a href="${download.baidu_url}" target="_blank" class="external-link">
           <i class="fas fa-external-link-alt me-2"></i>百度网盘
         </a>
       </td>
@@ -399,14 +420,6 @@ function renderDownloadDetail(download, retryCount = 0) {
     </tr>
   `;
   
-  // 添加事件监听器，防止链接点击触发页面跳转
-  const baiduLink = container.querySelector('.external-link');
-  if (baiduLink) {
-    // 先移除旧的监听器，再添加新的
-    baiduLink.replaceWith(baiduLink.cloneNode(true));
-    container.querySelector('.external-link').addEventListener('click', function(e) {
-      // 只阻止事件冒泡，不阻止默认行为（打开链接）
-      e.stopPropagation();
-    });
-  }
+  // 移除旧的全局函数，不再需要
+  delete window.handleExternalLink;
 }

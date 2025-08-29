@@ -1169,7 +1169,8 @@ function showLoginRequired(pageId) {
     'user-settings': '用户设置',
     'order-entry': '订单录入',
     'exchange': '积分兑换',
-    'announcement-admin': '公告管理'
+    'announcement-admin': '公告管理',
+    'download': '下载中心' // 添加下载中心的映射
   };
   
   const pageName = pageNames[pageId] || '此功能';
@@ -1199,6 +1200,9 @@ function showLoginRequired(pageId) {
   }
   
   updateActiveMenuItem('home');
+  
+  // 确保移除加载状态
+  document.body.classList.remove('spa-loading');
 }
 
 // 设置字符计数器
@@ -1610,6 +1614,8 @@ function loadPage(pageId) {
 		  const token = localStorage.getItem('token');
 		  if (!token) {
 			showLoginRequired('download');
+			// 添加这行代码，确保移除加载状态
+			document.body.classList.remove('spa-loading');
 			return;
 		  }
 
@@ -1628,6 +1634,8 @@ function loadPage(pageId) {
 			  initDownloadPage();
 			} else {
 			  console.error('initDownloadPage 函数未定义');
+			  // 即使函数未定义，也要确保移除加载状态
+			  document.body.classList.remove('spa-loading');
 			}
 		  }, 100);
 		}
@@ -2921,6 +2929,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
 		// 处理外部链接
 		if (e.target.closest('a[href^="http"]') && !e.target.closest('a[href*="am-all.com.cn"]')) {
+		  // 外部链接，允许正常跳转
+		  return;
+		}
+
+		// 特别处理带有 external-link 类的链接
+		if (e.target.closest('a.external-link')) {
 		  // 外部链接，允许正常跳转
 		  return;
 		}
