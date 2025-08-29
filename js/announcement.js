@@ -311,6 +311,8 @@ class AnnouncementAdminSystem {
   constructor() {
     this.currentAnnouncement = null;
     this.isEditing = false;
+    this.editorElement = null; // 存储编辑器元素引用
+    this.currentEditorParent = null; // 存储当前编辑器父元素
   }
 
   // 初始化公告管理系统
@@ -318,6 +320,9 @@ class AnnouncementAdminSystem {
     this.loadAnnouncements();
     this.setupEventListeners();
     this.setupEditor();
+    
+    // 获取编辑器元素引用
+    this.editorElement = document.getElementById('announcement-editor');
   }
 
   // 设置事件监听器
@@ -347,35 +352,35 @@ class AnnouncementAdminSystem {
     }
   }
 
-	// 设置编辑器
-	setupEditor() {
-	  const editor = document.getElementById('announcement-editor-content');
-	  if (editor) {
-		editor.contentEditable = true;
-		
-		// 添加工具栏功能
-		const toolbar = document.querySelector('.editor-toolbar');
-		if (toolbar) {
-		  toolbar.querySelectorAll('button').forEach(button => {
-			button.addEventListener('click', (e) => {
-			  e.preventDefault();
-			  const command = button.dataset.command;
-			  
-			  if (command === 'createLink' || command === 'insertImage') {
-				const url = prompt('请输入URL:');
-				if (url) {
-				  document.execCommand(command, false, url);
-				}
-			  } else {
-				document.execCommand(command, false, null);
-			  }
-			  
-			  editor.focus();
-			});
-		  });
-		}
-	  }
-	}
+  // 设置编辑器
+  setupEditor() {
+    const editor = document.getElementById('announcement-editor-content');
+    if (editor) {
+      editor.contentEditable = true;
+      
+      // 添加工具栏功能
+      const toolbar = document.querySelector('.editor-toolbar');
+      if (toolbar) {
+        toolbar.querySelectorAll('button').forEach(button => {
+          button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const command = button.dataset.command;
+            
+            if (command === 'createLink' || command === 'insertImage') {
+              const url = prompt('请输入URL:');
+              if (url) {
+                document.execCommand(command, false, url);
+              }
+            } else {
+              document.execCommand(command, false, null);
+            }
+            
+            editor.focus();
+          });
+        });
+      }
+    }
+  }
 
   // 加载公告列表
   async loadAnnouncements() {
@@ -399,62 +404,63 @@ class AnnouncementAdminSystem {
     }
   }
 
-// 渲染公告列表
-renderAnnouncements(announcements) {
-  const container = document.getElementById('admin-announcements-list');
-  if (!container) return;
-  
-  let html = '';
-  
-  if (announcements.length === 0) {
-    html = '<div class="no-announcements text-center py-4">暂无公告</div>';
-  } else {
-    announcements.forEach(announcement => {
-      const date = new Date(announcement.created_at).toLocaleDateString('zh-CN');
-      const typeClass = announcement.type || 'notice';
-      const typeText = this.getTypeText(announcement.type);
-      const pinnedIcon = announcement.is_pinned ? '<i class="fas fa-thumbtack text-warning me-1"></i>' : '';
-      
-      html += `
-        <div class="admin-announcement-item">
-          <div class="admin-announcement-header">
-            <span class="announcement-type ${typeClass}">${pinnedIcon}${typeText}</span>
-            <h4 class="admin-announcement-title">${announcement.title}</h4>
-            <span class="admin-announcement-date">${date}</span>
+  // 渲染公告列表
+  renderAnnouncements(announcements) {
+    const container = document.getElementById('admin-announcements-list');
+    if (!container) return;
+    
+    let html = '';
+    
+    if (announcements.length === 0) {
+      html = '<div class="no-announcements text-center py-4">暂无公告</div>';
+    } else {
+      announcements.forEach(announcement => {
+        const date = new Date(announcement.created_at).toLocaleDateString('zh-CN');
+        const typeClass = announcement.type || 'notice';
+        const typeText = this.getTypeText(announcement.type);
+        const pinnedIcon = announcement.is_pinned ? '<i class="fas fa-thumbtack text-warning me-1"></i>' : '';
+        
+        html += `
+          <div class="admin-announcement-item" data-id="${announcement.id}">
+            <div class="admin-announcement-header">
+              <span class="announcement-type ${typeClass}">${pinnedIcon}${typeText}</span>
+              <h4 class="admin-announcement-title">${announcement.title}</h4>
+              <span class="admin-announcement-date">${date}</span>
+            </div>
+            <div class="admin-announcement-content">
+              ${announcement.content.substring(0, 100)}${announcement.content.length > 100 ? '...' : ''}
+            </div>
+            <div class="admin-announcement-actions">
+              <button class="btn-edit" data-id="${announcement.id}">
+                <i class="fas fa-edit me-1"></i>编辑
+              </button>
+              <button class="btn-delete" data-id="${announcement.id}">
+                <i class="fas fa-trash me-1"></i>删除
+              </button>
+            </div>
+            <div class="announcement-editor-container" id="editor-container-${announcement.id}" style="display: none;"></div>
           </div>
-          <div class="admin-announcement-content">
-            ${announcement.content.substring(0, 100)}${announcement.content.length > 100 ? '...' : ''}
-          </div>
-          <div class="admin-announcement-actions">
-            <button class="btn-edit" data-id="${announcement.id}">
-              <i class="fas fa-edit me-1"></i>编辑
-            </button>
-            <button class="btn-delete" data-id="${announcement.id}">
-              <i class="fas fa-trash me-1"></i>删除
-            </button>
-          </div>
-        </div>
-      `;
+        `;
+      });
+    }
+    
+    container.innerHTML = html;
+    
+    // 添加编辑和删除事件
+    container.querySelectorAll('.btn-edit').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.target.closest('.btn-edit').dataset.id;
+        this.editAnnouncement(id);
+      });
+    });
+    
+    container.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.target.closest('.btn-delete').dataset.id;
+        this.deleteAnnouncement(id);
+      });
     });
   }
-  
-  container.innerHTML = html;
-  
-  // 添加编辑和删除事件
-  container.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = e.target.closest('.btn-edit').dataset.id;
-      this.editAnnouncement(id);
-    });
-  });
-  
-  container.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = e.target.closest('.btn-delete').dataset.id;
-      this.deleteAnnouncement(id);
-    });
-  });
-}
 
   // 获取类型文本
   getTypeText(type) {
@@ -467,12 +473,25 @@ renderAnnouncements(announcements) {
     return typeMap[type] || '通知';
   }
 
-  // 显示编辑器
-  showEditor(announcement = null) {
-    const editor = document.getElementById('announcement-editor');
-    if (editor) {
-      editor.style.display = 'block';
+  // 显示编辑器 - 修改为在指定公告项下方显示
+  showEditor(announcement = null, parentElement = null) {
+    // 如果提供了父元素，将编辑器移动到该元素内
+    if (parentElement) {
+      const editorContainer = parentElement.querySelector('.announcement-editor-container');
+      if (editorContainer) {
+        editorContainer.appendChild(this.editorElement);
+        editorContainer.style.display = 'block';
+      }
+    } else {
+      // 新建公告时，将编辑器放回顶部
+      const adminContainer = document.querySelector('.announcement-admin-container');
+      if (adminContainer && this.editorElement.parentNode !== adminContainer) {
+        adminContainer.insertBefore(this.editorElement, adminContainer.firstChild.nextSibling);
+      }
     }
+    
+    // 显示编辑器
+    this.editorElement.style.display = 'block';
     
     this.isEditing = announcement !== null;
     this.currentAnnouncement = announcement;
@@ -489,14 +508,20 @@ renderAnnouncements(announcements) {
       document.getElementById('announcement-pinned').checked = false;
       document.getElementById('announcement-editor-content').innerHTML = '';
     }
+    
+    // 滚动到编辑器位置
+    this.editorElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   // 隐藏编辑器
   hideEditor() {
-    const editor = document.getElementById('announcement-editor');
-    if (editor) {
-      editor.style.display = 'none';
-    }
+    this.editorElement.style.display = 'none';
+    
+    // 隐藏所有编辑器容器
+    document.querySelectorAll('.announcement-editor-container').forEach(container => {
+      container.style.display = 'none';
+    });
+    
     this.currentAnnouncement = null;
     this.isEditing = false;
   }
@@ -551,7 +576,7 @@ renderAnnouncements(announcements) {
     }
   }
 
-  // 编辑公告
+  // 编辑公告 - 修改为在对应公告项下方显示编辑器
   async editAnnouncement(id) {
     try {
       const token = localStorage.getItem('token');
@@ -568,7 +593,13 @@ renderAnnouncements(announcements) {
         return;
       }
       
-      this.showEditor(announcement);
+      // 找到对应的公告项元素
+      const announcementItem = document.querySelector(`.admin-announcement-item[data-id="${id}"]`);
+      if (announcementItem) {
+        this.showEditor(announcement, announcementItem);
+      } else {
+        this.showEditor(announcement);
+      }
     } catch (error) {
       console.error('加载公告失败:', error);
       alert('加载公告失败');

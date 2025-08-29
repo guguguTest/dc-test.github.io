@@ -347,71 +347,73 @@ download: `
   </div>
 `,
 
-	// 公告管理页面
-	'announcement-admin': `
-	  <div class="section">
-		<h1 class="page-title">公告管理</h1>
-		<button class="back-button" data-page="home">
-		  <i class="fas fa-arrow-left me-2"></i>
-		  <span>返回</span>
-		</button>
-		
-		<div class="announcement-admin-container">
-		  <div class="announcement-admin-actions">
-			<button id="create-announcement-btn" class="btn btn-primary">
-			  <i class="fas fa-plus me-2"></i>新建公告
-			</button>
-		  </div>
-		  
-		  <div class="announcement-editor" id="announcement-editor" style="display: none;">
-			<h3 id="editor-title">新建公告</h3>
-			<div class="form-group">
-			  <label for="announcement-title">标题</label>
-			  <input type="text" id="announcement-title" class="form-control">
-			</div>
-			<div class="form-group">
-			  <label for="announcement-type">类型</label>
-			  <select id="announcement-type" class="form-control">
-				<option value="notice">通知</option>
-				<option value="important">重要</option>
-				<option value="update">更新</option>
-				<option value="top">置顶</option>
-			  </select>
-			</div>
-			<div class="form-group form-check">
-			  <input type="checkbox" id="announcement-pinned" class="form-check-input">
-			  <label for="announcement-pinned" class="form-check-label">置顶公告</label>
-			</div>
-			<div class="form-group">
-			  <label>内容</label>
-			<div class="editor-toolbar">
-			  <button type="button" data-command="bold"><i class="fas fa-bold"></i></button>
-			  <button type="button" data-command="italic"><i class="fas fa-italic"></i></button>
-			  <button type="button" data-command="underline"><i class="fas fa-underline"></i></button>
-			  <button type="button" data-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
-			  <button type="button" data-command="insertOrderedList"><i class="fas fa-list-ol"></i></button>
-			  <button type="button" data-command="createLink"><i class="fas fa-link"></i></button>
-			  <button type="button" data-command="insertImage"><i class="fas fa-image"></i></button>
-			</div>
-			  <div id="announcement-editor-content" class="editor-content"></div>
-			</div>
-			<div class="form-group">
-			  <button id="save-announcement-btn" class="btn btn-primary">保存</button>
-			  <button id="cancel-announcement-btn" class="btn btn-secondary">取消</button>
-			</div>
-		  </div>
-		  
-		  <div id="admin-announcements-list" class="admin-announcements-list">
-			<div class="text-center">
-			  <div class="spinner-border text-primary" role="status">
-				<span class="visually-hidden">加载中...</span>
-			  </div>
-			  <p>公告加载中...</p>
-			</div>
-		  </div>
-		</div>
-	  </div>
-	`,
+  // 公告管理页面
+  'announcement-admin': `
+    <div class="section">
+      <h1 class="page-title">公告管理</h1>
+      <button class="back-button" data-page="home">
+        <i class="fas fa-arrow-left me-2"></i>
+        <span>返回</span>
+      </button>
+      
+      <div class="announcement-admin-container">
+        <div class="announcement-admin-actions">
+          <button id="create-announcement-btn" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>新建公告
+          </button>
+        </div>
+        
+        <!-- 编辑器放在这里，初始状态为隐藏 -->
+        <div class="announcement-editor" id="announcement-editor" style="display: none;">
+          <h3 id="editor-title">新建公告</h3>
+          <div class="form-group">
+            <label for="announcement-title">标题</label>
+            <input type="text" id="announcement-title" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="announcement-type">类型</label>
+            <select id="announcement-type" class="form-control">
+              <option value="notice">通知</option>
+              <option value="important">重要</option>
+              <option value="update">更新</option>
+              <option value="top">置顶</option>
+            </select>
+          </div>
+          <div class="form-group form-check">
+            <input type="checkbox" id="announcement-pinned" class="form-check-input">
+            <label for="announcement-pinned" class="form-check-label">置顶公告</label>
+          </div>
+          <div class="form-group">
+            <label>内容</label>
+          <div class="editor-toolbar">
+            <button type="button" data-command="bold"><i class="fas fa-bold"></i></button>
+            <button type="button" data-command="italic"><i class="fas fa-italic"></i></button>
+            <button type="button" data-command="underline"><i class="fas fa-underline"></i></button>
+            <button type="button" data-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
+            <button type="button" data-command="insertOrderedList"><i class="fas fa-list-ol"></i></button>
+            <button type="button" data-command="createLink"><i class="fas fa-link"></i></button>
+            <button type="button" data-command="insertImage"><i class="fas fa-image"></i></button>
+          </div>
+            <div id="announcement-editor-content" class="editor-content"></div>
+          </div>
+          <div class="form-group">
+            <button id="save-announcement-btn" class="btn btn-primary">保存</button>
+            <button id="cancel-announcement-btn" class="btn btn-secondary">取消</button>
+          </div>
+        </div>
+        
+        <div id="admin-announcements-list" class="admin-announcements-list">
+          <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">加载中...</span>
+            </div>
+            <p>公告加载中...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+
 
 	// 订单录入页面
 	'order-entry': `
