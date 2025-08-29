@@ -225,18 +225,18 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
           5: '管理员'
         };
         
-        return `
-          <tr>
-            <td data-label="游戏名称">
-              ${hasAccess ? 
-                `<a href="#" data-page="download-detail" data-download-id="${download.id}">
-                  <i class="fas fa-link me-2"></i> ${download.title}
-                </a>` : 
-                `<span class="text-muted">
-                  <i class="fas fa-lock me-2"></i> ${download.title}
-                </span>`
-              }
-            </td>
+		return `
+		  <tr>
+			<td data-label="游戏名称">
+			  ${hasAccess ? 
+				`<a href="#" class="download-detail-link" data-download-id="${download.id}">
+				  <i class="fas fa-link me-2"></i> ${download.title}
+				</a>` : 
+				`<span class="text-muted">
+				  <i class="fas fa-lock me-2"></i> ${download.title}
+				</span>`
+			  }
+			</td>
             <td data-label="版本">${download.version || '-'}</td>
             <td data-label="文件数">${download.file_count || '0'}</td>
             <td data-label="访问权限">
@@ -258,9 +258,9 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
   container.appendChild(table);
   
   // 添加点击事件 - 只对有权限的项目添加
-  container.querySelectorAll('a[data-page="download-detail"]').forEach(link => {
-    link.addEventListener('click', async (e) => {
-      e.preventDefault();
+	container.querySelectorAll('a.download-detail-link').forEach(link => {
+	  link.addEventListener('click', async (e) => {
+		e.preventDefault();
       const downloadId = e.currentTarget.getAttribute('data-download-id');
       
       // 检查是否需要积分
