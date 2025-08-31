@@ -101,6 +101,66 @@ const pages = {
 	  </div>
 	`,
 
+// 用户管理界面
+'user-manager': `
+<div class="section">
+  <h1 class="page-title">用户管理</h1>
+  <div class="user-manager-container">
+    <div class="user-search-section">
+      <div class="search-filters">
+        <div class="search-input">
+          <input type="text" id="user-search-input" placeholder="搜索用户ID、用户名或邮箱...">
+          <button id="user-search-btn" class="btn btn-primary">
+            <i class="fas fa-search"></i> 搜索
+          </button>
+        </div>
+        <select id="user-rank-filter" class="filter-select">
+          <option value="">所有用户组</option>
+          <option value="0">普通用户</option>
+          <option value="1">初级用户</option>
+          <option value="2">中级用户</option>
+          <option value="3">高级用户</option>
+          <option value="4">贵宾用户</option>
+          <option value="5">系统管理员</option>
+        </select>
+        <select id="user-state-filter" class="filter-select">
+          <option value="">所有状态</option>
+          <option value="0">正常</option>
+          <option value="1">受限</option>
+          <option value="2">封禁</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="user-table-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>头像</th>
+            <th>UID</th>
+            <th>用户名</th>
+            <th>邮箱</th>
+            <th>用户组</th>
+            <th>特殊用户组</th>
+            <th>积分</th>
+            <th>鸽屋积分</th>
+            <th>游戏服务器</th>
+            <th>Keychip</th>
+            <th>GUID</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body">
+          <!-- 用户数据将通过JavaScript动态填充 -->
+        </tbody>
+      </table>
+      <div id="user-pagination" class="pagination-container"></div>
+    </div>
+  </div>
+</div>
+`,
+
 // 下载页面
 download: `
   <h1 class="page-title" id="download-heading">下载中心</h1>

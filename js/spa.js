@@ -10,7 +10,7 @@ let currentPage = 1;
 const ordersPerPage = 50;
 
 // 受保护的页面
-const PROTECTED_PAGES = ['tools', 'dllpatcher', 'fortune', 'user-settings', 'order-entry', 'exchange', 'announcement-admin'];
+const PROTECTED_PAGES = ['tools', 'dllpatcher', 'fortune', 'user-settings', 'order-entry', 'exchange', 'announcement-admin', 'user-manager'];
 
 // 数据源
 const MUSIC_DATA_URLS = [
@@ -377,7 +377,7 @@ function checkLoginStatus() {
         showAuthLinks();
       })
       .finally(() => {
-		restoreSidebarScroll();
+        restoreSidebarScroll();
         document.body.classList.remove('spa-loading');
       });
   } else {
@@ -389,7 +389,6 @@ function checkLoginStatus() {
 function getUserRankInfo(userRank) {
   const rankInfo = {
     background: "",
-
     icon: "",
     text: ""
   };
@@ -492,14 +491,40 @@ function updateUserInfo(user) {
   const rankInfo = getUserRankInfo(user.user_rank || 0);
   
   // 使用用户自定义头像或默认头像
-  const avatarUrl = user.avatar || defaultAvatarUrl;
+  let avatarUrl = defaultAvatarUrl;
+	if (user.avatar) {
+	  // 检查是否已经是完整URL
+	  if (user.avatar.startsWith('http')) {
+		avatarUrl = user.avatar;
+	  } else {
+		avatarUrl = `https://api.am-all.com.cn/avatars/${user.avatar}`;
+	  }
+	}
   
-  // PC视图
+  // 获取所有元素引用
   const userAvatarPc = document.getElementById('user-avatar-pc');
   const userNicknamePc = document.getElementById('user-nickname-pc');
   const userUidPc = document.getElementById('user-uid-pc');
   const userInfoPc = document.getElementById('user-info-pc');
+  const dropdownUid = document.getElementById('dropdown-uid');
+  const dropdownRank = document.getElementById('dropdown-rank');
+  const dropdownPoints = document.getElementById('dropdown-points');
+  const userAvatarMobile = document.getElementById('user-avatar-mobile');
+  const userNicknameMobile = document.getElementById('user-nickname-mobile');
+  const userEmailMobile = document.getElementById('user-email-mobile');
+  const userUidMobile = document.getElementById('user-uid-mobile');
+  const userPointsMobile = document.getElementById('user-points-mobile');
+  const settingsAvatar = document.getElementById('settings-avatar');
+  const settingsUsername = document.getElementById('settings-username');
+  const settingsEmail = document.getElementById('settings-email');
+  const settingsUid = document.getElementById('settings-uid');
+  const settingsPoints = document.getElementById('settings-points');
+  const settingsPoint2 = document.getElementById('settings-point2');
+  const settingsTotalPoints = document.getElementById('settings-total-points');
+  const nicknameInput = document.getElementById('settings-nickname');
+  const sidebarUserArea = document.querySelector('.sidebar-user-area');
   
+  // PC视图
   if (userInfoPc) {
     userInfoPc.style.setProperty('--user-rank-bg', `url(${rankInfo.background})`);
     
@@ -532,30 +557,21 @@ function updateUserInfo(user) {
     userUidPc.textContent = user.email || '未设置邮箱';
   }
   
-  const dropdownUid = document.getElementById('dropdown-uid');
   if (dropdownUid) {
     dropdownUid.textContent = `UID: ${user.uid}`;
   }
   
-  const dropdownRank = document.getElementById('dropdown-rank');
   if (dropdownRank) {
     dropdownRank.innerHTML = `<i class="fas fa-crown me-2"></i>用户组: ${rankInfo.text}`;
   }
   
   // 修改积分显示为总积分
-  const dropdownPoints = document.getElementById('dropdown-points');
   if (dropdownPoints) {
     const totalPoints = (user.points || 0) + (user.point2 || 0);
     dropdownPoints.innerHTML = `<i class="fas fa-coins me-2"></i>积分: ${totalPoints}`;
   }
   
   // 移动视图
-  const userAvatarMobile = document.getElementById('user-avatar-mobile');
-  const userNicknameMobile = document.getElementById('user-nickname-mobile');
-  const userEmailMobile = document.getElementById('user-email-mobile');
-  const userUidMobile = document.getElementById('user-uid-mobile');
-  const userPointsMobile = document.getElementById('user-points-mobile');
-  
   if (userAvatarMobile) {
     userAvatarMobile.src = avatarUrl;
     // 确保特效元素存在
@@ -583,16 +599,8 @@ function updateUserInfo(user) {
   }
   
   // 用户设置页面
-  const settingsAvatar = document.getElementById('settings-avatar');
-  const settingsUsername = document.getElementById('settings-username');
-  const settingsEmail = document.getElementById('settings-email');
-  const settingsUid = document.getElementById('settings-uid');
-  const settingsPoints = document.getElementById('settings-points');
-  const settingsPoint2 = document.getElementById('settings-point2');
-  const settingsTotalPoints = document.getElementById('settings-total-points');
-  
   if (settingsAvatar) {
-    settingsAvatar.src = user.avatar || defaultAvatarUrl;
+    settingsAvatar.src = avatarUrl;
   }
   
   if (settingsUsername) {
@@ -615,15 +623,12 @@ function updateUserInfo(user) {
     settingsTotalPoints.textContent = totalPoints;
   }
   
-  const nicknameInput = document.getElementById('settings-nickname');
   if (nicknameInput) {
     nicknameInput.value = user.nickname || '';
     document.getElementById('settings-nickname-counter').textContent = (user.nickname || '').length;
   }
   
   // 为移动端添加用户组背景和等级图标
-  const sidebarUserArea = document.querySelector('.sidebar-user-area');
-  
   if (sidebarUserArea) {
     sidebarUserArea.style.setProperty('--user-rank-bg', `url(${rankInfo.background})`);
     
@@ -735,6 +740,13 @@ function showUserInfo() {
       document.getElementById('sidebar-download-admin').style.display = 'none';
     }
     
+	// 显示用户管理菜单（用户组级别>=5）
+	if (currentUser.user_rank >= 5) {
+	  document.getElementById('sidebar-user-manager').style.display = 'block';
+	} else {
+	  document.getElementById('sidebar-user-manager').style.display = 'none';
+	}
+	
     // 显示订单录入菜单（用户组级别>=4）
     document.getElementById('sidebar-order-entry').style.display = 'block';
   } else {
@@ -743,14 +755,14 @@ function showUserInfo() {
   }
   
     // 显示下载菜单（用户组级别>0）
-	if (currentUser && currentUser.user_rank > 0) {
-	  document.querySelector('a[data-page="download"]').parentElement.style.display = 'block';
-	} else {
-	  // 改为始终显示，但添加特殊样式表示权限不足
-	  const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
-	  downloadMenuItem.style.display = 'block';
-	  downloadMenuItem.classList.add('disabled-menu-item');
-	}
+  if (currentUser && currentUser.user_rank > 0) {
+    document.querySelector('a[data-page="download"]').parentElement.style.display = 'block';
+  } else {
+    // 改为始终显示，但添加特殊样式表示权限不足
+    const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
+    downloadMenuItem.style.display = 'block';
+    downloadMenuItem.classList.add('disabled-menu-item');
+  }
 }
 
 // 显示登录/注册链接
@@ -1170,7 +1182,8 @@ function showLoginRequired(pageId) {
     'order-entry': '订单录入',
     'exchange': '积分兑换',
     'announcement-admin': '公告管理',
-    'download': '下载中心' // 添加下载中心的映射
+    'download': '下载中心',
+    'user-manager': '用户管理'
   };
   
   const pageName = pageNames[pageId] || '此功能';
@@ -1279,8 +1292,83 @@ function displayFortune(song, luck, recommendations, pointsEarned) {
 
 }
 
+// 获取用户权限
+async function getUserPermissions() {
+  const token = localStorage.getItem('token');
+  if (!token) return {};
+  
+  try {
+    // 修改为获取当前用户的权限
+    const response = await fetch('https://api.am-all.com.cn/api/admin/users/permissions/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      // 如果接口不存在，返回空对象而不是抛出错误
+      if (response.status === 404) {
+        return {};
+      }
+      throw new Error('获取用户权限失败');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('获取用户权限失败:', error);
+    return {};
+  }
+}
+
+// 辅助函数：检查页面是否默认允许访问
+function isPageAllowedByDefault(pageId, user) {
+  const defaultAllowedPages = ['home', 'tools', 'dllpatcher', 'settings', 'help', 'fortune', 'exchange'];
+  return defaultAllowedPages.includes(pageId);
+}
+
+// 显示权限不足提示
+function showPermissionDenied(pageId) {
+  const contentContainer = document.getElementById('content-container');
+  const pageNames = {
+    'download': '下载中心',
+    'ccb': '游戏查分',
+    'announcement-admin': '公告管理',
+    'site-admin': '网站管理',
+    'download-admin': '下载管理',
+    'order-entry': '订单录入',
+    'user-manager': '用户管理'
+  };
+  
+  const pageName = pageNames[pageId] || '此功能';
+  
+  contentContainer.innerHTML = `
+    <div class="section">
+      <div class="permission-denied-container">
+        <div class="permission-denied-icon">
+          <i class="fas fa-ban"></i>
+        </div>
+        <h2>权限不足</h2>
+        <p>您没有访问${pageName}的权限</p>
+        <p>请联系管理员获取权限</p>
+        <button class="back-btn" data-page="home">
+          <i class="fas fa-arrow-left me-2"></i>
+          返回首页
+        </button>
+      </div>
+    </div>
+  `;
+  
+  const backBtn = contentContainer.querySelector('.back-btn');
+  if (backBtn) {
+    backBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      loadPage(this.getAttribute('data-page'));
+    });
+  }
+}
+
 // 加载页面内容
-function loadPage(pageId) {
+async function loadPage(pageId) {
   const contentContainer = document.getElementById('content-container');
   if (!contentContainer) return;
 
@@ -1307,9 +1395,25 @@ function loadPage(pageId) {
     }
   }
 
+  // 检查页面访问权限
   if (PROTECTED_PAGES.includes(pageId)) {
     const token = localStorage.getItem('token');
     if (!token) {
+      showLoginRequired(pageId);
+      return;
+    }
+    
+    // 检查用户权限
+    try {
+      const userPermissions = await getUserPermissions();
+      
+      // 检查是否默认允许访问或者有特定权限
+      if (!isPageAllowedByDefault(pageId, currentUser) && !userPermissions[pageId]) {
+        showPermissionDenied(pageId);
+        return;
+      }
+    } catch (error) {
+      console.error('检查权限失败:', error);
       showLoginRequired(pageId);
       return;
     }
@@ -1329,13 +1433,13 @@ function loadPage(pageId) {
         languageModule.initLanguage();
       }
       
-	if (pageId === 'user-settings') {
-		const token = localStorage.getItem('token');
-		if (token) {
-			fetchUserInfo(token);
-		} else {
-			loadPage('login');
-		}
+      if (pageId === 'user-settings') {
+        const token = localStorage.getItem('token');
+        if (token) {
+          fetchUserInfo(token);
+        } else {
+          loadPage('login');
+        }
         
         const changeAvatarBtn = document.getElementById('change-avatar-btn');
         const avatarUpload = document.getElementById('avatar-upload');
@@ -1508,9 +1612,9 @@ function loadPage(pageId) {
           });
         }
         
-		// 显示查分绑定信息
-		setTimeout(displayCCBBindingInfo, 100);
-		
+        // 显示查分绑定信息
+        setTimeout(displayCCBBindingInfo, 100);
+        
         const savePasswordBtn = document.getElementById('save-password-btn');
         if (savePasswordBtn) {
           savePasswordBtn.addEventListener('click', function() {
@@ -1556,470 +1660,482 @@ function loadPage(pageId) {
         }
       }
 
-		if (pageId === 'settings') {
-		  // 初始化设置值
-		  const languageSelect = document.getElementById('language-select');
-		  const rememberLanguage = document.getElementById('remember-language');
-		  
-		  if (languageSelect) {
-			languageSelect.value = localStorage.getItem('language') || 'zh-cn';
-		  }
-		  if (rememberLanguage) {
-			rememberLanguage.checked = localStorage.getItem('rememberLanguage') === 'true';
-		  }
-		  
-		  // 添加语言切换事件监听器
-		  if (languageSelect) {
-			languageSelect.addEventListener('change', function() {
-			  const lang = this.value;
-			  const remember = document.getElementById('remember-language').checked;
-			  
-			  if (remember) {
-				localStorage.setItem('language', lang);
-			  }
-			  
-			  // 更新URL参数并重新加载页面（与顶部导航栏相同的机制）
-			  const url = new URL(window.location);
-			  url.searchParams.set('lang', lang);
-			  window.history.replaceState({}, '', url);
-			  
-			  // 重新加载页面以应用语言更改
-			  window.location.reload();
-			});
-		  }
-		  
-		  // 记住语言偏好开关事件
-		  if (rememberLanguage) {
-			rememberLanguage.addEventListener('change', function() {
-			  localStorage.setItem('rememberLanguage', this.checked);
-			});
-		  }
-		  
-		  // 修改保存按钮事件
-		  const saveBtn = document.getElementById('save-settings');
-		  if (saveBtn) {
-			saveBtn.addEventListener('click', function() {
-			  const language = document.getElementById('language-select').value;
-			  const rememberLanguage = document.getElementById('remember-language').checked;
-			  
-			  localStorage.setItem('language', language);
-			  localStorage.setItem('rememberLanguage', rememberLanguage);
-			  
-			  showSuccessMessage('设置已保存');
-			});
-		  }
-		}
+      if (pageId === 'settings') {
+        // 初始化设置值
+        const languageSelect = document.getElementById('language-select');
+        const rememberLanguage = document.getElementById('remember-language');
+        
+        if (languageSelect) {
+          languageSelect.value = localStorage.getItem('language') || 'zh-cn';
+        }
+        if (rememberLanguage) {
+          rememberLanguage.checked = localStorage.getItem('rememberLanguage') === 'true';
+        }
+        
+        // 添加语言切换事件监听器
+        if (languageSelect) {
+          languageSelect.addEventListener('change', function() {
+            const lang = this.value;
+            const remember = document.getElementById('remember-language').checked;
+            
+            if (remember) {
+              localStorage.setItem('language', lang);
+            }
+            
+            // 更新URL参数并重新加载页面（与顶部导航栏相同的机制）
+            const url = new URL(window.location);
+            url.searchParams.set('lang', lang);
+            window.history.replaceState({}, '', url);
+            
+            // 重新加载页面以应用语言更改
+            window.location.reload();
+          });
+        }
+        
+        // 记住语言偏好开关事件
+        if (rememberLanguage) {
+          rememberLanguage.addEventListener('change', function() {
+            localStorage.setItem('rememberLanguage', this.checked);
+          });
+        }
+        
+        // 修改保存按钮事件
+        const saveBtn = document.getElementById('save-settings');
+        if (saveBtn) {
+          saveBtn.addEventListener('click', function() {
+            const language = document.getElementById('language-select').value;
+            const rememberLanguage = document.getElementById('remember-language').checked;
+            
+            localStorage.setItem('language', language);
+            localStorage.setItem('rememberLanguage', rememberLanguage);
+            
+            showSuccessMessage('设置已保存');
+          });
+        }
+      }
 
-		if (pageId === 'download') {
-		  const token = localStorage.getItem('token');
-		  if (!token) {
-			showLoginRequired('download');
-			// 添加这行代码，确保移除加载状态
-			document.body.classList.remove('spa-loading');
-			return;
-		  }
-
-		  // 从本地存储获取用户信息
-		  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-		  
-		  // 即使权限不足也尝试加载内容，因为可能有公开内容
-		  if (userInfo.user_rank <= 0) {
-			// 显示权限不足提示，但不阻止页面加载
-			showPermissionDenied();
-		  }
-		  
-		  // 确保页面加载完成后再初始化下载内容
-		  setTimeout(() => {
-			if (typeof initDownloadPage === 'function') {
-			  initDownloadPage();
-			} else {
-			  console.error('initDownloadPage 函数未定义');
-			  // 即使函数未定义，也要确保移除加载状态
-			  document.body.classList.remove('spa-loading');
-			}
-		  }, 100);
-		}
-
-		if (pageId === 'download-detail') {
-		  // 从URL参数获取下载ID
-		  const urlParams = new URLSearchParams(window.location.search);
-		  const downloadId = urlParams.get('id');
-		  
-		  if (downloadId && typeof loadDownloadDetail === 'function') {
-			setTimeout(() => loadDownloadDetail(downloadId), 100);
-		  }
-		}
-
-		if (pageId === 'download-admin') {
+		if (pageId === 'user-manager') {
 		  // 检查用户权限
 		  if (currentUser && currentUser.user_rank >= 5) {
-			// 初始化下载管理系统
-			if (typeof initDownloadAdminPage === 'function') {
-			  setTimeout(initDownloadAdminPage, 100);
+			// 初始化用户管理系统
+			if (typeof initUserManager === 'function') {
+			  setTimeout(initUserManager, 100);
 			}
 		  } else {
-			showLoginRequired('download-admin');
+			showLoginRequired('user-manager');
 		  }
 		}
 
-if (pageId === 'fortune') {
-  setTimeout(() => {
-    const coverImg = document.getElementById('cover-img');
-    const songIdEl = document.getElementById('song-id');
-    const songCategoryEl = document.getElementById('song-category');
-    const songTitleEl = document.getElementById('song-title');
-    const songArtistEl = document.getElementById('song-artist');
-    const difficultiesContainer = document.querySelector('.difficulties');
-    const fortuneLuckEl = document.getElementById('fortune-luck');
-    const drawBtn = document.getElementById('draw-btn');
-    const fortuneHint = document.getElementById('fortune-hint');
-    const luckyActionEl = document.getElementById('lucky-action');
-    const unluckyActionEl = document.getElementById('unlucky-action');
-    
-    if (coverImg) {
-      if (window.innerWidth <= 768) {
-        coverImg.style.width = '190px';
-        coverImg.style.height = '190px';
-      } else {
-        coverImg.style.width = '';
-        coverImg.style.height = '';
-      }
-    }
-    
-    const luckTexts = ['大凶', '凶', '末吉', '吉', '小吉', '中吉', '大吉', '特大吉'];
-    
-    const lastDrawDate = localStorage.getItem('dailyFortuneDate');
-    const today = new Date().toDateString();
-    const dailyFortuneData = localStorage.getItem('dailyFortuneData');
-    
-    let songList = [];
-    
-    const dummySong = {
-      id: '???',
-      title: '???',
-      artist: '???',
-      catname: '???',
-      lev_bas: '?',
-      lev_adv: '?',
-      lev_exp: '?',
-      lev_mas: '?',
-      lev_ult: '?'
-    };
-    
-    updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-    
-    // 修改歌曲数据加载逻辑
-    const fetchMusicData = async () => {
-      for (const url of MUSIC_DATA_URLS) {
-        try {
-          const response = await fetch(url);
-          if (!response.ok) continue;
-          const data = await response.json();
-          
-          // 确保数据是数组格式
-          if (Array.isArray(data)) {
-            return data;
-          } else if (data.songs && Array.isArray(data.songs)) {
-            return data.songs;
-          } else {
-            console.error('无效的音乐数据格式:', data);
-            continue;
-          }
-        } catch (e) {
-          console.log(`尝试从 ${url} 加载数据失败`, e);
-          continue;
-        }
-      }
-      throw new Error('所有数据源均不可用');
-    };
-    
-    fetchMusicData()
-      .then(data => {
-        songList = data;
-        console.log('成功加载歌曲数据:', songList.length, '首歌曲');
-        
-        // 只有在没有已保存的运势数据时才显示占位符
-        if (!(lastDrawDate === today && dailyFortuneData)) {
-          updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-        }
-        
-        // 检查是否可以抽取运势
-        const token = localStorage.getItem('token');
-        if (token) {
-			// 在获取上次抽取时间的代码部分，添加错误处理
-			fetch('https://api.am-all.com.cn/api/fortune/last-draw', {
-			  headers: {
-				'Authorization': `Bearer ${token}`
-			  }
-			})
-			.then(response => {
-			  if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			  }
-			  return response.json();
-			})
-			.then(data => {
-			  if (data.canDraw) {
-				if (drawBtn) {
-				  drawBtn.disabled = false;
-				  drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
-				}
-				if (fortuneHint) {
-				  fortuneHint.textContent = '今日运势待抽取';
-				}
-			  } else {
-				// 已经抽取过，显示上次抽取的结果
-				if (data.lastFortune) {
-				  displayFortune(
-					data.lastFortune.song_data,
-					data.lastFortune.luck,
-					data.lastFortune.recommendations
-				  );
-				  
-				  // 显示历史获得的积分
-				  if (data.lastFortune.points_earned) {
-					const fortuneHint = document.getElementById('fortune-hint');
-					if (fortuneHint) {
-					  // 使用当前用户积分显示，而不是历史积分
-					  const totalPoints = (currentUser.points || 0) + (currentUser.point2 || 0);
-					  fortuneHint.textContent = `昨日获得 ${data.lastFortune.points_earned} 积分，当前积分: ${totalPoints}`;
-					  fortuneHint.style.color = '#7f8c8d'; // 使用灰色表示历史记录
-					}
-				  }
-				}
-				
-				if (drawBtn) {
-				  drawBtn.disabled = true;
-				  drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-				}
-				
-				if (fortuneHint) {
-				  if (data.nextDrawTime) {
-					const nextDraw = new Date(data.nextDrawTime);
-					const now = new Date();
-					const hoursLeft = Math.ceil((nextDraw - now) / (1000 * 60 * 60));
-					fortuneHint.textContent = `今日运势已抽取，${hoursLeft}小时后可再次抽取`;
-				  } else {
-					fortuneHint.textContent = `今日运势已抽取，请明天再来`;
-				  }
-				}
-			  }
-			})
-			.catch(error => {
-			  console.error('检查运势抽取状态失败:', error);
-			  // 使用本地逻辑作为后备
-			  if (lastDrawDate === today && dailyFortuneData) {
-				try {
-				  const data = JSON.parse(dailyFortuneData);
-				  if (data && data.song) {
-					displayFortune(data.song, data.luck, data.recommendations);
-					if (drawBtn) {
-					  drawBtn.disabled = true;
-					  drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-					}
-					if (fortuneHint) {
-					  fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
-					}
-				  }
-				} catch (e) {
-				  console.error('解析运势数据失败', e);
-				  localStorage.removeItem('dailyFortuneDate');
-				  localStorage.removeItem('dailyFortuneData');
-				  updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-				}
-			  } else {
-				// 显示通用错误信息，而不是NaN
-				if (fortuneHint) {
-				  fortuneHint.textContent = '无法获取抽取状态，请稍后重试';
-				}
-				if (drawBtn) {
-				  drawBtn.disabled = false;
-				  drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
-				}
-			  }
-			});
-        }
-      })
-      .catch(error => {
-        console.error('加载歌曲数据失败:', error);
-        if (fortuneHint) {
-          fortuneHint.textContent = '加载歌曲数据失败，使用备用数据';
-        }
-        // 使用本地备用数据
-        songList = [
-          {
-            id: '001',
-            title: '备用歌曲',
-            artist: '系统',
-            catname: 'ORIGINAL',
-            lev_bas: '3',
-            lev_adv: '5',
-            lev_exp: '7',
-            lev_mas: '9',
-            lev_ult: '12',
-            image: 'dummy.jpg'
-          }
-        ];
-        // 只有在没有已保存的运势数据时才显示占位符
-        if (!(lastDrawDate === today && dailyFortuneData)) {
-          updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-        }
-      });
-    
-    if (drawBtn) {
-      drawBtn.addEventListener('click', () => {
-        if (!drawBtn) return;
-        
+      if (pageId === 'download') {
         const token = localStorage.getItem('token');
         if (!token) {
-          showErrorMessage('请先登录');
+          showLoginRequired('download');
+          // 添加这行代码，确保移除加载状态
+          document.body.classList.remove('spa-loading');
           return;
         }
+
+        // 从本地存储获取用户信息
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         
-        drawBtn.disabled = true;
-        drawBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>抽取中...';
-        if (fortuneHint) fortuneHint.textContent = '';
-        
-        // 隐藏封面，显示动画
-        const coverImg = document.getElementById('cover-img');
-        const animationContainer = contentContainer.querySelector('.fortune-animation');
-        const kuji01 = contentContainer.querySelector('#kuji-01');
-        const kuji02 = contentContainer.querySelector('#kuji-02');
-        
-        if (coverImg) {
-          coverImg.style.display = 'none';
+        // 即使权限不足也尝试加载内容，因为可能有公开内容
+        if (userInfo.user_rank <= 0) {
+          // 显示权限不足提示，但不阻止页面加载
+          showPermissionDenied('download');
         }
         
-        if (animationContainer) {
-          animationContainer.style.display = 'flex';
-          kuji01.style.display = 'block';
-          kuji01.classList.add('kuji-swing');
-          kuji02.style.display = 'none';
-          kuji02.classList.remove('kuji-fadein');
-        }
-        
+        // 确保页面加载完成后再初始化下载内容
         setTimeout(() => {
-          let scrollCount = 0;
-          const scrollInterval = setInterval(() => {
-            if (songList.length === 0) {
-              clearInterval(scrollInterval);
-              return;
+          if (typeof initDownloadPage === 'function') {
+            initDownloadPage();
+          } else {
+            console.error('initDownloadPage 函数未定义');
+            // 即使函数未定义，也要确保移除加载状态
+            document.body.classList.remove('spa-loading');
+          }
+        }, 100);
+      }
+
+      if (pageId === 'download-detail') {
+        // 从URL参数获取下载ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const downloadId = urlParams.get('id');
+        
+        if (downloadId && typeof loadDownloadDetail === 'function') {
+          setTimeout(() => loadDownloadDetail(downloadId), 100);
+        }
+      }
+
+      if (pageId === 'download-admin') {
+        // 检查用户权限
+        if (currentUser && currentUser.user_rank >= 5) {
+          // 初始化下载管理系统
+          if (typeof initDownloadAdminPage === 'function') {
+            setTimeout(initDownloadAdminPage, 100);
+          }
+        } else {
+          showLoginRequired('download-admin');
+        }
+      }
+
+      if (pageId === 'fortune') {
+        setTimeout(() => {
+          const coverImg = document.getElementById('cover-img');
+          const songIdEl = document.getElementById('song-id');
+          const songCategoryEl = document.getElementById('song-category');
+          const songTitleEl = document.getElementById('song-title');
+          const songArtistEl = document.getElementById('song-artist');
+          const difficultiesContainer = document.querySelector('.difficulties');
+          const fortuneLuckEl = document.getElementById('fortune-luck');
+          const drawBtn = document.getElementById('draw-btn');
+          const fortuneHint = document.getElementById('fortune-hint');
+          const luckyActionEl = document.getElementById('lucky-action');
+          const unluckyActionEl = document.getElementById('unlucky-action');
+          
+          if (coverImg) {
+            if (window.innerWidth <= 768) {
+              coverImg.style.width = '190px';
+              coverImg.style.height = '190px';
+            } else {
+              coverImg.style.width = '';
+              coverImg.style.height = '';
             }
-            
-            const tempSong = songList[Math.floor(Math.random() * songList.length)];
-            
-            updateDisplay(tempSong, '???', {lucky: '?', unlucky: '?'});
-            scrollCount++;
-            
-            if (scrollCount > 30) {
-              clearInterval(scrollInterval);
+          }
+          
+          const luckTexts = ['大凶', '凶', '末吉', '吉', '小吉', '中吉', '大吉', '特大吉'];
+          
+          const lastDrawDate = localStorage.getItem('dailyFortuneDate');
+          const today = new Date().toDateString();
+          const dailyFortuneData = localStorage.getItem('dailyFortuneData');
+          
+          let songList = [];
+          
+          const dummySong = {
+            id: '???',
+            title: '???',
+            artist: '???',
+            catname: '???',
+            lev_bas: '?',
+            lev_adv: '?',
+            lev_exp: '?',
+            lev_mas: '?',
+            lev_ult: '?'
+          };
+          
+          updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+          
+          // 修改歌曲数据加载逻辑
+          const fetchMusicData = async () => {
+            for (const url of MUSIC_DATA_URLS) {
+              try {
+                const response = await fetch(url);
+                if (!response.ok) continue;
+                const data = await response.json();
+                
+                // 确保数据是数组格式
+                if (Array.isArray(data)) {
+                  return data;
+                } else if (data.songs && Array.isArray(data.songs)) {
+                  return data.songs;
+                } else {
+                  console.error('无效的音乐数据格式:', data);
+                  continue;
+                }
+              } catch (e) {
+                console.log(`尝试从 ${url} 加载数据失败`, e);
+                continue;
+              }
+            }
+            throw new Error('所有数据源均不可用');
+          };
+          
+          fetchMusicData()
+            .then(data => {
+              songList = data;
+              console.log('成功加载歌曲数据:', songList.length, '首歌曲');
               
-              // 调用后端API抽取运势
-			fetch('https://api.am-all.com.cn/api/fortune/draw', {
-			  method: 'POST',
-			  headers: {
-				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json'
-			  }
-			})
-			.then(response => response.json())
-			.then(data => {
-			  if (data.success) {
-				// 修复：传递正确的参数，包括获得的积分
-				displayFortune(data.song, data.luck, data.recommendations);
-				
-				// 显示获得的积分信息
-				if (data.pointsEarned) {
-				  const fortuneHint = document.getElementById('fortune-hint');
-				  if (fortuneHint) {
-					const totalPoints = data.points + (data.point2 || 0);
-					fortuneHint.textContent = `恭喜获得 ${data.pointsEarned} 积分！当前积分: ${totalPoints}`;
-					fortuneHint.style.color = '#27ae60';
-				  }
-				}
-				
-				// 保存到本地存储，用于页面刷新后显示
-				const today = new Date().toDateString();
-				localStorage.setItem('dailyFortuneDate', today);
-				localStorage.setItem('dailyFortuneData', JSON.stringify({
-				  song: data.song,
-				  luck: data.luck,
-				  recommendations: data.recommendations,
-				  pointsEarned: data.pointsEarned
-				}));
-				
-				if (drawBtn) {
-				  drawBtn.disabled = true;
-				  drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-				}
-				
-				// 更新用户信息
-				if (currentUser) {
-				  currentUser.points = data.points;
-				  currentUser.point2 = data.point2;
-				  updateUserInfo(currentUser);
-				}
-			  } else {
-				// 抽取失败，显示错误信息
-				if (drawBtn) {
-				  drawBtn.disabled = false;
-				  drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
-				}
-				if (fortuneHint) {
-				  fortuneHint.textContent = data.error || '抽取运势失败';
-				  fortuneHint.style.color = '#e74c3c';
-				}
-				
-				// 失败时也要恢复封面显示
-				const coverImg = document.getElementById('cover-img');
-				const animationContainer = document.querySelector('.fortune-animation');
-				if (coverImg) coverImg.style.display = 'block';
-				if (animationContainer) animationContainer.style.display = 'none';
-			  }
-			})
-			.catch(error => {
-			  console.error('抽取运势失败:', error);
-			  if (drawBtn) {
-				drawBtn.disabled = false;
-				drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
-			  }
-			  if (fortuneHint) {
-				fortuneHint.textContent = '网络错误，请重试';
-				fortuneHint.style.color = '#e74c3c';
-			  }
-			  
-			  // 失败时恢复封面显示并隐藏动画
-			  const coverImg = document.getElementById('cover-img');
-			  const animationContainer = document.querySelector('.fortune-animation');
-			  if (coverImg) coverImg.style.display = 'block';
-			  if (animationContainer) animationContainer.style.display = 'none';
-			 });
-            }
-          }, 100);
-        }, 500);
-      });
-    }
-  }, 100);
-}
+              // 只有在没有已保存的运势数据时才显示占位符
+              if (!(lastDrawDate === today && dailyFortuneData)) {
+                updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+              }
+              
+              // 检查是否可以抽取运势
+              const token = localStorage.getItem('token');
+              if (token) {
+                // 在获取上次抽取时间的代码部分，添加错误处理
+                fetch('https://api.am-all.com.cn/api/fortune/last-draw', {
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                })
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+                  return response.json();
+                })
+                .then(data => {
+                  if (data.canDraw) {
+                    if (drawBtn) {
+                      drawBtn.disabled = false;
+                      drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
+                    }
+                    if (fortuneHint) {
+                      fortuneHint.textContent = '今日运势待抽取';
+                    }
+                  } else {
+                    // 已经抽取过，显示上次抽取的结果
+                    if (data.lastFortune) {
+                      displayFortune(
+                        data.lastFortune.song_data,
+                        data.lastFortune.luck,
+                        data.lastFortune.recommendations
+                      );
+                      
+                      // 显示历史获得的积分
+                      if (data.lastFortune.points_earned) {
+                        const fortuneHint = document.getElementById('fortune-hint');
+                        if (fortuneHint) {
+                          // 使用当前用户积分显示，而不是历史积分
+                          const totalPoints = (currentUser.points || 0) + (currentUser.point2 || 0);
+                          fortuneHint.textContent = `昨日获得 ${data.lastFortune.points_earned} 积分，当前积分: ${totalPoints}`;
+                          fortuneHint.style.color = '#7f8c8d'; // 使用灰色表示历史记录
+                        }
+                      }
+                    }
+                    
+                    if (drawBtn) {
+                      drawBtn.disabled = true;
+                      drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+                    }
+                    
+                    if (fortuneHint) {
+                      if (data.nextDrawTime) {
+                        const nextDraw = new Date(data.nextDrawTime);
+                        const now = new Date();
+                        const hoursLeft = Math.ceil((nextDraw - now) / (1000 * 60 * 60));
+                        fortuneHint.textContent = `今日运势已抽取，${hoursLeft}小时后可再次抽取`;
+                      } else {
+                        fortuneHint.textContent = `今日运势已抽取，请明天再来`;
+                      }
+                    }
+                  }
+                })
+                .catch(error => {
+                  console.error('检查运势抽取状态失败:', error);
+                  // 使用本地逻辑作为后备
+                  if (lastDrawDate === today && dailyFortureData) {
+                    try {
+                      const data = JSON.parse(dailyFortuneData);
+                      if (data && data.song) {
+                        displayFortune(data.song, data.luck, data.recommendations);
+                        if (drawBtn) {
+                          drawBtn.disabled = true;
+                          drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+                        }
+                        if (fortuneHint) {
+                          fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
+                        }
+                      }
+                    } catch (e) {
+                      console.error('解析运势数据失败', e);
+                      localStorage.removeItem('dailyFortuneDate');
+                      localStorage.removeItem('dailyFortuneData');
+                      updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+                    }
+                  } else {
+                    // 显示通用错误信息，而不是NaN
+                    if (fortuneHint) {
+                      fortuneHint.textContent = '无法获取抽取状态，请稍后重试';
+                    }
+                    if (drawBtn) {
+                      drawBtn.disabled = false;
+                      drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
+                    }
+                  }
+                });
+              }
+            })
+            .catch(error => {
+              console.error('加载歌曲数据失败:', error);
+              if (fortuneHint) {
+                fortuneHint.textContent = '加载歌曲数据失败，使用备用数据';
+              }
+              // 使用本地备用数据
+              songList = [
+                {
+                  id: '001',
+                  title: '备用歌曲',
+                  artist: '系统',
+                  catname: 'ORIGINAL',
+                  lev_bas: '3',
+                  lev_adv: '5',
+                  lev_exp: '7',
+                  lev_mas: '9',
+                  lev_ult: '12',
+                  image: 'dummy.jpg'
+                }
+              ];
+              // 只有在没有已保存的运势数据时才显示占位符
+              if (!(lastDrawDate === today && dailyFortuneData)) {
+                updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
+              }
+            });
+          
+          if (drawBtn) {
+            drawBtn.addEventListener('click', () => {
+              if (!drawBtn) return;
+              
+              const token = localStorage.getItem('token');
+              if (!token) {
+                showErrorMessage('请先登录');
+                return;
+              }
+              
+              drawBtn.disabled = true;
+              drawBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>抽取中...';
+              if (fortuneHint) fortuneHint.textContent = '';
+              
+              // 隐藏封面，显示动画
+              const coverImg = document.getElementById('cover-img');
+              const animationContainer = contentContainer.querySelector('.fortune-animation');
+              const kuji01 = contentContainer.querySelector('#kuji-01');
+              const kuji02 = contentContainer.querySelector('#kuji-02');
+              
+              if (coverImg) {
+                coverImg.style.display = 'none';
+              }
+              
+              if (animationContainer) {
+                animationContainer.style.display = 'flex';
+                kuji01.style.display = 'block';
+                kuji01.classList.add('kuji-swing');
+                kuji02.style.display = 'none';
+                kuji02.classList.remove('kuji-fadein');
+              }
+              
+              setTimeout(() => {
+                let scrollCount = 0;
+                const scrollInterval = setInterval(() => {
+                  if (songList.length === 0) {
+                    clearInterval(scrollInterval);
+                    return;
+                  }
+                  
+                  const tempSong = songList[Math.floor(Math.random() * songList.length)];
+                  
+                  updateDisplay(tempSong, '???', {lucky: '?', unlucky: '?'});
+                  scrollCount++;
+                  
+                  if (scrollCount > 30) {
+                    clearInterval(scrollInterval);
+                    
+                    // 调用后端API抽取运势
+                  fetch('https://api.am-all.com.cn/api/fortune/draw', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                    }
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                    if (data.success) {
+                      // 修复：传递正确的参数，包括获得的积分
+                      displayFortune(data.song, data.luck, data.recommendations);
+                      
+                      // 显示获得的积分信息
+                      if (data.pointsEarned) {
+                        const fortuneHint = document.getElementById('fortune-hint');
+                        if (fortuneHint) {
+                          const totalPoints = data.points + (data.point2 || 0);
+                          fortuneHint.textContent = `恭喜获得 ${data.pointsEarned} 积分！当前积分: ${totalPoints}`;
+                          fortuneHint.style.color = '#27ae60';
+                        }
+                      }
+                      
+                      // 保存到本地存储，用于页面刷新后显示
+                      const today = new Date().toDateString();
+                      localStorage.setItem('dailyFortuneDate', today);
+                      localStorage.setItem('dailyFortuneData', JSON.stringify({
+                        song: data.song,
+                        luck: data.luck,
+                        recommendations: data.recommendations,
+                        pointsEarned: data.pointsEarned
+                      }));
+                      
+                      if (drawBtn) {
+                        drawBtn.disabled = true;
+                        drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+                      }
+                      
+                      // 更新用户信息
+                      if (currentUser) {
+                        currentUser.points = data.points;
+                        currentUser.point2 = data.point2;
+                        updateUserInfo(currentUser);
+                      }
+                    } else {
+                      // 抽取失败，显示错误信息
+                      if (drawBtn) {
+                        drawBtn.disabled = false;
+                        drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
+                      }
+                      if (fortuneHint) {
+                        fortuneHint.textContent = data.error || '抽取运势失败';
+                        fortuneHint.style.color = '#e74c3c';
+                      }
+                      
+                      // 失败时也要恢复封面显示
+                      const coverImg = document.getElementById('cover-img');
+                      const animationContainer = document.querySelector('.fortune-animation');
+                      if (coverImg) coverImg.style.display = 'block';
+                      if (animationContainer) animationContainer.style.display = 'none';
+                    }
+                  })
+                  .catch(error => {
+                    console.error('抽取运势失败:', error);
+                    if (drawBtn) {
+                      drawBtn.disabled = false;
+                      drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
+                    }
+                    if (fortuneHint) {
+                      fortuneHint.textContent = '网络错误，请重试';
+                      fortuneHint.style.color = '#e74c3c';
+                    }
+                    
+                    // 失败时恢复封面显示并隐藏动画
+                    const coverImg = document.getElementById('cover-img');
+                    const animationContainer = document.querySelector('.fortune-animation');
+                    if (coverImg) coverImg.style.display = 'block';
+                    if (animationContainer) animationContainer.style.display = 'none';
+                   });
+                  }
+                }, 100);
+              }, 500);
+            });
+          }
+        }, 100);
+      }
       
-		if (pageId === 'home') {
-		  // 初始化公告系统
-		  try {
-			if (typeof window.initAnnouncementSystem === 'function') {
-			  setTimeout(() => {
-				try {
-				  window.initAnnouncementSystem();
-				} catch (e) {
-				  console.error('初始化公告系统失败:', e);
-				}
-			  }, 100);
-			} else {
-			  console.warn('initAnnouncementSystem 不是函数');
-			}
-		  } catch (e) {
-			console.error('公告系统初始化异常:', e);
-		  }
-		}
+      if (pageId === 'home') {
+        // 初始化公告系统
+        try {
+          if (typeof window.initAnnouncementSystem === 'function') {
+            setTimeout(() => {
+              try {
+                window.initAnnouncementSystem();
+              } catch (e) {
+                console.error('初始化公告系统失败:', e);
+              }
+            }, 100);
+          } else {
+            console.warn('initAnnouncementSystem 不是函数');
+          }
+        } catch (e) {
+          console.error('公告系统初始化异常:', e);
+        }
+      }
 
       // 在公告管理页面的处理部分添加：
       if (pageId === 'announcement-admin') {
@@ -2044,13 +2160,26 @@ if (pageId === 'fortune') {
           showSuccessMessage('兑换码功能尚未开放');
         });
       }
+      
+      // 用户管理页面
+      if (pageId === 'user-manager') {
+        // 检查用户权限
+        if (currentUser && currentUser.user_rank >= 5) {
+          // 初始化用户管理系统
+          if (typeof initUserManager === 'function') {
+            setTimeout(initUserManager, 100);
+          }
+        } else {
+          showLoginRequired('user-manager');
+        }
+      }
     } else {
         contentContainer.innerHTML = `<div class="section"><h1>404 NO LEAK</h1><p>页面不存在</p></div>`;
     }
     
     setupCharCounters();
-	restoreSidebarScroll();
-	
+    restoreSidebarScroll();
+    
     document.body.classList.remove('spa-loading');
     updateActiveMenuItem(pageId);
   }, 300);
@@ -2403,18 +2532,18 @@ function renderPagination(pagination) {
     }
   }
   
-	for (let i = startPage; i <= endPage; i++) {
-	  const li = document.createElement('li');
-	  li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-	  li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-	  li.addEventListener('click', (e) => {
-		e.preventDefault();
-		currentPage = i;
-		loadOrders();
-	  });
-	  
-	  ul.appendChild(li);
-	}
+  for (let i = startPage; i <= endPage; i++) {
+    const li = document.createElement('li');
+    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+    li.addEventListener('click', (e) => {
+      e.preventDefault();
+      currentPage = i;
+      loadOrders();
+    });
+    
+    ul.appendChild(li);
+  }
   
   if (endPage < pagination.totalPages) {
     if (endPage < pagination.totalPages - 1) {
@@ -2484,7 +2613,6 @@ function renderPagination(pagination) {
   }
   
   container.appendChild(ul);
-  container.appendChild(jumpDiv);
 }
 
 function updateActionButtons() {
@@ -2803,173 +2931,173 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('logout-pc')?.addEventListener('click', handleLogout);
     document.getElementById('logout-mobile')?.addEventListener('click', handleLogout);
     
-	document.body.addEventListener('click', function(e) {
-	  // 处理所有带有 data-page 属性的链接
-		  const pageLink = e.target.closest('[data-page]');
-		  if (pageLink) {
-			e.preventDefault();
-			const pageId = pageLink.getAttribute('data-page');
-			loadPage(pageId);
-			
-			if (window.innerWidth <= 992) {
-			  const sidebar = document.querySelector('.sidebar');
-			  if (sidebar) sidebar.classList.remove('show');
-			  document.body.classList.remove('mobile-sidebar-open');
-			  document.body.classList.add('mobile-sidebar-closed');
-			}
-			return;
-		  }
-
-		  // 新增：排除公告分页链接
-		  const announcementPageLink = e.target.closest('[data-announcement-page]');
-		  if (announcementPageLink) {
-			// 不阻止默认行为，让公告系统处理
-			return;
-		  }
+  document.body.addEventListener('click', function(e) {
+    // 处理所有带有 data-page 属性的链接
+      const pageLink = e.target.closest('[data-page]');
+      if (pageLink) {
+        e.preventDefault();
+        const pageId = pageLink.getAttribute('data-page');
+        loadPage(pageId);
         
-        if (e.target.closest('#login-btn')) {
-            e.preventDefault();
-            handleLogin();
+        if (window.innerWidth <= 992) {
+          const sidebar = document.querySelector('.sidebar');
+          if (sidebar) sidebar.classList.remove('show');
+          document.body.classList.remove('mobile-sidebar-open');
+          document.body.classList.add('mobile-sidebar-closed');
         }
+        return;
+      }
+
+      // 新增：排除公告分页链接
+      const announcementPageLink = e.target.closest('[data-announcement-page]');
+      if (announcementPageLink) {
+        // 不阻止默认行为，让公告系统处理
+        return;
+      }
         
-        if (e.target.closest('#register-btn')) {
-            e.preventDefault();
-            handleRegister();
-        }
-        
-        if (e.target.closest('#send-verification-code')) {
-            e.preventDefault();
-            const emailInput = document.getElementById('register-email');
-            const errorElement = document.getElementById('register-error');
-            if (emailInput && emailInput.value) {
-                sendVerificationCode(emailInput.value, 'register')
-                    .then(() => {
-                        showSuccessMessage('验证码已发送');
-                    })
-                    .catch(error => {
-                        showTempErrorMessage(errorElement, error.message || '发送验证码失败');
-                    });
-            } else {
-                showTempErrorMessage(errorElement, '请输入邮箱地址');
-            }
-        }
+      if (e.target.closest('#login-btn')) {
+          e.preventDefault();
+          handleLogin();
+      }
+      
+      if (e.target.closest('#register-btn')) {
+          e.preventDefault();
+          handleRegister();
+      }
+      
+      if (e.target.closest('#send-verification-code')) {
+          e.preventDefault();
+          const emailInput = document.getElementById('register-email');
+          const errorElement = document.getElementById('register-error');
+          if (emailInput && emailInput.value) {
+              sendVerificationCode(emailInput.value, 'register')
+                  .then(() => {
+                      showSuccessMessage('验证码已发送');
+                  })
+                  .catch(error => {
+                      showTempErrorMessage(errorElement, error.message || '发送验证码失败');
+                  });
+          } else {
+              showTempErrorMessage(errorElement, '请输入邮箱地址');
+          }
+      }
 
-        if (e.target.closest('#send-reset-code')) {
-            e.preventDefault();
-            const emailInput = document.getElementById('forgot-email');
-            const errorElement = document.getElementById('forgot-error');
-            if (emailInput && emailInput.value) {
-                sendVerificationCode(emailInput.value, 'reset')
-                    .then(() => {
-                        showSuccessMessage('验证码已发送');
-                    })
-                    .catch(error => {
-                        showTempErrorMessage(errorElement, error.message || '发送验证码失败');
-                    });
-            } else {
-                showTempErrorMessage(errorElement, '请输入邮箱地址');
-            }
-        }
+      if (e.target.closest('#send-reset-code')) {
+          e.preventDefault();
+          const emailInput = document.getElementById('forgot-email');
+          const errorElement = document.getElementById('forgot-error');
+          if (emailInput && emailInput.value) {
+              sendVerificationCode(emailInput.value, 'reset')
+                  .then(() => {
+                      showSuccessMessage('验证码已发送');
+                  })
+                  .catch(error => {
+                      showTempErrorMessage(errorElement, error.message || '发送验证码失败');
+                  });
+          } else {
+              showTempErrorMessage(errorElement, '请输入邮箱地址');
+          }
+      }
 
-        if (e.target.closest('#verify-code-btn')) {
-            e.preventDefault();
-            const email = document.getElementById('forgot-email').value;
-            const code = document.getElementById('forgot-verification-code').value;
-            const errorElement = document.getElementById('forgot-error');
+      if (e.target.closest('#verify-code-btn')) {
+          e.preventDefault();
+          const email = document.getElementById('forgot-email').value;
+          const code = document.getElementById('forgot-verification-code').value;
+          const errorElement = document.getElementById('forgot-error');
 
-            if (!email || !code) {
-                showTempErrorMessage(errorElement, '邮箱和验证码不能为空');
-                return;
-            }
+          if (!email || !code) {
+              showTempErrorMessage(errorElement, '邮箱和验证码不能为空');
+              return;
+          }
 
-            verifyCode(email, code, 'reset')
-                .then(data => {
-                    localStorage.setItem('resetToken', data.resetToken);
-                    loadPage('reset-password');
-                })
-                .catch(error => {
-                    showTempErrorMessage(errorElement, error.error || '验证码验证失败');
-                });
-        }
+          verifyCode(email, code, 'reset')
+              .then(data => {
+                  localStorage.setItem('resetToken', data.resetToken);
+                  loadPage('reset-password');
+              })
+              .catch(error => {
+                  showTempErrorMessage(errorElement, error.error || '验证码验证失败');
+              });
+      }
 
-        if (e.target.closest('#reset-password-btn')) {
-            e.preventDefault();
-            const newPassword = document.getElementById('reset-new-password').value;
-            const confirmPassword = document.getElementById('reset-confirm-password').value;
-            const resetToken = localStorage.getItem('resetToken');
-            const errorElement = document.getElementById('reset-error');
+      if (e.target.closest('#reset-password-btn')) {
+          e.preventDefault();
+          const newPassword = document.getElementById('reset-new-password').value;
+          const confirmPassword = document.getElementById('reset-confirm-password').value;
+          const resetToken = localStorage.getItem('resetToken');
+          const errorElement = document.getElementById('reset-error');
 
-            if (!newPassword || !confirmPassword) {
-                showTempErrorMessage(errorElement, '新密码和确认密码不能为空');
-                return;
-            }
+          if (!newPassword || !confirmPassword) {
+              showTempErrorMessage(errorElement, '新密码和确认密码不能为空');
+              return;
+          }
 
-            if (newPassword !== confirmPassword) {
-                showTempErrorMessage(errorElement, '两次输入的密码不一致');
-                return;
-            }
+          if (newPassword !== confirmPassword) {
+              showTempErrorMessage(errorElement, '两次输入的密码不一致');
+              return;
+          }
 
-            if (newPassword.length < 8 || newPassword.length > 16) {
-                showTempErrorMessage(errorElement, '密码长度需在8-16个字符之间');
-                return;
-            }
+          if (newPassword.length < 8 || newPassword.length > 16) {
+              showTempErrorMessage(errorElement, '密码长度需在8-16个字符之间');
+              return;
+          }
 
-            resetPassword(resetToken, newPassword)
-                .then(() => {
-                    showSuccessMessage('密码重置成功');
-                    localStorage.removeItem('resetToken');
-                    setTimeout(() => {
-                        loadPage('login');
-                    }, 2000);
-                })
-                .catch(error => {
-                    showTempErrorMessage(errorElement, error.error || '密码重置失败');
-                });
-        }
+          resetPassword(resetToken, newPassword)
+              .then(() => {
+                  showSuccessMessage('密码重置成功');
+                  localStorage.removeItem('resetToken');
+                  setTimeout(() => {
+                      loadPage('login');
+                  }, 2000);
+              })
+              .catch(error => {
+                  showTempErrorMessage(errorElement, error.error || '密码重置失败');
+              });
+      }
 
-		// 处理外部链接
-		if (e.target.closest('a[href^="http"]') && !e.target.closest('a[href*="am-all.com.cn"]')) {
-		  // 外部链接，允许正常跳转
-		  return;
-		}
-
-		// 特别处理带有 external-link 类的链接
-		if (e.target.closest('a.external-link')) {
-		  // 外部链接，允许正常跳转
-		  return;
-		}
-
-		// 允许语言切换链接正常跳转
-		const languageLink = e.target.closest('a[href*="lang="]');
-		if (languageLink) {
-		  // 允许语言切换链接正常行为
-		  return;
-		}
-
-		// 允许下载链接正常跳转
-		const downloadLink = e.target.closest('a[href*="/download/"]') || 
-							 e.target.closest('a[href$=".zip"]') || 
-							 e.target.closest('a[href$=".rar"]') || 
-							 e.target.closest('a[href$=".7z"]') || 
-							 e.target.closest('a[href$=".exe"]');
-		if (downloadLink) {
-		  // 允许下载链接正常行为
-		  return;
-		}
-
-		// 阻止其他链接的默认行为（仅限SPA内部导航）
-		const spaLink = e.target.closest('a[href^="#"]') || 
-						e.target.closest('a[href^="/"]') && !e.target.closest('a[href^="http"]');
-		if (spaLink) {
-		  e.preventDefault();
-		  console.log('SPA链接被阻止:', spaLink.href);
-		}
-    });
-
-    const sidebarToggle = document.querySelector('.sidebar-toggle');
-    if (sidebarToggle) {
-        sidebarToggle.style.display = 'none';
+    // 处理外部链接
+    if (e.target.closest('a[href^="http"]') && !e.target.closest('a[href*="am-all.com.cn"]')) {
+      // 外部链接，允许正常跳转
+      return;
     }
 
-    loadPage('home');
+    // 特别处理带有 external-link 类的链接
+    if (e.target.closest('a.external-link')) {
+      // 外部链接，允许正常跳转
+      return;
+    }
+
+    // 允许语言切换链接正常跳转
+    const languageLink = e.target.closest('a[href*="lang="]');
+    if (languageLink) {
+      // 允许语言切换链接正常行为
+      return;
+    }
+
+    // 允许下载链接正常跳转
+    const downloadLink = e.target.closest('a[href*="/download/"]') || 
+               e.target.closest('a[href$=".zip"]') || 
+               e.target.closest('a[href$=".rar"]') || 
+               e.target.closest('a[href$=".7z"]') || 
+               e.target.closest('a[href$=".exe"]');
+    if (downloadLink) {
+      // 允许下载链接正常行为
+      return;
+    }
+
+    // 阻止其他链接的默认行为（仅限SPA内部导航）
+    const spaLink = e.target.closest('a[href^="#"]') || 
+            e.target.closest('a[href^="/"]') && !e.target.closest('a[href^="http"]');
+    if (spaLink) {
+      e.preventDefault();
+      console.log('SPA链接被阻止:', spaLink.href);
+    }
+  });
+
+  const sidebarToggle = document.querySelector('.sidebar-toggle');
+  if (sidebarToggle) {
+      sidebarToggle.style.display = 'none';
+  }
+
+  loadPage('home');
 });
