@@ -326,38 +326,27 @@ async saveUserChanges(userId) {
   try {
     const token = localStorage.getItem('token');
     
-    // 找到用户行
-    const userRow = document.querySelector(`tr[data-user-id="${userId}"]`);
-    if (!userRow) {
-      throw new Error('找不到用户行');
+    // 不再从 DOM 查找，而是直接从当前用户数据中获取
+    const user = this.users.find(u => u.id === userId);
+    if (!user) {
+      throw new Error('找不到用户');
     }
 
-    const inputs = userRow.querySelectorAll('.edit-mode-input, .edit-mode-select');
-    const updates = {};
+    // 构建更新对象 - 直接从用户对象获取值
+    const updates = {
+      username: user.username,
+      email: user.email,
+      user_rank: user.user_rank,
+      rankSp: user.rankSp,
+      points: user.points,
+      point2: user.point2,
+      game_server: user.game_server,
+      keychip: user.keychip,
+      guid: user.guid,
+      banState: user.banState,
+      avatar: user.avatar
+    };
 
-    inputs.forEach(input => {
-      const field = input.dataset.field;
-      let value = input.value;
-      
-      // 处理数字字段
-      if (['points', 'point2', 'user_rank', 'rankSp', 'banState'].includes(field)) {
-        value = parseInt(value) || 0;
-      }
-      
-      // 处理空字符串
-      if (value === '') {
-        value = null;
-      }
-      
-      // 特殊处理：如果是头像字段且值包含路径，只保留文件名
-      if (field === 'avatar' && value && value.includes('/')) {
-        value = value.split('/').pop();
-      }
-      
-      updates[field] = value;
-    });
-
-    // 添加调试信息
     console.log('发送的用户更新数据:', updates);
 
     const response = await fetch(`https://api.am-all.com.cn/api/admin/users/${userId}`, {
@@ -525,7 +514,7 @@ async showPermissionModal(userId) {
   }
 }
 
-// 在 userManager.js 中，确保权限保存功能正确
+// 修改 userManager.js 中的 savePermissions 方法
 async savePermissions() {
   try {
     const token = localStorage.getItem('token');
@@ -536,7 +525,9 @@ async savePermissions() {
       permissions[checkbox.dataset.page] = checkbox.checked;
     });
 
-    const response = await fetch(`${API_BASE_URL}/api/admin/users/${this.currentEditingUserId}/permissions`, {
+    console.log('保存权限:', permissions);
+
+    const response = await fetch(`https://api.am-all.com.cn/api/admin/users/${this.currentEditingUserId}/permissions`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -546,6 +537,8 @@ async savePermissions() {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('权限保存响应错误:', errorText);
       throw new Error('保存用户权限失败');
     }
 
@@ -568,43 +561,6 @@ async savePermissions() {
         document.body.style.overflow = '';
         this.currentEditingUserId = null;
         this.currentPermissions = {};
-    }
-
-    async savePermissions() {
-        try {
-            const token = localStorage.getItem('token');
-            const checkboxes = this.permissionModal.querySelectorAll('input[type="checkbox"]');
-            const permissions = {};
-
-            checkboxes.forEach(checkbox => {
-                permissions[checkbox.dataset.page] = checkbox.checked;
-            });
-
-            const response = await fetch(`https://api.am-all.com.cn/api/admin/users/${this.currentEditingUserId}/permissions`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(permissions)
-            });
-
-            if (!response.ok) {
-                throw new Error('保存用户权限失败');
-            }
-
-            const result = await response.json();
-            
-            if (result.success) {
-                showSuccessMessage('用户权限更新成功');
-                this.hidePermissionModal();
-            } else {
-                throw new Error(result.error || '保存用户权限失败');
-            }
-        } catch (error) {
-            console.error('保存用户权限失败:', error);
-            showErrorMessage('保存用户权限失败: ' + error.message);
-        }
     }
 }
 

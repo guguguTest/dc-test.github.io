@@ -160,7 +160,7 @@ function refreshUserInfoDisplay() {
   }
 }
 
-// 更新侧边栏显示函数
+// 修改 spa.js 中的 updateSidebarVisibility 函数
 function updateSidebarVisibility(user) {
   if (!user) {
     // 未登录状态
@@ -186,12 +186,16 @@ function updateSidebarVisibility(user) {
   document.getElementById('sidebar-user-manager').style.display = showAdminMenus ? 'block' : 'none';
   document.getElementById('sidebar-order-entry').style.display = showOrderEntry ? 'block' : 'none';
   
-  // 为权限不足的菜单项添加特殊样式
+  // 确保下载菜单对所有登录用户可见（包括0级用户）
   const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
-  if (user.user_rank <= 0) {
-    downloadMenuItem.classList.add('disabled-menu-item');
-  } else {
-    downloadMenuItem.classList.remove('disabled-menu-item');
+  if (downloadMenuItem) {
+    downloadMenuItem.style.display = 'block';
+    // 只对0级用户添加禁用样式
+    if (user.user_rank <= 0) {
+      downloadMenuItem.classList.add('disabled-menu-item');
+    } else {
+      downloadMenuItem.classList.remove('disabled-menu-item');
+    }
   }
 }
 
