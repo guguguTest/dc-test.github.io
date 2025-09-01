@@ -160,7 +160,6 @@ function refreshUserInfoDisplay() {
   }
 }
 
-// 修改 spa.js 中的 updateSidebarVisibility 函数
 function updateSidebarVisibility(user) {
   if (!user) {
     // 未登录状态
@@ -186,16 +185,12 @@ function updateSidebarVisibility(user) {
   document.getElementById('sidebar-user-manager').style.display = showAdminMenus ? 'block' : 'none';
   document.getElementById('sidebar-order-entry').style.display = showOrderEntry ? 'block' : 'none';
   
-  // 确保下载菜单对所有登录用户可见（包括0级用户）
+  // 修改下载菜单显示逻辑 - 不再根据用户组级别禁用
   const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
   if (downloadMenuItem) {
     downloadMenuItem.style.display = 'block';
-    // 只对0级用户添加禁用样式
-    if (user.user_rank <= 0) {
-      downloadMenuItem.classList.add('disabled-menu-item');
-    } else {
-      downloadMenuItem.classList.remove('disabled-menu-item');
-    }
+    // 移除禁用样式，实际访问权限由后端API检查
+    downloadMenuItem.classList.remove('disabled-menu-item');
   }
 }
 
@@ -508,34 +503,34 @@ function fetchUserInfo(token) {
     // 保存用户信息到本地存储
     localStorage.setItem('userInfo', JSON.stringify(user));
     
-    return user;
+    // 获取并缓存用户权限
+    return fetchUserPermissions(token);
+  })
+  .then(permissions => {
+    // 保存权限到本地存储
+    localStorage.setItem('userPermissions', JSON.stringify(permissions));
+    return currentUser;
   })
   .catch(error => {
     console.error('获取用户信息错误:', error);
-    
-    // 尝试从本地存储恢复用户信息
-    const savedUserInfo = localStorage.getItem('userInfo');
-    if (savedUserInfo) {
-      try {
-        const user = JSON.parse(savedUserInfo);
-        currentUser = user;
-        updateUserInfo(user);
-        showUserInfo();
-        setupUserDropdown();
-        return user;
-      } catch (e) {
-        console.error('从本地存储恢复用户信息失败:', e);
-      }
+    // 错误处理代码...
+  });
+}
+
+// 获取用户权限
+function fetchUserPermissions(token) {
+  return secureFetch('https://api.am-all.com.cn/api/admin/users/permissions/me', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
     }
-    
-    // 如果token无效，清除本地存储
-    if (error.message.includes('401') || error.message.includes('无效的令牌')) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('userInfo');
-    }
-    
-    showAuthLinks();
-    throw error;
+  })
+  .then(permissions => {
+    return permissions;
+  })
+  .catch(error => {
+    console.error('获取用户权限失败:', error);
+    return {};
   });
 }
 
@@ -1103,6 +1098,8 @@ function handleRegister() {
 function handleLogout() {
   localStorage.removeItem('token');
   localStorage.removeItem('userInfo');
+  // 清除权限缓存
+  localStorage.removeItem('userPermissions');
   currentUser = null;
   showAuthLinks();
   loadPage('home');
@@ -1431,22 +1428,6 @@ async function loadPage(pageId) {
   let sidebarScrollTop = 0;
   if (sidebar) {
     sidebarScrollTop = sidebar.scrollTop;
-  }
-
-  // 恢复侧边栏滚动位置
-  const restoreSidebarScroll = () => {
-    if (sidebar && sidebarScrollTop > 0) {
-      setTimeout(() => {
-        sidebar.scrollTop = sidebarScrollTop;
-      }, 100);
-    }
-  };
-
-  if (window.innerWidth <= 992) {
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) {
-      sidebar.scrollTop = 0;
-    }
   }
 
   // 检查页面访问权限
@@ -2254,6 +2235,27 @@ async function checkPageAccess(pageId, token) {
     return false;
   } catch (error) {
     console.error('检查页面权限失败:', error);
+    return false;
+  }
+}
+
+// 检查页面可见性
+async function checkPageVisibility(pageId, token) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/page-visibility/${pageId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.status === 200) {
+      const data = await response.json();
+      return data.visible;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('检查页面可见性失败:', error);
     return false;
   }
 }

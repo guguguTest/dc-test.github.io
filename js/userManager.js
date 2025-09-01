@@ -461,45 +461,37 @@ async showPermissionModal(userId) {
     const permissionList = document.getElementById('permission-list');
     permissionList.innerHTML = '';
 
-    // 定义所有可授权的页面（包含用户设置页面）
+    // 定义所有可授权的页面
     const pages = [
       { id: 'home', name: '首页', default: true },
       { id: 'download', name: '下载中心', default: true },
-      { id: 'tools', name: '实用工具', default: true },
-      { id: 'dllpatcher', name: '补丁工具', default: true },
-      { id: 'settings', name: '设置', default: true },
-      { id: 'help', name: '帮助', default: true },
-      { id: 'fortune', name: '每日签到', default: true },
-      { id: 'ccb', name: '游戏查分', default: false },
-      { id: 'exchange', name: '兑换', default: true },
-      { id: 'user-settings', name: '用户设置', default: true },
-      { id: 'announcement-admin', name: '公告管理', default: false },
-      { id: 'site-admin', name: '网站管理', default: false },
-      { id: 'download-admin', name: '下载管理', default: false },
-      { id: 'order-entry', name: '订单录入', default: false },
-      { id: 'user-manager', name: '用户管理', default: false }
+      // ... 其他页面定义
     ];
 
     pages.forEach(page => {
       // 检查权限是否已设置，如果没有则使用默认值
       const isAllowed = permissions[page.id] !== undefined ? 
-                       permissions[page.id] : page.default;
+                       permissions[page.id].allowed : page.default;
+      const isVisible = permissions[page.id] !== undefined ? 
+                       permissions[page.id].visible : page.default;
 
       const permissionItem = document.createElement('div');
       permissionItem.className = 'permission-item';
       permissionItem.innerHTML = `
         <span class="permission-name">${page.name}</span>
-        <label class="permission-switch">
-          <input type="checkbox" data-page="${page.id}" ${isAllowed ? 'checked' : ''}>
-          <span class="permission-slider"></span>
-        </label>
+        <div class="permission-controls">
+          <label class="permission-switch">
+            <span class="permission-label">访问权限</span>
+            <input type="checkbox" data-page="${page.id}" data-type="allowed" ${isAllowed ? 'checked' : ''}>
+            <span class="permission-slider"></span>
+          </label>
+          <label class="permission-switch">
+            <span class="permission-label">显示权限</span>
+            <input type="checkbox" data-page="${page.id}" data-type="visible" ${isVisible ? 'checked' : ''}>
+            <span class="permission-slider"></span>
+          </label>
+        </div>
       `;
-      
-      // 阻止复选框点击事件冒泡
-      const checkbox = permissionItem.querySelector('input[type="checkbox"]');
-      checkbox.addEventListener('click', (e) => {
-        e.stopPropagation();
-      });
       
       permissionList.appendChild(permissionItem);
     });
@@ -514,7 +506,6 @@ async showPermissionModal(userId) {
   }
 }
 
-// 修改 userManager.js 中的 savePermissions 方法
 async savePermissions() {
   try {
     const token = localStorage.getItem('token');
@@ -522,7 +513,14 @@ async savePermissions() {
     const permissions = {};
 
     checkboxes.forEach(checkbox => {
-      permissions[checkbox.dataset.page] = checkbox.checked;
+      const pageId = checkbox.dataset.page;
+      const type = checkbox.dataset.type;
+      
+      if (!permissions[pageId]) {
+        permissions[pageId] = {};
+      }
+      
+      permissions[pageId][type] = checkbox.checked;
     });
 
     console.log('保存权限:', permissions);
