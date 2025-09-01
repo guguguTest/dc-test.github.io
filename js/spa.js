@@ -160,54 +160,50 @@ function refreshUserInfoDisplay() {
   }
 }
 
-function updateSidebarVisibility(user) {
+// 更新侧边栏显示函数
+async function updateSidebarVisibility(user) {
   if (!user) {
     // 未登录状态
     hideAllProtectedMenus();
     return;
   }
   
-  // 根据用户组显示菜单
-  const showCCB = user.user_rank >= 1;
-  const showExchange = user.user_rank >= 1;
+  // 获取用户权限
+  const permissions = JSON.parse(localStorage.getItem('userPermissions') || '{}');
+  
+  // 根据用户组和权限显示菜单
+  const showCCB = (user.user_rank >= 1) && (permissions['ccb']?.visible !== false);
+  const showExchange = (user.user_rank >= 1) && (permissions['exchange']?.visible !== false);
   const showAdminSection = user.user_rank >= 4;
   const showAdminMenus = user.user_rank >= 5;
   const showOrderEntry = user.user_rank >= 4;
   
-  // 控制菜单显示
+  // 控制菜单显示 - 同时考虑用户组和单独设置的visible
   document.getElementById('sidebar-ccb').style.display = showCCB ? 'block' : 'none';
   document.getElementById('sidebar-exchange').style.display = showExchange ? 'block' : 'none';
   document.getElementById('admin-section-title').style.display = showAdminSection ? 'block' : 'none';
   document.getElementById('admin-section-nav').style.display = showAdminSection ? 'block' : 'none';
-  document.getElementById('sidebar-announcement-admin').style.display = showAdminMenus ? 'block' : 'none';
-  document.getElementById('sidebar-site-admin').style.display = showAdminMenus ? 'block' : 'none';
-  document.getElementById('sidebar-download-admin').style.display = showAdminMenus ? 'block' : 'none';
-  document.getElementById('sidebar-user-manager').style.display = showAdminMenus ? 'block' : 'none';
-  document.getElementById('sidebar-order-entry').style.display = showOrderEntry ? 'block' : 'none';
   
-  // 修改下载菜单显示逻辑 - 不再根据用户组级别禁用
+  // 管理员菜单 - 检查可见性权限
+  document.getElementById('sidebar-announcement-admin').style.display = 
+    (showAdminMenus && permissions['announcement-admin']?.visible !== false) ? 'block' : 'none';
+  document.getElementById('sidebar-site-admin').style.display = 
+    (showAdminMenus && permissions['site-admin']?.visible !== false) ? 'block' : 'none';
+  document.getElementById('sidebar-download-admin').style.display = 
+    (showAdminMenus && permissions['download-admin']?.visible !== false) ? 'block' : 'none';
+  document.getElementById('sidebar-user-manager').style.display = 
+    (showAdminMenus && permissions['user-manager']?.visible !== false) ? 'block' : 'none';
+  document.getElementById('sidebar-order-entry').style.display = 
+    (showOrderEntry && permissions['order-entry']?.visible !== false) ? 'block' : 'none';
+  
+  // 下载菜单 - 特殊处理
   const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
   if (downloadMenuItem) {
-    downloadMenuItem.style.display = 'block';
-    // 移除禁用样式，实际访问权限由后端API检查
-    downloadMenuItem.classList.remove('disabled-menu-item');
+    // 用户组0及以上都可以看到，但是还要看visible设置
+    const showDownload = (user.user_rank >= 0) && (permissions['download']?.visible !== false);
+    downloadMenuItem.style.display = showDownload ? 'block' : 'none';
   }
 }
-
-// 添加CSS样式
-const style = document.createElement('style');
-style.textContent = `
-  .disabled-menu-item {
-    opacity: 0.5;
-    pointer-events: none;
-    cursor: not-allowed;
-  }
-  
-  .disabled-menu-item a {
-    color: #6c757d !important;
-  }
-`;
-document.head.appendChild(style);
 
 // 在侧边栏显示/隐藏时调用这个函数
 document.addEventListener("DOMContentLoaded", function() {
@@ -482,7 +478,7 @@ function getUserRankInfo(userRank) {
   return rankInfo;
 }
 
-// 获取用户信息
+// 在获取用户信息后更新侧边栏
 function fetchUserInfo(token) {
   return secureFetch('https://api.am-all.com.cn/api/user', {
     method: 'GET',
@@ -509,6 +505,10 @@ function fetchUserInfo(token) {
   .then(permissions => {
     // 保存权限到本地存储
     localStorage.setItem('userPermissions', JSON.stringify(permissions));
+    
+    // 更新侧边栏显示
+    updateSidebarVisibility(currentUser);
+    
     return currentUser;
   })
   .catch(error => {
@@ -810,7 +810,6 @@ function showUserInfo() {
     // 改为始终显示，但添加特殊样式表示权限不足
     const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
     downloadMenuItem.style.display = 'block';
-    downloadMenuItem.classList.add('disabled-menu-item');
   }
 }
 
@@ -1423,13 +1422,6 @@ async function loadPage(pageId) {
   const contentContainer = document.getElementById('content-container');
   if (!contentContainer) return;
 
-  // 保存当前侧边栏滚动位置
-  const sidebar = document.querySelector('.sidebar');
-  let sidebarScrollTop = 0;
-  if (sidebar) {
-    sidebarScrollTop = sidebar.scrollTop;
-  }
-
   // 检查页面访问权限
   if (PROTECTED_PAGES.includes(pageId)) {
     const token = localStorage.getItem('token');
@@ -1440,8 +1432,19 @@ async function loadPage(pageId) {
     
     try {
       // 使用新的权限检查API
-      const hasAccess = await checkPageAccess(pageId, token);
-      if (!hasAccess) {
+      const response = await fetch(`https://api.am-all.com.cn/api/check-permission?page=${pageId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        showLoginRequired(pageId);
+        return;
+      }
+      
+      const data = await response.json();
+      if (!data.hasAccess) {
         showPermissionDenied(pageId);
         return;
       }

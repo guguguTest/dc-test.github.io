@@ -44,33 +44,39 @@ class UserManager {
             this.loadUsers();
         });
 
-        // 事件委托处理动态生成的按钮
-        document.addEventListener('click', (e) => {
-            // 编辑按钮
-            if (e.target.classList.contains('btn-edit')) {
-                const userId = parseInt(e.target.dataset.userId);
-                this.toggleEditMode(userId);
-            }
-
-            // 保存按钮
-            if (e.target.classList.contains('btn-save')) {
-                const userId = parseInt(e.target.dataset.userId);
-                this.saveUserChanges(userId);
-            }
-
-            // 取消按钮
-            if (e.target.classList.contains('btn-cancel')) {
-                const userId = parseInt(e.target.dataset.userId);
-                this.cancelEditMode(userId);
-            }
-
-            // 授权按钮
-            if (e.target.classList.contains('btn-auth')) {
-                const userId = parseInt(e.target.dataset.userId);
-                this.showPermissionModal(userId);
-            }
-        });
-    }
+	  // 事件委托处理动态生成的按钮 - 添加页面检查
+	  document.addEventListener('click', (e) => {
+		// 检查是否在用户管理页面
+		const userManagerPage = document.querySelector('[data-page="user-manager"]');
+		if (!userManagerPage || userManagerPage.offsetParent === null) {
+		  return; // 不在用户管理页面，不处理这些事件
+		}
+		
+		// 编辑按钮
+		if (e.target.classList.contains('btn-edit')) {
+		  const userId = parseInt(e.target.dataset.userId);
+		  this.toggleEditMode(userId);
+		}
+		
+		// 保存按钮
+		if (e.target.classList.contains('btn-save')) {
+		  const userId = parseInt(e.target.dataset.userId);
+		  this.saveUserChanges(userId);
+		}
+		
+		// 取消按钮
+		if (e.target.classList.contains('btn-cancel')) {
+		  const userId = parseInt(e.target.dataset.userId);
+		  this.cancelEditMode(userId);
+		}
+		
+		// 授权按钮
+		if (e.target.classList.contains('btn-auth')) {
+		  const userId = parseInt(e.target.dataset.userId);
+		  this.showPermissionModal(userId);
+		}
+	  });
+	}
 
 	async loadUsers() {
 	  try {
@@ -123,6 +129,11 @@ class UserManager {
 
 	renderUsers() {
 		const tbody = document.getElementById('users-table-body');
+		  if (!tbody) {
+			console.warn('用户表格容器不存在，跳过渲染');
+			return;
+		  }
+
 		tbody.innerHTML = '';
 
 		if (this.users.length === 0) {
@@ -317,34 +328,50 @@ getUserRowHTML(user, isEditing) {
         this.renderUsers();
     }
 
-    cancelEditMode(userId) {
-        this.editingUserId = null;
-        this.renderUsers();
-    }
+	cancelEditMode(userId) {
+	  this.editingUserId = null;
+	  
+	  // 安全检查：确保在用户管理页面才执行渲染
+	  const userManagerPage = document.querySelector('[data-page="user-manager"]');
+	  if (userManagerPage && userManagerPage.offsetParent !== null) {
+		this.renderUsers();
+	  }
+	}
 
 async saveUserChanges(userId) {
   try {
     const token = localStorage.getItem('token');
     
-    // 不再从 DOM 查找，而是直接从当前用户数据中获取
-    const user = this.users.find(u => u.id === userId);
-    if (!user) {
-      throw new Error('找不到用户');
+    // 从DOM获取更新的值 - 使用更健壮的选择器
+    const userRow = document.querySelector(`tr[data-user-id="${userId}"]`);
+    if (!userRow) {
+      // 尝试通过其他方式查找
+      const allRows = document.querySelectorAll('tr[data-user-id]');
+      for (let row of allRows) {
+        if (parseInt(row.getAttribute('data-user-id')) === userId) {
+          userRow = row;
+          break;
+        }
+      }
+      
+      if (!userRow) {
+        throw new Error('找不到用户行，可能页面已刷新');
+      }
     }
-
-    // 构建更新对象 - 直接从用户对象获取值
+    
+    // 构建更新对象 - 从输入字段获取值
     const updates = {
-      username: user.username,
-      email: user.email,
-      user_rank: user.user_rank,
-      rankSp: user.rankSp,
-      points: user.points,
-      point2: user.point2,
-      game_server: user.game_server,
-      keychip: user.keychip,
-      guid: user.guid,
-      banState: user.banState,
-      avatar: user.avatar
+      username: userRow.querySelector('[data-field="username"]')?.value,
+      email: userRow.querySelector('[data-field="email"]')?.value,
+      user_rank: userRow.querySelector('[data-field="user_rank"]')?.value,
+      rankSp: userRow.querySelector('[data-field="rankSp"]')?.value,
+      points: userRow.querySelector('[data-field="points"]')?.value,
+      point2: userRow.querySelector('[data-field="point2"]')?.value,
+      game_server: userRow.querySelector('[data-field="game_server"]')?.value,
+      keychip: userRow.querySelector('[data-field="keychip"]')?.value,
+      guid: userRow.querySelector('[data-field="guid"]')?.value,
+      banState: userRow.querySelector('[data-field="banState"]')?.value,
+      avatar: userRow.querySelector('[data-field="avatar"]')?.value
     };
 
     console.log('发送的用户更新数据:', updates);
@@ -461,11 +488,23 @@ async showPermissionModal(userId) {
     const permissionList = document.getElementById('permission-list');
     permissionList.innerHTML = '';
 
-    // 定义所有可授权的页面
+    // 定义所有可授权的页面（包含用户设置页面）
     const pages = [
       { id: 'home', name: '首页', default: true },
       { id: 'download', name: '下载中心', default: true },
-      // ... 其他页面定义
+      { id: 'tools', name: '实用工具', default: true },
+      { id: 'dllpatcher', name: '补丁工具', default: true },
+      { id: 'settings', name: '设置', default: true },
+      { id: 'help', name: '帮助', default: true },
+      { id: 'fortune', name: '每日签到', default: true },
+      { id: 'ccb', name: '游戏查分', default: false },
+      { id: 'exchange', name: '兑换', default: true },
+      { id: 'user-settings', name: '用户设置', default: true },
+      { id: 'announcement-admin', name: '公告管理', default: false },
+      { id: 'site-admin', name: '网站管理', default: false },
+      { id: 'download-admin', name: '下载管理', default: false },
+      { id: 'order-entry', name: '订单录入', default: false },
+      { id: 'user-manager', name: '用户管理', default: false }
     ];
 
     pages.forEach(page => {
@@ -492,6 +531,14 @@ async showPermissionModal(userId) {
           </label>
         </div>
       `;
+      
+      // 添加事件监听器，阻止开关点击事件冒泡
+      const checkboxes = permissionItem.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      });
       
       permissionList.appendChild(permissionItem);
     });
@@ -545,6 +592,17 @@ async savePermissions() {
     if (result.success) {
       showSuccessMessage('用户权限更新成功');
       this.hidePermissionModal();
+      
+      // 如果修改的是当前用户的权限，立即更新本地存储
+      const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
+      if (currentUser && currentUser.id === this.currentEditingUserId) {
+        // 重新获取当前用户权限
+        const updatedPermissions = await fetchUserPermissions(token);
+        localStorage.setItem('userPermissions', JSON.stringify(updatedPermissions));
+        
+        // 更新侧边栏显示
+        updateSidebarVisibility(currentUser);
+      }
     } else {
       throw new Error(result.error || '保存用户权限失败');
     }

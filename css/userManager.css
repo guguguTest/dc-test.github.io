@@ -495,3 +495,45 @@ input:checked + .permission-slider:before {
   justify-content: flex-end;
   gap: 10px;
 }
+
+.permission-modal {
+  /* 确保模态框在最上层 */
+  z-index: 10000;
+}
+
+.permission-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.permission-name {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.permission-controls {
+  display: flex;
+  flex-direction: column;
+}
+
+.permission-switch {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.permission-label {
+  margin-right: 10px;
+  min-width: 80px;
+  font-size: 14px;
+}
+
+/* 区分两种权限的标签颜色 */
+.permission-switch:first-child .permission-label {
+  color: #4CAF50; /* 访问权限 - 绿色 */
+}
+
+.permission-switch:last-child .permission-label {
+  color: #2196F3; /* 显示权限 - 蓝色 */
+}
