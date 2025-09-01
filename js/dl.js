@@ -222,7 +222,7 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
           2: '中级用户',
           3: '高级用户',
           4: '贵宾用户',
-          5: '管理员'
+          5: '系统管理员'
         };
         
 		return `

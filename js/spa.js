@@ -160,6 +160,56 @@ function refreshUserInfoDisplay() {
   }
 }
 
+// 更新侧边栏显示函数
+function updateSidebarVisibility(user) {
+  if (!user) {
+    // 未登录状态
+    hideAllProtectedMenus();
+    return;
+  }
+  
+  // 根据用户组显示菜单
+  const showCCB = user.user_rank >= 1;
+  const showExchange = user.user_rank >= 1;
+  const showAdminSection = user.user_rank >= 4;
+  const showAdminMenus = user.user_rank >= 5;
+  const showOrderEntry = user.user_rank >= 4;
+  
+  // 控制菜单显示
+  document.getElementById('sidebar-ccb').style.display = showCCB ? 'block' : 'none';
+  document.getElementById('sidebar-exchange').style.display = showExchange ? 'block' : 'none';
+  document.getElementById('admin-section-title').style.display = showAdminSection ? 'block' : 'none';
+  document.getElementById('admin-section-nav').style.display = showAdminSection ? 'block' : 'none';
+  document.getElementById('sidebar-announcement-admin').style.display = showAdminMenus ? 'block' : 'none';
+  document.getElementById('sidebar-site-admin').style.display = showAdminMenus ? 'block' : 'none';
+  document.getElementById('sidebar-download-admin').style.display = showAdminMenus ? 'block' : 'none';
+  document.getElementById('sidebar-user-manager').style.display = showAdminMenus ? 'block' : 'none';
+  document.getElementById('sidebar-order-entry').style.display = showOrderEntry ? 'block' : 'none';
+  
+  // 为权限不足的菜单项添加特殊样式
+  const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
+  if (user.user_rank <= 0) {
+    downloadMenuItem.classList.add('disabled-menu-item');
+  } else {
+    downloadMenuItem.classList.remove('disabled-menu-item');
+  }
+}
+
+// 添加CSS样式
+const style = document.createElement('style');
+style.textContent = `
+  .disabled-menu-item {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  
+  .disabled-menu-item a {
+    color: #6c757d !important;
+  }
+`;
+document.head.appendChild(style);
+
 // 在侧边栏显示/隐藏时调用这个函数
 document.addEventListener("DOMContentLoaded", function() {
   const sidebar = document.querySelector('.sidebar');
@@ -1403,12 +1453,10 @@ async function loadPage(pageId) {
       return;
     }
     
-    // 检查用户权限
     try {
-      const userPermissions = await getUserPermissions();
-      
-      // 检查是否默认允许访问或者有特定权限
-      if (!isPageAllowedByDefault(pageId, currentUser) && !userPermissions[pageId]) {
+      // 使用新的权限检查API
+      const hasAccess = await checkPageAccess(pageId, token);
+      if (!hasAccess) {
         showPermissionDenied(pageId);
         return;
       }
@@ -2183,6 +2231,27 @@ async function loadPage(pageId) {
     document.body.classList.remove('spa-loading');
     updateActiveMenuItem(pageId);
   }, 300);
+}
+
+// 检查页面访问权限
+async function checkPageAccess(pageId, token) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/check-permission?page=${pageId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.status === 200) {
+      const data = await response.json();
+      return data.hasAccess;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('检查页面权限失败:', error);
+    return false;
+  }
 }
 
 // 显示成功消息

@@ -525,6 +525,7 @@ async showPermissionModal(userId) {
   }
 }
 
+// 在 userManager.js 中，确保权限保存功能正确
 async savePermissions() {
   try {
     const token = localStorage.getItem('token');
@@ -535,9 +536,7 @@ async savePermissions() {
       permissions[checkbox.dataset.page] = checkbox.checked;
     });
 
-    console.log('保存权限:', permissions);
-
-    const response = await fetch(`https://api.am-all.com.cn/api/admin/users/${this.currentEditingUserId}/permissions`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/users/${this.currentEditingUserId}/permissions`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -547,8 +546,6 @@ async savePermissions() {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('权限保存失败:', errorText);
       throw new Error('保存用户权限失败');
     }
 
