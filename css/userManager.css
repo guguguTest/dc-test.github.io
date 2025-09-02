@@ -537,3 +537,77 @@ input:checked + .permission-slider:before {
 .permission-switch:last-child .permission-label {
   color: #2196F3; /* 显示权限 - 蓝色 */
 }
+
+/* ===== 权限弹窗布局优化，避免文字被开关遮挡 ===== */
+.permission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+}
+.permission-name {
+  font-weight: 600;
+  flex: 0 0 auto;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.permission-controls {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.permission-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.permission-label {
+  display: inline-block;
+  min-width: 64px;
+  line-height: 1.2;
+  user-select: none;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+.switch input { display: none; }
+.slider {
+  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+  background: #ccc; transition: .3s; border-radius: 12px;
+}
+.slider:before {
+  position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+  background: white; transition: .3s; border-radius: 50%;
+}
+input:checked + .slider { background: #4caf50; }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* userManager.final.v3.css — 授权弹窗排版修复 */
+.permission-modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index: 10000; }
+.permission-modal.show { display:flex; }
+.permission-modal-content { background:#fff; width:min(900px, 92vw); border-radius:12px; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
+.permission-modal-header, .permission-modal-footer { padding:14px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #eee; }
+.permission-modal-footer { border-top:1px solid #eee; border-bottom:none; }
+.permission-modal-header h3 { margin:0; font-size:18px; }
+.permission-modal-close { background:transparent; border:0; font-size:20px; cursor:pointer; }
+.permission-modal-body { padding: 12px 16px; max-height: 60vh; overflow:auto; }
+
+.permission-row { display:flex; align-items:center; justify-content:space-between; gap: 12px; padding:10px 6px; border-bottom:1px dashed #f0f0f0; }
+.permission-name { font-weight:600; flex:0 0 140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.permission-controls { display:flex; gap:28px; align-items:center; }
+.permission-item { display:inline-flex; align-items:center; gap:8px; }
+.permission-label { min-width:64px; font-size:13px; color:#555; }
+
+.switch { position:relative; display:inline-block; width:46px; height:24px; }
+.switch input { display:none; }
+.slider { position:absolute; inset:0; background:#ccc; border-radius:12px; transition:.25s; }
+.slider:before { content:''; position:absolute; left:3px; bottom:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition:.25s; }
+input:checked + .slider { background:#3bb273; }
+input:checked + .slider:before { transform: translateX(22px); }

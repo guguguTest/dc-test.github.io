@@ -1,3 +1,7 @@
+// build-tag: SPA v2025-09-02-e
+console.log('[SPA] build v2025-09-02-e loaded');
+// build-tag: SPA v2025-09-02-c
+console.log('[SPA] build v2025-09-02-c loaded');
 // spa.js - 单页面应用主模块
 // 用户状态管理
 let currentUser = null;
@@ -10,7 +14,10 @@ let currentPage = 1;
 const ordersPerPage = 50;
 
 // 受保护的页面
-const PROTECTED_PAGES = ['tools', 'dllpatcher', 'fortune', 'user-settings', 'order-entry', 'exchange', 'announcement-admin', 'user-manager'];
+const PROTECTED_PAGES = [
+  'download','tools','dllpatcher','fortune','user-settings',
+  'ccb','exchange','announcement-admin','site-admin','download-admin','order-entry','user-manager'
+];
 
 // 数据源
 const MUSIC_DATA_URLS = [
@@ -162,46 +169,33 @@ function refreshUserInfoDisplay() {
 
 // 更新侧边栏显示函数
 async function updateSidebarVisibility(user) {
-  if (!user) {
-    // 未登录状态
-    hideAllProtectedMenus();
+  const token = localStorage.getItem('token');
+  const nav = document.querySelector('.sidebar-nav');
+  if (!nav) return;
+
+  const allLinks = nav.querySelectorAll('a[data-page]');
+  const guestVisible = ['home', 'settings', 'help'];
+
+  if (!token) {
+    allLinks.forEach(a => {
+      const pid = a.getAttribute('data-page');
+      a.parentElement.style.display = guestVisible.includes(pid) ? '' : 'none';
+    });
     return;
   }
-  
-  // 获取用户权限
-  const permissions = JSON.parse(localStorage.getItem('userPermissions') || '{}');
-  
-  // 根据用户组和权限显示菜单
-  const showCCB = (user.user_rank >= 1) && (permissions['ccb']?.visible !== false);
-  const showExchange = (user.user_rank >= 1) && (permissions['exchange']?.visible !== false);
-  const showAdminSection = user.user_rank >= 4;
-  const showAdminMenus = user.user_rank >= 5;
-  const showOrderEntry = user.user_rank >= 4;
-  
-  // 控制菜单显示 - 同时考虑用户组和单独设置的visible
-  document.getElementById('sidebar-ccb').style.display = showCCB ? 'block' : 'none';
-  document.getElementById('sidebar-exchange').style.display = showExchange ? 'block' : 'none';
-  document.getElementById('admin-section-title').style.display = showAdminSection ? 'block' : 'none';
-  document.getElementById('admin-section-nav').style.display = showAdminSection ? 'block' : 'none';
-  
-  // 管理员菜单 - 检查可见性权限
-  document.getElementById('sidebar-announcement-admin').style.display = 
-    (showAdminMenus && permissions['announcement-admin']?.visible !== false) ? 'block' : 'none';
-  document.getElementById('sidebar-site-admin').style.display = 
-    (showAdminMenus && permissions['site-admin']?.visible !== false) ? 'block' : 'none';
-  document.getElementById('sidebar-download-admin').style.display = 
-    (showAdminMenus && permissions['download-admin']?.visible !== false) ? 'block' : 'none';
-  document.getElementById('sidebar-user-manager').style.display = 
-    (showAdminMenus && permissions['user-manager']?.visible !== false) ? 'block' : 'none';
-  document.getElementById('sidebar-order-entry').style.display = 
-    (showOrderEntry && permissions['order-entry']?.visible !== false) ? 'block' : 'none';
-  
-  // 下载菜单 - 特殊处理
-  const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
-  if (downloadMenuItem) {
-    // 用户组0及以上都可以看到，但是还要看visible设置
-    const showDownload = (user.user_rank >= 0) && (permissions['download']?.visible !== false);
-    downloadMenuItem.style.display = showDownload ? 'block' : 'none';
+
+  const headers = { 'Authorization': `Bearer ${token}` };
+  for (const a of allLinks) {
+    const pid = a.getAttribute('data-page');
+    try {
+      const resp = await fetch(`https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`, { headers });
+      if (!resp.ok) throw new Error('vis api fail');
+      const { visible } = await resp.json();
+      a.parentElement.style.display = visible ? '' : 'none';
+    } catch (e) {
+      console.warn('检查可见性失败:', pid, e);
+      a.parentElement.style.display = 'none';
+    }
   }
 }
 
@@ -1761,17 +1755,8 @@ async function loadPage(pageId) {
 			showLoginRequired('user-manager');
 		  }
 		}
-
-      if (pageId === 'download') {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          showLoginRequired('download');
-          // 添加这行代码，确保移除加载状态
-          document.body.classList.remove('spa-loading');
-          return;
-        }
-
-        // 从本地存储获取用户信息
+if (pageId === 'download') {
+// 从本地存储获取用户信息
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         
         // 即使权限不足也尝试加载内容，因为可能有公开内容
@@ -1791,6 +1776,7 @@ async function loadPage(pageId) {
           }
         }, 100);
       }
+
 
       if (pageId === 'download-detail') {
         // 从URL参数获取下载ID
@@ -3179,3 +3165,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
   loadPage('home');
 });
+
+// 在捕获阶段拦截来自权限弹窗的点击，阻止冒泡到全局路由代理
+document.addEventListener('click', function(e){
+  if (e.target && e.target.closest && e.target.closest('.permission-modal')) {
+    e.stopPropagation();
+  }
+}, true);

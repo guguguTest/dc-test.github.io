@@ -1,630 +1,487 @@
-// userManager.js
+
+// userManager.final.v6.js — 用户管理（修正版，幂等 + 弹窗单例 + 防冒泡 + 完整方法集）
+// 说明：
+// 1) 仅创建一个权限弹窗（#permission-modal），并在内容区阻止冒泡，避免触发 SPA 导航。
+// 2) setupEventListeners() 只绑定一次 document 事件；init() 多次进入页面也不会重复绑定/重复创建弹窗。
+// 3) 授权开关使用 data-perm-page，保存时读取 dataset.permPage，避免与 SPA 中的 [data-page] 冲突。
+// 4) 授权按钮的点击处理优先使用 window.userManager 实例，this 丢失也能弹出。
+// 5) 提供全局 window.showPermissionModal 兜底。
 
 class UserManager {
-    constructor() {
+  constructor() {
+    this.currentPage = 1;
+    this.usersPerPage = 20;
+    this.totalPages = 1;
+    this.users = [];
+    this.editingUserId = null;
+    this.permissionModal = null;
+    this.currentEditingUserId = null;
+    this.currentPermissions = {};
+    this.__initializedOnce = false;
+    this.__listenersBound = false;
+    this.__onDocClick = null;
+  }
+
+  init() {
+    // 多次进入页面时仅刷新数据
+    if (this.__initializedOnce) {
+      this.loadUsers();
+      return;
+    }
+    this.__initializedOnce = true;
+    this.loadUsers();
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    if (this.__listenersBound) return;
+    this.__listenersBound = true;
+
+    // 搜索
+    const searchBtn = document.getElementById('user-search-btn');
+    const searchInput = document.getElementById('user-search-input');
+    if (searchBtn) {
+      searchBtn.addEventListener('click', () => {
         this.currentPage = 1;
-        this.usersPerPage = 20;
-        this.totalPages = 1;
-        this.users = [];
-        this.editingUserId = null;
-        this.permissionModal = null;
-        this.currentPermissions = {};
-    }
-
-    init() {
         this.loadUsers();
-        this.setupEventListeners();
-        this.createPermissionModal();
+      });
+    }
+    if (searchInput) {
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          this.currentPage = 1;
+          this.loadUsers();
+        }
+      });
     }
 
-    setupEventListeners() {
-        // 搜索按钮事件
-        document.getElementById('user-search-btn').addEventListener('click', () => {
-            this.currentPage = 1;
-            this.loadUsers();
-        });
+    // 过滤
+    const rankFilter = document.getElementById('user-rank-filter');
+    const stateFilter = document.getElementById('user-state-filter');
+    if (rankFilter) {
+      rankFilter.addEventListener('change', () => {
+        this.currentPage = 1;
+        this.loadUsers();
+      });
+    }
+    if (stateFilter) {
+      stateFilter.addEventListener('change', () => {
+        this.currentPage = 1;
+        this.loadUsers();
+      });
+    }
 
-        // 搜索输入框回车事件
-        document.getElementById('user-search-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.currentPage = 1;
-                this.loadUsers();
-            }
-        });
+    // 统一事件委托（只绑定一次）
+    this.__onDocClick = this.__onDocClick || ((e) => {
+      // 仅在用户管理页面内处理
+      const isUserManagerVisible = document.querySelector('[data-page="user-manager"], [data-perm-page="user-manager"]');
+      if (!isUserManagerVisible || isUserManagerVisible.offsetParent === null) return;
 
-        // 用户组筛选事件
-        document.getElementById('user-rank-filter').addEventListener('change', () => {
-            this.currentPage = 1;
-            this.loadUsers();
-        });
+      const target = e.target;
 
-        // 状态筛选事件
-        document.getElementById('user-state-filter').addEventListener('change', () => {
-            this.currentPage = 1;
-            this.loadUsers();
-        });
+      // 编辑
+      if (target.classList.contains('btn-edit')) {
+        const userId = parseInt(target.dataset.userId || target.getAttribute('data-user-id'), 10);
+        if (!isNaN(userId)) this.toggleEditMode(userId);
+        return;
+      }
+      // 保存（行内保存用户资料）
+      if (target.classList.contains('btn-save')) {
+        const userId = parseInt(target.dataset.userId || target.getAttribute('data-user-id'), 10);
+        if (!isNaN(userId)) this.saveUserChanges(userId);
+        return;
+      }
+      // 取消
+      if (target.classList.contains('btn-cancel')) {
+        const userId = parseInt(target.dataset.userId || target.getAttribute('data-user-id'), 10);
+        if (!isNaN(userId)) this.cancelEditMode(userId);
+        return;
+      }
+      // 授权
+      if (target.classList.contains('btn-auth')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const userId = parseInt(target.dataset.userId || target.getAttribute('data-user-id'), 10);
+        const inst = (window.userManager && typeof window.userManager.showPermissionModal === 'function') ? window.userManager : this;
+        if (inst && typeof inst.showPermissionModal === 'function') {
+          inst.showPermissionModal(userId);
+        } else if (typeof window.showPermissionModal === 'function') {
+          window.showPermissionModal(userId);
+        } else {
+          console.error('showPermissionModal 未定义');
+        }
+        return;
+      }
+    });
+    document.addEventListener('click', this.__onDocClick);
+  }
 
-	  // 事件委托处理动态生成的按钮 - 添加页面检查
-	  document.addEventListener('click', (e) => {
-		// 检查是否在用户管理页面
-		const userManagerPage = document.querySelector('[data-page="user-manager"]');
-		if (!userManagerPage || userManagerPage.offsetParent === null) {
-		  return; // 不在用户管理页面，不处理这些事件
-		}
-		
-		// 编辑按钮
-		if (e.target.classList.contains('btn-edit')) {
-		  const userId = parseInt(e.target.dataset.userId);
-		  this.toggleEditMode(userId);
-		}
-		
-		// 保存按钮
-		if (e.target.classList.contains('btn-save')) {
-		  const userId = parseInt(e.target.dataset.userId);
-		  this.saveUserChanges(userId);
-		}
-		
-		// 取消按钮
-		if (e.target.classList.contains('btn-cancel')) {
-		  const userId = parseInt(e.target.dataset.userId);
-		  this.cancelEditMode(userId);
-		}
-		
-		// 授权按钮
-		if (e.target.classList.contains('btn-auth')) {
-		  const userId = parseInt(e.target.dataset.userId);
-		  this.showPermissionModal(userId);
-		}
-	  });
-	}
+  async loadUsers() {
+    try {
+      const token = localStorage.getItem('token');
+      const search = (document.getElementById('user-search-input') || {}).value || '';
+      const rankFilter = (document.getElementById('user-rank-filter') || {}).value || '';
+      const stateFilter = (document.getElementById('user-state-filter') || {}).value || '';
 
-	async loadUsers() {
-	  try {
-		const token = localStorage.getItem('token');
-		const search = document.getElementById('user-search-input').value;
-		const rankFilter = document.getElementById('user-rank-filter').value;
-		const stateFilter = document.getElementById('user-state-filter').value;
+      let url = `https://api.am-all.com.cn/api/admin/users?page=${this.currentPage}&limit=${this.usersPerPage}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      if (rankFilter) url += `&user_rank=${rankFilter}`;
+      if (stateFilter) url += `&banState=${stateFilter}`;
 
-		let url = `https://api.am-all.com.cn/api/admin/users?page=${this.currentPage}&limit=${this.usersPerPage}`;
-		
-		if (search) url += `&search=${encodeURIComponent(search)}`;
-		if (rankFilter) url += `&user_rank=${rankFilter}`;
-		if (stateFilter) url += `&banState=${stateFilter}`;
+      const resp = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }});
+      if (!resp.ok) {
+        const txt = await resp.text();
+        let msg = `获取用户列表失败: ${resp.status}`;
+        try {
+          const j = JSON.parse(txt);
+          msg = j.error || msg;
+        } catch {}
+        throw new Error(msg);
+      }
 
-		console.log('请求URL:', url); // 添加日志
+      const data = await resp.json();
+      this.users = data.users || [];
+      this.totalPages = (data.pagination && data.pagination.totalPages) || 1;
+      this.renderUsers();
+      this.renderPagination();
+    } catch (err) {
+      console.error('加载用户列表失败:', err);
+      if (typeof showErrorMessage === 'function') showErrorMessage('加载用户列表失败: ' + err.message);
+    }
+  }
 
-		const response = await fetch(url, {
-		  headers: {
-			'Authorization': `Bearer ${token}`
-		  }
-		});
+  renderUsers() {
+    const tbody = document.getElementById('users-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
 
-		if (!response.ok) {
-		  // 尝试获取更详细的错误信息
-		  let errorMsg = '获取用户列表失败';
-		  try {
-			const errorData = await response.json();
-			errorMsg = errorData.error || errorMsg;
-			if (errorData.details) {
-			  errorMsg += `: ${errorData.details}`;
-			}
-		  } catch (e) {
-			errorMsg += `: HTTP ${response.status}`;
-		  }
-		  throw new Error(errorMsg);
-		}
+    if (!this.users.length) {
+      tbody.innerHTML = '<tr><td colspan="13" class="text-center">没有找到用户</td></tr>';
+      return;
+    }
 
-		const data = await response.json();
-		
-		this.users = data.users;
-		this.totalPages = data.pagination.totalPages;
-		
-		this.renderUsers();
-		this.renderPagination();
-	  } catch (error) {
-		console.error('加载用户列表失败:', error);
-		showErrorMessage('加载用户列表失败: ' + error.message);
-	  }
-	}
+    this.users.forEach(user => {
+      const isEditing = this.editingUserId === user.id;
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-user-id', user.id);
+      tr.innerHTML = this.getUserRowHTML(user, isEditing);
+      tbody.appendChild(tr);
+    });
+  }
 
-	renderUsers() {
-		const tbody = document.getElementById('users-table-body');
-		  if (!tbody) {
-			console.warn('用户表格容器不存在，跳过渲染');
-			return;
-		  }
-
-		tbody.innerHTML = '';
-
-		if (this.users.length === 0) {
-			tbody.innerHTML = '<tr><td colspan="13" class="text-center">没有找到用户</td></tr>';
-			return;
-		}
-
-		this.users.forEach(user => {
-			const isEditing = this.editingUserId === user.id;
-			
-			const tr = document.createElement('tr');
-			// 添加data-user-id属性以便后续查找
-			tr.setAttribute('data-user-id', user.id);
-			tr.innerHTML = this.getUserRowHTML(user, isEditing);
-			tbody.appendChild(tr);
-		});
-	}
-
-getUserRowHTML(user, isEditing) {
-    // 用户组映射
-    const rankMap = {
-        0: '普通用户',
-        1: '初级用户',
-        2: '中级用户',
-        3: '高级用户',
-        4: '贵宾用户',
-        5: '系统管理员'
-    };
-
-    // 特殊用户组映射
-    const specialRankMap = {
-        0: '无',
-        1: 'MML'
-        // 可根据需要添加更多特殊用户组
-    };
-
-    // 账户状态映射
-    const stateMap = {
-        0: '正常',
-        1: '受限',
-        2: '封禁'
-    };
-
-    // 修复头像URL - 使用正确的服务器地址
-    const avatarUrl = user.avatar ? 
-        `https://api.am-all.com.cn/avatars/${user.avatar}` : 
-        'https://api.am-all.com.cn/avatars/default_avatar.png';
+  getUserRowHTML(user, isEditing) {
+    const rankMap = {0:'普通用户',1:'初级用户',2:'中级用户',3:'高级用户',4:'贵宾用户',5:'系统管理员'};
+    const specialRankMap = {0:'无',1:'MML'};
+    const stateMap = {0:'正常',1:'受限',2:'封禁'};
+    const avatarUrl = user.avatar ? `https://api.am-all.com.cn/avatars/${user.avatar}` : 'https://api.am-all.com.cn/avatars/default_avatar.png';
 
     return `
-        <td>
-            ${isEditing ? 
-                `<input type="text" class="edit-mode-input" value="${user.avatar || ''}" data-field="avatar">` : 
-                `<img src="${avatarUrl}" class="user-avatar" alt="头像">`
-            }
-        </td>
-        <td>${user.uid}</td>
-        <td>
-            ${isEditing ? 
-                `<input type="text" class="edit-mode-input" value="${user.username}" data-field="username">` : 
-                user.username
-            }
-        </td>
-        <td>
-            ${isEditing ? 
-                `<input type="text" class="edit-mode-input" value="${user.email || ''}" data-field="email">` : 
-                (user.email || '未设置')
-            }
-        </td>
-        <td>
-            ${isEditing ? 
-                `<select class="edit-mode-select" data-field="user_rank">
-                    <option value="0" ${user.user_rank == 0 ? 'selected' : ''}>普通用户</option>
-                    <option value="1" ${user.user_rank == 1 ? 'selected' : ''}>初级用户</option>
-                    <option value="2" ${user.user_rank == 2 ? 'selected' : ''}>中级用户</option>
-                    <option value="3" ${user.user_rank == 3 ? 'selected' : ''}>高级用户</option>
-                    <option value="4" ${user.user_rank == 4 ? 'selected' : ''}>贵宾用户</option>
-                    <option value="5" ${user.user_rank == 5 ? 'selected' : ''}>系统管理员</option>
-                </select>` : 
-                rankMap[user.user_rank] || '未知'
-            }
-        </td>
-        <td>
-            ${isEditing ? 
-                `<select class="edit-mode-select" data-field="rankSp">
-                    <option value="0" ${user.rankSp == 0 ? 'selected' : ''}>无</option>
-                    <option value="1" ${user.rankSp == 1 ? 'selected' : ''}>MML</option>
-                </select>` : 
-                specialRankMap[user.rankSp] || '未知'
-            }
-        </td>
-        <td>
-            ${isEditing ? 
-                `<input type="number" class="edit-mode-input" value="${user.points || 0}" data-field="points" min="0">` : 
-                (user.points || 0)
-            }
-        </td>
-        <td>
-            ${isEditing ? 
-                `<input type="number" class="edit-mode-input" value="${user.point2 || 0}" data-field="point2" min="0">` : 
-                (user.point2 || 0)
-            }
-        </td>
-        <td>
-            ${isEditing ? 
-                `<input type="text" class="edit-mode-input" value="${user.game_server || ''}" data-field="game_server">` : 
-                (user.game_server || '未绑定')
-            }
-        </td>
-        <td>
-            ${isEditing ? 
-                `<input type="text" class="edit-mode-input" value="${user.keychip || ''}" data-field="keychip">` : 
-                (user.keychip || '未绑定')
-            }
-        </td>
-        <td>
-            ${isEditing ? 
-                `<input type="text" class="edit-mode-input" value="${user.guid || ''}" data-field="guid">` : 
-                (user.guid || '未绑定')
-            }
-        </td>
-        <td>
-            ${isEditing ? 
-                `<select class="edit-mode-select" data-field="banState">
-                    <option value="0" ${user.banState == 0 ? 'selected' : ''}>正常</option>
-                    <option value="1" ${user.banState == 1 ? 'selected' : ''}>受限</option>
-                    <option value="2" ${user.banState == 2 ? 'selected' : ''}>封禁</option>
-                </select>` : 
-                stateMap[user.banState] || '未知'
-            }
-        </td>
-        <td class="user-actions">
-            ${isEditing ? 
-                `<button class="btn-save" data-user-id="${user.id}">保存</button>
-                 <button class="btn-cancel" data-user-id="${user.id}">取消</button>` : 
-                `<button class="btn-edit" data-user-id="${user.id}">编辑</button>
-                 <button class="btn-auth" data-user-id="${user.id}">授权</button>`
-            }
-        </td>
+      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.avatar || ''}" data-field="avatar">` : `<img src="${avatarUrl}" class="user-avatar" alt="头像">`}</td>
+      <td>${user.uid}</td>
+      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.username}" data-field="username">` : user.username}</td>
+      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.email || ''}" data-field="email">` : (user.email || '未设置')}</td>
+      <td>${isEditing ? `
+          <select class="edit-mode-select" data-field="user_rank">
+            <option value="0" ${user.user_rank==0?'selected':''}>普通用户</option>
+            <option value="1" ${user.user_rank==1?'selected':''}>初级用户</option>
+            <option value="2" ${user.user_rank==2?'selected':''}>中级用户</option>
+            <option value="3" ${user.user_rank==3?'selected':''}>高级用户</option>
+            <option value="4" ${user.user_rank==4?'selected':''}>贵宾用户</option>
+            <option value="5" ${user.user_rank==5?'selected':''}>系统管理员</option>
+          </select>` : (rankMap[user.user_rank] || '未知')}</td>
+      <td>${isEditing ? `
+          <select class="edit-mode-select" data-field="rankSp">
+            <option value="0" ${user.rankSp==0?'selected':''}>无</option>
+            <option value="1" ${user.rankSp==1?'selected':''}>MML</option>
+          </select>` : (specialRankMap[user.rankSp] || '未知')}</td>
+      <td>${isEditing ? `<input type="number" class="edit-mode-input" value="${user.points || 0}" data-field="points" min="0">` : (user.points || 0)}</td>
+      <td>${isEditing ? `<input type="number" class="edit-mode-input" value="${user.point2 || 0}" data-field="point2" min="0">` : (user.point2 || 0)}</td>
+      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.game_server || ''}" data-field="game_server">` : (user.game_server || '未绑定')}</td>
+      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.keychip || ''}" data-field="keychip">` : (user.keychip || '未绑定')}</td>
+      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.guid || ''}" data-field="guid">` : (user.guid || '未绑定')}</td>
+      <td>${isEditing ? `
+          <select class="edit-mode-select" data-field="banState">
+            <option value="0" ${user.banState==0?'selected':''}>正常</option>
+            <option value="1" ${user.banState==1?'selected':''}>受限</option>
+            <option value="2" ${user.banState==2?'selected':''}>封禁</option>
+          </select>` : (stateMap[user.banState] || '未知')}</td>
+      <td class="user-actions">
+        ${isEditing ? `
+          <button class="btn-save" data-user-id="${user.id}">保存</button>
+          <button class="btn-cancel" data-user-id="${user.id}">取消</button>` : `
+          <button class="btn-edit" data-user-id="${user.id}">编辑</button>
+          <button class="btn-auth" data-user-id="${user.id}">授权</button>`}
+      </td>
     `;
-}
+  }
 
-    renderPagination() {
-        const container = document.getElementById('user-pagination');
-        container.innerHTML = '';
+  renderPagination() {
+    const container = document.getElementById('user-pagination');
+    if (!container) return;
+    container.innerHTML = '';
 
-        if (this.totalPages <= 1) return;
+    if (this.totalPages <= 1) return;
 
-        const ul = document.createElement('ul');
-        ul.className = 'pagination';
+    const ul = document.createElement('ul');
+    ul.className = 'pagination';
 
-        // 上一页
-        if (this.currentPage > 1) {
-            const prevLi = document.createElement('li');
-            prevLi.className = 'page-item';
-            prevLi.innerHTML = `<a class="page-link" href="#" data-page="${this.currentPage - 1}">上一页</a>`;
-            ul.appendChild(prevLi);
-        }
-
-        // 页码
-        for (let i = 1; i <= this.totalPages; i++) {
-            const li = document.createElement('li');
-            li.className = `page-item ${i === this.currentPage ? 'active' : ''}`;
-            li.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
-            ul.appendChild(li);
-        }
-
-        // 下一页
-        if (this.currentPage < this.totalPages) {
-            const nextLi = document.createElement('li');
-            nextLi.className = 'page-item';
-            nextLi.innerHTML = `<a class="page-link" href="#" data-page="${this.currentPage + 1}">下一页</a>`;
-            ul.appendChild(nextLi);
-        }
-
-        // 添加分页点击事件
-        ul.querySelectorAll('.page-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const page = parseInt(e.target.dataset.page);
-                if (page && page !== this.currentPage) {
-                    this.currentPage = page;
-                    this.loadUsers();
-                }
-            });
-        });
-
-        container.appendChild(ul);
+    if (this.currentPage > 1) {
+      const prevLi = document.createElement('li');
+      prevLi.className = 'page-item';
+      prevLi.innerHTML = `<a class="page-link" href="#" data-page="${this.currentPage - 1}">上一页</a>`;
+      ul.appendChild(prevLi);
     }
 
-    toggleEditMode(userId) {
-        this.editingUserId = userId;
-        this.renderUsers();
+    for (let i = 1; i <= this.totalPages; i++) {
+      const li = document.createElement('li');
+      li.className = `page-item ${i===this.currentPage ? 'active' : ''}`;
+      li.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+      ul.appendChild(li);
     }
 
-	cancelEditMode(userId) {
-	  this.editingUserId = null;
-	  
-	  // 安全检查：确保在用户管理页面才执行渲染
-	  const userManagerPage = document.querySelector('[data-page="user-manager"]');
-	  if (userManagerPage && userManagerPage.offsetParent !== null) {
-		this.renderUsers();
-	  }
-	}
+    if (this.currentPage < this.totalPages) {
+      const nextLi = document.createElement('li');
+      nextLi.className = 'page-item';
+      nextLi.innerHTML = `<a class="page-link" href="#" data-page="${this.currentPage + 1}">下一页</a>`;
+      ul.appendChild(nextLi);
+    }
 
-async saveUserChanges(userId) {
-  try {
-    const token = localStorage.getItem('token');
-    
-    // 从DOM获取更新的值 - 使用更健壮的选择器
-    const userRow = document.querySelector(`tr[data-user-id="${userId}"]`);
-    if (!userRow) {
-      // 尝试通过其他方式查找
-      const allRows = document.querySelectorAll('tr[data-user-id]');
-      for (let row of allRows) {
-        if (parseInt(row.getAttribute('data-user-id')) === userId) {
-          userRow = row;
-          break;
+    ul.querySelectorAll('.page-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const page = parseInt(e.currentTarget.dataset.page, 10);
+        if (page && page !== this.currentPage) {
+          this.currentPage = page;
+          this.loadUsers();
         }
-      }
-      
-      if (!userRow) {
-        throw new Error('找不到用户行，可能页面已刷新');
-      }
-    }
-    
-    // 构建更新对象 - 从输入字段获取值
-    const updates = {
-      username: userRow.querySelector('[data-field="username"]')?.value,
-      email: userRow.querySelector('[data-field="email"]')?.value,
-      user_rank: userRow.querySelector('[data-field="user_rank"]')?.value,
-      rankSp: userRow.querySelector('[data-field="rankSp"]')?.value,
-      points: userRow.querySelector('[data-field="points"]')?.value,
-      point2: userRow.querySelector('[data-field="point2"]')?.value,
-      game_server: userRow.querySelector('[data-field="game_server"]')?.value,
-      keychip: userRow.querySelector('[data-field="keychip"]')?.value,
-      guid: userRow.querySelector('[data-field="guid"]')?.value,
-      banState: userRow.querySelector('[data-field="banState"]')?.value,
-      avatar: userRow.querySelector('[data-field="avatar"]')?.value
-    };
-
-    console.log('发送的用户更新数据:', updates);
-
-    const response = await fetch(`https://api.am-all.com.cn/api/admin/users/${userId}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updates)
+      });
     });
 
-    // 添加响应日志
-    console.log('响应状态:', response.status);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('服务器错误响应:', errorText);
-      
-      let errorMessage = `更新用户信息失败: ${response.status} ${response.statusText}`;
-      try {
-        const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error || errorMessage;
-        if (errorData.details) {
-          errorMessage += ` - ${errorData.details}`;
-        }
-      } catch (e) {
-        // 如果不是JSON响应，使用原始错误文本
-        errorMessage = errorText || errorMessage;
-      }
-      
-      throw new Error(errorMessage);
-    }
+    container.appendChild(ul);
+  }
 
-    const result = await response.json();
-    console.log('服务器响应:', result);
-    
-    if (result.success) {
-      showSuccessMessage(result.message || '用户信息更新成功');
+  toggleEditMode(userId) {
+    this.editingUserId = userId;
+    this.renderUsers();
+  }
+
+  cancelEditMode(userId) {
+    this.editingUserId = null;
+    this.renderUsers();
+  }
+
+  async saveUserChanges(userId) {
+    try {
+      const token = localStorage.getItem('token');
+      const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+      if (!row) throw new Error('找不到用户行');
+
+      const updates = {
+        username: row.querySelector('[data-field="username"]')?.value,
+        email: row.querySelector('[data-field="email"]')?.value,
+        user_rank: row.querySelector('[data-field="user_rank"]')?.value,
+        rankSp: row.querySelector('[data-field="rankSp"]')?.value,
+        points: row.querySelector('[data-field="points"]')?.value,
+        point2: row.querySelector('[data-field="point2"]')?.value,
+        game_server: row.querySelector('[data-field="game_server"]')?.value,
+        keychip: row.querySelector('[data-field="keychip"]')?.value,
+        guid: row.querySelector('[data-field="guid"]')?.value,
+        banState: row.querySelector('[data-field="banState"]')?.value,
+        avatar: row.querySelector('[data-field="avatar"]')?.value
+      };
+
+      const resp = await fetch(`https://api.am-all.com.cn/api/admin/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(txt || `更新用户信息失败: ${resp.status}`);
+      }
+      const result = await resp.json();
+      if (!result.success) throw new Error(result.error || '更新用户信息失败');
+
+      if (typeof showSuccessMessage === 'function') showSuccessMessage(result.message || '用户信息更新成功');
       this.editingUserId = null;
       this.loadUsers();
-    } else {
-      throw new Error(result.error || '更新用户信息失败');
+    } catch (err) {
+      console.error('保存用户信息失败:', err);
+      if (typeof showErrorMessage === 'function') showErrorMessage('保存用户信息失败: ' + err.message);
     }
-  } catch (error) {
-    console.error('保存用户信息失败:', error);
-    showErrorMessage('保存用户信息失败: ' + error.message);
   }
-}
 
-    createPermissionModal() {
-        this.permissionModal = document.createElement('div');
-        this.permissionModal.className = 'permission-modal';
-        this.permissionModal.innerHTML = `
-            <div class="permission-modal-content">
-                <div class="permission-modal-header">
-                    <h3>用户权限管理</h3>
-                    <button class="permission-modal-close">&times;</button>
-                </div>
-                <div class="permission-modal-body" id="permission-list">
-                    <!-- 权限列表将通过JavaScript动态生成 -->
-                </div>
-                <div class="permission-modal-footer">
-                    <button class="btn-cancel" id="permission-cancel">取消</button>
-                    <button class="btn-save" id="permission-save">保存</button>
-                </div>
-            </div>
-        `;
+  createPermissionModal() {
+    // 单例
+    const existed = document.getElementById('permission-modal');
+    if (existed) { this.permissionModal = existed; return; }
 
-        document.body.appendChild(this.permissionModal);
+    this.permissionModal = document.createElement('div');
+    this.permissionModal.id = 'permission-modal';
+    this.permissionModal.className = 'permission-modal';
+    this.permissionModal.innerHTML = `
+      <div class="permission-modal-content">
+        <div class="permission-modal-header">
+          <h3>用户权限管理</h3>
+          <button class="permission-modal-close" aria-label="关闭">&times;</button>
+        </div>
+        <div class="permission-modal-body" id="permission-list"></div>
+        <div class="permission-modal-footer">
+          <button class="btn-cancel" id="permission-cancel">取消</button>
+          <button class="btn-save" id="permission-save">保存</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(this.permissionModal);
 
-        // 添加关闭事件
-        this.permissionModal.querySelector('.permission-modal-close').addEventListener('click', () => {
-            this.hidePermissionModal();
-        });
+    // 弹窗内容区阻止冒泡到全局
+    const pmc = this.permissionModal.querySelector('.permission-modal-content');
+    if (pmc) pmc.addEventListener('click', (e) => e.stopPropagation());
 
-        this.permissionModal.querySelector('#permission-cancel').addEventListener('click', () => {
-            this.hidePermissionModal();
-        });
-
-        this.permissionModal.querySelector('#permission-save').addEventListener('click', () => {
-            this.savePermissions();
-        });
-
-        // 点击背景关闭
-        this.permissionModal.addEventListener('click', (e) => {
-            if (e.target === this.permissionModal) {
-                this.hidePermissionModal();
-            }
-        });
-    }
-
-async showPermissionModal(userId) {
-  try {
-    const token = localStorage.getItem('token');
-    
-    // 获取用户权限
-    const response = await fetch(`https://api.am-all.com.cn/api/admin/users/${userId}/permissions`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    this.permissionModal.addEventListener('click', (e) => {
+      if (e.target === this.permissionModal) this.hidePermissionModal();
     });
+    this.permissionModal.querySelector('.permission-modal-close').addEventListener('click', () => this.hidePermissionModal());
+    this.permissionModal.querySelector('#permission-cancel').addEventListener('click', () => this.hidePermissionModal());
+    this.permissionModal.querySelector('#permission-save').addEventListener('click', () => this.savePermissions());
+  }
 
-    if (!response.ok) {
-      throw new Error('获取用户权限失败');
+  async showPermissionModal(userId) {
+    this.currentEditingUserId = userId;
+    this.createPermissionModal();
+
+    const token = localStorage.getItem('token');
+    try {
+      const resp = await fetch(`https://api.am-all.com.cn/api/admin/users/${userId}/permissions`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!resp.ok) throw new Error('获取权限失败');
+      const data = await resp.json();
+      this.currentPermissions = data || {};
+    } catch (err) {
+      console.error('获取权限失败:', err);
+      if (typeof showErrorMessage === 'function') showErrorMessage('获取权限失败');
+      return;
     }
 
-    const permissions = await response.json();
-    this.currentPermissions = permissions;
-    this.currentEditingUserId = userId;
-
-    // 生成权限列表
-    const permissionList = document.getElementById('permission-list');
-    permissionList.innerHTML = '';
-
-    // 定义所有可授权的页面（包含用户设置页面）
     const pages = [
-      { id: 'home', name: '首页', default: true },
-      { id: 'download', name: '下载中心', default: true },
-      { id: 'tools', name: '实用工具', default: true },
-      { id: 'dllpatcher', name: '补丁工具', default: true },
-      { id: 'settings', name: '设置', default: true },
-      { id: 'help', name: '帮助', default: true },
-      { id: 'fortune', name: '每日签到', default: true },
-      { id: 'ccb', name: '游戏查分', default: false },
-      { id: 'exchange', name: '兑换', default: true },
-      { id: 'user-settings', name: '用户设置', default: true },
-      { id: 'announcement-admin', name: '公告管理', default: false },
-      { id: 'site-admin', name: '网站管理', default: false },
-      { id: 'download-admin', name: '下载管理', default: false },
-      { id: 'order-entry', name: '订单录入', default: false },
-      { id: 'user-manager', name: '用户管理', default: false }
+      { id: 'home', name: '首页' },
+      { id: 'download', name: '下载中心' },
+      { id: 'tools', name: '实用工具' },
+      { id: 'dllpatcher', name: '补丁工具' },
+      { id: 'settings', name: '设置' },
+      { id: 'help', name: '帮助' },
+      { id: 'fortune', name: '每日签到' },
+      { id: 'user-settings', name: '用户设置' },
+      { id: 'announcement-admin', name: '公告管理' },
+      { id: 'site-admin', name: '网站管理' },
+      { id: 'download-admin', name: '下载管理' },
+      { id: 'user-manager', name: '用户管理' },
+      { id: 'ccb', name: '游戏查分' },
+      { id: 'order-entry', name: '订单录入' },
+      { id: 'exchange', name: '积分兑换' }
     ];
 
-    pages.forEach(page => {
-      // 检查权限是否已设置，如果没有则使用默认值
-      const isAllowed = permissions[page.id] !== undefined ? 
-                       permissions[page.id].allowed : page.default;
-      const isVisible = permissions[page.id] !== undefined ? 
-                       permissions[page.id].visible : page.default;
+    const list = this.permissionModal.querySelector('#permission-list');
+    list.innerHTML = '';
 
-      const permissionItem = document.createElement('div');
-      permissionItem.className = 'permission-item';
-      permissionItem.innerHTML = `
-        <span class="permission-name">${page.name}</span>
+    pages.forEach(p => {
+      const cur = this.currentPermissions[p.id] || {};
+      const allowedChecked = cur.allowed === true || cur.allowed === 1 || cur.allowed === '1';
+      const visibleChecked = cur.visible === true || cur.visible === 1 || cur.visible === '1';
+
+      const row = document.createElement('div');
+      row.className = 'permission-row';
+      row.innerHTML = `
+        <div class="permission-name">${p.name}</div>
         <div class="permission-controls">
-          <label class="permission-switch">
-            <span class="permission-label">访问权限</span>
-            <input type="checkbox" data-page="${page.id}" data-type="allowed" ${isAllowed ? 'checked' : ''}>
-            <span class="permission-slider"></span>
+          <label class="permission-item">
+            <span class="permission-label">允许访问</span>
+            <label class="switch">
+              <input type="checkbox" data-type="allowed" data-perm-page="${p.id}" ${allowedChecked ? 'checked' : ''}>
+              <span class="slider round"></span>
+            </label>
           </label>
-          <label class="permission-switch">
-            <span class="permission-label">显示权限</span>
-            <input type="checkbox" data-page="${page.id}" data-type="visible" ${isVisible ? 'checked' : ''}>
-            <span class="permission-slider"></span>
+          <label class="permission-item">
+            <span class="permission-label">显示入口</span>
+            <label class="switch">
+              <input type="checkbox" data-type="visible" data-perm-page="${p.id}" ${visibleChecked ? 'checked' : ''}>
+              <span class="slider round"></span>
+            </label>
           </label>
         </div>
       `;
-      
-      // 添加事件监听器，阻止开关点击事件冒泡
-      const checkboxes = permissionItem.querySelectorAll('input[type="checkbox"]');
-      checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('click', (e) => {
-          e.stopPropagation();
-        });
-      });
-      
-      permissionList.appendChild(permissionItem);
+      list.appendChild(row);
     });
 
-    // 显示模态框
     this.permissionModal.classList.add('show');
-    document.body.style.overflow = 'hidden';
-
-  } catch (error) {
-    console.error('显示权限模态框失败:', error);
-    showErrorMessage('加载用户权限失败: ' + error.message);
   }
-}
 
-async savePermissions() {
-  try {
-    const token = localStorage.getItem('token');
-    const checkboxes = this.permissionModal.querySelectorAll('input[type="checkbox"]');
-    const permissions = {};
+  hidePermissionModal() {
+    if (this.permissionModal) this.permissionModal.classList.remove('show');
+  }
 
-    checkboxes.forEach(checkbox => {
-      const pageId = checkbox.dataset.page;
-      const type = checkbox.dataset.type;
-      
-      if (!permissions[pageId]) {
-        permissions[pageId] = {};
+  async savePermissions() {
+    try {
+      const token = localStorage.getItem('token');
+      const inputs = this.permissionModal.querySelectorAll('input[type="checkbox"][data-perm-page]');
+      const payload = {};
+
+      inputs.forEach(input => {
+        const pid = input.getAttribute('data-perm-page');
+        const key = input.getAttribute('data-type');
+        if (!payload[pid]) payload[pid] = {};
+        payload[pid][key] = !!input.checked;
+      });
+
+      const userId = this.currentEditingUserId;
+      const resp = await fetch(`https://api.am-all.com.cn/api/admin/users/${userId}/permissions`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(txt || '保存权限失败');
       }
-      
-      permissions[pageId][type] = checkbox.checked;
-    });
 
-    console.log('保存权限:', permissions);
-
-    const response = await fetch(`https://api.am-all.com.cn/api/admin/users/${this.currentEditingUserId}/permissions`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(permissions)
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('权限保存响应错误:', errorText);
-      throw new Error('保存用户权限失败');
-    }
-
-    const result = await response.json();
-    
-    if (result.success) {
-      showSuccessMessage('用户权限更新成功');
+      if (typeof showSuccessMessage === 'function') showSuccessMessage('权限更新成功');
       this.hidePermissionModal();
-      
-      // 如果修改的是当前用户的权限，立即更新本地存储
-      const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
-      if (currentUser && currentUser.id === this.currentEditingUserId) {
-        // 重新获取当前用户权限
-        const updatedPermissions = await fetchUserPermissions(token);
-        localStorage.setItem('userPermissions', JSON.stringify(updatedPermissions));
-        
-        // 更新侧边栏显示
-        updateSidebarVisibility(currentUser);
+
+      // 若给自己授权，刷新侧栏可见性
+      try {
+        const me = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        if (me && me.id && Number(me.id) === Number(userId) && typeof updateSidebarVisibility === 'function') {
+          localStorage.removeItem('userPermissions');
+          await updateSidebarVisibility(me);
+        }
+      } catch (e) {
+        console.warn('刷新侧栏失败（非致命）:', e);
       }
-    } else {
-      throw new Error(result.error || '保存用户权限失败');
+    } catch (err) {
+      console.error('保存权限失败:', err);
+      if (typeof showErrorMessage === 'function') showErrorMessage('保存权限失败：' + (err.message || '未知错误'));
     }
-  } catch (error) {
-    console.error('保存用户权限失败:', error);
-    showErrorMessage('保存用户权限失败: ' + error.message);
   }
 }
 
-    hidePermissionModal() {
-        this.permissionModal.classList.remove('show');
-        document.body.style.overflow = '';
-        this.currentEditingUserId = null;
-        this.currentPermissions = {};
-    }
-}
-
-// 初始化用户管理系统
-let userManager = null;
-
-// 导出到全局作用域
+// 全局初始化（幂等）
 window.initUserManager = function() {
-    userManager = new UserManager();
-    userManager.init();
+  if (window.userManager && window.userManager.__initializedOnce) {
+    window.userManager.loadUsers();
+    return;
+  }
+  window.userManager = new UserManager();
+  window.userManager.init();
 };
+
+// 旧代码兼容：全局函数
+if (typeof window !== 'undefined' && typeof window.showPermissionModal !== 'function') {
+  window.showPermissionModal = function(userId) {
+    if (window.userManager && typeof window.userManager.showPermissionModal === 'function') {
+      window.userManager.showPermissionModal(userId);
+    } else {
+      console.error('全局 showPermissionModal 不可用：未找到 userManager 实例');
+    }
+  };
+}
