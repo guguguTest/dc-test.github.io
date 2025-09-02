@@ -2996,7 +2996,10 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('logout-mobile')?.addEventListener('click', handleLogout);
     
   document.body.addEventListener('click', function(e) {
-    // 处理所有带有 data-page 属性的链接
+    
+    // 忽略权限弹窗内部点击，让弹窗自身处理（避免全局代理干扰）
+    if (e && e.target && e.target.closest && e.target.closest('.permission-modal')) { return; }
+// 处理所有带有 data-page 属性的链接
       const pageLink = e.target.closest('[data-page]');
       if (pageLink) {
         e.preventDefault();
