@@ -1,7 +1,3 @@
-// build-tag: SPA v2025-09-02-e
-console.log('[SPA] build v2025-09-02-e loaded');
-// build-tag: SPA v2025-09-02-c
-console.log('[SPA] build v2025-09-02-c loaded');
 // spa.js - 单页面应用主模块
 // 用户状态管理
 let currentUser = null;
@@ -168,36 +164,82 @@ function refreshUserInfoDisplay() {
 }
 
 // 更新侧边栏显示函数
-async function updateSidebarVisibility(user) {
+async 
+function updateSidebarVisibility(user) {
   const token = localStorage.getItem('token');
   const nav = document.querySelector('.sidebar-nav');
-  if (!nav) return;
-
-  const allLinks = nav.querySelectorAll('a[data-page]');
   const guestVisible = ['home', 'settings', 'help'];
 
-  if (!token) {
-    allLinks.forEach(a => {
-      const pid = a.getAttribute('data-page');
-      a.parentElement.style.display = guestVisible.includes(pid) ? '' : 'none';
-    });
-    return;
+  // 统一的显隐控制函数
+  const setDisplay = (el, show) => {
+    if (!el) return;
+    el.style.display = show ? '' : 'none';
+  };
+
+  // 先处理带 data-page 的链接（新结构）
+  if (nav) {
+    const allLinks = nav.querySelectorAll('a[data-page]');
+    if (!token) {
+      allLinks.forEach(a => {
+        const pid = a.getAttribute('data-page');
+        setDisplay(a.parentElement, guestVisible.includes(pid));
+      });
+    } else {
+      const headers = { 'Authorization': `Bearer ${token}` };
+      allLinks.forEach(async (a) => {
+        const pid = a.getAttribute('data-page');
+        try {
+          const resp = await fetch(`https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`, { headers });
+          const { visible } = await resp.json();
+          setDisplay(a.parentElement, !!visible);
+        } catch (e) {
+          console.warn('检查可见性失败:', pid, e);
+          setDisplay(a.parentElement, false);
+        }
+      });
+    }
   }
 
-  const headers = { 'Authorization': `Bearer ${token}` };
-  for (const a of allLinks) {
-    const pid = a.getAttribute('data-page');
+  // 再处理老结构（没有 data-page 的固定 ID）
+  const legacyMap = [
+    ['sidebar-ccb', 'ccb'],
+    ['sidebar-exchange', 'exchange'],
+    ['sidebar-announcement-admin', 'announcement-admin'],
+    ['sidebar-site-admin', 'site-admin'],
+    ['sidebar-download-admin', 'download-admin'],
+    ['sidebar-user-manager', 'user-manager'],
+    ['sidebar-order-entry', 'order-entry'],
+    ['sidebar-home', 'home'],
+    ['sidebar-download', 'download'],
+    ['sidebar-tools', 'tools'],
+    ['sidebar-dllpatcher', 'dllpatcher'],
+    ['sidebar-settings', 'settings'],
+    ['sidebar-help', 'help'],
+    ['sidebar-fortune', 'fortune'],
+    ['sidebar-user-settings', 'user-settings'],
+  ];
+
+  const headers = token ? { 'Authorization': `Bearer ${token}` } : null;
+
+  legacyMap.forEach(async ([id, pid]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!token) {
+      setDisplay(el, guestVisible.includes(pid));
+      return;
+    }
     try {
       const resp = await fetch(`https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`, { headers });
       if (!resp.ok) throw new Error('vis api fail');
       const { visible } = await resp.json();
-      a.parentElement.style.display = visible ? '' : 'none';
+      setDisplay(el, !!visible);
     } catch (e) {
       console.warn('检查可见性失败:', pid, e);
-      a.parentElement.style.display = 'none';
+      setDisplay(el, false);
     }
-  }
+  });
 }
+
 
 // 在侧边栏显示/隐藏时调用这个函数
 document.addEventListener("DOMContentLoaded", function() {
@@ -728,85 +770,34 @@ function setupUserDropdown() {
 }
 
 // 显示用户信息区域
+
+// 显示用户信息区域（修复：不再用用户组硬编码来覆盖侧栏入口的显示，统一走 /api/page-visibility）
+
+// 显示用户信息区域（修复：不再用用户组硬编码来覆盖侧栏入口的显示，统一走 /api/page-visibility）
 function showUserInfo() {
   // PC视图
   const authLinksPc = document.getElementById('auth-links-pc');
   const userInfoPc = document.getElementById('user-info-pc');
-  
   if (authLinksPc) authLinksPc.style.display = 'none';
   if (userInfoPc) userInfoPc.style.display = 'flex';
-  
+
   // 移动视图
   const authLinksMobile = document.getElementById('auth-links-mobile');
   const userInfoMobile = document.getElementById('user-info-mobile');
-  
   if (authLinksMobile) authLinksMobile.style.display = 'none';
   if (userInfoMobile) userInfoMobile.style.display = 'block';
-  
-  // 显示游戏查分菜单（用户组级别>0）
-  if (currentUser && currentUser.user_rank > 0) {
-    document.getElementById('sidebar-ccb').style.display = 'block';
-  } else {
-    document.getElementById('sidebar-ccb').style.display = 'none';
-  }
-  
-  // 显示积分兑换菜单（用户组级别>=1）
-  if (currentUser && currentUser.user_rank >= 1) {
-    document.getElementById('sidebar-exchange').style.display = 'block';
-  } else {
-    document.getElementById('sidebar-exchange').style.display = 'none';
-  }
-  
-  // 显示管理分类和菜单（用户组级别>=4）
-  if (currentUser && currentUser.user_rank >= 4) {
-    document.getElementById('admin-section-title').style.display = 'block';
-    document.getElementById('admin-section-nav').style.display = 'block';
-    
-    // 显示公告管理菜单（用户组级别>=5）
-    if (currentUser.user_rank >= 5) {
-      document.getElementById('sidebar-announcement-admin').style.display = 'block';
-    } else {
-      document.getElementById('sidebar-announcement-admin').style.display = 'none';
-    }
-    
-    // 显示网站管理菜单（用户组级别>=5）
-    if (currentUser.user_rank >= 5) {
-      document.getElementById('sidebar-site-admin').style.display = 'block';
-    } else {
-      document.getElementById('sidebar-site-admin').style.display = 'none';
-    }
-    
-    // 显示下载管理菜单（用户组级别>=5）
-    if (currentUser.user_rank >= 5) {
-      document.getElementById('sidebar-download-admin').style.display = 'block';
-    } else {
-      document.getElementById('sidebar-download-admin').style.display = 'none';
-    }
-    
-	// 显示用户管理菜单（用户组级别>=5）
-	if (currentUser.user_rank >= 5) {
-	  document.getElementById('sidebar-user-manager').style.display = 'block';
-	} else {
-	  document.getElementById('sidebar-user-manager').style.display = 'none';
-	}
-	
-    // 显示订单录入菜单（用户组级别>=4）
-    document.getElementById('sidebar-order-entry').style.display = 'block';
-  } else {
-    document.getElementById('admin-section-title').style.display = 'none';
-    document.getElementById('admin-section-nav').style.display = 'none';
-  }
-  
-    // 显示下载菜单（用户组级别>0）
-  if (currentUser && currentUser.user_rank > 0) {
-    document.querySelector('a[data-page="download"]').parentElement.style.display = 'block';
-  } else {
-    // 改为始终显示，但添加特殊样式表示权限不足
-    const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
-    downloadMenuItem.style.display = 'block';
+
+  // 重要：始终显示管理分组容器，由每个菜单项的可见性单独控制
+  const adminTitle = document.getElementById('admin-section-title');
+  const adminNav = document.getElementById('admin-section-nav');
+  if (adminTitle) adminTitle.style.display = 'block';
+  if (adminNav) adminNav.style.display = 'block';
+
+  // 统一交由后端接口 /api/page-visibility 来决定具体各入口是否可见
+  if (typeof updateSidebarVisibility === 'function') {
+    updateSidebarVisibility(currentUser);
   }
 }
-
 // 显示登录/注册链接
 function showAuthLinks() {
   // PC视图

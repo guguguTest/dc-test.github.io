@@ -12,27 +12,26 @@ const SPECIAL_GROUP_MAP = {
 function initDownloadPage() {
   const token = localStorage.getItem('token');
   if (!token) {
-    showLoginRequired('download');
+    if (typeof showLoginRequired==='function') { showLoginRequired('download'); }
+    else { console.warn('[download] login required'); }
     return;
   }
-
-  // 获取用户信息
-  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-  
-  // 调试输出 - 添加在这里
-  console.log('用户信息:', {
-    userInfo: userInfo,
-    userRank: userInfo.user_rank,
-    userSpecialGroup: userInfo.rankSp,
-    token: localStorage.getItem('token')
-  });
-  
-  // 即使权限不足也加载内容，因为可能有公开内容
-  if (userInfo.user_rank <= 0) {
-    showPermissionDenied();
-  }
-
-  loadDownloadContent();
+  (async () => {
+    try {
+      const base = (window.API_BASE_URL || window.API_ORIGIN || '').replace(/\/+$/,'') || '';
+      const resp = await fetch(base + '/api/check-permission?page=download', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!resp.ok) { console.warn('[download] check-permission HTTP', resp.status); showPermissionDenied && showPermissionDenied(); return; }
+      const data = await resp.json();
+      if (!data || !data.hasAccess) { showPermissionDenied && showPermissionDenied(); return; }
+      if (typeof loadDownloadContent === 'function') loadDownloadContent();
+      else if (typeof renderDownloadPage === 'function') renderDownloadPage();
+    } catch (e) {
+      console.warn('[download] check-permission error', e);
+      showPermissionDenied && showPermissionDenied();
+    }
+  })();
 }
 
 // 显示权限不足提示

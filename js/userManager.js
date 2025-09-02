@@ -1,12 +1,3 @@
-
-// userManager.final.v6.js — 用户管理（修正版，幂等 + 弹窗单例 + 防冒泡 + 完整方法集）
-// 说明：
-// 1) 仅创建一个权限弹窗（#permission-modal），并在内容区阻止冒泡，避免触发 SPA 导航。
-// 2) setupEventListeners() 只绑定一次 document 事件；init() 多次进入页面也不会重复绑定/重复创建弹窗。
-// 3) 授权开关使用 data-perm-page，保存时读取 dataset.permPage，避免与 SPA 中的 [data-page] 冲突。
-// 4) 授权按钮的点击处理优先使用 window.userManager 实例，this 丢失也能弹出。
-// 5) 提供全局 window.showPermissionModal 兜底。
-
 class UserManager {
   constructor() {
     this.currentPage = 1;
