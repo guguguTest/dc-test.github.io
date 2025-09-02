@@ -3171,7 +3171,5 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // 在捕获阶段拦截来自权限弹窗的点击，阻止冒泡到全局路由代理
 document.addEventListener('click', function(e){
-  if (e.target && e.target.closest && e.target.closest('.permission-modal')) {
-    e.stopPropagation();
-  }
+  if (e.target && e.target.closest && e.target.closest('.permission-modal')) { /* allow */ }
 }, true);

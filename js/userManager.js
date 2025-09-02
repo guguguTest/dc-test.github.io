@@ -1,3 +1,4 @@
+
 // userManager.final.v6.js — 用户管理（修正版，幂等 + 弹窗单例 + 防冒泡 + 完整方法集）
 // 说明：
 // 1) 仅创建一个权限弹窗（#permission-modal），并在内容区阻止冒泡，避免触发 SPA 导航。
@@ -310,64 +311,42 @@ class UserManager {
     }
   }
 
-createPermissionModal() {
-  // 单例
-  const existed = document.getElementById('permission-modal');
-  if (existed) { 
-    this.permissionModal = existed; 
-    
-    // 重新绑定事件，确保每次都能正确工作
-    this.bindPermissionModalEvents();
-    return; 
-  }
+  createPermissionModal() {
+    // 单例
+    const existed = document.getElementById('permission-modal');
+    if (existed) { this.permissionModal = existed; return; }
 
-  this.permissionModal = document.createElement('div');
-  this.permissionModal.id = 'permission-modal';
-  this.permissionModal.className = 'permission-modal';
-  this.permissionModal.innerHTML = `
-    <div class="permission-modal-content">
-      <div class="permission-modal-header">
-        <h3>用户权限管理</h3>
-        <button class="permission-modal-close" aria-label="关闭">&times;</button>
+    this.permissionModal = document.createElement('div');
+    this.permissionModal.id = 'permission-modal';
+    this.permissionModal.className = 'permission-modal';
+    this.permissionModal.innerHTML = `
+      <div class="permission-modal-content">
+        <div class="permission-modal-header">
+          <h3>用户权限管理</h3>
+          <button class="permission-modal-close" aria-label="关闭">&times;</button>
+        </div>
+        <div class="permission-modal-body" id="permission-list"></div>
+        <div class="permission-modal-footer">
+          <button class="btn-cancel" id="permission-cancel">取消</button>
+          <button class="btn-save" id="permission-save">保存</button>
+        </div>
       </div>
-      <div class="permission-modal-body" id="permission-list"></div>
-      <div class="permission-modal-footer">
-        <button class="btn-cancel" id="permission-cancel">取消</button>
-        <button class="btn-save" id="permission-save">保存</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(this.permissionModal);
+    `;
+    document.body.appendChild(this.permissionModal);
+    const __pmc = this.permissionModal.querySelector('.permission-modal-content');
+    if (__pmc) __pmc.addEventListener('click', (evt)=>evt.stopPropagation());
 
-  // 绑定事件
-  this.bindPermissionModalEvents();
-}
+    // 弹窗内容区阻止冒泡到全局
+    const pmc = this.permissionModal.querySelector('.permission-modal-content');
+    if (pmc) pmc.addEventListener('click', (e) => e.stopPropagation());
 
-// 新增方法：绑定权限弹窗事件
-bindPermissionModalEvents() {
-  if (!this.permissionModal) return;
-  
-  // 移除旧的事件监听器（避免重复绑定）
-  const newModal = this.permissionModal.cloneNode(true);
-  this.permissionModal.parentNode.replaceChild(newModal, this.permissionModal);
-  this.permissionModal = newModal;
-  
-  // 绑定新的事件
-  this.permissionModal.querySelector('.permission-modal-close').addEventListener('click', () => this.hidePermissionModal());
-  this.permissionModal.querySelector('#permission-cancel').addEventListener('click', () => this.hidePermissionModal());
-  this.permissionModal.querySelector('#permission-save').addEventListener('click', () => this.savePermissions());
-  
-  // 点击遮罩层关闭弹窗
-  this.permissionModal.addEventListener('click', (e) => {
-    if (e.target === this.permissionModal) this.hidePermissionModal();
-  });
-  
-  // 阻止弹窗内容区的点击事件冒泡（避免触发SPA路由）
-  const content = this.permissionModal.querySelector('.permission-modal-content');
-  if (content) {
-    content.addEventListener('click', (e) => e.stopPropagation());
+    this.permissionModal.addEventListener('click', (e) => {
+      if (e.target === this.permissionModal) this.hidePermissionModal();
+    });
+    this.permissionModal.querySelector('.permission-modal-close').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); this.hidePermissionModal(); } );
+    this.permissionModal.querySelector('#permission-cancel').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); this.hidePermissionModal(); } );
+    this.permissionModal.querySelector('#permission-save').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); this.savePermissions(); } );
   }
-}
 
   async showPermissionModal(userId) {
     this.currentEditingUserId = userId;
