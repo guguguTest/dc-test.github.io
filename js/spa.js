@@ -184,7 +184,7 @@ async function updateSidebarVisibility(user) {
       for (const a of links) {
         const pid = a.getAttribute('data-page');
         try {
-          const resp = await fetch(`https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}?t=${Date.now()}`, { headers });
+          const resp = await fetch(`https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`, { headers });
           const data = await resp.json();
           setDisplay(a.parentElement, !!(data && data.visible));
         } catch (e) {
@@ -3326,43 +3326,4 @@ document.addEventListener('DOMContentLoaded', () => {
   if (location.hash && typeof loadPage === 'function') {
     try { handleHashRoute(); } catch {}
   }
-})();
-
-// ---- Permission gate for protected pages (cache-busted; Authorization only) ----
-(function(){
-  const API = 'https://api.am-all.com.cn';
-  const PROTECTED_SET = new Set(['ccb','exchange','order-entry','announcement-admin','download-admin','site-admin','user-manager']);
-  async function canAccess(pageId){
-    try{
-      const token = localStorage.getItem('token');
-      if (!token) return false;
-      const base = `${API}/api/check-permission?page=${encodeURIComponent(pageId)}`;
-      const url = base + (base.includes('?') ? '&' : '?') + 't=' + Date.now();
-      const resp = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
-      let data = null; try{ data = await resp.json(); }catch(_){ data = null; }
-      if (!data && resp.status === 304) {
-        const url2 = base + (base.includes('?') ? '&' : '?') + 't=' + (Date.now()+1);
-        const r2 = await fetch(url2, { headers: { 'Authorization': `Bearer ${token}` } });
-        try{ data = await r2.json(); }catch(_){ data = null; }
-      }
-      return !!(data && data.allowed);
-    }catch(e){ console.warn('check-permission failed', e); return false; }
-  }
-  function showForbidden(pageId){
-    const c = document.getElementById('content-container');
-    if (!c) return;
-    c.innerHTML = `<div class="section"><h1 class="page-title">权限不足</h1><p>你没有访问“${pageId}”页面的权限。</p></div>`;
-  }
-  document.addEventListener('DOMContentLoaded', function(){
-    if (!window.loadPage || window.__loadPageWrapped) return;
-    const original = window.loadPage;
-    window.__loadPageWrapped = true;
-    window.loadPage = async function(pageId){
-      if (PROTECTED_SET.has(pageId)) {
-        const ok = await canAccess(pageId);
-        if (!ok) return showForbidden(pageId);
-      }
-      return original.apply(this, arguments);
-    };
-  });
 })();

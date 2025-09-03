@@ -424,43 +424,52 @@ class UserManager {
     if (this.permissionModal) this.permissionModal.classList.remove('show');
   }
 
-  async savePermissions() {
+    async savePermissions() {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('未登录');
-      const userId = this.currentEditingUserId;
+      const userId = this.currentEditingUserId || this.editingUserId || this.userId;
       if (!userId) throw new Error('缺少用户 ID');
-      // find modal root
+
       const root = this.permissionModal || __getPermissionModalRoot();
-      // collect payload (only rows actually present)
       const rows = (root && root.querySelectorAll('[data-perm-page]')) || [];
       const payload = {};
       rows.forEach(input => {
         const pid = input.getAttribute('data-perm-page');
-        const typ = input.getAttribute('data-type');
+        const typ = input.getAttribute('data-type'); // allowed / visible
         if (!pid || !typ) return;
         payload[pid] = payload[pid] || {};
         payload[pid][typ] = !!input.checked;
       });
-      return fetch(`https://api.am-all.com.cn/api/admin/users/${encodeURIComponent(userId)}/permissions`, {
+
+      const resp = await fetch(`https://api.am-all.com.cn/api/admin/users/${encodeURIComponent(userId)}/permissions`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      }).then(r => r.json().catch(()=>({}))).then(data => {
-        if (data && data.success === false) throw new Error(data.error || '保存失败');
-        if (typeof showSuccessMessage === 'function') showSuccessMessage('权限已保存');
-        this.hidePermissionModal && this.hidePermissionModal();
-        // refresh: re-load current page's visibility if needed
-        if (typeof updateSidebarVisibility === 'function' && window.currentUser) {
-          updateSidebarVisibility(window.currentUser);
-        }
-      }).catch(err => {
-        console.error('保存权限失败:', err);
-        if (typeof showErrorMessage === 'function') showErrorMessage('保存权限失败: ' + (err && err.message || '未知错误'));
       });
-    } catch (e) {
-      console.error('保存权限失败:', e);
-      if (typeof showErrorMessage === 'function') showErrorMessage('保存权限失败: ' + (e && e.message || '未知错误'));
+      const data = await resp.json().catch(()=>({}));
+      if (!resp.ok || data.success === false) throw new Error(data.error || '保存失败');
+
+      (window.toast && toast.success) ? toast.success('权限已保存') : console.log('权限已保存');
+      // 关闭弹窗（常见选择器兜底）
+      try {
+        const dlg = (root && root.querySelector('dialog[open]')) || null;
+        if (dlg && typeof dlg.close === 'function') dlg.close();
+        const modal = document.getElementById('user-permission-modal') || document.getElementById('permission-modal') || root;
+        if (modal) modal.style.display = 'none';
+        const overlay = document.querySelector('.modal-backdrop,.overlay');
+        if (overlay) overlay.remove();
+      } catch (_) {}
+
+      // 若编辑的是当前登录用户，刷新侧边栏可见性
+      try {
+        if (window.currentUser && (Number(window.currentUser.id) === Number(userId)) && typeof updateSidebarVisibility === 'function') {
+          await updateSidebarVisibility(window.currentUser);
+        }
+      } catch (_) {}
+    } catch (err) {
+      console.error('保存权限失败:', err);
+      (window.toast && toast.error) ? toast.error('保存权限失败: ' + (err && err.message || '未知错误')) : alert('保存权限失败: ' + (err && err.message || '未知错误'));
     }
   });
 
