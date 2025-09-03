@@ -164,80 +164,108 @@ function refreshUserInfoDisplay() {
 }
 
 // 更新侧边栏显示函数
-async 
-function updateSidebarVisibility(user) {
+
+async function updateSidebarVisibility(user) {
   const token = localStorage.getItem('token');
-  const nav = document.querySelector('.sidebar-nav');
   const guestVisible = ['home', 'settings', 'help'];
 
-  // 统一的显隐控制函数
-  const setDisplay = (el, show) => {
-    if (!el) return;
-    el.style.display = show ? '' : 'none';
-  };
+  const setDisplay = (el, show) => { if (el) el.style.display = show ? '' : 'none'; };
 
-  // 先处理带 data-page 的链接（新结构）
+  const nav = document.querySelector('.sidebar-nav');
   if (nav) {
-    const allLinks = nav.querySelectorAll('a[data-page]');
+    const links = nav.querySelectorAll('a[data-page]');
     if (!token) {
-      allLinks.forEach(a => {
+      for (const a of links) {
         const pid = a.getAttribute('data-page');
         setDisplay(a.parentElement, guestVisible.includes(pid));
-      });
+      }
     } else {
       const headers = { 'Authorization': `Bearer ${token}` };
-      allLinks.forEach(async (a) => {
+      for (const a of links) {
         const pid = a.getAttribute('data-page');
         try {
           const resp = await fetch(`https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`, { headers });
-          const { visible } = await resp.json();
-          setDisplay(a.parentElement, !!visible);
+          const data = await resp.json();
+          setDisplay(a.parentElement, !!(data && data.visible));
         } catch (e) {
-          console.warn('检查可见性失败:', pid, e);
+          console.warn('可见性检查失败:', pid, e);
           setDisplay(a.parentElement, false);
         }
-      });
+      }
     }
   }
 
-  // 再处理老结构（没有 data-page 的固定 ID）
   const legacyMap = [
-    ['sidebar-ccb', 'ccb'],
-    ['sidebar-exchange', 'exchange'],
-    ['sidebar-announcement-admin', 'announcement-admin'],
-    ['sidebar-site-admin', 'site-admin'],
-    ['sidebar-download-admin', 'download-admin'],
-    ['sidebar-user-manager', 'user-manager'],
-    ['sidebar-order-entry', 'order-entry'],
-    ['sidebar-home', 'home'],
-    ['sidebar-download', 'download'],
-    ['sidebar-tools', 'tools'],
-    ['sidebar-dllpatcher', 'dllpatcher'],
-    ['sidebar-settings', 'settings'],
-    ['sidebar-help', 'help'],
-    ['sidebar-fortune', 'fortune'],
-    ['sidebar-user-settings', 'user-settings'],
+    ['sidebar-ccb','ccb'],
+    ['sidebar-exchange','exchange'],
+    ['sidebar-announcement-admin','announcement-admin'],
+    ['sidebar-site-admin','site-admin'],
+    ['sidebar-download-admin','download-admin'],
+    ['sidebar-user-manager','user-manager'],
+    ['sidebar-order-entry','order-entry'],
+    ['sidebar-home','home'],
+    ['sidebar-download','download'],
+    ['sidebar-tools','tools'],
+    ['sidebar-dllpatcher','dllpatcher'],
+    ['sidebar-settings','settings'],
+    ['sidebar-help','help'],
+    ['sidebar-fortune','fortune'],
+    ['sidebar-user-settings','user-settings'],
   ];
-
-  const headers = token ? { 'Authorization': `Bearer ${token}` } : null;
-
-  legacyMap.forEach(async ([id, pid]) => {
+  
+  for (const [id, pid] of legacyMap) {
     const el = document.getElementById(id);
-    if (!el) return;
-    if (!token) {
-      setDisplay(el, guestVisible.includes(pid));
-      return;
-    }
+    if (!el) continue;
+
+    const a = el.querySelector ? el.querySelector('a') : null;
+    const clickTarget = a || el;
+
     try {
-      const resp = await fetch(`https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`, { headers });
-      if (!resp.ok) throw new Error('vis api fail');
-      const { visible } = await resp.json();
-      setDisplay(el, !!visible);
-    } catch (e) {
-      console.warn('检查可见性失败:', pid, e);
-      setDisplay(el, false);
+      clickTarget.setAttribute('data-page', pid);
+      if (a) {
+        if (!a.getAttribute('href')) a.setAttribute('href', `#/${pid}`);
+        a.setAttribute('role', 'button');
+      }
+    } catch {}
+
+    if (!token) {
+      const vis = guestVisible.includes(pid);
+      if (a && a.parentElement) a.parentElement.style.display = vis ? '' : 'none';
+      else el.style.display = vis ? '' : 'none';
+    } else {
+      try {
+        const resp = await fetch(`https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await resp.json();
+        const vis = !!(data && data.visible);
+        if (a && a.parentElement) a.parentElement.style.display = vis ? '' : 'none';
+        else el.style.display = vis ? '' : 'none';
+      } catch (e) {
+        console.warn('可见性检查失败:', pid, e);
+        if (a && a.parentElement) a.parentElement.style.display = 'none';
+        else el.style.display = 'none';
+      }
     }
-  });
+
+    if (!clickTarget.dataset.boundClick) {
+      clickTarget.addEventListener('click', (ev) => {
+        if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+        try {
+          console.debug('nav from legacy item →', pid);
+          if (typeof loadPage === 'function') loadPage(pid);
+          else window.location.hash = `#/${pid}`;
+        } catch (e) {
+          console.error('跳转失败', pid, e);
+          window.location.hash = `#/${pid}`;
+        }
+      }, { passive: false });
+      clickTarget.dataset.boundClick = '1';
+      clickTarget.style.cursor = 'pointer';
+    }
+  }
+
+
 }
 
 
@@ -770,34 +798,89 @@ function setupUserDropdown() {
 }
 
 // 显示用户信息区域
-
-// 显示用户信息区域（修复：不再用用户组硬编码来覆盖侧栏入口的显示，统一走 /api/page-visibility）
-
-// 显示用户信息区域（修复：不再用用户组硬编码来覆盖侧栏入口的显示，统一走 /api/page-visibility）
 function showUserInfo() {
   // PC视图
   const authLinksPc = document.getElementById('auth-links-pc');
   const userInfoPc = document.getElementById('user-info-pc');
+  
   if (authLinksPc) authLinksPc.style.display = 'none';
   if (userInfoPc) userInfoPc.style.display = 'flex';
-
+  
   // 移动视图
   const authLinksMobile = document.getElementById('auth-links-mobile');
   const userInfoMobile = document.getElementById('user-info-mobile');
+  
   if (authLinksMobile) authLinksMobile.style.display = 'none';
   if (userInfoMobile) userInfoMobile.style.display = 'block';
-
-  // 重要：始终显示管理分组容器，由每个菜单项的可见性单独控制
-  const adminTitle = document.getElementById('admin-section-title');
-  const adminNav = document.getElementById('admin-section-nav');
-  if (adminTitle) adminTitle.style.display = 'block';
-  if (adminNav) adminNav.style.display = 'block';
-
-  // 统一交由后端接口 /api/page-visibility 来决定具体各入口是否可见
-  if (typeof updateSidebarVisibility === 'function') {
-    updateSidebarVisibility(currentUser);
+  
+  // 显示游戏查分菜单（用户组级别>0）
+  if (currentUser && currentUser.user_rank > 0) {
+    document.getElementById('sidebar-ccb').style.display = 'block';
+  } else {
+    document.getElementById('sidebar-ccb').style.display = 'none';
   }
+  
+  // 显示积分兑换菜单（用户组级别>=1）
+  if (currentUser && currentUser.user_rank >= 1) {
+    document.getElementById('sidebar-exchange').style.display = 'block';
+  } else {
+    document.getElementById('sidebar-exchange').style.display = 'none';
+  }
+  
+  // 显示管理分类和菜单（用户组级别>=4）
+  if (currentUser && currentUser.user_rank >= 4) {
+    document.getElementById('admin-section-title').style.display = 'block';
+    document.getElementById('admin-section-nav').style.display = 'block';
+    
+    // 显示公告管理菜单（用户组级别>=5）
+    if (currentUser.user_rank >= 5) {
+      document.getElementById('sidebar-announcement-admin').style.display = 'block';
+    } else {
+      document.getElementById('sidebar-announcement-admin').style.display = 'none';
+    }
+    
+    // 显示网站管理菜单（用户组级别>=5）
+    if (currentUser.user_rank >= 5) {
+      document.getElementById('sidebar-site-admin').style.display = 'block';
+    } else {
+      document.getElementById('sidebar-site-admin').style.display = 'none';
+    }
+    
+    // 显示下载管理菜单（用户组级别>=5）
+    if (currentUser.user_rank >= 5) {
+      document.getElementById('sidebar-download-admin').style.display = 'block';
+    } else {
+      document.getElementById('sidebar-download-admin').style.display = 'none';
+    }
+    
+	// 显示用户管理菜单（用户组级别>=5）
+	if (currentUser.user_rank >= 5) {
+	  document.getElementById('sidebar-user-manager').style.display = 'block';
+	} else {
+	  document.getElementById('sidebar-user-manager').style.display = 'none';
+	}
+	
+    // 显示订单录入菜单（用户组级别>=4）
+    document.getElementById('sidebar-order-entry').style.display = 'block';
+  } else {
+    document.getElementById('admin-section-title').style.display = 'none';
+    document.getElementById('admin-section-nav').style.display = 'none';
+  }
+  
+    // 显示下载菜单（用户组级别>0）
+  if (currentUser && currentUser.user_rank > 0) {
+    document.querySelector('a[data-page="download"]').parentElement.style.display = 'block';
+  } else {
+    // 改为始终显示，但添加特殊样式表示权限不足
+    const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
+    downloadMenuItem.style.display = 'block';
+  }
+
+  // 显示管理分组容器；具体入口显隐由 updateSidebarVisibility 决定
+  ;['admin-section-title','admin-section-nav'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='block'; });
+  try { if (typeof updateSidebarVisibility==='function') updateSidebarVisibility(window.currentUser||null); } catch(e){ console.warn('updateSidebarVisibility 失败', e); }
 }
+
 // 显示登录/注册链接
 function showAuthLinks() {
   // PC视图
@@ -1423,9 +1506,10 @@ async function loadPage(pageId) {
         }
       });
       
-      if (!response.ok) {
-        showLoginRequired(pageId);
-        return;
+      if (!response.ok) { 
+        if (response.status === 401) { showLoginRequired(pageId); } 
+        else if (typeof showPermissionDenied === 'function') { showPermissionDenied(pageId); }
+        return; 
       }
       
       const data = await response.json();
@@ -1767,6 +1851,11 @@ if (pageId === 'download') {
           }
         }, 100);
       }
+      if (pageId === 'ccb') {
+        try { if (typeof initCCBPage === 'function') setTimeout(initCCBPage, 50); }
+        catch(e){ console.error('初始化 ccb 页面失败:', e); }
+      }
+
 
 
       if (pageId === 'download-detail') {
@@ -3164,3 +3253,37 @@ document.addEventListener("DOMContentLoaded", function() {
 document.addEventListener('click', function(e){
   if (e.target && e.target.closest && e.target.closest('.permission-modal')) { /* allow */ }
 }, true);
+
+
+// sidebar click delegation (defense in depth)
+document.addEventListener('DOMContentLoaded', () => {
+  const side = document.querySelector('.sidebar-nav') || document.getElementById('admin-section-nav');
+  if (!side) return;
+  side.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-page]');
+    if (!el) return;
+    const pid = el.getAttribute('data-page');
+    if (!pid) return;
+    e.preventDefault();
+    try { if (typeof loadPage === 'function') loadPage(pid); } catch {}
+  }, { passive: false });
+});
+
+
+
+// 轻量级 hash 路由：#/page → loadPage('page')
+(function(){
+  function handleHashRoute(){
+    try {
+      const h = location.hash || '';
+      const m = h.match(/^#\/(\w[\w-]*)/);
+      if (m && typeof loadPage === 'function') {
+        loadPage(m[1]);
+      }
+    } catch(e) { console.warn('hash route fail', e); }
+  }
+  window.addEventListener('hashchange', handleHashRoute, false);
+  if (location.hash && typeof loadPage === 'function') {
+    try { handleHashRoute(); } catch {}
+  }
+})();
