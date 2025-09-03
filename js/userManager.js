@@ -1,3 +1,13 @@
+
+// --- helper: get permission modal root safely
+function __getPermissionModalRoot(){
+  return document.getElementById('permission-modal-root')
+      || document.getElementById('permission-modal')
+      || document.getElementById('user-permission-modal')
+      || document.querySelector('.permission-modal')
+      || document.body;
+}
+
 class UserManager {
   constructor() {
     this.currentPage = 1;
@@ -417,17 +427,42 @@ class UserManager {
   async savePermissions() {
     try {
       const token = localStorage.getItem('token');
-      
-const inputs = permissionModalRoot.querySelectorAll('input[type="checkbox"][data-perm-page][data-dirty="1"]');
-const payload = {};
-inputs.forEach(function(input){
-  const pid = input.getAttribute('data-perm-page');
-  const typ = input.getAttribute('data-type'); // allowed | visible
-  if (!pid || !typ) return;
-  if (!payload[pid]) payload[pid] = {};
-  payload[pid][typ] = !!input.checked;
-});
-
+      if (!token) throw new Error('未登录');
+      const userId = this.currentEditingUserId;
+      if (!userId) throw new Error('缺少用户 ID');
+      // find modal root
+      const root = this.permissionModal || __getPermissionModalRoot();
+      // collect payload (only rows actually present)
+      const rows = (root && root.querySelectorAll('[data-perm-page]')) || [];
+      const payload = {};
+      rows.forEach(input => {
+        const pid = input.getAttribute('data-perm-page');
+        const typ = input.getAttribute('data-type');
+        if (!pid || !typ) return;
+        payload[pid] = payload[pid] || {};
+        payload[pid][typ] = !!input.checked;
+      });
+      return fetch(`https://api.am-all.com.cn/api/admin/users/${encodeURIComponent(userId)}/permissions`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(r => r.json().catch(()=>({}))).then(data => {
+        if (data && data.success === false) throw new Error(data.error || '保存失败');
+        if (typeof showSuccessMessage === 'function') showSuccessMessage('权限已保存');
+        this.hidePermissionModal && this.hidePermissionModal();
+        // refresh: re-load current page's visibility if needed
+        if (typeof updateSidebarVisibility === 'function' && window.currentUser) {
+          updateSidebarVisibility(window.currentUser);
+        }
+      }).catch(err => {
+        console.error('保存权限失败:', err);
+        if (typeof showErrorMessage === 'function') showErrorMessage('保存权限失败: ' + (err && err.message || '未知错误'));
+      });
+    } catch (e) {
+      console.error('保存权限失败:', e);
+      if (typeof showErrorMessage === 'function') showErrorMessage('保存权限失败: ' + (e && e.message || '未知错误'));
+    }
+  });
 
       const userId = this.currentEditingUserId;
       const resp = await fetch(`https://api.am-all.com.cn/api/admin/users/${userId}/permissions`, {
@@ -480,12 +515,3 @@ if (typeof window !== 'undefined' && typeof window.showPermissionModal !== 'func
     }
   };
 }
-
-
-// $__DIRTY_LISTENER__
-document.addEventListener('change', function(e){
-  var t = e.target;
-  if (t && t.matches && t.matches('input[type="checkbox"][data-perm-page]')) {
-    t.setAttribute('data-dirty','1');
-  }
-});
