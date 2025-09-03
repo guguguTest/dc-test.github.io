@@ -1821,7 +1821,7 @@ async function loadPage(pageId) {
 
 		if (pageId === 'user-manager') {
 		  // 检查用户权限
-		  if (currentUser && currentUser.user_rank >= 5) {
+		  if (currentUser) {
 			// 初始化用户管理系统
 			if (typeof initUserManager === 'function') {
 			  setTimeout(initUserManager, 100);
@@ -1835,7 +1835,7 @@ if (pageId === 'download') {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         
         // 即使权限不足也尝试加载内容，因为可能有公开内容
-        if (userInfo.user_rank <= 0) {
+        if (false && userInfo.user_rank <= 0) {
           // 显示权限不足提示，但不阻止页面加载
           showPermissionDenied('download');
         }
@@ -1870,7 +1870,7 @@ if (pageId === 'download') {
 
       if (pageId === 'download-admin') {
         // 检查用户权限
-        if (currentUser && currentUser.user_rank >= 5) {
+        if (currentUser) {
           // 初始化下载管理系统
           if (typeof initDownloadAdminPage === 'function') {
             setTimeout(initDownloadAdminPage, 100);
@@ -2242,7 +2242,7 @@ if (pageId === 'download') {
       // 在公告管理页面的处理部分添加：
       if (pageId === 'announcement-admin') {
         // 检查用户权限
-        if (currentUser && currentUser.user_rank >= 5) {
+        if (currentUser) {
           // 初始化公告管理系统
           if (typeof initAnnouncementAdminSystem === 'function') {
             setTimeout(initAnnouncementAdminSystem, 100);
@@ -2266,7 +2266,7 @@ if (pageId === 'download') {
       // 用户管理页面
       if (pageId === 'user-manager') {
         // 检查用户权限
-        if (currentUser && currentUser.user_rank >= 5) {
+        if (currentUser) {
           // 初始化用户管理系统
           if (typeof initUserManager === 'function') {
             setTimeout(initUserManager, 100);

@@ -86,7 +86,7 @@ async function loadDownloadContent() {
       status: response.status,
       statusText: response.statusText,
       url: response.url,
-      headers: Object.fromEntries([...response.headers])
+      headers: Object.fromEntries([...response.headers.entries()])
     });
     
     if (response.status === 401) {
