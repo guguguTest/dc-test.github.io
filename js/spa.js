@@ -266,6 +266,38 @@ async function updateSidebarVisibility(user) {
   }
 
 
+
+  // ---- Auto hide empty admin group (no visible children) ----
+  try {
+    (function hideEmptyGroups() {
+      var adminNav = document.getElementById('admin-section-nav');
+      var adminTitle = document.getElementById('admin-section-title');
+      if (!adminNav || !adminTitle) return;
+      var items = adminNav.querySelectorAll('li, a[data-page]');
+      var anyVisible = false;
+      items.forEach ? items.forEach(function(el){
+        var node = el.tagName === 'A' ? (el.parentElement || el) : el;
+        if (!node) return;
+        var style = window.getComputedStyle(node);
+        if (style.display !== 'none' && style.visibility !== 'hidden' && node.offsetParent !== null) {
+          anyVisible = true;
+        }
+      }) : (function(){
+        for (var i=0;i<items.length;i++){
+          var el = items[i];
+          var node = el.tagName === 'A' ? (el.parentElement || el) : el;
+          if (!node) continue;
+          var style = window.getComputedStyle(node);
+          if (style.display !== 'none' && style.visibility !== 'hidden' && node.offsetParent !== null) {
+            anyVisible = true;
+            break;
+          }
+        }
+      })();
+      adminNav.style.display = anyVisible ? '' : 'none';
+      adminTitle.style.display = anyVisible ? '' : 'none';
+    })();
+  } catch(e) { console.warn('hideEmptyGroups failed', e); }
 }
 
 
@@ -877,7 +909,7 @@ function showUserInfo() {
   }
 
   // 显示管理分组容器；具体入口显隐由 updateSidebarVisibility 决定
-  ;['admin-section-title','admin-section-nav'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='block'; });
+  
   try { if (typeof updateSidebarVisibility==='function') updateSidebarVisibility(window.currentUser||null); } catch(e){ console.warn('updateSidebarVisibility 失败', e); }
 }
 
@@ -1821,7 +1853,7 @@ async function loadPage(pageId) {
 
 		if (pageId === 'user-manager') {
 		  // 检查用户权限
-		  if (currentUser) {
+		  if (currentUser && currentUser.user_rank >= 5) {
 			// 初始化用户管理系统
 			if (typeof initUserManager === 'function') {
 			  setTimeout(initUserManager, 100);
@@ -1835,7 +1867,7 @@ if (pageId === 'download') {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         
         // 即使权限不足也尝试加载内容，因为可能有公开内容
-        if (false && userInfo.user_rank <= 0) {
+        if (false && userInfo && userInfo.user_rank <= 0) {
           // 显示权限不足提示，但不阻止页面加载
           showPermissionDenied('download');
         }
@@ -1870,7 +1902,7 @@ if (pageId === 'download') {
 
       if (pageId === 'download-admin') {
         // 检查用户权限
-        if (currentUser) {
+        if (currentUser && currentUser.user_rank >= 5) {
           // 初始化下载管理系统
           if (typeof initDownloadAdminPage === 'function') {
             setTimeout(initDownloadAdminPage, 100);
@@ -2242,7 +2274,7 @@ if (pageId === 'download') {
       // 在公告管理页面的处理部分添加：
       if (pageId === 'announcement-admin') {
         // 检查用户权限
-        if (currentUser) {
+        if (currentUser && currentUser.user_rank >= 5) {
           // 初始化公告管理系统
           if (typeof initAnnouncementAdminSystem === 'function') {
             setTimeout(initAnnouncementAdminSystem, 100);
@@ -2266,7 +2298,7 @@ if (pageId === 'download') {
       // 用户管理页面
       if (pageId === 'user-manager') {
         // 检查用户权限
-        if (currentUser) {
+        if (currentUser && currentUser.user_rank >= 5) {
           // 初始化用户管理系统
           if (typeof initUserManager === 'function') {
             setTimeout(initUserManager, 100);

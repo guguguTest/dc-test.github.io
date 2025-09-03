@@ -417,15 +417,17 @@ class UserManager {
   async savePermissions() {
     try {
       const token = localStorage.getItem('token');
-      const inputs = this.permissionModal.querySelectorAll('input[type="checkbox"][data-perm-page]');
-      const payload = {};
+      
+const inputs = permissionModalRoot.querySelectorAll('input[type="checkbox"][data-perm-page][data-dirty="1"]');
+const payload = {};
+inputs.forEach(function(input){
+  const pid = input.getAttribute('data-perm-page');
+  const typ = input.getAttribute('data-type'); // allowed | visible
+  if (!pid || !typ) return;
+  if (!payload[pid]) payload[pid] = {};
+  payload[pid][typ] = !!input.checked;
+});
 
-      inputs.forEach(input => {
-        const pid = input.getAttribute('data-perm-page');
-        const key = input.getAttribute('data-type');
-        if (!payload[pid]) payload[pid] = {};
-        payload[pid][key] = !!input.checked;
-      });
 
       const userId = this.currentEditingUserId;
       const resp = await fetch(`https://api.am-all.com.cn/api/admin/users/${userId}/permissions`, {
@@ -478,3 +480,12 @@ if (typeof window !== 'undefined' && typeof window.showPermissionModal !== 'func
     }
   };
 }
+
+
+// $__DIRTY_LISTENER__
+document.addEventListener('change', function(e){
+  var t = e.target;
+  if (t && t.matches && t.matches('input[type="checkbox"][data-perm-page]')) {
+    t.setAttribute('data-dirty','1');
+  }
+});
