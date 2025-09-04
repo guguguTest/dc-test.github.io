@@ -3327,3 +3327,107 @@ document.addEventListener('DOMContentLoaded', () => {
     try { handleHashRoute(); } catch {}
   }
 })();
+
+
+// === Safe Route Contract (non-breaking) ===
+// Falls back to site's original loadPage for all unknown routes.
+(function(){
+  if (window.__routeContractInstalledSafe) return;
+  window.__routeContractInstalledSafe = true;
+
+  if (typeof window !== 'undefined' && typeof window.API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = 'https://api.am-all.com.cn';
+  }
+
+  function ensure(fnName){
+    return (typeof window[fnName] === 'function') ? window[fnName] : function(){
+      const c = document.getElementById('content-container') || document.body;
+      if (c) c.innerHTML = '<div class="section"><h1>404</h1><p>缺少渲染函数：' + fnName + '</p></div>';
+    };
+  }
+
+  async function checkAuth(permissionPage){
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return false;
+      const base = window.API_BASE_URL || 'https://api.am-all.com.cn';
+      const r = await fetch(base + '/api/check-permission?page=' + encodeURIComponent(permissionPage), {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await r.json().catch(()=>({}));
+      return !!(r.ok && (data.hasAccess !== false));
+    } catch (e) {
+      console.warn('checkAuth error:', e);
+      return false;
+    }
+  }
+
+  const ROUTES = {
+    'ccb': { protected: true, perm: 'ccb', handler: () => ensure('renderCCBUserPage')() },
+    'site-admin': { protected: true, perm: 'site-admin', handler: () => ensure('renderSiteAdminHome')() },
+    'site-admin-ccb-servers': { protected: true, perm: 'site-admin', handler: () => ensure('renderCCBServersPage')() },
+    'site-admin-ccb-games': { protected: true, perm: 'site-admin', handler: () => ensure('renderCCBGamesPage')() },
+  };
+  window.ROUTES = Object.assign({}, window.ROUTES || {}, ROUTES);
+
+  function makeWrapper(orig){
+    async function wrapper(pageId){
+      try {
+        const route = (window.ROUTES && window.ROUTES[pageId]) || null;
+        if (route) {
+          if (route.protected) {
+            const ok = await checkAuth(route.perm || pageId);
+            if (!ok) {
+              if (typeof showErrorMessage === 'function') showErrorMessage('需要权限才能访问此页面');
+              // fall back to home via orig if available
+              if (typeof orig === 'function') return orig('home');
+              return;
+            }
+          }
+          return route.handler();
+        }
+        // Unknown route: defer to site's original router
+        if (typeof orig === 'function') return orig(pageId);
+        // No original: do nothing (do NOT force 404 to avoid breaking legacy flows)
+      } catch (e) {
+        console.error('Route wrapper error:', e);
+        if (typeof orig === 'function') return orig(pageId);
+      }
+    }
+    // Tag for detection
+    Object.defineProperty(wrapper, '__isRouteWrapper', { value: true });
+    return wrapper;
+  }
+
+  function install(){
+    const orig = (typeof window.loadPage === 'function' && !window.loadPage.__isRouteWrapper)
+      ? window.loadPage
+      : (typeof window.__origLoadPage === 'function' ? window.__origLoadPage : null);
+
+    window.__origLoadPage = orig || window.__origLoadPage || null;
+    const wrapper = makeWrapper(window.__origLoadPage);
+    window.loadPage = wrapper;
+  }
+
+  // Install once DOM is ready (to maximize chance that site's router is already defined)
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(install, 0);
+  } else {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(install, 0); });
+  }
+
+  // Auto re-wrap if other scripts replace loadPage later
+  let tries = 0;
+  const maxTries = 20;
+  const iv = setInterval(function(){
+    tries++;
+    const lp = window.loadPage;
+    if (typeof lp === 'function' && !lp.__isRouteWrapper) {
+      // Someone replaced it; capture as new orig and re-wrap
+      window.__origLoadPage = lp;
+      window.loadPage = makeWrapper(lp);
+    }
+    if (tries >= maxTries) clearInterval(iv);
+  }, 250);
+})();
+

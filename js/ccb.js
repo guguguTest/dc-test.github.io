@@ -382,3 +382,117 @@
     document.addEventListener('DOMContentLoaded', displayCCBInfoInSettings);
   }
 })();
+
+
+// === 渲染：用户查分（绑定/解绑） ===
+function renderCCBUserPage() {
+  var c = document.getElementById('content-container') || document.body;
+  if (!c) return;
+  c.innerHTML = [
+    '<div class="section">',
+      '<h1 class="page-title">游戏查分</h1>',
+      '<div class="admin-container">',
+        '<div class="admin-card">',
+          '<h3>绑定查分信息</h3>',
+          '<form id="ccb-bind-form" class="admin-form">',
+            '<div class="form-group">',
+              '<label for="ccb-server">查分服务器</label>',
+              '<select id="ccb-server" required></select>',
+            '</div>',
+            '<div class="form-group">',
+              '<label for="ccb-keychip">keychip</label>',
+              '<input type="text" id="ccb-keychip" required />',
+            '</div>',
+            '<div class="form-group">',
+              '<label for="ccb-guid">游戏卡号</label>',
+              '<input type="text" id="ccb-guid" required />',
+            '</div>',
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;">',
+              '<button type="submit" class="ccb-btn ccb-btn-primary">保存绑定</button>',
+              '<button type="button" id="ccb-unbind-btn" class="ccb-btn ccb-btn-secondary">解绑</button>',
+            '</div>',
+          '</form>',
+        '</div>',
+      '</div>',
+    '</div>'
+  ].join('');
+
+  var base = (window.API_BASE_URL || 'https://api.am-all.com.cn');
+  try {
+    fetch(base + '/api/ccb/servers').then(function(r){ return r.json(); }).then(function(list){
+      var sel = document.getElementById('ccb-server');
+      if (!sel) return;
+      sel.innerHTML = (list || []).map(function(s){
+        return '<option value="' + (s.server_name || '') + '">' + (s.server_name || '') + (s.server_url ? (' - ' + s.server_url) : '') + '</option>';
+      }).join('');
+      try {
+        var me = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        if (me && me.game_server && sel.querySelector('option[value="' + me.game_server + '"]')) sel.value = me.game_server;
+        if (me && me.keychip) document.getElementById('ccb-keychip').value = me.keychip || '';
+        if (me && me.guid) document.getElementById('ccb-guid').value = me.guid || '';
+      } catch(_e){}
+    }).catch(function(e){ console.warn('加载服务器列表失败', e); });
+  } catch(_ignore) {}
+
+  var form = document.getElementById('ccb-bind-form');
+  if (form) {
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var token = localStorage.getItem('token');
+      if (!token) { if (typeof showLoginRequired==='function') return showLoginRequired('ccb'); alert('未登录'); return; }
+      var payload = {
+        game_server: (document.getElementById('ccb-server').value || '').trim(),
+        keychip: (document.getElementById('ccb-keychip').value || '').trim(),
+        guid: (document.getElementById('ccb-guid').value || '').trim()
+      };
+      fetch(base + '/api/ccb/bind', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(async function(r){
+        if (!r.ok) throw new Error(await r.text() || '绑定失败');
+        if (typeof showSuccessMessage === 'function') showSuccessMessage('绑定成功');
+        try {
+          var me = JSON.parse(localStorage.getItem('userInfo') || '{}');
+          var merged = Object.assign({}, me || {}, payload);
+          localStorage.setItem('userInfo', JSON.stringify(merged));
+          window.currentUser = merged;
+        } catch(_e){}
+      }).catch(function(err){
+        console.error('绑定失败:', err);
+        if (typeof showErrorMessage === 'function') showErrorMessage(err.message || '绑定失败');
+      });
+    });
+  }
+
+  var unbindBtn = document.getElementById('ccb-unbind-btn');
+  if (unbindBtn) {
+    unbindBtn.addEventListener('click', function(){
+      var token = localStorage.getItem('token');
+      if (!token) { if (typeof showLoginRequired==='function') return showLoginRequired('ccb'); alert('未登录'); return; }
+      if (!confirm('确定要解绑查分信息吗？')) return;
+      fetch(base + '/api/ccb/unbind', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } })
+        .then(async function(r){
+          if (!r.ok) throw new Error(await r.text() || '解绑失败');
+          if (typeof showSuccessMessage === 'function') showSuccessMessage('解绑成功');
+          try {
+            var me = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            var merged = Object.assign({}, me || {}, { game_server: '', keychip: '', guid: '' });
+            localStorage.setItem('userInfo', JSON.stringify(merged));
+            window.currentUser = merged;
+            var k = document.getElementById('ccb-keychip'); if (k) k.value = '';
+            var g = document.getElementById('ccb-guid'); if (g) g.value = '';
+          } catch(_e){}
+        }).catch(function(err){
+          console.error('解绑失败:', err);
+          if (typeof showErrorMessage === 'function') showErrorMessage(err.message || '解绑失败');
+        });
+    });
+  }
+}
+
+// === 导出到全局（供路由层调用） ===
+window.renderCCBUserPage = (typeof renderCCBUserPage === 'function') ? renderCCBUserPage : window.renderCCBUserPage;
+window.renderSiteAdminHome = (typeof renderSiteAdminHome === 'function') ? renderSiteAdminHome : window.renderSiteAdminHome;
+window.renderCCBServersPage = (typeof renderCCBServersPage === 'function') ? renderCCBServersPage : window.renderCCBServersPage;
+window.renderCCBGamesPage = (typeof renderCCBGamesPage === 'function') ? renderCCBGamesPage : window.renderCCBGamesPage;
