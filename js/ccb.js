@@ -17,19 +17,7 @@
   }
   function secureFetch(url, options = {}) {
     const token = localStorage.getItem('token');
-    const headers = Object.assign({}
-  async function fetchWithFallback(urls) {
-    for (const u of urls) {
-      try {
-        const data = await secureFetch(u);
-        if (Array.isArray(data) || (data && typeof data === 'object')) return data;
-      } catch (e) {
-        // try next
-      }
-    }
-    throw new Error('所有候选接口均失败');
-  }
-, options.headers || {});
+    const headers = Object.assign({}, options.headers || {});
     if (token && !headers['Authorization']) headers['Authorization'] = `Bearer ${token}`;
     return fetch(url, { ...options, headers })
       .then(async (r) => {
@@ -110,16 +98,7 @@
     document.head.appendChild(style);
   }
 
-  
-  function setActiveNavForAdmin() {
-    try {
-      const links = document.querySelectorAll('.sidebar [data-page]');
-      links.forEach(el=>el.classList.remove('active'));
-      const admin = document.querySelector('.sidebar [data-page="site-admin"]');
-      if (admin) admin.classList.add('active');
-    } catch(e){}
-  }
-function renderSiteAdminHome() {
+  function renderSiteAdminHome() {
     ensureAdminStyles();
     const c = document.getElementById('content-container');
     if (!c) return;
@@ -146,7 +125,6 @@ function renderSiteAdminHome() {
 
   // --- 子页：查分服务器 ---（不再需要 game_title）
   function renderCCBServersPage() {
-    setActiveNavForAdmin();
     ensureAdminStyles();
     const c = document.getElementById('content-container');
     if (!c) return;
@@ -182,7 +160,7 @@ function renderSiteAdminHome() {
   }
 
   function loadAdminServerList_Clean() {
-    fetchWithFallback(['https://api.am-all.com.cn/api/admin/ccb/servers','https://api.am-all.com.cn/api/ccb/servers'])
+    secureFetch('https://api.am-all.com.cn/api/ccb/servers')
       .then((servers) => {
         const list = document.getElementById('server-list');
         if (!list) return;
@@ -260,7 +238,6 @@ function renderSiteAdminHome() {
 
   // --- 子页：查分游戏 ---（保留 game_title 在 ccb_game）
   function renderCCBGamesPage() {
-    setActiveNavForAdmin();
     ensureAdminStyles();
     const c = document.getElementById('content-container');
     if (!c) return;
@@ -298,7 +275,7 @@ function renderSiteAdminHome() {
   }
 
   function loadAdminGameList_Clean() {
-    fetchWithFallback(['https://api.am-all.com.cn/api/admin/ccb/games','https://api.am-all.com.cn/api/ccb/games'])
+    secureFetch('https://api.am-all.com.cn/api/ccb/games')
       .then((games) => {
         const list = document.getElementById('game-list');
         if (!list) return;
