@@ -312,8 +312,8 @@ class UserManager {
     }
   }
 
+  
   createPermissionModal() {
-    // 单例
     const existed = document.getElementById('permission-modal');
     if (existed) { this.permissionModal = existed; return; }
 
@@ -334,19 +334,12 @@ class UserManager {
       </div>
     `;
     document.body.appendChild(this.permissionModal);
-    const __pmc = this.permissionModal.querySelector('.permission-modal-content');
-    if (__pmc) __pmc.addEventListener('click', (evt)=>evt.stopPropagation());
-
-    // 弹窗内容区阻止冒泡到全局
     const pmc = this.permissionModal.querySelector('.permission-modal-content');
     if (pmc) pmc.addEventListener('click', (e) => e.stopPropagation());
-
-    this.permissionModal.addEventListener('click', (e) => {
-      if (e.target === this.permissionModal) this.hidePermissionModal();
-    });
-    this.permissionModal.querySelector('.permission-modal-close').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); this.hidePermissionModal(); } );
-    this.permissionModal.querySelector('#permission-cancel').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); this.hidePermissionModal(); } );
-    this.permissionModal.querySelector('#permission-save').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); this.savePermissions(); } );
+    this.permissionModal.addEventListener('click', (e) => { if (e.target === this.permissionModal) this.hidePermissionModal(); });
+    this.permissionModal.querySelector('.permission-modal-close').addEventListener('click', (e) => { e.preventDefault(); this.hidePermissionModal(); });
+    this.permissionModal.querySelector('#permission-cancel').addEventListener('click', (e) => { e.preventDefault(); this.hidePermissionModal(); });
+    this.permissionModal.querySelector('#permission-save').addEventListener('click', (e) => { e.preventDefault(); this.savePermissions(); });
   }
 
   async showPermissionModal(userId) {
@@ -424,14 +417,14 @@ class UserManager {
     if (this.permissionModal) this.permissionModal.classList.remove('show');
   }
 
-    async savePermissions() {
+  async savePermissions() {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('未登录');
       const userId = this.currentEditingUserId || this.editingUserId || this.userId;
       if (!userId) throw new Error('缺少用户 ID');
 
-      const root = this.permissionModal || __getPermissionModalRoot();
+      const root = this.permissionModal;
       const rows = (root && root.querySelectorAll('[data-perm-page]')) || [];
       const payload = {};
       rows.forEach(input => {
@@ -447,21 +440,16 @@ class UserManager {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      const data = await resp.json().catch(()=>({}));
+      const data = await resp.json().catch(() => ({}));
       if (!resp.ok || data.success === false) throw new Error(data.error || '保存失败');
 
       (window.toast && toast.success) ? toast.success('权限已保存') : console.log('权限已保存');
-      // 关闭弹窗（常见选择器兜底）
+
       try {
-        const dlg = (root && root.querySelector('dialog[open]')) || null;
-        if (dlg && typeof dlg.close === 'function') dlg.close();
-        const modal = document.getElementById('user-permission-modal') || document.getElementById('permission-modal') || root;
-        if (modal) modal.style.display = 'none';
-        const overlay = document.querySelector('.modal-backdrop,.overlay');
-        if (overlay) overlay.remove();
+        const modal = document.getElementById('permission-modal') || root;
+        if (modal) modal.classList.remove('show');
       } catch (_) {}
 
-      // 若编辑的是当前登录用户，刷新侧边栏可见性
       try {
         if (window.currentUser && (Number(window.currentUser.id) === Number(userId)) && typeof updateSidebarVisibility === 'function') {
           await updateSidebarVisibility(window.currentUser);
@@ -471,38 +459,7 @@ class UserManager {
       console.error('保存权限失败:', err);
       (window.toast && toast.error) ? toast.error('保存权限失败: ' + (err && err.message || '未知错误')) : alert('保存权限失败: ' + (err && err.message || '未知错误'));
     }
-  });
-
-      const userId = this.currentEditingUserId;
-      const resp = await fetch(`https://api.am-all.com.cn/api/admin/users/${userId}/permissions`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!resp.ok) {
-        const txt = await resp.text();
-        throw new Error(txt || '保存权限失败');
-      }
-
-      if (typeof showSuccessMessage === 'function') showSuccessMessage('权限更新成功');
-      this.hidePermissionModal();
-
-      // 若给自己授权，刷新侧栏可见性
-      try {
-        const me = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        if (me && me.id && Number(me.id) === Number(userId) && typeof updateSidebarVisibility === 'function') {
-          localStorage.removeItem('userPermissions');
-          await updateSidebarVisibility(me);
-        }
-      } catch (e) {
-        console.warn('刷新侧栏失败（非致命）:', e);
-      }
-    } catch (err) {
-      console.error('保存权限失败:', err);
-      if (typeof showErrorMessage === 'function') showErrorMessage('保存权限失败：' + (err.message || '未知错误'));
-    }
   }
-}
 
 // 全局初始化（幂等）
 window.initUserManager = function() {
