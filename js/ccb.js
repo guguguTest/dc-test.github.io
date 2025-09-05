@@ -492,289 +492,25 @@ function displayCCBInfoInSettings() {
 }
 
 // 初始化网站管理页面
-function initSiteAdminPage() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        showLoginRequired('site-admin');
-        return;
-    }
-    
-    // 检查用户是否为管理员
-    if (!currentUser || currentUser.user_rank < 5) {
-        showErrorMessage('需要管理员权限才能访问此页面');
-        loadPage('home');
-        return;
-    }
-    
-    const contentContainer = document.getElementById('content-container');
-    
-    contentContainer.innerHTML = `
-        <div class="section">
-            <h1 class="page-title">网站管理</h1>
-            <div class="admin-container">
-                <div class="admin-card">
-                    <h3>查分服务器设置</h3>
-                    <form id="server-form" class="admin-form">
-                        <div class="form-group">
-                            <label for="server-name">服务器名称</label>
-                            <input type="text" id="server-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="server-url">服务器地址</label>
-                            <input type="text" id="server-url" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="server-game">游戏代码</label>
-                            <input type="text" id="server-game" required>
-                        </div>
-                        <button type="submit" class="ccb-btn ccb-btn-primary">添加服务器</button>
-                    </form>
-                    
-                    <div class="admin-list" id="server-list">
-                        <h4>服务器列表</h4>
-                        <!-- 服务器列表将通过JS动态添加 -->
-                    </div>
-                </div>
-                
-                <div class="admin-card">
-                    <h3>查分游戏设置</h3>
-                    <form id="game-form" class="admin-form">
-                        <div class="form-group">
-                            <label for="game-name">游戏名称</label>
-                            <input type="text" id="game-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="game-title">游戏代码</label>
-                            <input type="text" id="game-title" required>
-                        </div>
-                        <button type="submit" class="ccb-btn ccb-btn-primary">添加游戏</button>
-                    </form>
-                    
-                    <div class="admin-list" id="game-list">
-                        <h4>游戏列表</h4>
-                        <!-- 游戏列表将通过JS动态添加 -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // 加载服务器和游戏列表
-    loadAdminServerList();
-    loadAdminGameList();
-    
-    // 绑定表单提交事件
-    document.getElementById('server-form').addEventListener('submit', handleServerAdd);
-    document.getElementById('game-form').addEventListener('submit', handleGameAdd);
-}
+
 
 // 加载管理页面的服务器列表
-function loadAdminServerList() {
-    secureFetch('https://api.am-all.com.cn/api/ccb/servers')
-        .then(servers => {
-            const serverList = document.getElementById('server-list');
-            
-            if (servers.length === 0) {
-                serverList.innerHTML += '<p>暂无服务器</p>';
-                return;
-            }
-            
-            servers.forEach(server => {
-                const item = document.createElement('div');
-                item.className = 'admin-item';
-                item.innerHTML = `
-                    <div>
-                        <strong>${server.server_name}</strong> - ${server.server_url} (${server.game_title})
-                    </div>
-                    <div class="admin-item-actions">
-                        <button class="ccb-btn ccb-btn-secondary" data-id="${server.id}" onclick="deleteServer(${server.id})">删除</button>
-                    </div>
-                `;
-                serverList.appendChild(item);
-            });
-        })
-        .catch(error => {
-            console.error('加载服务器列表失败:', error);
-            showErrorMessage('加载服务器列表失败');
-        });
-}
+
 
 // 加载管理页面的游戏列表
-function loadAdminGameList() {
-    secureFetch('https://api.am-all.com.cn/api/ccb/games')
-        .then(games => {
-            const gameList = document.getElementById('game-list');
-            
-            if (games.length === 0) {
-                gameList.innerHTML += '<p>暂无游戏</p>';
-                return;
-            }
-            
-            games.forEach(game => {
-                const item = document.createElement('div');
-                item.className = 'admin-item';
-                item.innerHTML = `
-                    <div>
-                        <strong>${game.game_name}</strong> (${game.game_title})
-                    </div>
-                    <div class="admin-item-actions">
-                        <button class="ccb-btn ccb-btn-secondary" data-id="${game.id}" onclick="deleteGame(${game.id})">删除</button>
-                    </div>
-                `;
-                gameList.appendChild(item);
-            });
-        })
-        .catch(error => {
-            console.error('加载游戏列表失败:', error);
-            showErrorMessage('加载游戏列表失败');
-        });
-}
+
 
 // 处理添加服务器
-function handleServerAdd(e) {
-    e.preventDefault();
-    
-    const name = document.getElementById('server-name').value;
-    const url = document.getElementById('server-url').value;
-    const game = document.getElementById('server-game').value;
-    
-    if (!name || !url || !game) {
-        showErrorMessage('请填写所有字段');
-        return;
-    }
-    
-    const token = localStorage.getItem('token');
-    
-    secureFetch('https://api.am-all.com.cn/api/admin/ccb/servers', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            server_name: name,
-            server_url: url,
-            game_title: game
-        })
-    })
-    .then(result => {
-        if (result.success) {
-            showSuccessMessage('服务器添加成功');
-            document.getElementById('server-form').reset();
-            // 重新加载服务器列表
-            document.getElementById('server-list').innerHTML = '<h4>服务器列表</h4>';
-            loadAdminServerList();
-        } else {
-            showErrorMessage(result.error || '添加服务器失败');
-        }
-    })
-    .catch(error => {
-        console.error('添加服务器失败:', error);
-        showErrorMessage('添加服务器失败: ' + (error.error || '服务器错误'));
-    });
-}
+
 
 // 处理添加游戏
-function handleGameAdd(e) {
-    e.preventDefault();
-    
-    const name = document.getElementById('game-name').value;
-    const title = document.getElementById('game-title').value;
-    
-    if (!name || !title) {
-        showErrorMessage('请填写所有字段');
-        return;
-    }
-    
-    const token = localStorage.getItem('token');
-    
-    secureFetch('https://api.am-all.com.cn/api/admin/ccb/games', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            game_name: name,
-            game_title: title
-        })
-    })
-    .then(result => {
-        if (result.success) {
-            showSuccessMessage('游戏添加成功');
-            document.getElementById('game-form').reset();
-            // 重新加载游戏列表
-            document.getElementById('game-list').innerHTML = '<h4>游戏列表</h4>';
-            loadAdminGameList();
-        } else {
-            showErrorMessage(result.error || '添加游戏失败');
-        }
-    })
-    .catch(error => {
-        console.error('添加游戏失败:', error);
-        showErrorMessage('添加游戏失败: ' + (error.error || '服务器错误'));
-    });
-}
+
 
 // 删除服务器
-function deleteServer(id) {
-    if (!confirm('确定要删除这个服务器吗？')) {
-        return;
-    }
-    
-    const token = localStorage.getItem('token');
-    
-    secureFetch(`https://api.am-all.com.cn/api/admin/ccb/servers/${id}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(result => {
-        if (result.success) {
-            showSuccessMessage('服务器删除成功');
-            // 重新加载服务器列表
-            document.getElementById('server-list').innerHTML = '<h4>服务器列表</h4>';
-            loadAdminServerList();
-        } else {
-            showErrorMessage(result.error || '删除服务器失败');
-        }
-    })
-    .catch(error => {
-        console.error('删除服务器失败:', error);
-        showErrorMessage('删除服务器失败: ' + (error.error || '服务器错误'));
-    });
-}
+
 
 // 删除游戏
-function deleteGame(id) {
-    if (!confirm('确定要删除这个游戏吗？')) {
-        return;
-    }
-    
-    const token = localStorage.getItem('token');
-    
-    secureFetch(`https://api.am-all.com.cn/api/admin/ccb/games/${id}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(result => {
-        if (result.success) {
-            showSuccessMessage('游戏删除成功');
-            // 重新加载游戏列表
-            document.getElementById('game-list').innerHTML = '<h4>游戏列表</h4>';
-            loadAdminGameList();
-        } else {
-            showErrorMessage(result.error || '删除游戏失败');
-        }
-    })
-    .catch(error => {
-        console.error('删除游戏失败:', error);
-        showErrorMessage('删除游戏失败: ' + (error.error || '服务器错误'));
-    });
-}
+
 
 // 保存查分图片
 function saveCCBImage() {
@@ -810,9 +546,9 @@ document.addEventListener("DOMContentLoaded", function() {
         if (pageId === 'ccb') {
             initCCBPage();
             updateActiveMenuItem(pageId); // 添加这一行
+        /* site-admin 路由移交给 siteAdmin.js / spa.js 处理 */
         } else if (pageId === 'site-admin') {
-            initSiteAdminPage();
-            updateActiveMenuItem(pageId); // 添加这一行
+            originalLoadPage(pageId);
         } else {
             originalLoadPage(pageId);
             

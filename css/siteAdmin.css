@@ -1,0 +1,132 @@
+/* siteAdmin.css — 网站管理（独立）
+   - 一级页面（入口卡片）靠左排列；
+   - 二级页面（具体设置页）居中；
+   - 表单卡片不至于过宽；
+   - 输入框宽度约 40 字符（max-width: 30em）；
+   - 按钮增加间距并在移动端可换行；
+   - 按钮配色：新增/编辑/保存=蓝色；删除=红色；返回/清空=灰色。
+*/
+
+/* 一级页容器：不居中，靠左展开 */
+.admin-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  margin: 0;
+  padding: 16px 0;
+}
+
+/* 二级页容器：添加 .centered 才居中 */
+.admin-container.centered {
+  max-width: 640px;   /* 控制宽度不要太宽 */
+  margin: 0 auto;
+}
+
+/* 一级页面：卡片栅格靠左，自适应多列 */
+.admin-entry-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  justify-items: stretch;  /* 不居中，填满列 */
+}
+
+/* 通用卡片样式 */
+.admin-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  transition: transform .1s ease, box-shadow .1s ease;
+}
+.admin-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,.06);
+}
+
+/* 一级入口卡片 */
+.admin-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+.admin-entry-title{
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+  border-bottom: 2px solid #3b82f6;
+  padding-bottom: 6px;
+}
+.admin-entry-desc{
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 36px;
+}
+.admin-actions{ margin-top: 8px; display:flex; justify-content:flex-end; }
+
+/* 二级页面：表单卡片与表单布局（垂直排列） */
+.admin-form-card {
+  background:#fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+
+.admin-form { display: flex; flex-direction: column; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.admin-form label { font-weight: 600; color: #1f2937; }
+.admin-form input {
+  max-width: 30em;  /* 约 40 字符宽度 */
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.admin-form input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.2);
+}
+
+/* 列表与列表项 */
+.admin-list { margin-top: 8px; }
+.admin-list h4 { font-size: 14px; margin: 8px 0 10px; color:#111827; }
+.admin-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.admin-item:last-child { border-bottom: none; }
+.admin-item-meta { color:#374151; font-size: 13px; }
+
+/* 按钮（间距 & 配色） */
+.admin-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 12px;          /* 增加按钮间距 */
+  flex-wrap: wrap;    /* 移动端自动换行 */
+}
+.admin-btn { padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; }
+.admin-btn-primary { background: #3b82f6; color: #fff; }      /* 新增/保存/编辑：蓝色 */
+.admin-btn-primary:hover { background: #2563eb; }
+.admin-btn-danger { background: #ef4444; color: #fff; }       /* 删除：红色 */
+.admin-btn-danger:hover { background: #dc2626; }
+.admin-btn-ghost { background: #f3f4f6; color:#111827; }      /* 次级/返回/清空：灰 */
+.admin-btn-ghost:hover { background: #e5e7eb; }
+
+.breadcrumb { color:#6b7280; font-size: 13px; }
+.breadcrumb a { color:#3b82f6; text-decoration:none; }
+.breadcrumb a:hover{ text-decoration:underline; }
+
+.page-title { font-size: 20px; font-weight: 700; color:#111827; margin: 6px 0; }
+.empty { color:#6b7280; font-size: 13px; padding: 8px 0; }
