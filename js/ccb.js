@@ -1,498 +1,855 @@
+// ccb.js - 游戏查分系统功能
+let queryCooldown = false;
+let cooldownTimer = null;
 
-/* ccb.js — 查分相关前端逻辑（卡片式管理入口 + 子页）
- * 变更要点：
- * 1) 管理首页改为卡片式入口（“查分服务器设置 / 查分游戏设置”）
- * 2) 新增子页：site-admin-ccb-servers / site-admin-ccb-games
- * 3) 服务器新增/列表不再涉及 game_title（由 ccb_game 专管）
- * 4) 列表加载前统一清空，避免重复条目
- * 5) 防止重复绑定：每次渲染页面都整体重绘，再绑定事件
- */
-
-(function(){
-  function showErrorMessage(msg) { window?.toast?.error ? toast.error(msg) : alert(msg); }
-  function showSuccessMessage(msg) { window?.toast?.success ? toast.success(msg) : alert(msg); }
-  function showLoginRequired(pageId) {
-    const c = document.getElementById('content-container');
-    if (c) c.innerHTML = `<div class="section"><p>请先登录再访问此页面</p></div>`;
-  }
-  function secureFetch(url, options = {}) {
+// 初始化查分页面
+function initCCBPage() {
     const token = localStorage.getItem('token');
-    const headers = Object.assign({}, options.headers || {});
-    if (token && !headers['Authorization']) headers['Authorization'] = `Bearer ${token}`;
-    return fetch(url, { ...options, headers })
-      .then(async (r) => {
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok) throw data || { error: '请求失败' };
-        return data;
-      });
-  }
-
-  // 在用户设置页中展示查分绑定信息（保持原有行为）
-  function displayCCBInfoInSettings() {
-    const settingsContainer = document.getElementById('settings-extra');
-    if (!settingsContainer) return;
-
-    const bound = (window.currentUser && window.currentUser.keychip && window.currentUser.guid);
-    const ccbInfoSection = document.createElement('div');
-    ccbInfoSection.className = 'card';
-    ccbInfoSection.innerHTML = `
-      <h3>查分绑定</h3>
-      ${bound ? `
-        <div>
-          <p><strong>查分服务器:</strong> ${window.currentUser.game_server || '-'}</p>
-          <p><strong>keychip:</strong> ${window.currentUser.keychip}</p>
-          <p><strong>游戏卡号:</strong> ${window.currentUser.guid}</p>
-          <button type="button" class="ccb-btn ccb-btn-secondary" id="settings-unbind-btn">解绑查分信息</button>
-        </div>
-      ` : '<p>未绑定查分信息</p>'}
-    `;
-    settingsContainer.appendChild(ccbInfoSection);
-
-    const unbindBtn = document.getElementById('settings-unbind-btn');
-    if (unbindBtn) unbindBtn.addEventListener('click', handleUnbind);
-  }
-
-  function handleUnbind() {
-    secureFetch('https://api.am-all.com.cn/api/ccb/unbind', { method: 'POST' })
-      .then(() => {
-        showSuccessMessage('解绑成功');
-        window.loadPage && window.loadPage('user-settings');
-      })
-      .catch((e) => {
-        console.error(e);
-        showErrorMessage('解绑失败');
-      });
-  }
-
-  // --- 管理首页：卡片式入口 ---
-  function ensureAdminStyles(){
-    if (document.getElementById('admin-card-styles')) return;
-    const style = document.createElement('style');
-    style.id = 'admin-card-styles';
-    style.textContent = `
-      .admin-card-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 16px;
-        margin-top: 12px;
-      }
-      .admin-card {
-        border: 1px solid rgba(0,0,0,0.1);
-        border-radius: 10px;
-        padding: 16px;
-        background: #fff;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-      }
-      .admin-card.clickable { cursor: pointer; }
-      .admin-card h3 { margin: 0 0 8px; font-size: 16px; }
-      .admin-card p { margin: 0 0 12px; color: #666; font-size: 13px; }
-      .card-actions { display: flex; gap: 8px; }
-      .ccb-btn { padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; background:#f7f7f7; }
-      .ccb-btn-primary { background: #3b82f6; color: #fff; border-color: #3b82f6; }
-      .ccb-btn-secondary { background: #f3f4f6; color: #111; border-color: #e5e7eb; }
-      .admin-container { margin-top: 12px; }
-      .admin-form .form-group { margin-bottom: 10px; }
-      .admin-list { margin-top: 16px; }
-      .admin-item { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom: 1px dashed #eee; }
-    `;
-    document.head.appendChild(style);
-  }
-
-  function renderSiteAdminHome() {
-    ensureAdminStyles();
-    const c = document.getElementById('content-container');
-    if (!c) return;
-    c.innerHTML = `
-      <div class="section">
-        <h1 class="page-title">网站管理</h1>
-        <div class="admin-card-grid">
-          <div class="admin-card clickable" id="card-ccb-servers">
-            <h3>查分服务器设置</h3>
-            <p>管理查分服务器地址与名称。</p>
-            <div class="card-actions"><button class="ccb-btn ccb-btn-primary">进入</button></div>
-          </div>
-          <div class="admin-card clickable" id="card-ccb-games">
-            <h3>查分游戏设置</h3>
-            <p>管理可查询的游戏与代码。</p>
-            <div class="card-actions"><button class="ccb-btn ccb-btn-primary">进入</button></div>
-          </div>
-        </div>
-      </div>
-    `;
-    document.getElementById('card-ccb-servers')?.addEventListener('click', () => window.loadPage('site-admin-ccb-servers'));
-    document.getElementById('card-ccb-games')?.addEventListener('click', () => window.loadPage('site-admin-ccb-games'));
-  }
-
-  // --- 子页：查分服务器 ---（不再需要 game_title）
-  function renderCCBServersPage() {
-    ensureAdminStyles();
-    const c = document.getElementById('content-container');
-    if (!c) return;
-    c.innerHTML = `
-      <div class="section">
-        <h1 class="page-title">查分服务器设置</h1>
-        <div class="admin-container">
-          <div class="admin-card">
-            <h3>新增服务器</h3>
-            <form id="server-form" class="admin-form">
-              <div class="form-group">
-                <label for="server-name">服务器名称</label>
-                <input type="text" id="server-name" required>
-              </div>
-              <div class="form-group">
-                <label for="server-url">服务器地址</label>
-                <input type="text" id="server-url" required>
-              </div>
-              <button type="submit" class="ccb-btn ccb-btn-primary">添加服务器</button>
-              <button type="button" id="btn-back-admin" class="ccb-btn ccb-btn-secondary" style="margin-left:8px;">返回管理首页</button>
-            </form>
-
-            <div class="admin-list" id="server-list">
-              <h4>服务器列表</h4>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    document.getElementById('server-form').addEventListener('submit', handleServerAdd_NoGameTitle);
-    document.getElementById('btn-back-admin')?.addEventListener('click', () => window.loadPage('site-admin'));
-    loadAdminServerList_Clean();
-  }
-
-  function loadAdminServerList_Clean() {
-    secureFetch('https://api.am-all.com.cn/api/ccb/servers')
-      .then((servers) => {
-        const list = document.getElementById('server-list');
-        if (!list) return;
-        // 防重复：每次加载先清空成标题
-        list.innerHTML = '<h4>服务器列表</h4>';
-
-        if (!servers || servers.length === 0) {
-          list.innerHTML += '<p>暂无服务器</p>';
-          return;
-        }
-
-        servers.forEach((server) => {
-          const item = document.createElement('div');
-          item.className = 'admin-item';
-          item.innerHTML = `
-            <div>
-              <strong>${server.server_name}</strong> - ${server.server_url}
-            </div>
-            <div class="admin-item-actions">
-              <button class="ccb-btn ccb-btn-secondary" data-id="${server.id}">删除</button>
-            </div>
-          `;
-          item.querySelector('button[data-id]').addEventListener('click', () => deleteServer(server.id));
-          list.appendChild(item);
-        });
-      })
-      .catch((err) => {
-        console.error('加载服务器列表失败:', err);
-        showErrorMessage('加载服务器列表失败');
-      });
-  }
-
-  function handleServerAdd_NoGameTitle(e) {
-    e.preventDefault();
-    const name = document.getElementById('server-name').value.trim();
-    const url  = document.getElementById('server-url').value.trim();
-    if (!name || !url) return showErrorMessage('请填写所有字段');
-
-    secureFetch('https://api.am-all.com.cn/api/admin/ccb/servers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ server_name: name, server_url: url })
-    })
-    .then((ret) => {
-      if (ret && ret.success) {
-        showSuccessMessage('服务器添加成功');
-        document.getElementById('server-form').reset();
-        loadAdminServerList_Clean();
-      } else {
-        showErrorMessage(ret.error || '添加服务器失败');
-      }
-    })
-    .catch((err) => {
-      console.error('添加服务器失败:', err);
-      showErrorMessage('添加服务器失败');
-    });
-  }
-
-  function deleteServer(id) {
-    if (!confirm('确定要删除这个服务器吗？')) return;
-    secureFetch(`https://api.am-all.com.cn/api/admin/ccb/servers/${id}`, { method: 'DELETE' })
-    .then((ret) => {
-      if (ret && ret.success) {
-        showSuccessMessage('服务器删除成功');
-        loadAdminServerList_Clean();
-      } else {
-        showErrorMessage(ret.error || '删除服务器失败');
-      }
-    })
-    .catch((err) => {
-      console.error('删除服务器失败:', err);
-      showErrorMessage('删除服务器失败');
-    });
-  }
-
-  // --- 子页：查分游戏 ---（保留 game_title 在 ccb_game）
-  function renderCCBGamesPage() {
-    ensureAdminStyles();
-    const c = document.getElementById('content-container');
-    if (!c) return;
-
-    c.innerHTML = `
-      <div class="section">
-        <h1 class="page-title">查分游戏设置</h1>
-        <div class="admin-container">
-          <div class="admin-card">
-            <h3>新增游戏</h3>
-            <form id="game-form" class="admin-form">
-              <div class="form-group">
-                <label for="game-name">游戏名称</label>
-                <input type="text" id="game-name" required>
-              </div>
-              <div class="form-group">
-                <label for="game-title">游戏代码</label>
-                <input type="text" id="game-title" required>
-              </div>
-              <button type="submit" class="ccb-btn ccb-btn-primary">添加游戏</button>
-              <button type="button" id="btn-back-admin2" class="ccb-btn ccb-btn-secondary" style="margin-left:8px;">返回管理首页</button>
-            </form>
-
-            <div class="admin-list" id="game-list">
-              <h4>游戏列表</h4>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.getElementById('game-form').addEventListener('submit', handleGameAdd);
-    document.getElementById('btn-back-admin2')?.addEventListener('click', () => window.loadPage('site-admin'));
-    loadAdminGameList_Clean();
-  }
-
-  function loadAdminGameList_Clean() {
-    secureFetch('https://api.am-all.com.cn/api/ccb/games')
-      .then((games) => {
-        const list = document.getElementById('game-list');
-        if (!list) return;
-
-        // 防重复：每次加载先清空成标题
-        list.innerHTML = '<h4>游戏列表</h4>';
-
-        if (!games || games.length === 0) {
-          list.innerHTML += '<p>暂无游戏</p>';
-          return;
-        }
-
-        games.forEach((game) => {
-          const item = document.createElement('div');
-          item.className = 'admin-item';
-          item.innerHTML = `
-            <div>
-              <strong>${game.game_name}</strong> (${game.game_title})
-            </div>
-            <div class="admin-item-actions">
-              <button class="ccb-btn ccb-btn-secondary" data-id="${game.id}">删除</button>
-            </div>
-          `;
-          item.querySelector('button[data-id]').addEventListener('click', () => deleteGame(game.id));
-          list.appendChild(item);
-        });
-      })
-      .catch((err) => {
-        console.error('加载游戏列表失败:', err);
-        showErrorMessage('加载游戏列表失败');
-      });
-  }
-
-  function handleGameAdd(e) {
-    e.preventDefault();
-    const name  = document.getElementById('game-name').value.trim();
-    const title = document.getElementById('game-title').value.trim();
-    if (!name || !title) return showErrorMessage('请填写所有字段');
-
-    secureFetch('https://api.am-all.com.cn/api/admin/ccb/games', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ game_name: name, game_title: title })
-    })
-    .then((ret) => {
-      if (ret && ret.success) {
-        showSuccessMessage('游戏添加成功');
-        document.getElementById('game-form').reset();
-        loadAdminGameList_Clean();
-      } else {
-        showErrorMessage(ret.error || '添加游戏失败');
-      }
-    })
-    .catch((err) => {
-      console.error('添加游戏失败:', err);
-      showErrorMessage('添加游戏失败');
-    });
-  }
-
-  function deleteGame(id) {
-    if (!confirm('确定要删除这个游戏吗？')) return;
-    secureFetch(`https://api.am-all.com.cn/api/admin/ccb/games/${id}`, { method: 'DELETE' })
-    .then((ret) => {
-      if (ret && ret.success) {
-        showSuccessMessage('游戏删除成功');
-        loadAdminGameList_Clean();
-      } else {
-        showErrorMessage(ret.error || '删除游戏失败');
-      }
-    })
-    .catch((err) => {
-      console.error('删除游戏失败:', err);
-      showErrorMessage('删除游戏失败');
-    });
-  }
-
-  // --- 接入 SPA 路由 ---
-  document.addEventListener('DOMContentLoaded', function () {
-    if (!window.loadPage) return;
-    const originalLoadPage = window.loadPage;
-
-    window.loadPage = function (pageId) {
-      if (pageId === 'site-admin' || pageId === 'site-admin-ccb-servers' || pageId === 'site-admin-ccb-games') {
-        const token = localStorage.getItem('token');
-        if (!token) return showLoginRequired(pageId);
-        if (!window.currentUser || window.currentUser.user_rank < 5) {
-          showErrorMessage('需要管理员权限才能访问此页面');
-          return originalLoadPage('home');
-        }
-      }
-
-      if (pageId === 'site-admin') return renderSiteAdminHome();
-      if (pageId === 'site-admin-ccb-servers') return renderCCBServersPage();
-      if (pageId === 'site-admin-ccb-games') return renderCCBGamesPage();
-
-      return originalLoadPage(pageId);
-    };
-  });
-
-  // 可选：如果你的用户设置页需要注入查分信息
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    displayCCBInfoInSettings();
-  } else {
-    document.addEventListener('DOMContentLoaded', displayCCBInfoInSettings);
-  }
-})();
-
-
-// === 渲染：用户查分（绑定/解绑） ===
-function renderCCBUserPage() {
-  var c = document.getElementById('content-container') || document.body;
-  if (!c) return;
-  c.innerHTML = [
-    '<div class="section">',
-      '<h1 class="page-title">游戏查分</h1>',
-      '<div class="admin-container">',
-        '<div class="admin-card">',
-          '<h3>绑定查分信息</h3>',
-          '<form id="ccb-bind-form" class="admin-form">',
-            '<div class="form-group">',
-              '<label for="ccb-server">查分服务器</label>',
-              '<select id="ccb-server" required></select>',
-            '</div>',
-            '<div class="form-group">',
-              '<label for="ccb-keychip">keychip</label>',
-              '<input type="text" id="ccb-keychip" required />',
-            '</div>',
-            '<div class="form-group">',
-              '<label for="ccb-guid">游戏卡号</label>',
-              '<input type="text" id="ccb-guid" required />',
-            '</div>',
-            '<div style="display:flex;gap:8px;flex-wrap:wrap;">',
-              '<button type="submit" class="ccb-btn ccb-btn-primary">保存绑定</button>',
-              '<button type="button" id="ccb-unbind-btn" class="ccb-btn ccb-btn-secondary">解绑</button>',
-            '</div>',
-          '</form>',
-        '</div>',
-      '</div>',
-    '</div>'
-  ].join('');
-
-  var base = (window.API_BASE_URL || 'https://api.am-all.com.cn');
-  try {
-    fetch(base + '/api/ccb/servers').then(function(r){ return r.json(); }).then(function(list){
-      var sel = document.getElementById('ccb-server');
-      if (!sel) return;
-      sel.innerHTML = (list || []).map(function(s){
-        return '<option value="' + (s.server_name || '') + '">' + (s.server_name || '') + (s.server_url ? (' - ' + s.server_url) : '') + '</option>';
-      }).join('');
-      try {
-        var me = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        if (me && me.game_server && sel.querySelector('option[value="' + me.game_server + '"]')) sel.value = me.game_server;
-        if (me && me.keychip) document.getElementById('ccb-keychip').value = me.keychip || '';
-        if (me && me.guid) document.getElementById('ccb-guid').value = me.guid || '';
-      } catch(_e){}
-    }).catch(function(e){ console.warn('加载服务器列表失败', e); });
-  } catch(_ignore) {}
-
-  var form = document.getElementById('ccb-bind-form');
-  if (form) {
-    form.addEventListener('submit', function(e){
-      e.preventDefault();
-      var token = localStorage.getItem('token');
-      if (!token) { if (typeof showLoginRequired==='function') return showLoginRequired('ccb'); alert('未登录'); return; }
-      var payload = {
-        game_server: (document.getElementById('ccb-server').value || '').trim(),
-        keychip: (document.getElementById('ccb-keychip').value || '').trim(),
-        guid: (document.getElementById('ccb-guid').value || '').trim()
-      };
-      fetch(base + '/api/ccb/bind', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).then(async function(r){
-        if (!r.ok) throw new Error(await r.text() || '绑定失败');
-        if (typeof showSuccessMessage === 'function') showSuccessMessage('绑定成功');
-        try {
-          var me = JSON.parse(localStorage.getItem('userInfo') || '{}');
-          var merged = Object.assign({}, me || {}, payload);
-          localStorage.setItem('userInfo', JSON.stringify(merged));
-          window.currentUser = merged;
-        } catch(_e){}
-      }).catch(function(err){
-        console.error('绑定失败:', err);
-        if (typeof showErrorMessage === 'function') showErrorMessage(err.message || '绑定失败');
-      });
-    });
-  }
-
-  var unbindBtn = document.getElementById('ccb-unbind-btn');
-  if (unbindBtn) {
-    unbindBtn.addEventListener('click', function(){
-      var token = localStorage.getItem('token');
-      if (!token) { if (typeof showLoginRequired==='function') return showLoginRequired('ccb'); alert('未登录'); return; }
-      if (!confirm('确定要解绑查分信息吗？')) return;
-      fetch(base + '/api/ccb/unbind', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } })
-        .then(async function(r){
-          if (!r.ok) throw new Error(await r.text() || '解绑失败');
-          if (typeof showSuccessMessage === 'function') showSuccessMessage('解绑成功');
-          try {
-            var me = JSON.parse(localStorage.getItem('userInfo') || '{}');
-            var merged = Object.assign({}, me || {}, { game_server: '', keychip: '', guid: '' });
-            localStorage.setItem('userInfo', JSON.stringify(merged));
-            window.currentUser = merged;
-            var k = document.getElementById('ccb-keychip'); if (k) k.value = '';
-            var g = document.getElementById('ccb-guid'); if (g) g.value = '';
-          } catch(_e){}
-        }).catch(function(err){
-          console.error('解绑失败:', err);
-          if (typeof showErrorMessage === 'function') showErrorMessage(err.message || '解绑失败');
-        });
-    });
-  }
+    if (!token) {
+        showLoginRequired('ccb');
+        return;
+    }
+    
+    // 检查用户组级别
+    if (!currentUser || currentUser.user_rank <= 0) {
+        showErrorMessage('您的用户组级别不足，无法使用查分功能');
+        loadPage('home');
+        return;
+    }
+    
+    // 直接检查当前用户信息中的绑定状态
+    if (currentUser.game_server && currentUser.keychip && currentUser.guid) {
+        renderQueryPage(currentUser);
+    } else {
+        // 如果没有绑定信息，从服务器获取最新用户信息
+        checkUserBinding();
+    }
 }
 
-// === 导出到全局（供路由层调用） ===
-window.renderCCBUserPage = (typeof renderCCBUserPage === 'function') ? renderCCBUserPage : window.renderCCBUserPage;
-window.renderSiteAdminHome = (typeof renderSiteAdminHome === 'function') ? renderSiteAdminHome : window.renderSiteAdminHome;
-window.renderCCBServersPage = (typeof renderCCBServersPage === 'function') ? renderCCBServersPage : window.renderCCBServersPage;
-window.renderCCBGamesPage = (typeof renderCCBGamesPage === 'function') ? renderCCBGamesPage : window.renderCCBGamesPage;
+// 检查用户绑定状态
+function checkUserBinding() {
+    const token = localStorage.getItem('token');
+    
+    secureFetch('https://api.am-all.com.cn/api/user', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(user => {
+        // 检查用户是否已绑定查分信息
+        if (user.game_server && user.keychip && user.guid) {
+            renderQueryPage(user);
+        } else {
+            renderBindingPage();
+        }
+    })
+    .catch(error => {
+        console.error('获取用户信息失败:', error);
+        showErrorMessage('获取用户信息失败');
+    });
+}
+
+// 渲染绑定页面
+function renderBindingPage() {
+    const contentContainer = document.getElementById('content-container');
+    
+    contentContainer.innerHTML = `
+        <div class="section">
+            <h1 class="page-title">游戏查分 - 绑定信息</h1>
+            <div class="ccb-container">
+                <div class="ccb-section">
+                    <h2 class="ccb-title">绑定查分信息</h2>
+                    <p>请填写以下信息以使用查分功能：</p>
+                    
+                    <form id="ccb-binding-form" class="ccb-form">
+                        <div class="form-group">
+                            <label for="server-select">选择服务器</label>
+                            <select id="server-select" required>
+                                <option value="">请选择服务器</option>
+                                <!-- 服务器选项将通过JS动态添加 -->
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="guid-input">游戏卡号</label>
+                            <input type="text" id="guid-input" required placeholder="请输入游戏卡号">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="keychip-input">KeyChip</label>
+                            <input type="text" id="keychip-input" required placeholder="请输入KeyChip">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="default-keychip">
+                                <label for="default-keychip">使用默认KeyChip</label>
+                            </div>
+                        </div>
+                        
+                        <div class="ccb-actions">
+                            <button type="submit" class="ccb-btn ccb-btn-primary">绑定信息</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 加载服务器列表
+    loadServerList();
+    
+    // 绑定表单提交事件
+    document.getElementById('ccb-binding-form').addEventListener('submit', handleBindingSubmit);
+    
+    // 绑定默认KeyChip复选框事件
+    document.getElementById('default-keychip').addEventListener('change', function() {
+        const keychipInput = document.getElementById('keychip-input');
+        if (this.checked) {
+            keychipInput.value = 'A63E01A8888';
+            keychipInput.disabled = true;
+        } else {
+            keychipInput.value = '';
+            keychipInput.disabled = false;
+        }
+    });
+}
+
+// 加载服务器列表
+function loadServerList() {
+    secureFetch('https://api.am-all.com.cn/api/ccb/servers')
+        .then(servers => {
+            const serverSelect = document.getElementById('server-select');
+            
+            servers.forEach(server => {
+                const option = document.createElement('option');
+                option.value = server.server_url;
+                option.textContent = server.server_name;
+                serverSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('加载服务器列表失败:', error);
+            showErrorMessage('加载服务器列表失败');
+        });
+}
+
+// 处理绑定表单提交
+function handleBindingSubmit(e) {
+    e.preventDefault();
+    
+    const server = document.getElementById('server-select').value;
+    const keychip = document.getElementById('keychip-input').value;
+    const guid = document.getElementById('guid-input').value;
+    
+    if (!server || !keychip || !guid) {
+        showErrorMessage('请填写所有必填字段');
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    
+    secureFetch('https://api.am-all.com.cn/api/ccb/bind', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            game_server: server,
+            keychip: keychip,
+            guid: guid
+        })
+    })
+    .then(result => {
+        if (result.success) {
+            showSuccessMessage('绑定成功');
+            // 更新当前用户信息
+            currentUser.game_server = server;
+            currentUser.keychip = keychip;
+            currentUser.guid = guid;
+            
+            // 保存更新后的用户信息到本地存储
+            localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            
+            // 重新渲染页面
+            renderQueryPage(currentUser);
+        } else {
+            showErrorMessage(result.error || '绑定失败');
+        }
+    })
+    .catch(error => {
+        console.error('绑定失败:', error);
+        showErrorMessage('绑定失败: ' + (error.error || '服务器错误'));
+    });
+}
+
+// 渲染查询页面
+function renderQueryPage(user) {
+    const contentContainer = document.getElementById('content-container');
+    
+    contentContainer.innerHTML = `
+        <div class="section">
+            <h1 class="page-title">游戏查分</h1>
+            <div class="ccb-container">
+                <div class="ccb-section">
+                    <h2 class="ccb-title">查询分数</h2>
+                    <p>已绑定服务器: ${user.game_server}</p>
+                    
+                    <form id="ccb-query-form" class="ccb-form">
+                        <div class="form-group">
+                            <label for="game-select">选择游戏</label>
+                            <select id="game-select" required>
+                                <option value="">请选择游戏</option>
+                                <!-- 游戏选项将通过JS动态添加 -->
+                            </select>
+                        </div>
+                        
+                        <!-- 添加提示框 -->
+                        <div class="ccb-notice">
+                            <h4 class="ccb-notice-title"><i class="fas fa-exclamation-circle"></i>&ensp;提示</h4>
+                            <p class="ccb-notice-content">
+                                每次查分将消耗<b>5点普通积分</b>，查询结果以图片形式展示。<br>
+                                每次查分后需要等待10秒后才能再次查询。<br>
+								<br>
+								保存图片按钮在移动端某些浏览器可能会无效。<br>
+								如果点击后无法正常保存图片，请长按图片选择保存到相册即可。
+                            </p>
+                        </div>
+                        
+                        <div class="ccb-actions">
+                            <button type="submit" class="ccb-btn ccb-btn-primary" id="query-btn">查分</button>
+                            <button type="button" class="ccb-btn ccb-btn-secondary" id="unbind-btn">解绑</button>
+                        </div>
+                        
+                        <div class="ccb-points-info">
+                            当前积分: ${user.points || 0}  <!-- 只显示普通积分 -->
+                            <button id="refresh-points-btn" class="refresh-points-btn">
+                                <i class="fas fa-redo"></i>刷新积分
+                            </button>
+                        </div>
+                        
+                        <div class="ccb-cooldown" id="cooldown-message" style="display: none;"></div>
+                    </form>
+                </div>
+                
+                <div class="ccb-section">
+                    <h2 class="ccb-title">查询结果</h2>
+                    <div class="ccb-result" id="query-result">
+                        <!-- 查询结果将显示在这里 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 加载游戏列表
+    loadGameList();
+    
+    // 绑定表单提交事件
+    document.getElementById('ccb-query-form').addEventListener('submit', handleQuerySubmit);
+    
+    // 绑定解绑按钮事件
+    document.getElementById('unbind-btn').addEventListener('click', handleUnbind);
+    
+    // 绑定刷新积分按钮事件
+    document.getElementById('refresh-points-btn').addEventListener('click', refreshPoints);
+}
+
+// 刷新积分函数
+function refreshPoints() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showErrorMessage('请先登录');
+        return;
+    }
+    
+    const refreshBtn = document.getElementById('refresh-points-btn');
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>刷新中...';
+    
+    secureFetch('https://api.am-all.com.cn/api/user', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(user => {
+        // 更新当前用户信息
+        currentUser = user;
+        // 保存更新后的用户信息到本地存储
+        localStorage.setItem('userInfo', JSON.stringify(user));
+        
+        // 更新页面上的积分显示
+        const pointsInfo = document.querySelector('.ccb-points-info');
+        if (pointsInfo) {
+            pointsInfo.innerHTML = `当前积分: ${user.points || 0}
+                <button id="refresh-points-btn" class="refresh-points-btn">
+                    <i class="fas fa-redo"></i>刷新积分
+                </button>`;
+            
+            // 创建并显示成功提示
+            const successMsg = document.createElement('span');
+            successMsg.textContent = '刷新积分成功';
+            successMsg.style.color = '#e74c3c';
+            successMsg.style.fontSize = '14px';
+            successMsg.style.fontWeight = '500';
+            successMsg.style.marginLeft = '10px';
+            pointsInfo.appendChild(successMsg);
+            
+            // 2秒后移除提示
+            setTimeout(() => {
+                successMsg.remove();
+            }, 2000);
+            
+            // 重新绑定事件
+            document.getElementById('refresh-points-btn').addEventListener('click', refreshPoints);
+        }
+    })
+    .catch(error => {
+        console.error('刷新积分失败:', error);
+        showErrorMessage('刷新积分失败');
+    })
+    .finally(() => {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = '<i class="fas fa-redo"></i>刷新积分';
+    });
+}
+
+// 加载游戏列表
+function loadGameList() {
+    secureFetch('https://api.am-all.com.cn/api/ccb/games')
+        .then(games => {
+            const gameSelect = document.getElementById('game-select');
+            
+            games.forEach(game => {
+                const option = document.createElement('option');
+                option.value = game.game_title;
+                option.textContent = game.game_name;
+                gameSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('加载游戏列表失败:', error);
+            showErrorMessage('加载游戏列表失败');
+        });
+}
+
+// 处理查询提交
+function handleQuerySubmit(e) {
+    e.preventDefault();
+    
+    if (queryCooldown) {
+        showErrorMessage('查询冷却中，请稍后再试');
+        return;
+    }
+    
+    const game = document.getElementById('game-select').value;
+    
+    if (!game) {
+        showErrorMessage('请选择游戏');
+        return;
+    }
+    
+    // 检查积分（只检查普通积分）
+    if ((currentUser.points || 0) < 5) {
+        showErrorMessage('积分不足，需要5积分才能查询');
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    const queryBtn = document.getElementById('query-btn');
+    
+    queryBtn.disabled = true;
+    queryBtn.textContent = '查询中...';
+    
+    secureFetch('https://api.am-all.com.cn/api/ccb/query', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            game: game
+        })
+    })
+    .then(result => {
+        queryBtn.disabled = false;
+        queryBtn.textContent = '查分';
+        
+        if (result.success) {
+            if (result.status === 'ok' && result.image_base64) {
+                // 显示查询结果
+                document.getElementById('query-result').innerHTML = `
+                    <img src="data:image/png;base64,${result.image_base64}" alt="查分结果">
+                    <div class="ccb-save-action">
+                        <button id="save-image-btn" class="ccb-btn ccb-btn-primary">保存图片</button>
+                    </div>
+                `;
+
+                // 绑定保存按钮事件
+                document.getElementById('save-image-btn').addEventListener('click', saveCCBImage);
+                
+                // 更新用户积分（只更新普通积分）
+                currentUser.points -= 5;
+                updateUserInfo(currentUser);
+                
+                // 启动冷却计时器
+                startCooldown();
+            } else {
+                showErrorMessage(result.error || '查询失败');
+            }
+        } else {
+            showErrorMessage(result.error || '查询失败');
+        }
+    })
+    .catch(error => {
+        queryBtn.disabled = false;
+        queryBtn.textContent = '查分';
+        console.error('查询失败:', error);
+        showErrorMessage('查询失败: ' + (error.error || '服务器错误'));
+    });
+}
+
+// 启动冷却计时器
+function startCooldown() {
+    queryCooldown = true;
+    const cooldownMessage = document.getElementById('cooldown-message');
+    let seconds = 10;
+    
+    cooldownMessage.style.display = 'block';
+    cooldownMessage.textContent = `${seconds}秒后可再次查分`;
+    
+    cooldownTimer = setInterval(() => {
+        seconds--;
+        cooldownMessage.textContent = `${seconds}秒后可再次查分`;
+        
+        if (seconds <= 0) {
+            clearInterval(cooldownTimer);
+            cooldownMessage.style.display = 'none';
+            queryCooldown = false;
+        }
+    }, 1000);
+}
+
+// 处理解绑
+function handleUnbind() {
+    if (!confirm('确定要解绑查分信息吗？解绑后需要重新绑定才能使用查分功能。')) {
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    
+    secureFetch('https://api.am-all.com.cn/api/ccb/unbind', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(result => {
+        if (result.success) {
+            showSuccessMessage('解绑成功');
+            // 更新当前用户信息
+            currentUser.game_server = null;
+            currentUser.keychip = null;
+            currentUser.guid = null;
+            // 重新渲染绑定页面
+            renderBindingPage();
+        } else {
+            showErrorMessage(result.error || '解绑失败');
+        }
+    })
+    .catch(error => {
+        console.error('解绑失败:', error);
+        showErrorMessage('解绑失败: ' + (error.error || '服务器错误'));
+    });
+}
+
+// 在用户设置页面显示绑定信息
+function displayCCBInfoInSettings() {
+    const settingsContainer = document.querySelector('.user-settings-container');
+    if (!settingsContainer) return;
+    
+    const ccbInfoSection = document.createElement('div');
+    ccbInfoSection.className = 'settings-section';
+    ccbInfoSection.innerHTML = `
+        <h3>游戏查分绑定信息</h3>
+        ${currentUser.game_server && currentUser.keychip && currentUser.guid ? `
+            <div class="ccb-info">
+                <p><strong>服务器:</strong> ${currentUser.game_server}</p>
+                <p><strong>KeyChip:</strong> ${currentUser.keychip}</p>
+                <p><strong>游戏卡号:</strong> ${currentUser.guid}</p>
+                <button type="button" class="ccb-btn ccb-btn-secondary" id="settings-unbind-btn">解绑查分信息</button>
+            </div>
+        ` : '<p>未绑定查分信息</p>'}
+    `;
+    
+    settingsContainer.appendChild(ccbInfoSection);
+    
+    // 绑定解绑按钮事件
+    const unbindBtn = document.getElementById('settings-unbind-btn');
+    if (unbindBtn) {
+        unbindBtn.addEventListener('click', handleUnbind);
+    }
+}
+
+// 初始化网站管理页面
+function initSiteAdminPage() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showLoginRequired('site-admin');
+        return;
+    }
+    
+    // 检查用户是否为管理员
+    if (!currentUser || currentUser.user_rank < 5) {
+        showErrorMessage('需要管理员权限才能访问此页面');
+        loadPage('home');
+        return;
+    }
+    
+    const contentContainer = document.getElementById('content-container');
+    
+    contentContainer.innerHTML = `
+        <div class="section">
+            <h1 class="page-title">网站管理</h1>
+            <div class="admin-container">
+                <div class="admin-card">
+                    <h3>查分服务器设置</h3>
+                    <form id="server-form" class="admin-form">
+                        <div class="form-group">
+                            <label for="server-name">服务器名称</label>
+                            <input type="text" id="server-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="server-url">服务器地址</label>
+                            <input type="text" id="server-url" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="server-game">游戏代码</label>
+                            <input type="text" id="server-game" required>
+                        </div>
+                        <button type="submit" class="ccb-btn ccb-btn-primary">添加服务器</button>
+                    </form>
+                    
+                    <div class="admin-list" id="server-list">
+                        <h4>服务器列表</h4>
+                        <!-- 服务器列表将通过JS动态添加 -->
+                    </div>
+                </div>
+                
+                <div class="admin-card">
+                    <h3>查分游戏设置</h3>
+                    <form id="game-form" class="admin-form">
+                        <div class="form-group">
+                            <label for="game-name">游戏名称</label>
+                            <input type="text" id="game-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="game-title">游戏代码</label>
+                            <input type="text" id="game-title" required>
+                        </div>
+                        <button type="submit" class="ccb-btn ccb-btn-primary">添加游戏</button>
+                    </form>
+                    
+                    <div class="admin-list" id="game-list">
+                        <h4>游戏列表</h4>
+                        <!-- 游戏列表将通过JS动态添加 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 加载服务器和游戏列表
+    loadAdminServerList();
+    loadAdminGameList();
+    
+    // 绑定表单提交事件
+    document.getElementById('server-form').addEventListener('submit', handleServerAdd);
+    document.getElementById('game-form').addEventListener('submit', handleGameAdd);
+}
+
+// 加载管理页面的服务器列表
+function loadAdminServerList() {
+    secureFetch('https://api.am-all.com.cn/api/ccb/servers')
+        .then(servers => {
+            const serverList = document.getElementById('server-list');
+            
+            if (servers.length === 0) {
+                serverList.innerHTML += '<p>暂无服务器</p>';
+                return;
+            }
+            
+            servers.forEach(server => {
+                const item = document.createElement('div');
+                item.className = 'admin-item';
+                item.innerHTML = `
+                    <div>
+                        <strong>${server.server_name}</strong> - ${server.server_url} (${server.game_title})
+                    </div>
+                    <div class="admin-item-actions">
+                        <button class="ccb-btn ccb-btn-secondary" data-id="${server.id}" onclick="deleteServer(${server.id})">删除</button>
+                    </div>
+                `;
+                serverList.appendChild(item);
+            });
+        })
+        .catch(error => {
+            console.error('加载服务器列表失败:', error);
+            showErrorMessage('加载服务器列表失败');
+        });
+}
+
+// 加载管理页面的游戏列表
+function loadAdminGameList() {
+    secureFetch('https://api.am-all.com.cn/api/ccb/games')
+        .then(games => {
+            const gameList = document.getElementById('game-list');
+            
+            if (games.length === 0) {
+                gameList.innerHTML += '<p>暂无游戏</p>';
+                return;
+            }
+            
+            games.forEach(game => {
+                const item = document.createElement('div');
+                item.className = 'admin-item';
+                item.innerHTML = `
+                    <div>
+                        <strong>${game.game_name}</strong> (${game.game_title})
+                    </div>
+                    <div class="admin-item-actions">
+                        <button class="ccb-btn ccb-btn-secondary" data-id="${game.id}" onclick="deleteGame(${game.id})">删除</button>
+                    </div>
+                `;
+                gameList.appendChild(item);
+            });
+        })
+        .catch(error => {
+            console.error('加载游戏列表失败:', error);
+            showErrorMessage('加载游戏列表失败');
+        });
+}
+
+// 处理添加服务器
+function handleServerAdd(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('server-name').value;
+    const url = document.getElementById('server-url').value;
+    const game = document.getElementById('server-game').value;
+    
+    if (!name || !url || !game) {
+        showErrorMessage('请填写所有字段');
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    
+    secureFetch('https://api.am-all.com.cn/api/admin/ccb/servers', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            server_name: name,
+            server_url: url,
+            game_title: game
+        })
+    })
+    .then(result => {
+        if (result.success) {
+            showSuccessMessage('服务器添加成功');
+            document.getElementById('server-form').reset();
+            // 重新加载服务器列表
+            document.getElementById('server-list').innerHTML = '<h4>服务器列表</h4>';
+            loadAdminServerList();
+        } else {
+            showErrorMessage(result.error || '添加服务器失败');
+        }
+    })
+    .catch(error => {
+        console.error('添加服务器失败:', error);
+        showErrorMessage('添加服务器失败: ' + (error.error || '服务器错误'));
+    });
+}
+
+// 处理添加游戏
+function handleGameAdd(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('game-name').value;
+    const title = document.getElementById('game-title').value;
+    
+    if (!name || !title) {
+        showErrorMessage('请填写所有字段');
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    
+    secureFetch('https://api.am-all.com.cn/api/admin/ccb/games', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            game_name: name,
+            game_title: title
+        })
+    })
+    .then(result => {
+        if (result.success) {
+            showSuccessMessage('游戏添加成功');
+            document.getElementById('game-form').reset();
+            // 重新加载游戏列表
+            document.getElementById('game-list').innerHTML = '<h4>游戏列表</h4>';
+            loadAdminGameList();
+        } else {
+            showErrorMessage(result.error || '添加游戏失败');
+        }
+    })
+    .catch(error => {
+        console.error('添加游戏失败:', error);
+        showErrorMessage('添加游戏失败: ' + (error.error || '服务器错误'));
+    });
+}
+
+// 删除服务器
+function deleteServer(id) {
+    if (!confirm('确定要删除这个服务器吗？')) {
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    
+    secureFetch(`https://api.am-all.com.cn/api/admin/ccb/servers/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(result => {
+        if (result.success) {
+            showSuccessMessage('服务器删除成功');
+            // 重新加载服务器列表
+            document.getElementById('server-list').innerHTML = '<h4>服务器列表</h4>';
+            loadAdminServerList();
+        } else {
+            showErrorMessage(result.error || '删除服务器失败');
+        }
+    })
+    .catch(error => {
+        console.error('删除服务器失败:', error);
+        showErrorMessage('删除服务器失败: ' + (error.error || '服务器错误'));
+    });
+}
+
+// 删除游戏
+function deleteGame(id) {
+    if (!confirm('确定要删除这个游戏吗？')) {
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    
+    secureFetch(`https://api.am-all.com.cn/api/admin/ccb/games/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(result => {
+        if (result.success) {
+            showSuccessMessage('游戏删除成功');
+            // 重新加载游戏列表
+            document.getElementById('game-list').innerHTML = '<h4>游戏列表</h4>';
+            loadAdminGameList();
+        } else {
+            showErrorMessage(result.error || '删除游戏失败');
+        }
+    })
+    .catch(error => {
+        console.error('删除游戏失败:', error);
+        showErrorMessage('删除游戏失败: ' + (error.error || '服务器错误'));
+    });
+}
+
+// 保存查分图片
+function saveCCBImage() {
+    const resultImg = document.querySelector('#query-result img');
+    if (!resultImg) {
+        showErrorMessage('没有可保存的图片');
+        return;
+    }
+    
+    // 创建时间戳文件名
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `ccb_${timestamp}.png`;
+    
+    // 创建下载链接
+    const link = document.createElement('a');
+    link.href = resultImg.src;
+    link.download = filename;
+    
+    // 模拟点击下载
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showSuccessMessage('图片已保存');
+}
+
+// 在SPA加载页面时初始化
+document.addEventListener("DOMContentLoaded", function() {
+    // 在loadPage函数中添加ccb页面的处理
+    const originalLoadPage = window.loadPage;
+    
+    window.loadPage = function(pageId) {
+        if (pageId === 'ccb') {
+            initCCBPage();
+            updateActiveMenuItem(pageId); // 添加这一行
+        } else if (pageId === 'site-admin') {
+            initSiteAdminPage();
+            updateActiveMenuItem(pageId); // 添加这一行
+        } else {
+            originalLoadPage(pageId);
+            
+            // 在用户设置页面显示查分绑定信息
+            if (pageId === 'user-settings' && currentUser) {
+                setTimeout(displayCCBInfoInSettings, 100);
+            }
+        }
+    };
+    
+    // 在用户登录后显示查分菜单
+    const originalShowUserInfo = window.showUserInfo;
+    
+    window.showUserInfo = function() {
+        originalShowUserInfo();
+        
+        // 显示游戏查分菜单（用户组级别>0）
+        if (currentUser && currentUser.user_rank > 0) {
+            document.getElementById('sidebar-ccb').style.display = 'block';
+        } else {
+            document.getElementById('sidebar-ccb').style.display = 'none';
+        }
+        
+        // 显示网站管理菜单（用户组级别>=5）
+        if (currentUser && currentUser.user_rank >= 5) {
+            document.getElementById('sidebar-site-admin').style.display = 'block';
+        } else {
+            document.getElementById('sidebar-site-admin').style.display = 'none';
+        }
+    };
+    
+    // 在显示登录链接时隐藏查分菜单
+    const originalShowAuthLinks = window.showAuthLinks;
+    
+    window.showAuthLinks = function() {
+        originalShowAuthLinks();
+        document.getElementById('sidebar-ccb').style.display = 'none';
+        document.getElementById('sidebar-site-admin').style.display = 'none';
+    };
+});
