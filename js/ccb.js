@@ -115,21 +115,28 @@ function renderBindingPage() {
 
 // 加载服务器列表
 function loadServerList() {
-    secureFetch('https://api.am-all.com.cn/api/ccb/servers')
-        .then(servers => {
-            const serverSelect = document.getElementById('server-select');
-            
-            servers.forEach(server => {
-                const option = document.createElement('option');
-                option.value = server.server_url;
-                option.textContent = server.server_name;
-                serverSelect.appendChild(option);
+
+        const selectEl = document.getElementById('server-select');
+        if (!selectEl) return;
+        const placeholder = '<option value="">请选择服务器</option>';
+        selectEl.innerHTML = placeholder;
+        const seen = new Set();
+        secureFetch('https://api.am-all.com.cn/api/ccb/servers')
+          .then(list => {
+            (list || []).forEach(item => {
+              const key = `${item.server_url}|${item.server_name}`;
+              if (seen.has(key)) return;
+              seen.add(key);
+              const option = document.createElement('option');
+              option.value = item.server_url; option.textContent = item.server_name;
+              selectEl.appendChild(option);
             });
-        })
-        .catch(error => {
+          })
+          .catch(error => {
             console.error('加载服务器列表失败:', error);
             showErrorMessage('加载服务器列表失败');
-        });
+          });
+        
 }
 
 // 处理绑定表单提交
@@ -316,21 +323,28 @@ function refreshPoints() {
 
 // 加载游戏列表
 function loadGameList() {
-    secureFetch('https://api.am-all.com.cn/api/ccb/games')
-        .then(games => {
-            const gameSelect = document.getElementById('game-select');
-            
-            games.forEach(game => {
-                const option = document.createElement('option');
-                option.value = game.game_title;
-                option.textContent = game.game_name;
-                gameSelect.appendChild(option);
+
+        const selectEl = document.getElementById('game-select');
+        if (!selectEl) return;
+        const placeholder = '<option value="">请选择游戏</option>';
+        selectEl.innerHTML = placeholder;
+        const seen = new Set();
+        secureFetch('https://api.am-all.com.cn/api/ccb/games')
+          .then(list => {
+            (list || []).forEach(item => {
+              const key = `${item.game_title}|${item.game_name}`;
+              if (seen.has(key)) return;
+              seen.add(key);
+              const option = document.createElement('option');
+              option.value = item.game_title; option.textContent = item.game_name;
+              selectEl.appendChild(option);
             });
-        })
-        .catch(error => {
+          })
+          .catch(error => {
             console.error('加载游戏列表失败:', error);
             showErrorMessage('加载游戏列表失败');
-        });
+          });
+        
 }
 
 // 处理查询提交
