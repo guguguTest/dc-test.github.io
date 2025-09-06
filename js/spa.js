@@ -514,6 +514,27 @@ function checkLoginStatus() {
   if (token) {
     // 添加加载状态
     document.body.classList.add('spa-loading');
+
+// === Failsafe: ensure loader never sticks ===
+(function(){
+  try{
+    // Remove loading after content changes
+    const cc = document.getElementById('content-container');
+    if (cc && typeof MutationObserver !== 'undefined'){
+      const obs = new MutationObserver(function(){
+        document.body && document.body.classList && document.body.classList.remove('spa-loading');
+      });
+      obs.observe(cc, { childList: true, subtree: true });
+    }
+    // Time-based fallback (in case no DOM mutation occurs)
+    setInterval(function(){
+      if (document && document.body && document.body.classList && document.body.classList.contains('spa-loading')){
+        document.body.classList.remove('spa-loading');
+      }
+    }, 1500);
+  }catch(e){ console.warn('loader failsafe init error', e); }
+})();
+
     
     fetchUserInfo(token)
       .catch(error => {
@@ -1527,6 +1548,7 @@ function showPermissionDenied(pageId) {
 
 // 加载页面内容
 async function loadPage(pageId) {
+  try { if (typeof updateActiveMenuItem === 'function') updateActiveMenuItem(pageId); } catch(e) { console.warn('updateActiveMenuItem early call failed:', e); }
   const contentContainer = document.getElementById('content-container');
   if (!contentContainer) return;
 
@@ -2463,40 +2485,31 @@ function showErrorMessage(message) {
 
 function updateActiveMenuItem(activePage) {
   try {
-    // 清除所有已选
-    document.querySelectorAll('.sidebar-nav a').forEach(function(link){ link.classList.remove('active'); });
-    document.querySelectorAll('[id^="sidebar-"] a, [id^="sidebar-"]').forEach(function(link){ link.classList.remove('active'); });
+    // 清除所有已选（链接与其父 li）
+    document.querySelectorAll('.sidebar-nav li, .sidebar-nav a').forEach(el => el.classList.remove('active'));
 
-    // 1) 优先通过 data-page 精确匹配
-    var selector = '.sidebar-nav a[data-page="' + activePage + '"]';
-    var activeLink = document.querySelector(selector);
-    if (activeLink) {
-      activeLink.classList.add('active');
+    // 优先 data-page 精确匹配
+    const link = document.querySelector(`.sidebar-nav a[data-page="${activePage}"]`);
+    if (link) {
+      link.classList.add('active');
+      const li = link.closest('li');
+      if (li) li.classList.add('active');
       return;
     }
 
-    // 2) 兼容旧结构：#sidebar-<page> 或其内部 <a>
-    var legacy = document.getElementById('sidebar-' + activePage);
+    // 兼容旧结构：#sidebar-<page>
+    const legacy = document.getElementById(`sidebar-${activePage}`);
     if (legacy) {
-      var a = legacy.querySelector ? legacy.querySelector('a') : null;
-      (a || legacy).classList.add('active');
+      legacy.classList.add('active');
+      const legacyLi = legacy.closest('li');
+      if (legacyLi) legacyLi.classList.add('active');
       return;
-    }
-
-    // 3) 首页特殊：同时点亮顶部导航
-    if (activePage === 'home') {
-      var navDownload = document.getElementById('nav-download');
-      var navHome = document.getElementById('nav-home');
-      if (navDownload) navDownload.classList.add('active');
-      if (navHome) navHome.classList.add('active');
     }
   } catch (e) {
-    console.error('[updateActiveMenuItem] error:', e);
+    console.warn('[updateActiveMenuItem] error:', e);
   }
 }
 
-
-// 新增订单管理功能
 function initOrderEntryPage() {
   loadOrders();
   

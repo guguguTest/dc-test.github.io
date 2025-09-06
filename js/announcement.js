@@ -1,6 +1,8 @@
 // 公告系统功能
 class AnnouncementSystem {
   constructor() {
+    this._successNotifiedAt = 0;
+    this._lastSaveAt = 0;
     this.currentPage = 1;
     this.totalPages = 1;
     this.announcements = [];
@@ -309,6 +311,8 @@ renderAnnouncements() {
 // 公告管理系统（管理员功能）
 class AnnouncementAdminSystem {
   constructor() {
+    this._successNotifiedAt = 0;
+    this._lastSaveAt = 0;
     this.currentAnnouncement = null;
     this.isEditing = false;
     this.editorElement = null; // 存储编辑器元素引用
@@ -567,7 +571,7 @@ class AnnouncementAdminSystem {
         return;
       }
       
-      alert('保存成功');
+      if (Date.now() - this._successNotifiedAt > 800) { alert('保存成功'); this._successNotifiedAt = Date.now(); }
       this.hideEditor();
       this.loadAnnouncements();
     } catch (error) {
@@ -642,12 +646,16 @@ let announcementSystem = null;
 let announcementAdminSystem = null;
 
 // 确保这些函数被正确导出到全局作用域
-window.initAnnouncementSystem = function() {
-  announcementSystem = new AnnouncementSystem();
-  announcementSystem.init();
+window.initAnnouncementSystem = function(){
+  try{
+    if (!window.announcementSystem) window.announcementSystem = new AnnouncementSystem();
+    window.announcementSystem.init();
+  }catch(e){ console.error('initAnnouncementSystem error:', e);} 
 };
 
-window.initAnnouncementAdminSystem = function() {
-  announcementAdminSystem = new AnnouncementAdminSystem();
-  announcementAdminSystem.init();
+window.initAnnouncementAdminSystem = function(){
+  try{
+    if (!window.announcementAdminSystem) window.announcementAdminSystem = new AnnouncementAdminSystem();
+    window.announcementAdminSystem.init();
+  }catch(e){ console.error('initAnnouncementAdminSystem error:', e);} 
 };
