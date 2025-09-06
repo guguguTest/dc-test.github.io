@@ -2460,27 +2460,41 @@ function showErrorMessage(message) {
 }
 
 // 更新活动菜单项
+
 function updateActiveMenuItem(activePage) {
-    document.querySelectorAll('.sidebar-nav a').forEach(link => {
-        link.classList.remove('active');
-    });
-    
-    const activeLink = document.querySelector(`.sidebar-nav a[data-page="${activePage}"]`);
+  try {
+    // 清除所有已选
+    document.querySelectorAll('.sidebar-nav a').forEach(function(link){ link.classList.remove('active'); });
+    document.querySelectorAll('[id^="sidebar-"] a, [id^="sidebar-"]').forEach(function(link){ link.classList.remove('active'); });
+
+    // 1) 优先通过 data-page 精确匹配
+    var selector = '.sidebar-nav a[data-page="' + activePage + '"]';
+    var activeLink = document.querySelector(selector);
     if (activeLink) {
-        activeLink.classList.add('active');
+      activeLink.classList.add('active');
+      return;
     }
-    
-    document.querySelectorAll('.nav-links a').forEach(link => {
-        link.classList.remove('active');
-    });
-    
+
+    // 2) 兼容旧结构：#sidebar-<page> 或其内部 <a>
+    var legacy = document.getElementById('sidebar-' + activePage);
+    if (legacy) {
+      var a = legacy.querySelector ? legacy.querySelector('a') : null;
+      (a || legacy).classList.add('active');
+      return;
+    }
+
+    // 3) 首页特殊：同时点亮顶部导航
     if (activePage === 'home') {
-        const navDownload = document.getElementById('nav-download');
-        const navHome = document.getElementById('nav-home');
-        if (navDownload) navDownload.classList.add('active');
-        if (navHome) navHome.classList.add('active');
+      var navDownload = document.getElementById('nav-download');
+      var navHome = document.getElementById('nav-home');
+      if (navDownload) navDownload.classList.add('active');
+      if (navHome) navHome.classList.add('active');
     }
+  } catch (e) {
+    console.error('[updateActiveMenuItem] error:', e);
+  }
 }
+
 
 // 新增订单管理功能
 function initOrderEntryPage() {
