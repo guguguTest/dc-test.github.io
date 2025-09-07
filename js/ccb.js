@@ -576,30 +576,13 @@ document.addEventListener("DOMContentLoaded", function() {
     // 在用户登录后显示查分菜单
     const originalShowUserInfo = window.showUserInfo;
     
-    window.showUserInfo = function() {
-        originalShowUserInfo();
-        
-        // 显示游戏查分菜单（用户组级别>0）
-        if (currentUser && currentUser.user_rank > 0) {
-            document.getElementById('sidebar-ccb').style.display = 'block';
-        } else {
-            document.getElementById('sidebar-ccb').style.display = 'none';
-        }
-        
-        // 显示网站管理菜单（用户组级别>=5）
-        if (currentUser && currentUser.user_rank >= 5) {
-            document.getElementById('sidebar-site-admin').style.display = 'block';
-        } else {
-            document.getElementById('sidebar-site-admin').style.display = 'none';
-        }
-    };
-    
-    // 在显示登录链接时隐藏查分菜单
+    window.showUserInfo = function(){
+  originalShowUserInfo();
+  try { if (typeof updateSidebarVisibility === 'function') { updateSidebarVisibility(window.currentUser || null); } } catch(e){}
+};
+
+// 在显示登录链接时隐藏查分菜单
     const originalShowAuthLinks = window.showAuthLinks;
     
-    window.showAuthLinks = function() {
-        originalShowAuthLinks();
-        document.getElementById('sidebar-ccb').style.display = 'none';
-        document.getElementById('sidebar-site-admin').style.display = 'none';
-    };
+    window.showAuthLinks = function(){ originalShowAuthLinks(); try { if (typeof updateSidebarVisibility === 'function') { updateSidebarVisibility(null); } } catch(e){} };
 });

@@ -13,7 +13,8 @@
 
     // 旧逻辑回退（不影响旧页面）
     const u = global.currentUser;
-    if (!u || (u.user_rank || 0) < 5) {
+    const isCollabAdmin = u && (String(u.rankSp) === '2' || Number(u.rankSp) === 2);
+    if (!u || ((u.user_rank || 0) < 5 && !isCollabAdmin)) {
       showErrorMessage('需要管理员权限才能访问此页面');
       loadPage('home');
       return false;

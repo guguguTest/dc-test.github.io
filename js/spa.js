@@ -862,46 +862,13 @@ function showUserInfo() {
     document.getElementById('sidebar-exchange').style.display = 'none';
   }
   
-  // 显示管理分类和菜单（用户组级别>=4）
-  if (currentUser && currentUser.user_rank >= 4) {
-    document.getElementById('admin-section-title').style.display = 'block';
-    document.getElementById('admin-section-nav').style.display = 'block';
-    
-    // 显示公告管理菜单（用户组级别>=5）
-    if (currentUser.user_rank >= 5) {
-      document.getElementById('sidebar-announcement-admin').style.display = 'block';
-    } else {
-      document.getElementById('sidebar-announcement-admin').style.display = 'none';
-    }
-    
-    // 显示网站管理菜单（用户组级别>=5）
-    if (currentUser.user_rank >= 5) {
-      document.getElementById('sidebar-site-admin').style.display = 'block';
-    } else {
-      document.getElementById('sidebar-site-admin').style.display = 'none';
-    }
-    
-    // 显示下载管理菜单（用户组级别>=5）
-    if (currentUser.user_rank >= 5) {
-      document.getElementById('sidebar-download-admin').style.display = 'block';
-    } else {
-      document.getElementById('sidebar-download-admin').style.display = 'none';
-    }
-    
-	// 显示用户管理菜单（用户组级别>=5）
-	if (currentUser.user_rank >= 5) {
-	  document.getElementById('sidebar-user-manager').style.display = 'block';
-	} else {
-	  document.getElementById('sidebar-user-manager').style.display = 'none';
-	}
-	
-    // 显示订单录入菜单（用户组级别>=4）
-    document.getElementById('sidebar-order-entry').style.display = 'block';
-  } else {
-    document.getElementById('admin-section-title').style.display = 'none';
-    document.getElementById('admin-section-nav').style.display = 'none';
-  }
-  
+  // 管理分类容器交给后端可见性决定（显示容器，子项由 /api/page-visibility 控制）
+  (function(){
+    const adminTitle = document.getElementById('admin-section-title');
+    const adminNav   = document.getElementById('admin-section-nav');
+    if (adminTitle) adminTitle.style.display = '';
+    if (adminNav)   adminNav.style.display   = '';
+  })();
     // 显示下载菜单（用户组级别>0）
   if (currentUser && currentUser.user_rank > 0) {
     document.querySelector('a[data-page="download"]').parentElement.style.display = 'block';
