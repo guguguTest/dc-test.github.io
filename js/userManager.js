@@ -172,7 +172,9 @@ class UserManager {
 
   getUserRowHTML(user, isEditing) {
     const rankMap = {0:'普通用户',1:'初级用户',2:'中级用户',3:'高级用户',4:'贵宾用户',5:'系统管理员'};
-    const specialRankMap = {0:'无',1:'MML'};
+    const specialRankMap = {0:'无',1:'MML',
+  2:'协同管理员'
+};
     const stateMap = {0:'正常',1:'受限',2:'封禁'};
     const avatarUrl = user.avatar ? `https://api.am-all.com.cn/avatars/${user.avatar}` : 'https://api.am-all.com.cn/avatars/default_avatar.png';
 

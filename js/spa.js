@@ -2279,18 +2279,13 @@ if (pageId === 'download') {
         }
       }
 
-      // 在公告管理页面的处理部分添加：
+      // 公告管理页面
       if (pageId === 'announcement-admin') {
-        // 检查用户权限
-        if (currentUser && currentUser.user_rank >= 5) {
-          // 初始化公告管理系统
-          if (typeof initAnnouncementAdminSystem === 'function') {
-            setTimeout(initAnnouncementAdminSystem, 100);
-          }
-        } else {
-          showLoginRequired('announcement-admin');
+        if (typeof initAnnouncementAdminSystem === 'function') {
+          setTimeout(initAnnouncementAdminSystem, 100);
         }
       }
+
 
       if (pageId === 'order-entry') {
         initOrderEntryPage();
@@ -2305,14 +2300,9 @@ if (pageId === 'download') {
       
       // 用户管理页面
       if (pageId === 'user-manager') {
-        // 检查用户权限
-        if (currentUser && currentUser.user_rank >= 5) {
-          // 初始化用户管理系统
-          if (typeof initUserManager === 'function') {
-            setTimeout(initUserManager, 100);
-          }
-        } else {
-          showLoginRequired('user-manager');
+        // 后端统一鉴权；此处仅初始化页面逻辑
+        if (typeof initUserManager === 'function') {
+          setTimeout(initUserManager, 100);
         }
       }
     } else {
