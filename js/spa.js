@@ -514,27 +514,6 @@ function checkLoginStatus() {
   if (token) {
     // 添加加载状态
     document.body.classList.add('spa-loading');
-
-// === Failsafe: ensure loader never sticks ===
-(function(){
-  try{
-    // Remove loading after content changes
-    const cc = document.getElementById('content-container');
-    if (cc && typeof MutationObserver !== 'undefined'){
-      const obs = new MutationObserver(function(){
-        document.body && document.body.classList && document.body.classList.remove('spa-loading');
-      });
-      obs.observe(cc, { childList: true, subtree: true });
-    }
-    // Time-based fallback (in case no DOM mutation occurs)
-    setInterval(function(){
-      if (document && document.body && document.body.classList && document.body.classList.contains('spa-loading')){
-        document.body.classList.remove('spa-loading');
-      }
-    }, 1500);
-  }catch(e){ console.warn('loader failsafe init error', e); }
-})();
-
     
     fetchUserInfo(token)
       .catch(error => {
@@ -1548,7 +1527,6 @@ function showPermissionDenied(pageId) {
 
 // 加载页面内容
 async function loadPage(pageId) {
-  try { if (typeof updateActiveMenuItem === 'function') updateActiveMenuItem(pageId); } catch(e) { console.warn('updateActiveMenuItem early call failed:', e); }
   const contentContainer = document.getElementById('content-container');
   if (!contentContainer) return;
 
@@ -2483,42 +2461,45 @@ function showErrorMessage(message) {
 
 // 更新活动菜单项
 
+// -- Helper: normalize page ids to sidebar data-page keys
+function normalizePageId(pid) {
+  if (!pid) return pid;
+  var map = { 'exchange':'site-admin', 'site-admin':'site-admin', 'ccb':'ccb', 'game-check':'ccb', 'games':'ccb' };
+  return map[pid] || pid;
+}
+
+
 function updateActiveMenuItem(activePage) {
   try {
-    // 清除所有已选（链接与其父 li）
-    document.querySelectorAll('.sidebar-nav li, .sidebar-nav a').forEach(el => el.classList.remove('active'));
+    var page = normalizePageId(activePage);
+    // 清空
+    var els = document.querySelectorAll('.sidebar-nav li, .sidebar-nav a');
+    for (var i=0;i<els.length;i++){ els[i].classList.remove('active'); }
 
-    // 优先 data-page 精确匹配
-    const link = document.querySelector(`.sidebar-nav a[data-page="${activePage}"]`);
+    // 精确匹配 a[data-page]
+    var link = document.querySelector('.sidebar-nav a[data-page="' + page + '"]');
+    if (!link) {
+      var legacy = document.getElementById('sidebar-' + page);
+      if (legacy) link = legacy.tagName === 'A' ? legacy : legacy.querySelector('a');
+    }
     if (link) {
       link.classList.add('active');
-      const li = link.closest('li');
+      var li = link.closest ? link.closest('li') : null;
       if (li) li.classList.add('active');
       return;
     }
-
-    // 兼容旧结构：#sidebar-<page>
-    const legacy = document.getElementById(`sidebar-${activePage}`);
-    if (legacy) {
-      legacy.classList.add('active');
-      const legacyLi = legacy.closest('li');
-      if (legacyLi) legacyLi.classList.add('active');
-      return;
-    }
-  } catch (e) {
-    console.warn('[updateActiveMenuItem] error:', e);
-  }
+  } catch (e) { console.warn('[updateActiveMenuItem] error:', e); }
 }
 
 function initOrderEntryPage() {
   loadOrders();
   
-  document.getElementById('order-search-btn').addEventListener('click', () => {
+  document.getElementById('order-search-btn').addEventListener('click', function() {
     currentPage = 1;
     loadOrders();
   });
   
-  document.getElementById('order-search-input').addEventListener('keypress', (e) => {
+  document.getElementById('order-search-input').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
       currentPage = 1;
       loadOrders();
@@ -2527,16 +2508,16 @@ function initOrderEntryPage() {
   
   const addBtn = document.getElementById('add-order-btn');
   if (addBtn) {
-    addBtn.addEventListener('click', () => {
+    addBtn.addEventListener('click', function() {
       showOrderModal();
     });
   }
   
   const editBtn = document.getElementById('edit-order-btn');
   if (editBtn) {
-    editBtn.addEventListener('click', () => {
+    editBtn.addEventListener('click', function() {
       if (selectedOrderIds.length === 1) {
-        const order = currentOrders.find(o => o.id === selectedOrderIds[0]);
+        const order = currentOrders.find(function(o){ return o.id === selectedOrderIds[0]; });
         if (order) {
           showOrderModal(order);
         }
@@ -2548,7 +2529,7 @@ function initOrderEntryPage() {
   
   const deleteBtn = document.getElementById('delete-order-btn');
   if (deleteBtn) {
-    deleteBtn.addEventListener('click', () => {
+    deleteBtn.addEventListener('click', function() {
       if (selectedOrderIds.length > 0) {
         deleteOrders(selectedOrderIds);
       } else {
@@ -2559,9 +2540,9 @@ function initOrderEntryPage() {
   
   const selectAll = document.getElementById('select-all');
   if (selectAll) {
-    selectAll.addEventListener('change', (e) => {
+    selectAll.addEventListener('change', function(e) {
       const checkboxes = document.querySelectorAll('.order-checkbox');
-      checkboxes.forEach(cb => {
+      checkboxes.forEach(function(cb) {
         cb.checked = e.target.checked;
         const orderId = parseInt(cb.dataset.id);
         if (e.target.checked) {
@@ -2569,7 +2550,7 @@ function initOrderEntryPage() {
             selectedOrderIds.push(orderId);
           }
         } else {
-          selectedOrderIds = selectedOrderIds.filter(id => id !== orderId);
+          selectedOrderIds = selectedOrderIds.filter(function(id){ return id !== orderId; });
         }
       });
       updateActionButtons();
@@ -2578,7 +2559,7 @@ function initOrderEntryPage() {
 
   const orderForm = document.getElementById('order-form');
   if (orderForm) {
-    orderForm.addEventListener('submit', (e) => {
+    orderForm.addEventListener('submit', function(e) {
       e.preventDefault();
       saveOrder();
     });
@@ -2597,12 +2578,12 @@ function initOrderEntryPage() {
 
   const closeBtn = document.querySelector('.order-modal .close');
   if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
+    closeBtn.addEventListener('click', function() {
       closeOrderModal();
     });
   }
   
-  window.addEventListener('click', (e) => {
+  window.addEventListener('click', function(e) {
     if (e.target === document.getElementById('order-modal')) {
       closeOrderModal();
     }
@@ -2631,10 +2612,11 @@ async function loadOrders() {
     
     const data = await response.json();
     
-    currentOrders = data.orders.map(order => ({
-      ...order,
-      price: typeof order.price === 'string' ? parseFloat(order.price) : order.price
-    }));
+    currentOrders = data.orders.map(function(order){
+      return Object.assign({}, order, {
+        price: (typeof order.price === 'string') ? parseFloat(order.price) : order.price
+      });
+    });
     
     renderOrders(currentOrders);
     renderPagination(data.pagination);
@@ -3458,3 +3440,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 250);
 })();
 
+
+// -- Delegate: immediately highlight sidebar item on click
+
+document.addEventListener('click', function(e){
+  var t = e.target; if (!t || !t.closest) return;
+  var a = t.closest('.sidebar-nav a[data-page]');
+  if (!a) return;
+  var pid = a.getAttribute('data-page');
+  if (!pid) return;
+  try { updateActiveMenuItem(pid); } catch(_) {}
+}, true);
