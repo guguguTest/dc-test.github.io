@@ -196,6 +196,7 @@ class UserManager {
           <select class="edit-mode-select" data-field="rankSp">
             <option value="0" ${user.rankSp==0?'selected':''}>无</option>
             <option value="1" ${user.rankSp==1?'selected':''}>MML</option>
+            <option value="2" ${user.rankSp==2?'selected':''}>协同管理员</option>
           </select>` : (specialRankMap[user.rankSp] || '未知')}</td>
       <td>${isEditing ? `<input type="number" class="edit-mode-input" value="${user.points || 0}" data-field="points" min="0">` : (user.points || 0)}</td>
       <td>${isEditing ? `<input type="number" class="edit-mode-input" value="${user.point2 || 0}" data-field="point2" min="0">` : (user.point2 || 0)}</td>

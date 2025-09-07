@@ -1,4 +1,25 @@
 // spa.js - 单页面应用主模块
+// —— 通用登出（立即刷新 UI）——
+window.logoutAndRefresh = function logoutAndRefresh() {
+  try { localStorage.removeItem('token'); localStorage.removeItem('userInfo'); } catch (_){}
+  try { window.currentUser = null; } catch (_){}
+  try { if (typeof showAuthLinks === 'function') showAuthLinks(null); } catch (_){}
+  try { if (typeof updateSidebarVisibility === 'function') updateSidebarVisibility(null); } catch (_){}
+  try { if (typeof loadPage === 'function') loadPage('home'); window.location.hash = '#/home'; } catch (_){}
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const bindLogout = (sel) => {
+    document.querySelectorAll(sel).forEach(a => {
+      if (a.dataset.__logoutBound) return;
+      a.addEventListener('click', (e) => { e.preventDefault(); window.logoutAndRefresh(); });
+      a.dataset.__logoutBound = '1';
+    });
+  };
+  bindLogout('[data-link="logout"]');
+  bindLogout('.nav-logout');
+  bindLogout('a[href="#/logout"]');
+});
 // 用户状态管理
 let currentUser = null;
 let cropper = null;
@@ -170,30 +191,41 @@ async function updateSidebarVisibility(user) {
   const guestVisible = ['home', 'settings', 'help'];
 
   const setDisplay = (el, show) => { if (el) el.style.display = show ? '' : 'none'; };
-
-  const nav = document.querySelector('.sidebar-nav');
-  if (nav) {
-    const links = nav.querySelectorAll('a[data-page]');
-    if (!token) {
-      for (const a of links) {
-        const pid = a.getAttribute('data-page');
-        setDisplay(a.parentElement, guestVisible.includes(pid));
+  const isVisibleNode = (node) => {
+    if (!node) return false;
+    const st = window.getComputedStyle(node);
+    return (st.display !== 'none' && st.visibility !== 'hidden' && node.offsetParent !== null);
+  };
+  const hideEmptyGroupByIds = (navId, titleId) => {
+    const nav = document.getElementById(navId);
+    const title = document.getElementById(titleId);
+    if (!nav || !title) return;
+    const items = nav.querySelectorAll('li, a[data-page]');
+    let any = false;
+    items.forEach(el => {
+      const li = el.tagName === 'A' ? (el.parentElement || el) : el;
+      if (isVisibleNode(li)) any = true;
+    });
+    setDisplay(nav, any);
+    setDisplay(title, any);
+  };
+  const hideEmptyGroupGeneric = () => {
+    document.querySelectorAll('.sidebar-section-title').forEach(title => {
+      let list = title.nextElementSibling;
+      while (list && !(list.tagName === 'UL' || list.matches('.sidebar-group, .sidebar-nav-sub'))) {
+        list = list.nextElementSibling;
       }
-    } else {
-      const headers = { 'Authorization': `Bearer ${token}` };
-      for (const a of links) {
-        const pid = a.getAttribute('data-page');
-        try {
-          const resp = await fetch(`https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`, { headers });
-          const data = await resp.json();
-          setDisplay(a.parentElement, !!(data && data.visible));
-        } catch (e) {
-          console.warn('可见性检查失败:', pid, e);
-          setDisplay(a.parentElement, false);
-        }
-      }
-    }
-  }
+      if (!list) return;
+      const children = list.querySelectorAll('li, a[data-page]');
+      let any = false;
+      children.forEach(el => {
+        const li = el.tagName === 'A' ? (el.parentElement || el) : el;
+        if (isVisibleNode(li)) any = true;
+      });
+      setDisplay(list, any);
+      setDisplay(title, any);
+    });
+  };
 
   const legacyMap = [
     ['sidebar-ccb','ccb'],
@@ -212,14 +244,12 @@ async function updateSidebarVisibility(user) {
     ['sidebar-fortune','fortune'],
     ['sidebar-user-settings','user-settings'],
   ];
-  
+
   for (const [id, pid] of legacyMap) {
     const el = document.getElementById(id);
     if (!el) continue;
-
     const a = el.querySelector ? el.querySelector('a') : null;
     const clickTarget = a || el;
-
     try {
       clickTarget.setAttribute('data-page', pid);
       if (a) {
@@ -230,32 +260,31 @@ async function updateSidebarVisibility(user) {
 
     if (!token) {
       const vis = guestVisible.includes(pid);
-      if (a && a.parentElement) a.parentElement.style.display = vis ? '' : 'none';
-      else el.style.display = vis ? '' : 'none';
-    } else {
-      try {
-        const _pvUrl = `https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`;
-const _pvBust = _pvUrl + (_pvUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
-const resp = await fetch(_pvBust, {
-  headers: { 'Authorization': `Bearer ${token}`,  },
-  cache: 'no-store'
-});
-let data = null; try { data = await resp.json(); } catch(e) { data = null; }
-const vis = !!(data && data.visible);
-        if (a && a.parentElement) a.parentElement.style.display = vis ? '' : 'none';
-        else el.style.display = vis ? '' : 'none';
-      } catch (e) {
-        console.warn('可见性检查失败:', pid, e);
-        if (a && a.parentElement) a.parentElement.style.display = 'none';
-        else el.style.display = 'none';
-      }
+      const node = a && a.parentElement ? a.parentElement : el;
+      const hasText = a ? (a.textContent || '').trim().length > 0 : (el.textContent || '').trim().length > 0;
+      setDisplay(node, vis && hasText);
+      continue;
+    }
+
+    try {
+      const _pvUrl = `https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`;
+      const _pvBust = _pvUrl + (_pvUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+      const resp = await fetch(_pvBust, { headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' });
+      let data = null; try { data = await resp.json(); } catch(e) { data = null; }
+      const vis = !!(data && data.visible);
+      const node = a && a.parentElement ? a.parentElement : el;
+      const hasText = a ? (a.textContent || '').trim().length > 0 : (el.textContent || '').trim().length > 0;
+      setDisplay(node, vis && hasText);
+    } catch (e) {
+      console.warn('可见性检查失败:', pid, e);
+      const node = a && a.parentElement ? a.parentElement : el;
+      setDisplay(node, false);
     }
 
     if (!clickTarget.dataset.boundClick) {
       clickTarget.addEventListener('click', (ev) => {
         if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
         try {
-          console.debug('nav from legacy item →', pid);
           if (typeof loadPage === 'function') loadPage(pid);
           else window.location.hash = `#/${pid}`;
         } catch (e) {
@@ -268,42 +297,17 @@ const vis = !!(data && data.visible);
     }
   }
 
+  document.querySelectorAll('.sidebar li').forEach(li => {
+    const a = li.querySelector('a[data-page]');
+    if (!a) return;
+    const txt = (a.textContent || '').trim();
+    if (!txt || !isVisibleNode(a)) setDisplay(li, false);
+  });
 
-
-  // ---- Auto hide empty admin group (no visible children) ----
-  try {
-    (function hideEmptyGroups() {
-      var adminNav = document.getElementById('admin-section-nav');
-      var adminTitle = document.getElementById('admin-section-title');
-      if (!adminNav || !adminTitle) return;
-      var items = adminNav.querySelectorAll('li, a[data-page]');
-      var anyVisible = false;
-      items.forEach ? items.forEach(function(el){
-        var node = el.tagName === 'A' ? (el.parentElement || el) : el;
-        if (!node) return;
-        var style = window.getComputedStyle(node);
-        if (style.display !== 'none' && style.visibility !== 'hidden' && node.offsetParent !== null) {
-          anyVisible = true;
-        }
-      }) : (function(){
-        for (var i=0;i<items.length;i++){
-          var el = items[i];
-          var node = el.tagName === 'A' ? (el.parentElement || el) : el;
-          if (!node) continue;
-          var style = window.getComputedStyle(node);
-          if (style.display !== 'none' && style.visibility !== 'hidden' && node.offsetParent !== null) {
-            anyVisible = true;
-            break;
-          }
-        }
-      })();
-      adminNav.style.display = anyVisible ? '' : 'none';
-      adminTitle.style.display = anyVisible ? '' : 'none';
-    })();
-  } catch(e) { console.warn('hideEmptyGroups failed', e); }
+  hideEmptyGroupByIds('admin-section-nav', 'admin-section-title');
+  hideEmptyGroupByIds('feature-section-nav', 'feature-section-title');
+  hideEmptyGroupGeneric();
 }
-
-
 // 在侧边栏显示/隐藏时调用这个函数
 document.addEventListener("DOMContentLoaded", function() {
   const sidebar = document.querySelector('.sidebar');
@@ -862,13 +866,46 @@ function showUserInfo() {
     document.getElementById('sidebar-exchange').style.display = 'none';
   }
   
-  // 管理分类容器交给后端可见性决定（显示容器，子项由 /api/page-visibility 控制）
-  (function(){
-    const adminTitle = document.getElementById('admin-section-title');
-    const adminNav   = document.getElementById('admin-section-nav');
-    if (adminTitle) adminTitle.style.display = '';
-    if (adminNav)   adminNav.style.display   = '';
-  })();
+  // 显示管理分类和菜单（用户组级别>=4）
+  if (currentUser && currentUser.user_rank >= 4) {
+    document.getElementById('admin-section-title').style.display = 'block';
+    document.getElementById('admin-section-nav').style.display = 'block';
+    
+    // 显示公告管理菜单（用户组级别>=5）
+    if (currentUser.user_rank >= 5) {
+      document.getElementById('sidebar-announcement-admin').style.display = 'block';
+    } else {
+      document.getElementById('sidebar-announcement-admin').style.display = 'none';
+    }
+    
+    // 显示网站管理菜单（用户组级别>=5）
+    if (currentUser.user_rank >= 5) {
+      document.getElementById('sidebar-site-admin').style.display = 'block';
+    } else {
+      document.getElementById('sidebar-site-admin').style.display = 'none';
+    }
+    
+    // 显示下载管理菜单（用户组级别>=5）
+    if (currentUser.user_rank >= 5) {
+      document.getElementById('sidebar-download-admin').style.display = 'block';
+    } else {
+      document.getElementById('sidebar-download-admin').style.display = 'none';
+    }
+    
+	// 显示用户管理菜单（用户组级别>=5）
+	if (currentUser.user_rank >= 5) {
+	  document.getElementById('sidebar-user-manager').style.display = 'block';
+	} else {
+	  document.getElementById('sidebar-user-manager').style.display = 'none';
+	}
+	
+    // 显示订单录入菜单（用户组级别>=4）
+    document.getElementById('sidebar-order-entry').style.display = 'block';
+  } else {
+    document.getElementById('admin-section-title').style.display = 'none';
+    document.getElementById('admin-section-nav').style.display = 'none';
+  }
+  
     // 显示下载菜单（用户组级别>0）
   if (currentUser && currentUser.user_rank > 0) {
     document.querySelector('a[data-page="download"]').parentElement.style.display = 'block';
@@ -889,37 +926,78 @@ function showUserInfo() {
 }
 
 // 显示登录/注册链接
-function showAuthLinks() {
-  // PC视图
-  const authLinksPc = document.getElementById('auth-links-pc');
-  const userInfoPc = document.getElementById('user-info-pc');
-  
-  if (authLinksPc) authLinksPc.style.display = 'flex';
-  if (userInfoPc) userInfoPc.style.display = 'none';
-  
-  // 移动视图
-  const authLinksMobile = document.getElementById('auth-links-mobile');
-  const userInfoMobile = document.getElementById('user-info-mobile');
-  
-  if (authLinksMobile) authLinksMobile.style.display = 'block';
-  if (userInfoMobile) userInfoMobile.style.display = 'none';
-  
-  // 移除移动端用户组背景和等级图标
-  const sidebarUserArea = document.querySelector('.sidebar-user-area');
-  if (sidebarUserArea) {
-    sidebarUserArea.style.removeProperty('--user-rank-bg');
-    const rankIconMobile = document.getElementById('user-rank-icon-mobile');
-    if (rankIconMobile) {
-      rankIconMobile.remove();
-    }
-  }
-  
-  // 隐藏所有需要登录才能访问的菜单项
-  document.getElementById('sidebar-ccb').style.display = 'none';
-  document.getElementById('sidebar-exchange').style.display = 'none';
-  document.getElementById('admin-section-title').style.display = 'none';
-  document.getElementById('admin-section-nav').style.display = 'none';
+
+// 更健壮的显隐工具
+function $(sel) { return typeof sel === 'string' ? document.querySelector(sel) : sel; }
+function show(el) {
+  el = $(el);
+  if (!el) return;
+  if (el.style) el.style.display = '';
+  if (el.classList) { el.classList.remove('d-none', 'hidden'); }
+  if ('hidden' in el) el.hidden = false;
 }
+function hide(el) {
+  el = $(el);
+  if (!el) return;
+  if (el.style) el.style.display = 'none';
+  if (el.classList) { el.classList.add('d-none'); }
+  if ('hidden' in el) el.hidden = true;
+}
+
+const AUTH_SELECTORS = {
+  loginLink:    '[data-link="login"], .nav-login, a[href="#/login"]',
+  logoutLink:   '[data-link="logout"], .nav-logout, a[href="#/logout"]',
+  registerLink: '[data-link="register"], .nav-register, a[href="#/register"]',
+  userBadge:    '#user-badge, .user-badge',
+  userAvatar:   '#user-avatar, .user-avatar',
+  userName:     '#user-name, .user-name'
+};
+
+function showAuthLinks(currentUser) {
+  const isLoggedIn = !!currentUser;
+
+  const loginLink    = $(AUTH_SELECTORS.loginLink);
+  const registerLink = $(AUTH_SELECTORS.registerLink);
+  const logoutLink   = $(AUTH_SELECTORS.logoutLink);
+
+  if (isLoggedIn) {
+    hide(loginLink);
+    hide(registerLink);
+    show(logoutLink);
+  } else {
+    show(loginLink);
+    show(registerLink);
+    hide(logoutLink);
+  }
+
+  const badge  = $(AUTH_SELECTORS.userBadge);
+  const avatar = $(AUTH_SELECTORS.userAvatar);
+  const nameEl = $(AUTH_SELECTORS.userName);
+
+  if (isLoggedIn) {
+    show(badge); show(avatar); show(nameEl);
+    if (nameEl) {
+      const nickname = currentUser?.nickname || currentUser?.username || '用户';
+      if ('textContent' in nameEl) nameEl.textContent = nickname;
+    }
+    if (avatar && currentUser?.avatarUrl) {
+      if ('src' in avatar) avatar.src = currentUser.avatarUrl;
+      else if (avatar.style) avatar.style.backgroundImage = `url("${currentUser.avatarUrl}")`;
+    }
+  } else {
+    hide(badge); hide(avatar); hide(nameEl);
+  }
+}
+
+window.showAuthLinks = showAuthLinks;
+
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const cached = window.currentUser || null;
+    showAuthLinks(cached);
+  } catch (_e) {}
+});
+
 
 // 发送验证码
 function sendVerificationCode(email, type) {
@@ -2246,13 +2324,18 @@ if (pageId === 'download') {
         }
       }
 
-      // 公告管理页面
+      // 在公告管理页面的处理部分添加：
       if (pageId === 'announcement-admin') {
-        if (typeof initAnnouncementAdminSystem === 'function') {
-          setTimeout(initAnnouncementAdminSystem, 100);
+        // 检查用户权限
+        if (currentUser && currentUser.user_rank >= 5) {
+          // 初始化公告管理系统
+          if (typeof initAnnouncementAdminSystem === 'function') {
+            setTimeout(initAnnouncementAdminSystem, 100);
+          }
+        } else {
+          showLoginRequired('announcement-admin');
         }
       }
-
 
       if (pageId === 'order-entry') {
         initOrderEntryPage();
@@ -2267,9 +2350,14 @@ if (pageId === 'download') {
       
       // 用户管理页面
       if (pageId === 'user-manager') {
-        // 后端统一鉴权；此处仅初始化页面逻辑
-        if (typeof initUserManager === 'function') {
-          setTimeout(initUserManager, 100);
+        // 检查用户权限
+        if (currentUser && currentUser.user_rank >= 5) {
+          // 初始化用户管理系统
+          if (typeof initUserManager === 'function') {
+            setTimeout(initUserManager, 100);
+          }
+        } else {
+          showLoginRequired('user-manager');
         }
       }
     } else {
