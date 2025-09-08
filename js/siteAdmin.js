@@ -1,5 +1,3 @@
-// Injected API base detection
-var API_BASE=(typeof window!=='undefined' && window.API_BASE!==undefined ? window.API_BASE : ((location && (location.hostname==='127.0.0.1'||location.hostname==='localhost'))    ? 'https://api.am-all.com.cn' : ''));
 // siteAdmin.js — 网站管理（独立）
 // 依赖：currentUser / secureFetch / showLoginRequired / showErrorMessage / showSuccessMessage / loadPage
 
@@ -160,7 +158,7 @@ var API_BASE=(typeof window!=='undefined' && window.API_BASE!==undefined ? windo
 
   async function loadServers(listWrap) {
     try {
-      const servers = await secureFetch(API_BASE + '/api/ccb/servers'); // 公开读取
+      const servers = await secureFetch('https://api.am-all.com.cn/api/ccb/servers'); // 公开读取
       listWrap.innerHTML = '';
       if (!Array.isArray(servers) || servers.length === 0) {
         listWrap.innerHTML = '<p class="empty">暂无服务器</p>';
@@ -307,7 +305,7 @@ var API_BASE=(typeof window!=='undefined' && window.API_BASE!==undefined ? windo
 
   async function loadGames(listWrap) {
     try {
-      const games = await secureFetch(API_BASE + '/api/ccb/games'); // 公开读取
+      const games = await secureFetch('https://api.am-all.com.cn/api/ccb/games'); // 公开读取
       listWrap.innerHTML = '';
       if (!Array.isArray(games) || games.length === 0) {
         listWrap.innerHTML = '<p class="empty">暂无游戏</p>';

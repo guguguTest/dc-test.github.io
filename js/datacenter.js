@@ -1,5 +1,3 @@
-// Injected API base detection
-var API_BASE=(typeof window!=='undefined' && window.API_BASE!==undefined ? window.API_BASE : ((location && (location.hostname==='127.0.0.1'||location.hostname==='localhost'))    ? 'https://api.am-all.com.cn' : ''));
 // datacenter.js - 主功能模块
 document.addEventListener("DOMContentLoaded", function() {
     // 获取DOM元素

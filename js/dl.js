@@ -1,5 +1,3 @@
-// Injected API base detection
-var API_BASE=(typeof window!=='undefined' && window.API_BASE!==undefined ? window.API_BASE : ((location && (location.hostname==='127.0.0.1'||location.hostname==='localhost'))    ? 'https://api.am-all.com.cn' : ''));
 // downloads.js - 动态加载下载内容
 if (typeof window.API_BASE_URL === 'undefined') {
     window.API_BASE_URL = 'https://api.am-all.com.cn';
@@ -88,7 +86,7 @@ async function loadDownloadContent() {
       status: response.status,
       statusText: response.statusText,
       url: response.url,
-      headers: (function(){ const o={}; try{ response.headers.forEach((v,k)=>o[k]=v);}catch(e){} return o; })()
+      headers: Object.fromEntries([...response.headers])
     });
     
     if (response.status === 401) {

@@ -1,30 +1,4 @@
-// Injected API base detection
-var API_BASE=(typeof window!=='undefined' && window.API_BASE!==undefined ? window.API_BASE : ((location && (location.hostname==='127.0.0.1'||location.hostname==='localhost'))    ? 'https://api.am-all.com.cn' : ''));
 // spa.js - 单页面应用主模块
-// —— 通用登出（立即刷新 UI）——
-window.logoutAndRefresh = function logoutAndRefresh() {
-  try { localStorage.removeItem('token'); localStorage.removeItem('userInfo'); } catch (_){}
-  try { window.currentUser = null; } catch (_){}
-  try { if (typeof showAuthLinks === 'function') showAuthLinks(null); } catch (_){}
-  try { if (typeof updateSidebarVisibility === 'function') updateSidebarVisibility(null); } catch (_){}
-  try { if (typeof loadPage === 'function') loadPage('home'); window.location.hash = '#/home'; } catch (_){}
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  const bindLogout = (sel) => {
-    document.querySelectorAll(sel).forEach(a => {
-      if (a.dataset.__logoutBound) return;
-      a.addEventListener('click', (e) => { e.preventDefault(); window.logoutAndRefresh(); });
-      a.dataset.__logoutBound = '1';
-    });
-  };
-  bindLogout('[data-link="logout"]');
-  bindLogout('.nav-logout');
-  bindLogout('a[href="#/logout"]');
-  bindLogout('#logout-pc');
-  bindLogout('#logout-mobile');
-  bindLogout('[data-link="logout"], .nav-logout');
-});
 // 用户状态管理
 let currentUser = null;
 let cropper = null;
@@ -130,7 +104,7 @@ function handleUnbindFromSettings() {
     
     const token = localStorage.getItem('token');
     
-    secureFetch(API_BASE + '/api/ccb/unbind', {
+    secureFetch('https://api.am-all.com.cn/api/ccb/unbind', {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`
@@ -191,62 +165,144 @@ function refreshUserInfoDisplay() {
 
 // 更新侧边栏显示函数
 
-
 async function updateSidebarVisibility(user) {
   const token = localStorage.getItem('token');
   const guestVisible = ['home', 'settings', 'help'];
 
   const setDisplay = (el, show) => { if (el) el.style.display = show ? '' : 'none'; };
-  const closestItem = (a) => (a.closest && a.closest('li')) ? a.closest('li') : (a.parentElement || a);
-  const hasText = (a) => ((a.textContent || '').trim().length > 0);
 
-  // Helper: hide any section title whose following <ul> has no visible <li>
-  const hideSectionsGeneric = () => {
-    document.querySelectorAll('.sidebar-section-title').forEach(title => {
-      // Find the next sibling UL (may be several nodes away)
-      let list = title.nextElementSibling;
-      while (list && !(list.tagName === 'UL' && list.classList.contains('sidebar-nav'))) {
-        list = list.nextElementSibling;
+  const nav = document.querySelector('.sidebar-nav');
+  if (nav) {
+    const links = nav.querySelectorAll('a[data-page]');
+    if (!token) {
+      for (const a of links) {
+        const pid = a.getAttribute('data-page');
+        setDisplay(a.parentElement, guestVisible.includes(pid));
       }
-      if (!list) return;
-      const anyVisible = Array.from(list.querySelectorAll('li')).some(li => {
-        const st = window.getComputedStyle(li);
-        return st.display !== 'none' && st.visibility !== 'hidden';
-      });
-      setDisplay(list, anyVisible);
-      setDisplay(title, anyVisible);
-    });
-  };
-
-  const anchors = Array.from(document.querySelectorAll('.sidebar a[data-page]'));
-  if (!anchors.length) { hideSectionsGeneric(); return; }
-
-  // Guest: only home/settings/help
-  if (!token) {
-    anchors.forEach(a => {
-      const pid = a.getAttribute('data-page');
-      setDisplay(closestItem(a), guestVisible.includes(pid) && hasText(a));
-    });
-    hideSectionsGeneric();
-    return;
+    } else {
+      const headers = { 'Authorization': `Bearer ${token}` };
+      for (const a of links) {
+        const pid = a.getAttribute('data-page');
+        try {
+          const resp = await fetch(`https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`, { headers });
+          const data = await resp.json();
+          setDisplay(a.parentElement, !!(data && data.visible));
+        } catch (e) {
+          console.warn('可见性检查失败:', pid, e);
+          setDisplay(a.parentElement, false);
+        }
+      }
+    }
   }
 
-  // Logged-in: ask server for each page's visibility
-  await Promise.all(anchors.map(async (a) => {
-    const pid = a.getAttribute('data-page');
-    try {
-      const url = `https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}?t=${Date.now()}`;
-      const resp = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' });
-      const data = await resp.json().catch(() => null);
-      const visible = !!(data && data.visible);
-      setDisplay(closestItem(a), visible && hasText(a));
-    } catch (e) {
-      setDisplay(closestItem(a), false);
-    }
-  }));
+  const legacyMap = [
+    ['sidebar-ccb','ccb'],
+    ['sidebar-exchange','exchange'],
+    ['sidebar-announcement-admin','announcement-admin'],
+    ['sidebar-site-admin','site-admin'],
+    ['sidebar-download-admin','download-admin'],
+    ['sidebar-user-manager','user-manager'],
+    ['sidebar-order-entry','order-entry'],
+    ['sidebar-home','home'],
+    ['sidebar-download','download'],
+    ['sidebar-tools','tools'],
+    ['sidebar-dllpatcher','dllpatcher'],
+    ['sidebar-settings','settings'],
+    ['sidebar-help','help'],
+    ['sidebar-fortune','fortune'],
+    ['sidebar-user-settings','user-settings'],
+  ];
+  
+  for (const [id, pid] of legacyMap) {
+    const el = document.getElementById(id);
+    if (!el) continue;
 
-  hideSectionsGeneric();
+    const a = el.querySelector ? el.querySelector('a') : null;
+    const clickTarget = a || el;
+
+    try {
+      clickTarget.setAttribute('data-page', pid);
+      if (a) {
+        if (!a.getAttribute('href')) a.setAttribute('href', `#/${pid}`);
+        a.setAttribute('role', 'button');
+      }
+    } catch {}
+
+    if (!token) {
+      const vis = guestVisible.includes(pid);
+      if (a && a.parentElement) a.parentElement.style.display = vis ? '' : 'none';
+      else el.style.display = vis ? '' : 'none';
+    } else {
+      try {
+        const _pvUrl = `https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`;
+const _pvBust = _pvUrl + (_pvUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+const resp = await fetch(_pvBust, {
+  headers: { 'Authorization': `Bearer ${token}`,  },
+  cache: 'no-store'
+});
+let data = null; try { data = await resp.json(); } catch(e) { data = null; }
+const vis = !!(data && data.visible);
+        if (a && a.parentElement) a.parentElement.style.display = vis ? '' : 'none';
+        else el.style.display = vis ? '' : 'none';
+      } catch (e) {
+        console.warn('可见性检查失败:', pid, e);
+        if (a && a.parentElement) a.parentElement.style.display = 'none';
+        else el.style.display = 'none';
+      }
+    }
+
+    if (!clickTarget.dataset.boundClick) {
+      clickTarget.addEventListener('click', (ev) => {
+        if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+        try {
+          console.debug('nav from legacy item →', pid);
+          if (typeof loadPage === 'function') loadPage(pid);
+          else window.location.hash = `#/${pid}`;
+        } catch (e) {
+          console.error('跳转失败', pid, e);
+          window.location.hash = `#/${pid}`;
+        }
+      }, { passive: false });
+      clickTarget.dataset.boundClick = '1';
+      clickTarget.style.cursor = 'pointer';
+    }
+  }
+
+
+
+  // ---- Auto hide empty admin group (no visible children) ----
+  try {
+    (function hideEmptyGroups() {
+      var adminNav = document.getElementById('admin-section-nav');
+      var adminTitle = document.getElementById('admin-section-title');
+      if (!adminNav || !adminTitle) return;
+      var items = adminNav.querySelectorAll('li, a[data-page]');
+      var anyVisible = false;
+      items.forEach ? items.forEach(function(el){
+        var node = el.tagName === 'A' ? (el.parentElement || el) : el;
+        if (!node) return;
+        var style = window.getComputedStyle(node);
+        if (style.display !== 'none' && style.visibility !== 'hidden' && node.offsetParent !== null) {
+          anyVisible = true;
+        }
+      }) : (function(){
+        for (var i=0;i<items.length;i++){
+          var el = items[i];
+          var node = el.tagName === 'A' ? (el.parentElement || el) : el;
+          if (!node) continue;
+          var style = window.getComputedStyle(node);
+          if (style.display !== 'none' && style.visibility !== 'hidden' && node.offsetParent !== null) {
+            anyVisible = true;
+            break;
+          }
+        }
+      })();
+      adminNav.style.display = anyVisible ? '' : 'none';
+      adminTitle.style.display = anyVisible ? '' : 'none';
+    })();
+  } catch(e) { console.warn('hideEmptyGroups failed', e); }
 }
+
 
 // 在侧边栏显示/隐藏时调用这个函数
 document.addEventListener("DOMContentLoaded", function() {
@@ -523,7 +579,7 @@ function getUserRankInfo(userRank) {
 
 // 在获取用户信息后更新侧边栏
 function fetchUserInfo(token) {
-  return secureFetch(API_BASE + '/api/user', {
+  return secureFetch('https://api.am-all.com.cn/api/user', {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`
@@ -562,7 +618,7 @@ function fetchUserInfo(token) {
 
 // 获取用户权限
 function fetchUserPermissions(token) {
-  return secureFetch(API_BASE + '/api/admin/users/permissions/me', {
+  return secureFetch('https://api.am-all.com.cn/api/admin/users/permissions/me', {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`
@@ -579,7 +635,7 @@ function fetchUserPermissions(token) {
 
 // 更新用户信息显示
 function updateUserInfo(user) {
-  const defaultAvatarUrl = API_BASE + '/avatars/default_avatar.png';
+  const defaultAvatarUrl = 'https://api.am-all.com.cn/avatars/default_avatar.png';
   const rankInfo = getUserRankInfo(user.user_rank || 0);
   
   // 使用用户自定义头像或默认头像
@@ -806,52 +862,21 @@ function showUserInfo() {
     document.getElementById('sidebar-exchange').style.display = 'none';
   }
   
-  // 显示管理分类和菜单（用户组级别>=4）
-  if (currentUser && currentUser.user_rank >= 4) {
-    document.getElementById('admin-section-title').style.display = 'block';
-    document.getElementById('admin-section-nav').style.display = 'block';
-    
-    // 显示公告管理菜单（用户组级别>=5）
-    if (currentUser.user_rank >= 5) {
-      document.getElementById('sidebar-announcement-admin').style.display = 'block';
-    } else {
-      document.getElementById('sidebar-announcement-admin').style.display = 'none';
-    }
-    
-    // 显示网站管理菜单（用户组级别>=5）
-    if (currentUser.user_rank >= 5) {
-      document.getElementById('sidebar-site-admin').style.display = 'block';
-    } else {
-      document.getElementById('sidebar-site-admin').style.display = 'none';
-    }
-    
-    // 显示下载管理菜单（用户组级别>=5）
-    if (currentUser.user_rank >= 5) {
-      document.getElementById('sidebar-download-admin').style.display = 'block';
-    } else {
-      document.getElementById('sidebar-download-admin').style.display = 'none';
-    }
-    
-	// 显示用户管理菜单（用户组级别>=5）
-	if (currentUser.user_rank >= 5) {
-	  document.getElementById('sidebar-user-manager').style.display = 'block';
-	} else {
-	  document.getElementById('sidebar-user-manager').style.display = 'none';
-	}
-	
-    // 显示订单录入菜单（用户组级别>=4）
-    document.getElementById('sidebar-order-entry').style.display = 'block';
+  // 管理分类容器交给后端可见性决定（显示容器，子项由 /api/page-visibility 控制）
+  (function(){
+    const adminTitle = document.getElementById('admin-section-title');
+    const adminNav   = document.getElementById('admin-section-nav');
+    if (adminTitle) adminTitle.style.display = '';
+    if (adminNav)   adminNav.style.display   = '';
+  })();
+    // 显示下载菜单（用户组级别>0）
+  if (currentUser && currentUser.user_rank > 0) {
+    document.querySelector('a[data-page="download"]').parentElement.style.display = 'block';
   } else {
-    document.getElementById('admin-section-title').style.display = 'none';
-    document.getElementById('admin-section-nav').style.display = 'none';
+    // 改为始终显示，但添加特殊样式表示权限不足
+    const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
+    downloadMenuItem.style.display = 'block';
   }
-  
-    // 未登录或低权限时不强制显示“下载”；交由 updateSidebarVisibility 统一控制
-  try {
-    // 清空任何之前强制设置
-    const dlItem = document.querySelector('a[data-page="download"]');
-    if (dlItem && dlItem.parentElement) dlItem.parentElement.style.display = '';
-  } catch(_) {}
 
   // 显示管理分组容器；具体入口显隐由 updateSidebarVisibility 决定
   try {
@@ -864,79 +889,37 @@ function showUserInfo() {
 }
 
 // 显示登录/注册链接
-
-// 更健壮的显隐工具
-function $(sel) { return typeof sel === 'string' ? document.querySelector(sel) : sel; }
-function show(el) {
-  el = $(el);
-  if (!el) return;
-  if (el.style) el.style.display = '';
-  if (el.classList) { el.classList.remove('d-none', 'hidden'); }
-  if ('hidden' in el) el.hidden = false;
-}
-function hide(el) {
-  el = $(el);
-  if (!el) return;
-  if (el.style) el.style.display = 'none';
-  if (el.classList) { el.classList.add('d-none'); }
-  if ('hidden' in el) el.hidden = true;
-}
-
-const AUTH_SELECTORS = {
-  loginLink:    '[data-link="login"], .nav-login, a[href="#/login"]',
-  logoutLink:   '[data-link="logout"], .nav-logout, a[href="#/logout"]',
-  registerLink: '[data-link="register"], .nav-register, a[href="#/register"]',
-  userBadge:    '#user-badge, .user-badge',
-  userAvatar:   '#user-avatar, .user-avatar',
-  userName:     '#user-name, .user-name'
-};
-
-function showAuthLinks(currentUser) {
-  const isLoggedIn = !!currentUser;
-
-  const loginLink    = $(AUTH_SELECTORS.loginLink);
-  const registerLink = $(AUTH_SELECTORS.registerLink);
-  const logoutLink   = $(AUTH_SELECTORS.logoutLink);
-
-  if (isLoggedIn) {
-    hide(loginLink);
-    hide(registerLink);
-    show(logoutLink);
-  } else {
-    show(loginLink);
-    show(registerLink);
-    hide(logoutLink);
-  }
-
-  const badge  = $(AUTH_SELECTORS.userBadge);
-  const avatar = $(AUTH_SELECTORS.userAvatar);
-  const nameEl = $(AUTH_SELECTORS.userName);
-
-  if (isLoggedIn) {
-    show(badge); show(avatar); show(nameEl);
-    if (nameEl) {
-      const nickname = currentUser?.nickname || currentUser?.username || '用户';
-      if ('textContent' in nameEl) nameEl.textContent = nickname;
+function showAuthLinks() {
+  // PC视图
+  const authLinksPc = document.getElementById('auth-links-pc');
+  const userInfoPc = document.getElementById('user-info-pc');
+  
+  if (authLinksPc) authLinksPc.style.display = 'flex';
+  if (userInfoPc) userInfoPc.style.display = 'none';
+  
+  // 移动视图
+  const authLinksMobile = document.getElementById('auth-links-mobile');
+  const userInfoMobile = document.getElementById('user-info-mobile');
+  
+  if (authLinksMobile) authLinksMobile.style.display = 'block';
+  if (userInfoMobile) userInfoMobile.style.display = 'none';
+  
+  // 移除移动端用户组背景和等级图标
+  const sidebarUserArea = document.querySelector('.sidebar-user-area');
+  if (sidebarUserArea) {
+    sidebarUserArea.style.removeProperty('--user-rank-bg');
+    const rankIconMobile = document.getElementById('user-rank-icon-mobile');
+    if (rankIconMobile) {
+      rankIconMobile.remove();
     }
-    if (avatar && currentUser?.avatarUrl) {
-      if ('src' in avatar) avatar.src = currentUser.avatarUrl;
-      else if (avatar.style) avatar.style.backgroundImage = `url("${currentUser.avatarUrl}")`;
-    }
-  } else {
-    hide(badge); hide(avatar); hide(nameEl);
   }
+  
+  // 隐藏所有需要登录才能访问的菜单项
+  document.getElementById('sidebar-ccb').style.display = 'none';
+  document.getElementById('sidebar-exchange').style.display = 'none';
+  document.getElementById('admin-section-title').style.display = 'none';
+  document.getElementById('admin-section-nav').style.display = 'none';
 }
-
-window.showAuthLinks = showAuthLinks;
-
-document.addEventListener('DOMContentLoaded', () => {
-  try {
-    const cached = window.currentUser || null;
-    showAuthLinks(cached);
-    try { if (typeof updateSidebarVisibility === 'function') updateSidebarVisibility(cached); } catch (_e) {}
-  } catch (_e) {}
-});
-
 
 // 发送验证码
 function sendVerificationCode(email, type) {
@@ -963,7 +946,7 @@ function sendVerificationCode(email, type) {
     }, 1000);
   }
   
-  return fetch(API_BASE + '/api/send-verification-code', {
+  return fetch('https://api.am-all.com.cn/api/send-verification-code', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1024,7 +1007,7 @@ function sendVerificationCode(email, type) {
 
 // 验证验证码
 function verifyCode(email, code, type) {
-  return fetch(API_BASE + '/api/verify-code', {
+  return fetch('https://api.am-all.com.cn/api/verify-code', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1041,7 +1024,7 @@ function verifyCode(email, code, type) {
 
 // 重置密码
 function resetPassword(resetToken, newPassword) {
-  return fetch(API_BASE + '/api/reset-password', {
+  return fetch('https://api.am-all.com.cn/api/reset-password', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1074,7 +1057,7 @@ function handleLogin() {
 
   console.log('开始登录:', login);
   
-  secureFetch(API_BASE + '/api/login', {
+  secureFetch('https://api.am-all.com.cn/api/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1157,7 +1140,7 @@ function handleRegister() {
     return;
   }
 
-  fetch(API_BASE + '/api/register', {
+  fetch('https://api.am-all.com.cn/api/register', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1441,7 +1424,7 @@ async function getUserPermissions() {
   
   try {
     // 修改为获取当前用户的权限
-    const response = await fetch(API_BASE + '/api/admin/users/permissions/me', {
+    const response = await fetch('https://api.am-all.com.cn/api/admin/users/permissions/me', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1677,7 +1660,7 @@ async function loadPage(pageId) {
                 formData.append('avatar', blob, 'avatar.png');
                 
                 const token = localStorage.getItem('token');
-                fetch(API_BASE + '/api/user/avatar', {
+                fetch('https://api.am-all.com.cn/api/user/avatar', {
                   method: 'PUT',
                   headers: {
                     'Authorization': `Bearer ${token}`
@@ -1717,7 +1700,7 @@ async function loadPage(pageId) {
             }
             
             const token = localStorage.getItem('token');
-            fetch(API_BASE + '/api/user/profile', {
+            fetch('https://api.am-all.com.cn/api/user/profile', {
               method: 'PUT',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -1762,7 +1745,7 @@ async function loadPage(pageId) {
             }
             
             const token = localStorage.getItem('token');
-            fetch(API_BASE + '/api/user/password', {
+            fetch('https://api.am-all.com.cn/api/user/password', {
               method: 'PUT',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -1989,7 +1972,7 @@ if (pageId === 'download') {
               const token = localStorage.getItem('token');
               if (token) {
                 // 在获取上次抽取时间的代码部分，添加错误处理
-                fetch(API_BASE + '/api/fortune/last-draw', {
+                fetch('https://api.am-all.com.cn/api/fortune/last-draw', {
                   headers: {
                     'Authorization': `Bearer ${token}`
                   }
@@ -2157,7 +2140,7 @@ if (pageId === 'download') {
                     clearInterval(scrollInterval);
                     
                     // 调用后端API抽取运势
-                  fetch(API_BASE + '/api/fortune/draw', {
+                  fetch('https://api.am-all.com.cn/api/fortune/draw', {
                     method: 'POST',
                     headers: {
                       'Authorization': `Bearer ${token}`,
@@ -2263,18 +2246,13 @@ if (pageId === 'download') {
         }
       }
 
-      // 在公告管理页面的处理部分添加：
+      // 公告管理页面
       if (pageId === 'announcement-admin') {
-        // 检查用户权限
-        if (currentUser && currentUser.user_rank >= 5) {
-          // 初始化公告管理系统
-          if (typeof initAnnouncementAdminSystem === 'function') {
-            setTimeout(initAnnouncementAdminSystem, 100);
-          }
-        } else {
-          showLoginRequired('announcement-admin');
+        if (typeof initAnnouncementAdminSystem === 'function') {
+          setTimeout(initAnnouncementAdminSystem, 100);
         }
       }
+
 
       if (pageId === 'order-entry') {
         initOrderEntryPage();
@@ -2289,14 +2267,9 @@ if (pageId === 'download') {
       
       // 用户管理页面
       if (pageId === 'user-manager') {
-        // 检查用户权限
-        if (currentUser && currentUser.user_rank >= 5) {
-          // 初始化用户管理系统
-          if (typeof initUserManager === 'function') {
-            setTimeout(initUserManager, 100);
-          }
-        } else {
-          showLoginRequired('user-manager');
+        // 后端统一鉴权；此处仅初始化页面逻辑
+        if (typeof initUserManager === 'function') {
+          setTimeout(initUserManager, 100);
         }
       }
     } else {
@@ -2858,7 +2831,7 @@ async function saveOrder() {
       url = `https://api.am-all.com.cn/api/orders/${orderId}`;
       method = 'PUT';
     } else {
-      url = API_BASE + '/api/orders';
+      url = 'https://api.am-all.com.cn/api/orders';
       method = 'POST';
     }
     
@@ -2936,7 +2909,7 @@ async function handleRedeemOrder() {
   try {
     const token = localStorage.getItem('token');
     
-    const response = await fetch(API_BASE + '/api/redeem-order', {
+    const response = await fetch('https://api.am-all.com.cn/api/redeem-order', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

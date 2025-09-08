@@ -1,5 +1,3 @@
-// Injected API base detection
-var API_BASE=(typeof window!=='undefined' && window.API_BASE!==undefined ? window.API_BASE : ((location && (location.hostname==='127.0.0.1'||location.hostname==='localhost'))    ? 'https://api.am-all.com.cn' : ''));
 // 公告系统功能
 class AnnouncementSystem {
   constructor() {
@@ -392,7 +390,7 @@ class AnnouncementAdminSystem {
   async loadAnnouncements() {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(API_BASE + '/api/announcements?page=1&limit=100', {
+      const response = await fetch('https://api.am-all.com.cn/api/announcements?page=1&limit=100', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -548,7 +546,7 @@ class AnnouncementAdminSystem {
       const token = localStorage.getItem('token');
       const url = this.isEditing ? 
         `https://api.am-all.com.cn/api/announcements/${this.currentAnnouncement.id}` : 
-        API_BASE + '/api/announcements';
+        'https://api.am-all.com.cn/api/announcements';
       
       const method = this.isEditing ? 'PUT' : 'POST';
       
