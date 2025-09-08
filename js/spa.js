@@ -164,143 +164,164 @@ function refreshUserInfoDisplay() {
 }
 
 // 更新侧边栏显示函数
-
 async function updateSidebarVisibility(user) {
   const token = localStorage.getItem('token');
   const guestVisible = ['home', 'settings', 'help'];
 
-  const setDisplay = (el, show) => { if (el) el.style.display = show ? '' : 'none'; };
+  const setDisplay = (el, show) => { 
+    if (el) {
+      el.style.display = show ? '' : 'none';
+      console.log(`设置元素 ${el.id || el.className} 显示: ${show}`);
+    }
+  };
 
+  // 定义所有页面
+  const allPages = [
+    'home', 'download', 'tools', 'dllpatcher', 'settings', 'help', 'fortune', 'user-settings',
+    'ccb', 'exchange', 'announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry'
+  ];
+
+  // 存储每个页面的可见性
+  const pageVisibility = {};
+
+  // 处理所有页面的可见性
+  if (!token) {
+    // 未登录状态
+    for (const pageId of allPages) {
+      pageVisibility[pageId] = guestVisible.includes(pageId);
+    }
+  } else {
+    // 已登录状态 - 批量获取所有页面的可见性
+    const headers = { 'Authorization': `Bearer ${token}` };
+    
+    // 使用 Promise.all 并行获取所有页面的可见性
+    const visibilityPromises = allPages.map(async (pageId) => {
+      try {
+        const url = `https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pageId)}`;
+        const response = await fetch(url, {
+          headers: headers,
+          cache: 'no-store'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          return { pageId, visible: !!(data && data.visible) };
+        }
+        return { pageId, visible: false };
+      } catch (e) {
+        console.warn(`检查页面 ${pageId} 可见性失败:`, e);
+        return { pageId, visible: false };
+      }
+    });
+    
+    const results = await Promise.all(visibilityPromises);
+    results.forEach(result => {
+      pageVisibility[result.pageId] = result.visible;
+      console.log(`页面 ${result.pageId} 可见性: ${result.visible}`);
+    });
+  }
+
+  // 应用可见性到DOM元素
+  // 处理 data-page 属性的链接
   const nav = document.querySelector('.sidebar-nav');
   if (nav) {
     const links = nav.querySelectorAll('a[data-page]');
-    if (!token) {
-      for (const a of links) {
-        const pid = a.getAttribute('data-page');
-        setDisplay(a.parentElement, guestVisible.includes(pid));
+    links.forEach(a => {
+      const pid = a.getAttribute('data-page');
+      const parentLi = a.parentElement;
+      if (parentLi) {
+        setDisplay(parentLi, pageVisibility[pid] || false);
       }
-    } else {
-      const headers = { 'Authorization': `Bearer ${token}` };
-      for (const a of links) {
-        const pid = a.getAttribute('data-page');
-        try {
-          const resp = await fetch(`https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`, { headers });
-          const data = await resp.json();
-          setDisplay(a.parentElement, !!(data && data.visible));
-        } catch (e) {
-          console.warn('可见性检查失败:', pid, e);
-          setDisplay(a.parentElement, false);
-        }
-      }
-    }
+    });
   }
 
-  const legacyMap = [
-    ['sidebar-ccb','ccb'],
-    ['sidebar-exchange','exchange'],
-    ['sidebar-announcement-admin','announcement-admin'],
-    ['sidebar-site-admin','site-admin'],
-    ['sidebar-download-admin','download-admin'],
-    ['sidebar-user-manager','user-manager'],
-    ['sidebar-order-entry','order-entry'],
-    ['sidebar-home','home'],
-    ['sidebar-download','download'],
-    ['sidebar-tools','tools'],
-    ['sidebar-dllpatcher','dllpatcher'],
-    ['sidebar-settings','settings'],
-    ['sidebar-help','help'],
-    ['sidebar-fortune','fortune'],
-    ['sidebar-user-settings','user-settings'],
-  ];
-  
-  for (const [id, pid] of legacyMap) {
+  // 处理旧版 ID 兼容
+  const legacyMap = {
+    'sidebar-home': 'home',
+    'sidebar-download': 'download',
+    'sidebar-tools': 'tools',
+    'sidebar-dllpatcher': 'dllpatcher',
+    'sidebar-settings': 'settings',
+    'sidebar-help': 'help',
+    'sidebar-fortune': 'fortune',
+    'sidebar-user-settings': 'user-settings',
+    'sidebar-ccb': 'ccb',
+    'sidebar-exchange': 'exchange',
+    'sidebar-announcement-admin': 'announcement-admin',
+    'sidebar-site-admin': 'site-admin',
+    'sidebar-download-admin': 'download-admin',
+    'sidebar-user-manager': 'user-manager',
+    'sidebar-order-entry': 'order-entry'
+  };
+
+  for (const [id, pid] of Object.entries(legacyMap)) {
     const el = document.getElementById(id);
-    if (!el) continue;
-
-    const a = el.querySelector ? el.querySelector('a') : null;
-    const clickTarget = a || el;
-
-    try {
-      clickTarget.setAttribute('data-page', pid);
-      if (a) {
-        if (!a.getAttribute('href')) a.setAttribute('href', `#/${pid}`);
-        a.setAttribute('role', 'button');
+    if (el) {
+      const visible = pageVisibility[pid] || false;
+      const targetEl = el.querySelector('a')?.parentElement || el;
+      setDisplay(targetEl, visible);
+      
+      // 确保元素有正确的 data-page 属性
+      const link = el.querySelector('a') || el;
+      if (!link.getAttribute('data-page')) {
+        link.setAttribute('data-page', pid);
       }
-    } catch {}
-
-    if (!token) {
-      const vis = guestVisible.includes(pid);
-      if (a && a.parentElement) a.parentElement.style.display = vis ? '' : 'none';
-      else el.style.display = vis ? '' : 'none';
-    } else {
-      try {
-        const _pvUrl = `https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`;
-const _pvBust = _pvUrl + (_pvUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
-const resp = await fetch(_pvBust, {
-  headers: { 'Authorization': `Bearer ${token}`,  },
-  cache: 'no-store'
-});
-let data = null; try { data = await resp.json(); } catch(e) { data = null; }
-const vis = !!(data && data.visible);
-        if (a && a.parentElement) a.parentElement.style.display = vis ? '' : 'none';
-        else el.style.display = vis ? '' : 'none';
-      } catch (e) {
-        console.warn('可见性检查失败:', pid, e);
-        if (a && a.parentElement) a.parentElement.style.display = 'none';
-        else el.style.display = 'none';
-      }
-    }
-
-    if (!clickTarget.dataset.boundClick) {
-      clickTarget.addEventListener('click', (ev) => {
-        if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
-        try {
-          console.debug('nav from legacy item →', pid);
-          if (typeof loadPage === 'function') loadPage(pid);
-          else window.location.hash = `#/${pid}`;
-        } catch (e) {
-          console.error('跳转失败', pid, e);
-          window.location.hash = `#/${pid}`;
-        }
-      }, { passive: false });
-      clickTarget.dataset.boundClick = '1';
-      clickTarget.style.cursor = 'pointer';
     }
   }
 
+  // 处理分类标题
+  // 等待一段时间确保所有元素都已更新
+  setTimeout(() => {
+    // 功能分类
+    const functionTitle = document.querySelector('.sidebar-section-title');
+    const functionNav = functionTitle ? functionTitle.nextElementSibling : null;
+    
+    if (functionTitle && functionNav && functionNav.tagName === 'UL') {
+      if (!token) {
+        // 未登录时隐藏功能分类
+        setDisplay(functionTitle, false);
+        setDisplay(functionNav, false);
+      } else {
+        // 检查功能分类下是否有可见项
+        const functionPages = ['fortune', 'ccb', 'exchange'];
+        const hasVisibleFunction = functionPages.some(p => pageVisibility[p]);
+        setDisplay(functionTitle, hasVisibleFunction);
+        setDisplay(functionNav, hasVisibleFunction);
+      }
+    }
 
-
-  // ---- Auto hide empty admin group (no visible children) ----
-  try {
-    (function hideEmptyGroups() {
-      var adminNav = document.getElementById('admin-section-nav');
-      var adminTitle = document.getElementById('admin-section-title');
-      if (!adminNav || !adminTitle) return;
-      var items = adminNav.querySelectorAll('li, a[data-page]');
-      var anyVisible = false;
-      items.forEach ? items.forEach(function(el){
-        var node = el.tagName === 'A' ? (el.parentElement || el) : el;
-        if (!node) return;
-        var style = window.getComputedStyle(node);
-        if (style.display !== 'none' && style.visibility !== 'hidden' && node.offsetParent !== null) {
-          anyVisible = true;
-        }
-      }) : (function(){
-        for (var i=0;i<items.length;i++){
-          var el = items[i];
-          var node = el.tagName === 'A' ? (el.parentElement || el) : el;
-          if (!node) continue;
-          var style = window.getComputedStyle(node);
-          if (style.display !== 'none' && style.visibility !== 'hidden' && node.offsetParent !== null) {
-            anyVisible = true;
-            break;
+    // 管理分类
+    const adminTitle = document.getElementById('admin-section-title');
+    const adminNav = document.getElementById('admin-section-nav');
+    
+    if (adminTitle && adminNav) {
+      if (!token) {
+        // 未登录时隐藏管理分类
+        setDisplay(adminTitle, false);
+        setDisplay(adminNav, false);
+      } else {
+        // 检查管理分类下是否有可见项
+        const adminPages = ['announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry'];
+        const hasVisibleAdmin = adminPages.some(p => pageVisibility[p]);
+        
+        console.log('管理页面可见性:', adminPages.map(p => `${p}: ${pageVisibility[p]}`));
+        console.log('是否显示管理分类:', hasVisibleAdmin);
+        
+        setDisplay(adminTitle, hasVisibleAdmin);
+        setDisplay(adminNav, hasVisibleAdmin);
+        
+        // 确保管理页面的链接正确显示
+        adminPages.forEach(pageId => {
+          const el = document.getElementById(`sidebar-${pageId}`);
+          if (el) {
+            const visible = pageVisibility[pageId] || false;
+            const targetEl = el.querySelector('a')?.parentElement || el;
+            setDisplay(targetEl, visible);
           }
-        }
-      })();
-      adminNav.style.display = anyVisible ? '' : 'none';
-      adminTitle.style.display = anyVisible ? '' : 'none';
-    })();
-  } catch(e) { console.warn('hideEmptyGroups failed', e); }
+        });
+      }
+    }
+  }, 300);  // 增加延迟确保所有异步操作完成
 }
 
 
@@ -516,6 +537,10 @@ function checkLoginStatus() {
     document.body.classList.add('spa-loading');
     
     fetchUserInfo(token)
+      .then(() => {
+        // fetchUserInfo 已经调用了 updateSidebarVisibility
+        console.log('用户信息加载完成，侧边栏已更新');
+      })
       .catch(error => {
         console.error('检查登录状态失败:', error);
         showAuthLinks();
@@ -599,20 +624,19 @@ function fetchUserInfo(token) {
     localStorage.setItem('userInfo', JSON.stringify(user));
     
     // 获取并缓存用户权限
-    return fetchUserPermissions(token);
-  })
-  .then(permissions => {
-    // 保存权限到本地存储
-    localStorage.setItem('userPermissions', JSON.stringify(permissions));
-    
-    // 更新侧边栏显示
-    updateSidebarVisibility(currentUser);
-    
-    return currentUser;
+    return fetchUserPermissions(token).then(permissions => {
+      // 保存权限到本地存储
+      localStorage.setItem('userPermissions', JSON.stringify(permissions));
+      
+      // 确保更新侧边栏显示
+      updateSidebarVisibility(currentUser);
+      
+      return currentUser;
+    });
   })
   .catch(error => {
     console.error('获取用户信息错误:', error);
-    // 错误处理代码...
+    throw error;
   });
 }
 
@@ -848,37 +872,8 @@ function showUserInfo() {
   if (authLinksMobile) authLinksMobile.style.display = 'none';
   if (userInfoMobile) userInfoMobile.style.display = 'block';
   
-  // 显示游戏查分菜单（用户组级别>0）
-  if (currentUser && currentUser.user_rank > 0) {
-    document.getElementById('sidebar-ccb').style.display = 'block';
-  } else {
-    document.getElementById('sidebar-ccb').style.display = 'none';
-  }
-  
-  // 显示积分兑换菜单（用户组级别>=1）
-  if (currentUser && currentUser.user_rank >= 1) {
-    document.getElementById('sidebar-exchange').style.display = 'block';
-  } else {
-    document.getElementById('sidebar-exchange').style.display = 'none';
-  }
-  
-  // 管理分类容器交给后端可见性决定（显示容器，子项由 /api/page-visibility 控制）
-  (function(){
-    const adminTitle = document.getElementById('admin-section-title');
-    const adminNav   = document.getElementById('admin-section-nav');
-    if (adminTitle) adminTitle.style.display = '';
-    if (adminNav)   adminNav.style.display   = '';
-  })();
-    // 显示下载菜单（用户组级别>0）
-  if (currentUser && currentUser.user_rank > 0) {
-    document.querySelector('a[data-page="download"]').parentElement.style.display = 'block';
-  } else {
-    // 改为始终显示，但添加特殊样式表示权限不足
-    const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
-    downloadMenuItem.style.display = 'block';
-  }
-
-  // 显示管理分组容器；具体入口显隐由 updateSidebarVisibility 决定
+  // 所有页面的显示控制交给 updateSidebarVisibility 统一处理
+  // 不再在这里硬编码任何页面的显示/隐藏
   try {
     if (typeof updateSidebarVisibility === 'function') {
       updateSidebarVisibility(window.currentUser || null);
@@ -914,11 +909,9 @@ function showAuthLinks() {
     }
   }
   
-  // 隐藏所有需要登录才能访问的菜单项
-  document.getElementById('sidebar-ccb').style.display = 'none';
-  document.getElementById('sidebar-exchange').style.display = 'none';
-  document.getElementById('admin-section-title').style.display = 'none';
-  document.getElementById('admin-section-nav').style.display = 'none';
+  // 统一使用 updateSidebarVisibility 处理侧边栏显示
+  // 传入 null 表示未登录状态
+  updateSidebarVisibility(null);
 }
 
 // 发送验证码
@@ -1069,13 +1062,30 @@ function handleLogin() {
     
     if (data.token && data.user) {
       localStorage.setItem('token', data.token);
-      return fetchUserInfo(data.token); // 确保获取完整的用户信息
+      
+      // 保存基本用户信息
+      currentUser = data.user;
+      localStorage.setItem('userInfo', JSON.stringify(data.user));
+      
+      // 立即更新用户信息显示
+      updateUserInfo(data.user);
+      showUserInfo();
+      setupUserDropdown();
+      
+      // 异步获取权限并更新侧边栏
+      fetchUserPermissions(data.token).then(permissions => {
+        localStorage.setItem('userPermissions', JSON.stringify(permissions));
+        // 确保更新侧边栏
+        updateSidebarVisibility(currentUser);
+      });
+      
+      // 跳转到首页
+      loadPage('home');
+      
+      return data;
     } else {
       throw new Error(data.error || '登录失败');
     }
-  })
-  .then(() => {
-    loadPage('home');
   })
   .catch(error => {
     console.error('登录失败:', {
@@ -1170,12 +1180,25 @@ function handleRegister() {
 
 // 退出登录
 function handleLogout() {
+  // 清除本地存储
   localStorage.removeItem('token');
   localStorage.removeItem('userInfo');
-  // 清除权限缓存
   localStorage.removeItem('userPermissions');
+  
+  // 清除当前用户
   currentUser = null;
+  
+  // 立即更新界面显示
   showAuthLinks();
+  
+  // 确保侧边栏更新完成
+  setTimeout(() => {
+    if (typeof updateSidebarVisibility === 'function') {
+      updateSidebarVisibility(null);
+    }
+  }, 100);
+  
+  // 跳转到首页
   loadPage('home');
 }
 
@@ -1827,16 +1850,13 @@ async function loadPage(pageId) {
       }
 
 		if (pageId === 'user-manager') {
-		  // 检查用户权限
-		  if (currentUser && currentUser.user_rank >= 5) {
-			// 初始化用户管理系统
-			if (typeof initUserManager === 'function') {
-			  setTimeout(initUserManager, 100);
-			}
-		  } else {
-			showLoginRequired('user-manager');
+		  // 权限已在前面通过 /api/check-permission 检查
+		  // 直接初始化页面
+		  if (typeof initUserManager === 'function') {
+			setTimeout(initUserManager, 100);
 		  }
 		}
+		
 if (pageId === 'download') {
 // 从本地存储获取用户信息
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
@@ -1875,17 +1895,13 @@ if (pageId === 'download') {
         }
       }
 
-      if (pageId === 'download-admin') {
-        // 检查用户权限
-        if (currentUser && currentUser.user_rank >= 5) {
-          // 初始化下载管理系统
-          if (typeof initDownloadAdminPage === 'function') {
-            setTimeout(initDownloadAdminPage, 100);
-          }
-        } else {
-          showLoginRequired('download-admin');
-        }
-      }
+		if (pageId === 'download-admin') {
+		  // 权限已在前面通过 /api/check-permission 检查
+		  // 直接初始化页面
+		  if (typeof initDownloadAdminPage === 'function') {
+			setTimeout(initDownloadAdminPage, 100);
+		  }
+		}
 
       if (pageId === 'fortune') {
         setTimeout(() => {
