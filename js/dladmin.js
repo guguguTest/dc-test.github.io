@@ -1,3 +1,5 @@
+// Injected API base detection
+var API_BASE=(typeof window!=='undefined' && window.API_BASE!==undefined ? window.API_BASE : ((location && (location.hostname==='127.0.0.1'||location.hostname==='localhost'))    ? 'https://api.am-all.com.cn' : ''));
 // download-admin.js - 下载管理功能
 if (typeof window.API_BASE_URL === 'undefined') {
     window.API_BASE_URL = 'https://api.am-all.com.cn';

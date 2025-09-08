@@ -1,3 +1,5 @@
+// Injected API base detection
+var API_BASE=(typeof window!=='undefined' && window.API_BASE!==undefined ? window.API_BASE : ((location && (location.hostname==='127.0.0.1'||location.hostname==='localhost'))    ? 'https://api.am-all.com.cn' : ''));
 // spa.js - 单页面应用主模块
 // —— 通用登出（立即刷新 UI）——
 window.logoutAndRefresh = function logoutAndRefresh() {
@@ -19,6 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
   bindLogout('[data-link="logout"]');
   bindLogout('.nav-logout');
   bindLogout('a[href="#/logout"]');
+  bindLogout('#logout-pc');
+  bindLogout('#logout-mobile');
+  bindLogout('[data-link="logout"], .nav-logout');
 });
 // 用户状态管理
 let currentUser = null;
@@ -125,7 +130,7 @@ function handleUnbindFromSettings() {
     
     const token = localStorage.getItem('token');
     
-    secureFetch('https://api.am-all.com.cn/api/ccb/unbind', {
+    secureFetch(API_BASE + '/api/ccb/unbind', {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`
@@ -186,128 +191,63 @@ function refreshUserInfoDisplay() {
 
 // 更新侧边栏显示函数
 
+
 async function updateSidebarVisibility(user) {
   const token = localStorage.getItem('token');
   const guestVisible = ['home', 'settings', 'help'];
 
   const setDisplay = (el, show) => { if (el) el.style.display = show ? '' : 'none'; };
-  const isVisibleNode = (node) => {
-    if (!node) return false;
-    const st = window.getComputedStyle(node);
-    return (st.display !== 'none' && st.visibility !== 'hidden' && node.offsetParent !== null);
-  };
-  const hideEmptyGroupByIds = (navId, titleId) => {
-    const nav = document.getElementById(navId);
-    const title = document.getElementById(titleId);
-    if (!nav || !title) return;
-    const items = nav.querySelectorAll('li, a[data-page]');
-    let any = false;
-    items.forEach(el => {
-      const li = el.tagName === 'A' ? (el.parentElement || el) : el;
-      if (isVisibleNode(li)) any = true;
-    });
-    setDisplay(nav, any);
-    setDisplay(title, any);
-  };
-  const hideEmptyGroupGeneric = () => {
+  const closestItem = (a) => (a.closest && a.closest('li')) ? a.closest('li') : (a.parentElement || a);
+  const hasText = (a) => ((a.textContent || '').trim().length > 0);
+
+  // Helper: hide any section title whose following <ul> has no visible <li>
+  const hideSectionsGeneric = () => {
     document.querySelectorAll('.sidebar-section-title').forEach(title => {
+      // Find the next sibling UL (may be several nodes away)
       let list = title.nextElementSibling;
-      while (list && !(list.tagName === 'UL' || list.matches('.sidebar-group, .sidebar-nav-sub'))) {
+      while (list && !(list.tagName === 'UL' && list.classList.contains('sidebar-nav'))) {
         list = list.nextElementSibling;
       }
       if (!list) return;
-      const children = list.querySelectorAll('li, a[data-page]');
-      let any = false;
-      children.forEach(el => {
-        const li = el.tagName === 'A' ? (el.parentElement || el) : el;
-        if (isVisibleNode(li)) any = true;
+      const anyVisible = Array.from(list.querySelectorAll('li')).some(li => {
+        const st = window.getComputedStyle(li);
+        return st.display !== 'none' && st.visibility !== 'hidden';
       });
-      setDisplay(list, any);
-      setDisplay(title, any);
+      setDisplay(list, anyVisible);
+      setDisplay(title, anyVisible);
     });
   };
 
-  const legacyMap = [
-    ['sidebar-ccb','ccb'],
-    ['sidebar-exchange','exchange'],
-    ['sidebar-announcement-admin','announcement-admin'],
-    ['sidebar-site-admin','site-admin'],
-    ['sidebar-download-admin','download-admin'],
-    ['sidebar-user-manager','user-manager'],
-    ['sidebar-order-entry','order-entry'],
-    ['sidebar-home','home'],
-    ['sidebar-download','download'],
-    ['sidebar-tools','tools'],
-    ['sidebar-dllpatcher','dllpatcher'],
-    ['sidebar-settings','settings'],
-    ['sidebar-help','help'],
-    ['sidebar-fortune','fortune'],
-    ['sidebar-user-settings','user-settings'],
-  ];
+  const anchors = Array.from(document.querySelectorAll('.sidebar a[data-page]'));
+  if (!anchors.length) { hideSectionsGeneric(); return; }
 
-  for (const [id, pid] of legacyMap) {
-    const el = document.getElementById(id);
-    if (!el) continue;
-    const a = el.querySelector ? el.querySelector('a') : null;
-    const clickTarget = a || el;
-    try {
-      clickTarget.setAttribute('data-page', pid);
-      if (a) {
-        if (!a.getAttribute('href')) a.setAttribute('href', `#/${pid}`);
-        a.setAttribute('role', 'button');
-      }
-    } catch {}
-
-    if (!token) {
-      const vis = guestVisible.includes(pid);
-      const node = a && a.parentElement ? a.parentElement : el;
-      const hasText = a ? (a.textContent || '').trim().length > 0 : (el.textContent || '').trim().length > 0;
-      setDisplay(node, vis && hasText);
-      continue;
-    }
-
-    try {
-      const _pvUrl = `https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}`;
-      const _pvBust = _pvUrl + (_pvUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
-      const resp = await fetch(_pvBust, { headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' });
-      let data = null; try { data = await resp.json(); } catch(e) { data = null; }
-      const vis = !!(data && data.visible);
-      const node = a && a.parentElement ? a.parentElement : el;
-      const hasText = a ? (a.textContent || '').trim().length > 0 : (el.textContent || '').trim().length > 0;
-      setDisplay(node, vis && hasText);
-    } catch (e) {
-      console.warn('可见性检查失败:', pid, e);
-      const node = a && a.parentElement ? a.parentElement : el;
-      setDisplay(node, false);
-    }
-
-    if (!clickTarget.dataset.boundClick) {
-      clickTarget.addEventListener('click', (ev) => {
-        if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
-        try {
-          if (typeof loadPage === 'function') loadPage(pid);
-          else window.location.hash = `#/${pid}`;
-        } catch (e) {
-          console.error('跳转失败', pid, e);
-          window.location.hash = `#/${pid}`;
-        }
-      }, { passive: false });
-      clickTarget.dataset.boundClick = '1';
-      clickTarget.style.cursor = 'pointer';
-    }
+  // Guest: only home/settings/help
+  if (!token) {
+    anchors.forEach(a => {
+      const pid = a.getAttribute('data-page');
+      setDisplay(closestItem(a), guestVisible.includes(pid) && hasText(a));
+    });
+    hideSectionsGeneric();
+    return;
   }
 
-  document.querySelectorAll('.sidebar li').forEach(li => {
-    const a = li.querySelector('a[data-page]');
-    if (!a) return;
-    const txt = (a.textContent || '').trim();
-    if (!txt || !isVisibleNode(a)) setDisplay(li, false);
-  });
+  // Logged-in: ask server for each page's visibility
+  await Promise.all(anchors.map(async (a) => {
+    const pid = a.getAttribute('data-page');
+    try {
+      const url = `https://api.am-all.com.cn/api/page-visibility/${encodeURIComponent(pid)}?t=${Date.now()}`;
+      const resp = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' });
+      const data = await resp.json().catch(() => null);
+      const visible = !!(data && data.visible);
+      setDisplay(closestItem(a), visible && hasText(a));
+    } catch (e) {
+      setDisplay(closestItem(a), false);
+    }
+  }));
 
-  hideEmptyGroupByIds('admin-section-nav', 'admin-section-title');
-  hideEmptyGroupByIds('feature-section-nav', 'feature-section-title');
-  hideEmptyGroupGeneric();
+  hideSectionsGeneric();
 }
+
 // 在侧边栏显示/隐藏时调用这个函数
 document.addEventListener("DOMContentLoaded", function() {
   const sidebar = document.querySelector('.sidebar');
@@ -583,7 +523,7 @@ function getUserRankInfo(userRank) {
 
 // 在获取用户信息后更新侧边栏
 function fetchUserInfo(token) {
-  return secureFetch('https://api.am-all.com.cn/api/user', {
+  return secureFetch(API_BASE + '/api/user', {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`
@@ -622,7 +562,7 @@ function fetchUserInfo(token) {
 
 // 获取用户权限
 function fetchUserPermissions(token) {
-  return secureFetch('https://api.am-all.com.cn/api/admin/users/permissions/me', {
+  return secureFetch(API_BASE + '/api/admin/users/permissions/me', {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`
@@ -639,7 +579,7 @@ function fetchUserPermissions(token) {
 
 // 更新用户信息显示
 function updateUserInfo(user) {
-  const defaultAvatarUrl = 'https://api.am-all.com.cn/avatars/default_avatar.png';
+  const defaultAvatarUrl = API_BASE + '/avatars/default_avatar.png';
   const rankInfo = getUserRankInfo(user.user_rank || 0);
   
   // 使用用户自定义头像或默认头像
@@ -906,14 +846,12 @@ function showUserInfo() {
     document.getElementById('admin-section-nav').style.display = 'none';
   }
   
-    // 显示下载菜单（用户组级别>0）
-  if (currentUser && currentUser.user_rank > 0) {
-    document.querySelector('a[data-page="download"]').parentElement.style.display = 'block';
-  } else {
-    // 改为始终显示，但添加特殊样式表示权限不足
-    const downloadMenuItem = document.querySelector('a[data-page="download"]').parentElement;
-    downloadMenuItem.style.display = 'block';
-  }
+    // 未登录或低权限时不强制显示“下载”；交由 updateSidebarVisibility 统一控制
+  try {
+    // 清空任何之前强制设置
+    const dlItem = document.querySelector('a[data-page="download"]');
+    if (dlItem && dlItem.parentElement) dlItem.parentElement.style.display = '';
+  } catch(_) {}
 
   // 显示管理分组容器；具体入口显隐由 updateSidebarVisibility 决定
   try {
@@ -995,6 +933,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     const cached = window.currentUser || null;
     showAuthLinks(cached);
+    try { if (typeof updateSidebarVisibility === 'function') updateSidebarVisibility(cached); } catch (_e) {}
   } catch (_e) {}
 });
 
@@ -1024,7 +963,7 @@ function sendVerificationCode(email, type) {
     }, 1000);
   }
   
-  return fetch('https://api.am-all.com.cn/api/send-verification-code', {
+  return fetch(API_BASE + '/api/send-verification-code', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1085,7 +1024,7 @@ function sendVerificationCode(email, type) {
 
 // 验证验证码
 function verifyCode(email, code, type) {
-  return fetch('https://api.am-all.com.cn/api/verify-code', {
+  return fetch(API_BASE + '/api/verify-code', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1102,7 +1041,7 @@ function verifyCode(email, code, type) {
 
 // 重置密码
 function resetPassword(resetToken, newPassword) {
-  return fetch('https://api.am-all.com.cn/api/reset-password', {
+  return fetch(API_BASE + '/api/reset-password', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1135,7 +1074,7 @@ function handleLogin() {
 
   console.log('开始登录:', login);
   
-  secureFetch('https://api.am-all.com.cn/api/login', {
+  secureFetch(API_BASE + '/api/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1218,7 +1157,7 @@ function handleRegister() {
     return;
   }
 
-  fetch('https://api.am-all.com.cn/api/register', {
+  fetch(API_BASE + '/api/register', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1502,7 +1441,7 @@ async function getUserPermissions() {
   
   try {
     // 修改为获取当前用户的权限
-    const response = await fetch('https://api.am-all.com.cn/api/admin/users/permissions/me', {
+    const response = await fetch(API_BASE + '/api/admin/users/permissions/me', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1738,7 +1677,7 @@ async function loadPage(pageId) {
                 formData.append('avatar', blob, 'avatar.png');
                 
                 const token = localStorage.getItem('token');
-                fetch('https://api.am-all.com.cn/api/user/avatar', {
+                fetch(API_BASE + '/api/user/avatar', {
                   method: 'PUT',
                   headers: {
                     'Authorization': `Bearer ${token}`
@@ -1778,7 +1717,7 @@ async function loadPage(pageId) {
             }
             
             const token = localStorage.getItem('token');
-            fetch('https://api.am-all.com.cn/api/user/profile', {
+            fetch(API_BASE + '/api/user/profile', {
               method: 'PUT',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -1823,7 +1762,7 @@ async function loadPage(pageId) {
             }
             
             const token = localStorage.getItem('token');
-            fetch('https://api.am-all.com.cn/api/user/password', {
+            fetch(API_BASE + '/api/user/password', {
               method: 'PUT',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -2050,7 +1989,7 @@ if (pageId === 'download') {
               const token = localStorage.getItem('token');
               if (token) {
                 // 在获取上次抽取时间的代码部分，添加错误处理
-                fetch('https://api.am-all.com.cn/api/fortune/last-draw', {
+                fetch(API_BASE + '/api/fortune/last-draw', {
                   headers: {
                     'Authorization': `Bearer ${token}`
                   }
@@ -2218,7 +2157,7 @@ if (pageId === 'download') {
                     clearInterval(scrollInterval);
                     
                     // 调用后端API抽取运势
-                  fetch('https://api.am-all.com.cn/api/fortune/draw', {
+                  fetch(API_BASE + '/api/fortune/draw', {
                     method: 'POST',
                     headers: {
                       'Authorization': `Bearer ${token}`,
@@ -2919,7 +2858,7 @@ async function saveOrder() {
       url = `https://api.am-all.com.cn/api/orders/${orderId}`;
       method = 'PUT';
     } else {
-      url = 'https://api.am-all.com.cn/api/orders';
+      url = API_BASE + '/api/orders';
       method = 'POST';
     }
     
@@ -2997,7 +2936,7 @@ async function handleRedeemOrder() {
   try {
     const token = localStorage.getItem('token');
     
-    const response = await fetch('https://api.am-all.com.cn/api/redeem-order', {
+    const response = await fetch(API_BASE + '/api/redeem-order', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -1,3 +1,5 @@
+// Injected API base detection
+var API_BASE=(typeof window!=='undefined' && window.API_BASE!==undefined ? window.API_BASE : ((location && (location.hostname==='127.0.0.1'||location.hostname==='localhost'))    ? 'https://api.am-all.com.cn' : ''));
 // ccb.js - 游戏查分系统功能
 let queryCooldown = false;
 let cooldownTimer = null;
@@ -30,7 +32,7 @@ function initCCBPage() {
 function checkUserBinding() {
     const token = localStorage.getItem('token');
     
-    secureFetch('https://api.am-all.com.cn/api/user', {
+    secureFetch(API_BASE + '/api/user', {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`
@@ -121,7 +123,7 @@ function loadServerList() {
         const placeholder = '<option value="">请选择服务器</option>';
         selectEl.innerHTML = placeholder;
         const seen = new Set();
-        secureFetch('https://api.am-all.com.cn/api/ccb/servers')
+        secureFetch(API_BASE + '/api/ccb/servers')
           .then(list => {
             (list || []).forEach(item => {
               const key = `${item.server_url}|${item.server_name}`;
@@ -154,7 +156,7 @@ function handleBindingSubmit(e) {
     
     const token = localStorage.getItem('token');
     
-    secureFetch('https://api.am-all.com.cn/api/ccb/bind', {
+    secureFetch(API_BASE + '/api/ccb/bind', {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -273,7 +275,7 @@ function refreshPoints() {
     refreshBtn.disabled = true;
     refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>刷新中...';
     
-    secureFetch('https://api.am-all.com.cn/api/user', {
+    secureFetch(API_BASE + '/api/user', {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`
@@ -329,7 +331,7 @@ function loadGameList() {
         const placeholder = '<option value="">请选择游戏</option>';
         selectEl.innerHTML = placeholder;
         const seen = new Set();
-        secureFetch('https://api.am-all.com.cn/api/ccb/games')
+        secureFetch(API_BASE + '/api/ccb/games')
           .then(list => {
             (list || []).forEach(item => {
               const key = `${item.game_title}|${item.game_name}`;
@@ -375,7 +377,7 @@ function handleQuerySubmit(e) {
     queryBtn.disabled = true;
     queryBtn.textContent = '查询中...';
     
-    secureFetch('https://api.am-all.com.cn/api/ccb/query', {
+    secureFetch(API_BASE + '/api/ccb/query', {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -452,7 +454,7 @@ function handleUnbind() {
     
     const token = localStorage.getItem('token');
     
-    secureFetch('https://api.am-all.com.cn/api/ccb/unbind', {
+    secureFetch(API_BASE + '/api/ccb/unbind', {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`

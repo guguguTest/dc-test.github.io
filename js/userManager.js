@@ -1,3 +1,5 @@
+// Injected API base detection
+var API_BASE=(typeof window!=='undefined' && window.API_BASE!==undefined ? window.API_BASE : ((location && (location.hostname==='127.0.0.1'||location.hostname==='localhost'))    ? 'https://api.am-all.com.cn' : ''));
 
 // --- helper: get permission modal root safely
 function __getPermissionModalRoot(){
@@ -176,7 +178,7 @@ class UserManager {
   2:'协同管理员'
 };
     const stateMap = {0:'正常',1:'受限',2:'封禁'};
-    const avatarUrl = user.avatar ? `https://api.am-all.com.cn/avatars/${user.avatar}` : 'https://api.am-all.com.cn/avatars/default_avatar.png';
+    const avatarUrl = user.avatar ? `https://api.am-all.com.cn/avatars/${user.avatar}` : API_BASE + '/avatars/default_avatar.png';
 
     return `
       <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.avatar || ''}" data-field="avatar">` : `<img src="${avatarUrl}" class="user-avatar" alt="头像">`}</td>
