@@ -33,8 +33,8 @@
   margin-right: 0;
 }
 
-/* 模态框基础样式 */
-.modal {
+/* 下载管理专用模态框样式 - 使用特定选择器避免冲突 */
+#download-modal {
   display: none;
   position: fixed;
   top: 0;
@@ -45,11 +45,11 @@
   z-index: 1000;
 }
 
-.modal.show {
+#download-modal.show {
   display: block;
 }
 
-.modal-content {
+#download-modal .modal-content {
   background: white;
   border-radius: 8px;
   width: 90%;
@@ -64,7 +64,7 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-.modal-header {
+#download-modal .modal-header {
   padding: 20px 20px 0 20px;
   border-bottom: 1px solid #dee2e6;
   display: flex;
@@ -72,13 +72,13 @@
   align-items: center;
 }
 
-.modal-header h5 {
+#download-modal .modal-header h5 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
 }
 
-.close {
+#download-modal .close {
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -93,15 +93,15 @@
   justify-content: center;
 }
 
-.close:hover {
+#download-modal .close:hover {
   color: #000;
 }
 
-.modal-body {
+#download-modal .modal-body {
   padding: 20px;
 }
 
-.modal-footer {
+#download-modal .modal-footer {
   padding: 15px 20px 20px 20px;
   border-top: 1px solid #dee2e6;
   display: flex;
@@ -109,26 +109,26 @@
   gap: 10px;
 }
 
-/* 表单样式 */
-.form-row {
+/* 下载管理专用表单样式 */
+#download-modal .form-row {
   display: flex;
   gap: 15px;
   margin-bottom: 15px;
 }
 
-.form-group {
+#download-modal .form-group {
   flex: 1;
   margin-bottom: 15px;
 }
 
-.form-group label {
+#download-modal .form-group label {
   display: block;
   margin-bottom: 5px;
   font-weight: 500;
   color: #333;
 }
 
-.form-control {
+#download-modal .form-control {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #ddd;
@@ -137,23 +137,23 @@
   transition: border-color 0.3s ease;
 }
 
-.form-control:focus {
+#download-modal .form-control:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-.form-text {
+#download-modal .form-text {
   margin-top: 4px;
   font-size: 0.875rem;
 }
 
-.text-muted {
+#download-modal .text-muted {
   color: #6c757d;
 }
 
-/* 按钮样式 */
-.btn {
+/* 下载管理专用按钮样式 */
+#download-modal .btn {
   padding: 8px 16px;
   border: none;
   border-radius: 4px;
@@ -165,66 +165,119 @@
   display: inline-block;
 }
 
-.btn-primary {
+#download-modal .btn-primary {
   background-color: #007bff;
   color: white;
 }
 
-.btn-primary:hover {
+#download-modal .btn-primary:hover {
   background-color: #0056b3;
 }
 
-.btn-secondary {
+#download-modal .btn-secondary {
   background-color: #6c757d;
   color: white;
 }
 
-.btn-secondary:hover {
+#download-modal .btn-secondary:hover {
   background-color: #545b62;
 }
 
-.btn-outline-primary {
+#download-modal .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 下载管理页面其他按钮样式 */
+.admin-actions .btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.admin-actions .btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.admin-actions .btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.admin-actions .btn-outline-primary {
   background-color: transparent;
   color: #007bff;
   border: 1px solid #007bff;
 }
 
-.btn-outline-primary:hover {
+.admin-actions .btn-outline-primary:hover {
   background-color: #007bff;
   color: white;
 }
 
-.btn-outline-danger {
+.admin-actions .btn-outline-danger {
   background-color: transparent;
   color: #dc3545;
   border: 1px solid #dc3545;
 }
 
-.btn-outline-danger:hover {
+.admin-actions .btn-outline-danger:hover {
   background-color: #dc3545;
   color: white;
 }
 
-.btn-sm {
+.admin-actions .btn-sm {
   padding: 6px 12px;
   font-size: 12px;
 }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+#downloads-table .btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  margin-right: 5px;
 }
 
-/* 响应式调整 */
+#downloads-table .btn:last-child {
+  margin-right: 0;
+}
+
+#downloads-table .btn-outline-primary {
+  background-color: transparent;
+  color: #007bff;
+  border: 1px solid #007bff;
+}
+
+#downloads-table .btn-outline-primary:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+#downloads-table .btn-outline-danger {
+  background-color: transparent;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+}
+
+#downloads-table .btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* 下载管理页面响应式调整 */
 @media (max-width: 900px) {
-  .modal-content {
+  #download-modal .modal-content {
     width: 95%;
     margin: 10px;
     padding: 0;
   }
 }
 
-/* 下载管理页面响应式调整 */
 @media (max-width: 992px) {
   #downloads-table {
     font-size: 0.9rem;
@@ -260,24 +313,24 @@
     margin-bottom: 10px;
   }
   
-  .modal-content {
+  #download-modal .modal-content {
     margin: 10px;
     width: calc(100% - 20px);
   }
   
-  .modal-header,
-  .modal-body,
-  .modal-footer {
+  #download-modal .modal-header,
+  #download-modal .modal-body,
+  #download-modal .modal-footer {
     padding-left: 15px;
     padding-right: 15px;
   }
   
-  .form-row {
+  #download-modal .form-row {
     flex-direction: column;
     gap: 0;
   }
   
-  .form-group {
+  #download-modal .form-group {
     margin-bottom: 15px;
     width: 100%;
   }
