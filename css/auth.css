@@ -78,6 +78,8 @@
   border: 2px solid rgba(255, 255, 255, 0.3);
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 2;
 }
 
 /* 用户基本信息容器 */
@@ -796,23 +798,6 @@
   left: -4px !important;
 }
 
-/* PC端头像调整 */
-#user-info-pc .user-avatar-pc {
-  position: relative;
-  z-index: 2;
-  width: 55px;
-  height: 55px;
-}
-
-/* 移动端头像调整 */
-.sidebar-user-area .user-avatar-mobile {
-  position: relative;
-  z-index: 2;
-  width: 55px;
-  height: 55px;
-  margin-top: -38px;
-}
-
 /* 确保侧边栏底部有足够空间 */
 .sidebar-nav {
   padding-bottom: env(safe-area-inset-bottom, 20px);
@@ -859,5 +844,58 @@
   .user-state-badge {
     font-size: 12px;
     padding: 3px 10px;
+  }
+}
+
+/* ====== 账户状态图标样式 ====== */
+/* PC端状态图标 - 左下角位置 */
+#user-info-pc .user-state-icon {
+  position: absolute;
+  bottom: 3px;
+  left: 4px;  /* 改为left定位 */
+  width: 26px;
+  height: 26px;
+  z-index: 3;
+  /* 移除白色背景和padding，保持透明 */
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+
+/* 移动端状态图标 - 左下角位置 */
+.sidebar-user-area .user-state-icon-mobile {
+  position: absolute !important;
+  bottom: 30px !important;  /* 相对于user-info-text容器底部 */
+  left: -79px !important;     /* 移到左边，因为user-info-text有padding */
+  width: 26px !important;
+  height: 26px !important;
+  z-index: 10 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.sidebar-user-area .user-info-text {
+  position: relative !important;
+}
+
+/* 响应式调整 */
+@media (max-width: 992px) {
+  #user-info-pc .user-state-icon {
+    bottom: 0;
+    left: 8px;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar-user-area .user-state-icon-mobile {
+    width: 24px;
+    height: 24px;
+    bottom: 2px;
+    left: 2px;
   }
 }

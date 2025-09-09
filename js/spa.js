@@ -709,17 +709,44 @@ function updateUserInfo(user) {
     rankIcon.src = rankInfo.icon;
   }
   
-  if (userAvatarPc) {
-    userAvatarPc.src = avatarUrl;
-    // 确保特效元素存在
-    let effect = userAvatarPc.parentElement.querySelector('.avatar-effect-rainbow');
-    if (!effect) {
-      effect = document.createElement('div');
-      effect.className = 'avatar-effect-rainbow';
-      userAvatarPc.parentElement.appendChild(effect);
-    }
-    effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
+if (userAvatarPc) {
+  userAvatarPc.src = avatarUrl;
+  // 确保特效元素存在
+  let effect = userAvatarPc.parentElement.querySelector('.avatar-effect-rainbow');
+  if (!effect) {
+    effect = document.createElement('div');
+    effect.className = 'avatar-effect-rainbow';
+    userAvatarPc.parentElement.appendChild(effect);
   }
+  effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
+  
+  // 添加账户状态图标
+  let stateIcon = userAvatarPc.parentElement.querySelector('.user-state-icon');
+  if (!stateIcon) {
+    stateIcon = document.createElement('img');
+    stateIcon.className = 'user-state-icon';
+    userAvatarPc.parentElement.appendChild(stateIcon);
+  }
+  
+  // 根据状态设置图标
+  switch(user.state || 0) {
+    case 0:
+      stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs0.png';
+      stateIcon.title = '正常';
+      break;
+    case 1:
+      stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs1.png';
+      stateIcon.title = '受限';
+      break;
+    case 2:
+      stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs2.png';
+      stateIcon.title = '封禁';
+      break;
+    default:
+      stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs0.png';
+      stateIcon.title = '正常';
+  }
+}
     
   if (userNicknamePc) {
     userNicknamePc.textContent = user.nickname || user.username;
@@ -743,17 +770,49 @@ function updateUserInfo(user) {
   }
   
   // 移动视图
-  if (userAvatarMobile) {
-    userAvatarMobile.src = avatarUrl;
-    // 确保特效元素存在
-    let effect = userAvatarMobile.parentElement.querySelector('.avatar-effect-rainbow');
-    if (!effect) {
-      effect = document.createElement('div');
-      effect.className = 'avatar-effect-rainbow';
-      userAvatarMobile.parentElement.appendChild(effect);
-    }
-    effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
+if (userAvatarMobile) {
+  userAvatarMobile.src = avatarUrl;
+  
+  // 特效保持不变
+  let effect = userAvatarMobile.parentElement.querySelector('.avatar-effect-rainbow');
+  if (!effect) {
+    effect = document.createElement('div');
+    effect.className = 'avatar-effect-rainbow';
+    userAvatarMobile.parentElement.appendChild(effect);
   }
+  effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
+  
+  // 将状态图标添加到 user-info-text 容器（昵称和邮箱的容器）
+  const userInfoText = document.querySelector('.sidebar-user-area .user-info-text');
+  if (userInfoText) {
+    let stateIcon = document.querySelector('.sidebar-user-area .user-state-icon-mobile');
+    if (!stateIcon) {
+      stateIcon = document.createElement('img');
+      stateIcon.className = 'user-state-icon-mobile';
+      // 插入到user-info-text容器的开头
+      userInfoText.insertBefore(stateIcon, userInfoText.firstChild);
+    }
+    
+    // 根据状态设置图标
+    switch(user.state || 0) {
+      case 0:
+        stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs0.png';
+        stateIcon.title = '正常';
+        break;
+      case 1:
+        stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs1.png';
+        stateIcon.title = '受限';
+        break;
+      case 2:
+        stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs2.png';
+        stateIcon.title = '封禁';
+        break;
+      default:
+        stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs0.png';
+        stateIcon.title = '正常';
+    }
+  }
+}
   
   if (userNicknameMobile) {
     userNicknameMobile.textContent = user.nickname || user.username;
