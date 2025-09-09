@@ -61,25 +61,108 @@
   color: #856404;
 }
 
+/* 访问权限徽章样式 */
 .access-badge {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
-  margin-left: 8px;
+  margin-left: 0;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.access-badge.rank-0 { background: #6c757d; color: white; }
-.access-badge.rank-1 { background: #cd7f32; color: white; } /* 青铜 */
-.access-badge.rank-2 { background: #c0c0c0; color: black; } /* 白银 */
-.access-badge.rank-3 { background: #ffd700; color: black; } /* 黄金 */
-.access-badge.rank-4 { background: #e5e4e2; color: black; } /* 白金 */
-.access-badge.rank-5 { background: linear-gradient(45deg, #ff0000, #ff7700, #ffdd00, #00ff00, #0000ff, #8a2be2); color: white; } /* 彩虹 */
+/* 用户组权限背景色 */
+.access-badge.rank-unlimited { 
+  background: linear-gradient(45deg, #28a745, #20c997); 
+  color: white; 
+}
+.access-badge.rank-0 { 
+  background: #6c757d; 
+  color: white; 
+}
+.access-badge.rank-1 { 
+  background: linear-gradient(45deg, #cd7f32, #b8860b); 
+  color: white; 
+}
+.access-badge.rank-2 { 
+  background: linear-gradient(45deg, #4a90e2, #6bb6ff); 
+  color: white; 
+}
+.access-badge.rank-3 { 
+  background: linear-gradient(45deg, #ffd700, #ffed4a); 
+  color: #333; 
+  text-shadow: none; 
+}
+.access-badge.rank-4 { 
+  background: linear-gradient(45deg, #e5e4e2, #c0c0c0); 
+  color: #333; 
+  text-shadow: none; 
+  border: 1px solid #999; 
+}
+.access-badge.rank-5 { 
+  background: linear-gradient(45deg, #ff0000, #ff7700, #ffdd00, #00ff00, #0000ff, #8a2be2); 
+  color: white; 
+  animation: rainbow-glow 2s ease-in-out infinite alternate;
+}
+
+/* 特殊访问权限徽章样式 */
+.special-access-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 0;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* 特殊用户组背景色 */
+.special-access-badge.special-maimoller { 
+  background: linear-gradient(45deg, #e5e4e2, #c0c0c0); 
+  color: #333; 
+  text-shadow: none; 
+  border: 1px solid #999; 
+}
+.special-access-badge.special-coadmin { 
+  background: linear-gradient(45deg, #ff0000, #ff7700, #ffdd00, #00ff00, #0000ff, #8a2be2); 
+  color: white; 
+  animation: rainbow-glow 2s ease-in-out infinite alternate;
+}
+
+/* 彩虹动画效果 */
+@keyframes rainbow-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+  }
+  16.66% {
+    box-shadow: 0 0 5px rgba(255, 119, 0, 0.5);
+  }
+  33.33% {
+    box-shadow: 0 0 5px rgba(255, 221, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+  }
+  66.66% {
+    box-shadow: 0 0 5px rgba(0, 0, 255, 0.5);
+  }
+  83.33% {
+    box-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+  }
+}
 
 .points-cost {
   color: #e74c3c;
   font-weight: 600;
+  font-size: 0.7rem;
+  margin-top: 2px;
+  display: inline-block;
 }
 
 /* 响应式调整 */
@@ -121,5 +204,35 @@
     text-align: left;
     font-weight: 600;
     color: #495057;
+  }
+  
+  /* 移动端徽章样式调整 */
+  .access-badge,
+  .special-access-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    margin: 2px 0;
+    display: inline-block;
+  }
+  
+  .points-cost {
+    font-size: 0.65rem;
+    margin-top: 1px;
+  }
+}
+
+/* 中等屏幕适配 - 隐藏部分列 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .download-table th:nth-child(3),
+  .download-table td:nth-child(3) {
+    display: none; /* 隐藏文件数列 */
+  }
+}
+
+/* 小屏幕进一步优化 */
+@media (max-width: 992px) and (min-width: 769px) {
+  .download-table th:nth-child(2),
+  .download-table td:nth-child(2) {
+    display: none; /* 隐藏版本列 */
   }
 }

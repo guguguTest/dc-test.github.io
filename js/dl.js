@@ -5,6 +5,7 @@ if (typeof window.API_BASE_URL === 'undefined') {
 
 const SPECIAL_GROUP_MAP = {
   'maimoller': 1,
+  'coadmin': 2,  // 协同管理员
   // 可以添加其他特殊用户组映射
 };
 
@@ -182,14 +183,21 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
         <th>版本</th>
         <th>文件数</th>
         <th>访问权限</th>
+        <th>特殊访问权限</th>
+        <th>所需积分</th>
       </tr>
     </thead>
     <tbody>
       ${downloads.map(download => {
         // 权限检查逻辑
-        let hasAccess = userRank >= (download.access_level || 0);
+        let hasAccess = true;
         
-        // 如果有特殊用户组要求，需要额外检查
+        // 检查基础用户组权限（-1表示不限制）
+        if (download.access_level !== undefined && download.access_level !== null && download.access_level >= 0) {
+          hasAccess = userRank >= download.access_level;
+        }
+        
+        // 如果有特殊用户组要求，需额外检查
         if (download.special_group && download.special_group !== '') {
           // 将数据库中的字符串映射为数字，然后与用户的 rankSp 比较
           const requiredSpecialGroup = SPECIAL_GROUP_MAP[download.special_group] || 0;
@@ -212,40 +220,55 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
           title: download.title,
           userRank,
           accessLevel: download.access_level,
-          hasAccess: userRank >= (download.access_level || 0)
+          hasAccess: download.access_level === -1 || download.access_level === null || userRank >= (download.access_level || 0)
         });
         
         const accessLevelNames = {
-          0: '普通用户',
-          1: '初级用户',
-          2: '中级用户',
-          3: '高级用户',
-          4: '贵宾用户',
-          5: '系统管理员'
+          '-1': '不限',
+          '0': '普通用户',
+          '1': '初级用户',
+          '2': '中级用户',
+          '3': '高级用户',
+          '4': '贵宾用户',
+          '5': '系统管理员'
         };
         
-		return `
-		  <tr>
-			<td data-label="游戏名称">
-			  ${hasAccess ? 
-				`<a href="#" class="download-detail-link" data-download-id="${download.id}">
-				  <i class="fas fa-link me-2"></i> ${download.title}
-				</a>` : 
-				`<span class="text-muted">
-				  <i class="fas fa-lock me-2"></i> ${download.title}
-				</span>`
-			  }
-			</td>
+        const specialGroupNames = {
+          'maimoller': 'maimoller',
+          'coadmin': '协同管理员'
+        };
+        
+        return `
+          <tr>
+            <td data-label="游戏名称">
+              ${hasAccess ? 
+                `<a href="#" class="download-detail-link" data-download-id="${download.id}">
+                  <i class="fas fa-link me-2"></i> ${download.title}
+                </a>` : 
+                `<span class="text-muted">
+                  <i class="fas fa-lock me-2"></i> ${download.title}
+                </span>`
+              }
+            </td>
             <td data-label="版本">${download.version || '-'}</td>
             <td data-label="文件数">${download.file_count || '0'}</td>
             <td data-label="访问权限">
-              <span class="access-badge rank-${download.access_level || 0}">
-                ${accessLevelNames[download.access_level || 0]}
-                ${download.special_group ? `<br><small>(${download.special_group})</small>` : ''}
+              <span class="access-badge rank-${download.access_level === -1 ? 'unlimited' : (download.access_level || 0)}">
+                ${accessLevelNames[download.access_level] || accessLevelNames['0']}
               </span>
+            </td>
+            <td data-label="特殊访问权限">
+              ${download.special_group ? 
+                `<span class="special-access-badge special-${download.special_group}">
+                  ${specialGroupNames[download.special_group] || download.special_group}
+                </span>` : 
+                '<span class="text-muted">无</span>'
+              }
+            </td>
+            <td data-label="所需积分">
               ${download.required_points > 0 ? 
-                `<span class="points-cost">(${download.required_points}积分)</span>` : 
-                ''
+                `<span class="points-cost">${download.required_points}</span>` : 
+                '<span class="text-muted">免费</span>'
               }
             </td>
           </tr>
@@ -257,9 +280,9 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
   container.appendChild(table);
   
   // 添加点击事件 - 只对有权限的项目添加
-	container.querySelectorAll('a.download-detail-link').forEach(link => {
-	  link.addEventListener('click', async (e) => {
-		e.preventDefault();
+  container.querySelectorAll('a.download-detail-link').forEach(link => {
+    link.addEventListener('click', async (e) => {
+      e.preventDefault();
       const downloadId = e.currentTarget.getAttribute('data-download-id');
       
       // 检查是否需要积分
@@ -317,6 +340,7 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
 function getSpecialGroupDisplayName(specialGroup) {
   const specialGroupMap = {
     '1': 'maimoller',
+    '2': '协同管理员',
     // 添加其他特殊用户组映射
   };
   

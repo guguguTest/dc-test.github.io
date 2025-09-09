@@ -300,107 +300,134 @@ download: `
     
     <!-- 下载项目编辑模态框 -->
     <div class="modal" id="download-modal">
-      <div class="modal-content" style="max-width: 800px;">
-        <span class="close">&times;</span>
-        <h2 id="modal-title">新建下载项目</h2>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="modal-title">新建下载项目</h5>
+          <button type="button" class="close">&times;</button>
+        </div>
         <form id="download-form">
-          <input type="hidden" id="download-id">
-          
-          <div class="form-row">
-            <div class="form-group col-md-8">
-              <label for="download-title">标题</label>
-              <input type="text" id="download-title" class="form-control" required>
+          <div class="modal-body">
+            <input type="hidden" id="download-id">
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="download-title">标题 *</label>
+                <input type="text" id="download-title" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="download-version">版本</label>
+                <input type="text" id="download-version" class="form-control">
+              </div>
             </div>
-            <div class="form-group col-md-4">
-              <label for="download-category">分类</label>
-              <select id="download-category" class="form-control" required>
-                <option value="game">游戏下载</option>
-                <option value="archive">存档下载</option>
-                <option value="other">其他资源</option>
-              </select>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="download-category">分类 *</label>
+                <select id="download-category" class="form-control" required>
+                  <option value="">请选择分类</option>
+                  <option value="game">游戏下载</option>
+                  <option value="archive">存档下载</option>
+                  <option value="other">其他资源</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="download-file-count">文件数</label>
+                <input type="number" id="download-file-count" class="form-control" min="0">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="download-page-id">页面ID *</label>
+                <input type="text" id="download-page-id" class="form-control" required 
+                       placeholder="用于生成下载详情页面的唯一标识">
+              </div>
+              <div class="form-group">
+                <label for="download-last-update">最后更新时间</label>
+                <input type="date" id="download-last-update" class="form-control">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="download-baidu-url">百度网盘链接</label>
+                <input type="url" id="download-baidu-url" class="form-control" 
+                       placeholder="https://pan.baidu.com/s/...">
+              </div>
+              <div class="form-group">
+                <label for="download-baidu-code">提取码</label>
+                <input type="text" id="download-baidu-code" class="form-control" 
+                       placeholder="如: abcd">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="download-access-level">最低访问权限</label>
+                <select id="download-access-level" class="form-control">
+                  <option value="-1">不限</option>
+                  <option value="0">普通用户</option>
+                  <option value="1">初级用户</option>
+                  <option value="2">中级用户</option>
+                  <option value="3">高级用户</option>
+                  <option value="4">贵宾用户</option>
+                  <option value="5">系统管理员</option>
+                </select>
+                <small class="form-text text-muted">
+                  设置访问此资源所需的最低用户组级别
+                </small>
+              </div>
+              <div class="form-group">
+                <label for="download-special-group">特殊用户组验证</label>
+                <select id="download-special-group" class="form-control">
+                  <option value="">无</option>
+                  <option value="maimoller">maimoller</option>
+                  <option value="coadmin">协同管理员</option>
+                </select>
+                <small class="form-text text-muted">
+                  额外的特殊用户组验证，与基础权限叠加
+                </small>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="download-required-points">所需积分</label>
+                <input type="number" id="download-required-points" class="form-control" 
+                       min="0" value="0" placeholder="0">
+                <small class="form-text text-muted">
+                  访问此资源需要消耗的积分数量，0表示免费
+                </small>
+              </div>
+              <div class="form-group">
+                <label for="download-status">状态</label>
+                <select id="download-status" class="form-control">
+                  <option value="1">激活</option>
+                  <option value="0">禁用</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="download-image-url">封面图片URL</label>
+              <input type="url" id="download-image-url" class="form-control" 
+                     placeholder="https://example.com/image.jpg">
+              <small class="form-text text-muted">
+                可选的封面图片链接
+              </small>
+            </div>
+            
+            <div class="form-group">
+              <label for="download-description">描述</label>
+              <textarea id="download-description" class="form-control" rows="3" 
+                        placeholder="资源描述信息"></textarea>
             </div>
           </div>
           
-          <div class="form-row">
-            <div class="form-group col-md-6">
-              <label for="download-page-id">页面ID</label>
-              <input type="text" id="download-page-id" class="form-control" required>
-              <small class="form-text text-muted">用于URL的唯一标识符（英文、数字、短横线）</small>
-            </div>
-            <div class="form-group col-md-6">
-              <label for="download-status">状态</label>
-              <select id="download-status" class="form-control">
-                <option value="1">激活</option>
-                <option value="0">禁用</option>
-              </select>
-            </div>
+          <div class="modal-footer">
+            <button type="button" id="cancel-download-btn" class="btn btn-secondary">取消</button>
+            <button type="submit" class="btn btn-primary">保存</button>
           </div>
-          
-          <!-- 新增：权限和积分设置 -->
-          <div class="form-row">
-            <div class="form-group col-md-4">
-              <label for="download-access-level">访问权限</label>
-              <select id="download-access-level" class="form-control">
-                <option value="0">普通用户</option>
-                <option value="1">初级用户</option>
-                <option value="2">中级用户</option>
-                <option value="3">高级用户</option>
-                <option value="4">贵宾用户</option>
-                <option value="5">管理员</option>
-              </select>
-            </div>
-            <div class="form-group col-md-4">
-              <label for="download-special-group">特殊用户组</label>
-              <select id="download-special-group" class="form-control">
-                <option value="">无</option>
-                <option value="maimoller">maimoller</option>
-              </select>
-            </div>
-            <div class="form-group col-md-4">
-              <label for="download-required-points">所需积分</label>
-              <input type="number" id="download-required-points" class="form-control" min="0" value="0">
-              <small class="form-text text-muted">普通积分(非鸽屋积分)</small>
-            </div>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group col-md-4">
-              <label for="download-version">版本</label>
-              <input type="text" id="download-version" class="form-control">
-            </div>
-            <div class="form-group col-md-4">
-              <label for="download-file-count">文件数</label>
-              <input type="number" id="download-file-count" class="form-control" min="0">
-            </div>
-            <div class="form-group col-md-4">
-              <label for="download-last-update">最后更新</label>
-              <input type="date" id="download-last-update" class="form-control">
-            </div>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group col-md-6">
-              <label for="download-baidu-url">百度网盘链接</label>
-              <input type="url" id="download-baidu-url" class="form-control">
-            </div>
-            <div class="form-group col-md-6">
-              <label for="download-baidu-code">提取码</label>
-              <input type="text" id="download-baidu-code" class="form-control">
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label for="download-image-url">图片URL</label>
-            <input type="url" id="download-image-url" class="form-control">
-          </div>
-          
-          <div class="form-group">
-            <label for="download-description">描述</label>
-            <textarea id="download-description" class="form-control" rows="3"></textarea>
-          </div>
-          
-          <button type="submit" class="btn btn-primary">保存</button>
-          <button type="button" class="btn btn-secondary" id="cancel-download-btn">取消</button>
         </form>
       </div>
     </div>
