@@ -783,6 +783,33 @@ function updateUserInfo(user) {
   if (settingsUid) {
     settingsUid.textContent = user.uid;
   }
+  
+  // 添加账户状态显示
+  const settingsUserState = document.getElementById('settings-user-state');
+  if (settingsUserState) {
+    let stateBadge = '';
+    let stateText = '';
+    
+    switch(user.state || 0) {
+      case 0:
+        stateBadge = 'state-normal';
+        stateText = '正常';
+        break;
+      case 1:
+        stateBadge = 'state-limited';
+        stateText = '受限';
+        break;
+      case 2:
+        stateBadge = 'state-banned';
+        stateText = '封禁';
+        break;
+      default:
+        stateBadge = 'state-normal';
+        stateText = '正常';
+    }
+    
+    settingsUserState.innerHTML = `<span class="user-state-badge ${stateBadge}">${stateText}</span>`;
+  }
   if (settingsPoints) {
     settingsPoints.textContent = user.points || 0;
   }

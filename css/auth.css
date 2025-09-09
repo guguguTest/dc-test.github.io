@@ -104,7 +104,6 @@
   padding-left: 0;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   margin-top: 12px;
-  /* 添加SVG黑色描边效果 */
   filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.7)) 
           drop-shadow(0 0 1px rgba(0, 0, 0, 0.7)) 
           drop-shadow(0 0 1px rgba(0, 0, 0, 0.7));
@@ -120,7 +119,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  /* 添加SVG黑色描边效果 */
   filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.7)) 
           drop-shadow(0 0 1px rgba(0, 0, 0, 0.7)) 
           drop-shadow(0 0 1px rgba(0, 0, 0, 0.7));
@@ -217,6 +215,8 @@
   position: relative; 
   overflow: visible;
   min-height: auto;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  border-bottom: 1px solid #eee;
 }
 
 /* 用户组背景图片 - 向上调整位置 */
@@ -279,7 +279,6 @@
   position: relative; 
   z-index: 2; 
   padding-right: 55px;
-  /* 添加底部边距考虑安全区域 */
   margin-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -355,38 +354,38 @@
 .sidebar-user-area .auth-links {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* 增加按钮间距 */
-  padding: 20px 15px; /* 增加内边距 */
+  gap: 15px;
+  padding: 20px 15px;
 }
 
 .sidebar-user-area .auth-links a.mobile-auth-btn {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #3498db, #2980b9); /* 使用渐变背景 */
+  background: linear-gradient(135deg, #3498db, #2980b9);
   color: white;
-  border-radius: 8px; /* 稍微增加圆角 */
-  padding: 14px; /* 增加内边距 */
+  border-radius: 8px;
+  padding: 14px;
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08); /* 添加阴影 */
+  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
   margin: 8px 0;
 }
 
 .sidebar-user-area .auth-links a.mobile-auth-btn:hover {
-  background: linear-gradient(135deg, #2980b9, #1d6fa5); /* 加深渐变 */
-  transform: translateY(-2px); /* 添加悬浮效果 */
+  background: linear-gradient(135deg, #2980b9, #1d6fa5);
+  transform: translateY(-2px);
   box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
 }
 
 .sidebar-user-area .auth-links a.mobile-auth-btn:active {
-  transform: translateY(1px); /* 点击效果 */
+  transform: translateY(1px);
 }
 
 .sidebar-user-area .auth-links a.mobile-auth-btn i {
-  margin-right: 10px; /* 增加图标与文字的间距 */
-  font-size: 1.1rem; /* 稍微增大图标 */
+  margin-right: 10px;
+  font-size: 1.1rem;
 }
 
 /* 为登录和注册按钮设置不同颜色 */
@@ -433,11 +432,6 @@
 
 .sidebar-user-area #logout-mobile.mobile-user-action-btn:hover {
   background: #c0392b;
-}
-
-/* 用户区域底部分割线 */
-.sidebar-user-area {
-  border-bottom: 1px solid #eee;
 }
 
 /* ====== 响应式调整 ====== */
@@ -693,8 +687,8 @@
   position: relative;
   display: inline-block;
   margin-right: 15px;
-  width: 55px; /* 添加固定宽度 */
-  height: 55px; /* 添加固定高度 */
+  width: 55px;
+  height: 55px;
 }
 
 /* 移动端头像容器 */
@@ -702,77 +696,168 @@
   position: relative;
   display: inline-block;
   margin-right: 12px;
-  width: 55px; /* 添加固定宽度 */
-  height: 55px; /* 添加固定高度 */
+  width: 55px;
+  height: 55px;
 }
 
-/* 七彩光环效果 - 用于maimoller用户(rankSp=1) */
+/* 七彩光环效果 - 更鲜艳的颜色 */
 .avatar-effect-rainbow {
   position: absolute;
-  top: -4px; /* 默认位置，会被特定选择器覆盖 */
-  left: -4px; /* 默认位置，会被特定选择器覆盖 */
-  width: 63px; /* 比头像大8px (55+8) */
-  height: 63px; /* 保持与宽度相同以确保圆形 */
-  border-radius: 50%; /* 确保圆形 */
-  background: linear-gradient(
-    45deg, 
-    #ff0000, #ff7f00, #ffff00, #00ff00, 
-    #0000ff, #4b0082, #8b00ff, #ff0000
+  top: -4px;
+  left: -4px;
+  width: 63px;
+  height: 63px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #ff0080,
+    #ff0040,
+    #ff4000,
+    #ff8000,
+    #ffbf00,
+    #ffff00,
+    #bfff00,
+    #80ff00,
+    #40ff00,
+    #00ff00,
+    #00ff40,
+    #00ff80,
+    #00ffbf,
+    #00ffff,
+    #00bfff,
+    #0080ff,
+    #0040ff,
+    #0000ff,
+    #4000ff,
+    #8000ff,
+    #bf00ff,
+    #ff00ff,
+    #ff00bf,
+    #ff0080
   );
-  background-size: 800% 800%;
-  animation: rainbow-effect 3s linear infinite;
+  background-size: 100% 100%;
+  animation: rainbow-rotate 4s linear infinite;
   z-index: 1;
   pointer-events: none;
+  filter: brightness(1.2) saturate(1.3);
 }
 
-/* 七彩光环动画 */
-@keyframes rainbow-effect {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+/* 改进的七彩光环动画 - 旋转效果 */
+@keyframes rainbow-rotate {
+  0% { 
+    transform: rotate(0deg);
+    filter: brightness(1.2) saturate(1.3) hue-rotate(0deg);
+  }
+  50% {
+    filter: brightness(1.3) saturate(1.4) hue-rotate(180deg);
+  }
+  100% { 
+    transform: rotate(360deg);
+    filter: brightness(1.2) saturate(1.3) hue-rotate(360deg);
+  }
+}
+
+/* 添加光晕效果 */
+.avatar-effect-rainbow::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: inherit;
+  filter: blur(4px);
+  opacity: 0.7;
+  z-index: -1;
+  animation: rainbow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes rainbow-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+/* PC端特定调整 */
+#user-info-pc .avatar-effect-rainbow {
+  top: 6px !important;
+  left: 11px !important;
+}
+
+/* 移动端特定调整 */
+.sidebar-user-area .avatar-effect-rainbow {
+  top: -10px !important;
+  left: -4px !important;
 }
 
 /* PC端头像调整 */
 #user-info-pc .user-avatar-pc {
   position: relative;
   z-index: 2;
-  width: 55px; /* 确保明确尺寸 */
-  height: 55px; /* 确保明确尺寸 */
+  width: 55px;
+  height: 55px;
 }
 
 /* 移动端头像调整 */
 .sidebar-user-area .user-avatar-mobile {
   position: relative;
   z-index: 2;
-  width: 55px; /* 确保明确尺寸 */
-  height: 55px; /* 确保明确尺寸 */
-  margin-top: -38px; 
-}
-
-/* PC端特定调整 - 使用更具体的选择器 */
-#user-info-pc .avatar-effect-rainbow {
-  top: 6px !important; /* 使光环向上移动 */
-  left: 11px !important; /* 保持原样 */
-}
-
-/* 移动端特定调整 - 使用更具体的选择器 */
-.sidebar-user-area .avatar-effect-rainbow {
-  top: -10px !important; /* 使光环更向上移动 */
-  left: -4px !important; /* 使光环向左移动 */
-}
-
-.sidebar-user-area {
-  padding: 12px 15px;
-  background: white;
-  margin-bottom: 0;
-  position: relative; 
-  overflow: visible;
-  min-height: auto;
-  /* 修改安全区域处理 */
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  width: 55px;
+  height: 55px;
+  margin-top: -38px;
 }
 
 /* 确保侧边栏底部有足够空间 */
 .sidebar-nav {
   padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* ====== 账户状态徽章样式 ====== */
+.user-state-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.user-state-badge.state-normal {
+  background: linear-gradient(135deg, #27ae60, #229954);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.user-state-badge.state-limited {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.user-state-badge.state-banned {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.user-state-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .user-state-badge {
+    font-size: 12px;
+    padding: 3px 10px;
+  }
 }

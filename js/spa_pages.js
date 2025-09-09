@@ -791,29 +791,33 @@ download: `
       </div>
 
       <!-- 个人信息设置 -->
-      <div class="setting-section">
-        <h3><i class="fas fa-user me-2"></i>个人信息</h3>
-        <div class="form-group">
-          <label>UID</label>
-          <div id="settings-uid" class="form-control-static"></div>
-        </div>
-        <div class="form-group">
-          <label>用户名</label>
-          <div id="settings-username" class="form-control-static"></div>
-        </div>
-        <div class="form-group">
-          <label>邮箱</label>
-          <div id="settings-email" class="form-control-static"></div>
-        </div>
-        <div class="form-group">
-          <label for="settings-nickname">昵称</label>
-          <input type="text" id="settings-nickname" class="form-control" maxlength="20">
-          <div class="char-counter"><span id="settings-nickname-counter">0</span>/20</div>
-        </div>
-        <div class="setting-actions">
-          <button id="save-profile-btn" class="btn btn-primary">保存个人信息</button>
-        </div>
-      </div>
+		<div class="setting-section">
+		  <h3><i class="fas fa-user me-2"></i>个人信息</h3>
+		  <div class="form-group">
+			<label>UID</label>
+			<div id="settings-uid" class="form-control-static"></div>
+		  </div>
+		  <div class="form-group">
+			<label>用户名</label>
+			<div id="settings-username" class="form-control-static"></div>
+		  </div>
+		  <div class="form-group">
+			<label>邮箱</label>
+			<div id="settings-email" class="form-control-static"></div>
+		  </div>
+		  <div class="form-group">
+			<label>账户状态</label>
+			<div id="settings-user-state" class="form-control-static"></div>
+		  </div>
+		  <div class="form-group">
+			<label for="settings-nickname">昵称</label>
+			<input type="text" id="settings-nickname" class="form-control" maxlength="20">
+			<div class="char-counter"><span id="settings-nickname-counter">0</span>/20</div>
+		  </div>
+		  <div class="setting-actions">
+			<button id="save-profile-btn" class="btn btn-primary">保存个人信息</button>
+		  </div>
+		</div>
 
       <!-- 积分显示 -->
       <div class="setting-section">
