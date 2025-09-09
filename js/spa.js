@@ -176,10 +176,10 @@ async function updateSidebarVisibility(user) {
   };
 
   // 定义所有页面
-  const allPages = [
-    'home', 'download', 'tools', 'dllpatcher', 'settings', 'help', 'fortune', 'user-settings',
-    'ccb', 'exchange', 'announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry'
-  ];
+	const allPages = [
+	  'home', 'download', 'tools', 'dllpatcher', 'settings', 'help', 'fortune', 'user-settings',
+	  'ccb', 'exchange', 'announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry'
+	];
 
   // 存储每个页面的可见性
   const pageVisibility = {};
@@ -248,7 +248,7 @@ async function updateSidebarVisibility(user) {
     'sidebar-ccb': 'ccb',
     'sidebar-exchange': 'exchange',
     'sidebar-announcement-admin': 'announcement-admin',
-    'sidebar-site-admin': 'site-admin',
+	'sidebar-site-admin': 'site-admin', 
     'sidebar-download-admin': 'download-admin',
     'sidebar-user-manager': 'user-manager',
     'sidebar-order-entry': 'order-entry'
@@ -290,37 +290,36 @@ async function updateSidebarVisibility(user) {
       }
     }
 
-    // 管理分类
-    const adminTitle = document.getElementById('admin-section-title');
-    const adminNav = document.getElementById('admin-section-nav');
-    
-    if (adminTitle && adminNav) {
-      if (!token) {
-        // 未登录时隐藏管理分类
-        setDisplay(adminTitle, false);
-        setDisplay(adminNav, false);
-      } else {
-        // 检查管理分类下是否有可见项
-        const adminPages = ['announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry'];
-        const hasVisibleAdmin = adminPages.some(p => pageVisibility[p]);
-        
-        console.log('管理页面可见性:', adminPages.map(p => `${p}: ${pageVisibility[p]}`));
-        console.log('是否显示管理分类:', hasVisibleAdmin);
-        
-        setDisplay(adminTitle, hasVisibleAdmin);
-        setDisplay(adminNav, hasVisibleAdmin);
-        
-        // 确保管理页面的链接正确显示
-        adminPages.forEach(pageId => {
-          const el = document.getElementById(`sidebar-${pageId}`);
-          if (el) {
-            const visible = pageVisibility[pageId] || false;
-            const targetEl = el.querySelector('a')?.parentElement || el;
-            setDisplay(targetEl, visible);
-          }
-        });
-      }
-    }
+	// 管理分类
+	const adminTitle = document.getElementById('admin-section-title');
+	const adminNav = document.getElementById('admin-section-nav');
+
+	if (adminTitle && adminNav) {
+	  if (!token) {
+		setDisplay(adminTitle, false);
+		setDisplay(adminNav, false);
+	  } else {
+		// 包含 site-admin 在内的所有管理页面
+		const adminPages = ['announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry'];
+		const hasVisibleAdmin = adminPages.some(p => pageVisibility[p]);
+		
+		console.log('管理页面可见性:', adminPages.map(p => `${p}: ${pageVisibility[p]}`));
+		console.log('是否显示管理分类:', hasVisibleAdmin);
+		
+		setDisplay(adminTitle, hasVisibleAdmin);
+		setDisplay(adminNav, hasVisibleAdmin);
+		
+		// 确保管理页面的链接正确显示
+		adminPages.forEach(pageId => {
+		  const el = document.getElementById(`sidebar-${pageId}`);
+		  if (el) {
+			const visible = pageVisibility[pageId] || false;
+			const targetEl = el.querySelector('a')?.parentElement || el;
+			setDisplay(targetEl, visible);
+		  }
+		});
+	  }
+	}
   }, 300);  // 增加延迟确保所有异步操作完成
 }
 
@@ -2434,13 +2433,16 @@ function showErrorMessage(message) {
 
 // 更新活动菜单项
 
-// -- Helper: normalize page ids to sidebar data-page keys
 function normalizePageId(pid) {
   if (!pid) return pid;
-  var map = { 'exchange':'site-admin', 'site-admin':'site-admin', 'ccb':'ccb', 'game-check':'ccb', 'games':'ccb' };
+  var map = { 
+    'ccb': 'ccb', 
+    'game-check': 'ccb', 
+    'games': 'ccb'
+    // 删除 exchange 和 site-admin 的映射
+  };
   return map[pid] || pid;
 }
-
 
 function updateActiveMenuItem(activePage) {
   try {

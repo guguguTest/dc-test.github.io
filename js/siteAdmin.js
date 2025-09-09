@@ -5,22 +5,22 @@
   'use strict';
 
   // ---- 公共：管理员访问校验（与新路由合同兼容，避免误拦截）----
-  function ensureAdmin(pageId) {
-    const token = localStorage.getItem('token');
-    if (!token) { showLoginRequired(pageId || 'site-admin'); return false; }
-    // 路由层（spa.js）若已做后端鉴权，则不再重复拦截
-    if (global.__routeContractInstalledSafe) return true;
-
-    // 旧逻辑回退（不影响旧页面）
-    const u = global.currentUser;
-    const isCollabAdmin = u && (String(u.rankSp) === '2' || Number(u.rankSp) === 2);
-    if (!u || ((u.user_rank || 0) < 5 && !isCollabAdmin)) {
-      showErrorMessage('需要管理员权限才能访问此页面');
-      loadPage('home');
-      return false;
-    }
-    return true;
+function ensureAdmin(pageId) {
+  const token = localStorage.getItem('token');
+  if (!token) { showLoginRequired(pageId || 'site-admin'); return false; }
+  
+  // 完全依赖路由层的权限检查
+  if (global.__routeContractInstalledSafe) return true;
+  
+  // 移除协同管理员的硬编码检查，只保留基本的管理员检查作为回退
+  const u = global.currentUser;
+  if (!u || (u.user_rank || 0) < 5) {
+    showErrorMessage('需要管理员权限才能访问此页面');
+    loadPage('home');
+    return false;
   }
+  return true;
+}
 
   function setContent(html) {
     const wrap = document.getElementById('content-container');
