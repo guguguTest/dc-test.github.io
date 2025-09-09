@@ -70,7 +70,7 @@
   font-weight: 600;
   margin-left: 0;
   color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 /* 用户组权限背景色 */
@@ -91,19 +91,20 @@
   color: white; 
 }
 .access-badge.rank-3 { 
-  background: linear-gradient(45deg, #ffd700, #ffed4a); 
-  color: #333; 
-  text-shadow: none; 
+  background: linear-gradient(45deg, #b8860b, #daa520, #ffd700) !important; 
+  color: white !important; 
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
 }
 .access-badge.rank-4 { 
-  background: linear-gradient(45deg, #e5e4e2, #c0c0c0); 
-  color: #333; 
-  text-shadow: none; 
-  border: 1px solid #999; 
+  background: linear-gradient(45deg, #fff2cc, #ffeaa7, #fdcb6e) !important; 
+  color: white !important; 
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
+  border: 1px solid #ddd !important; 
 }
 .access-badge.rank-5 { 
   background: linear-gradient(45deg, #ff0000, #ff7700, #ffdd00, #00ff00, #0000ff, #8a2be2); 
   color: white; 
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
   animation: rainbow-glow 2s ease-in-out infinite alternate;
 }
 
@@ -116,19 +117,20 @@
   font-weight: 600;
   margin-left: 0;
   color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 /* 特殊用户组背景色 */
 .special-access-badge.special-maimoller { 
-  background: linear-gradient(45deg, #e5e4e2, #c0c0c0); 
-  color: #333; 
-  text-shadow: none; 
-  border: 1px solid #999; 
+  background: linear-gradient(45deg, #fff2cc, #ffeaa7, #fdcb6e) !important; 
+  color: white !important; 
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
+  border: 1px solid #ddd !important; 
 }
 .special-access-badge.special-coadmin { 
   background: linear-gradient(45deg, #ff0000, #ff7700, #ffdd00, #00ff00, #0000ff, #8a2be2); 
   color: white; 
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
   animation: rainbow-glow 2s ease-in-out infinite alternate;
 }
 
