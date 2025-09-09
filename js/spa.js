@@ -23,6 +23,316 @@ const MUSIC_DATA_URLS = [
 // 公告数据（示例）
 let announcementsData = [];
 
+// ====== 成功动画提示功能 ======
+/**
+ * 显示成功动画提示
+ * @param {string} title - 标题文字
+ * @param {string} message - 提示信息
+ * @param {number} duration - 自动关闭时间（毫秒），默认3000
+ * @param {function} callback - 关闭后的回调函数
+ */
+function showSuccessAnimation(title, message, duration = 3000, callback = null) {
+  // 如果已存在成功动画，先移除
+  const existingModal = document.getElementById('success-animation-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  // 创建成功动画HTML结构
+  const modalHTML = `
+    <div id="success-animation-modal" class="success-animation-modal">
+      <div class="success-animation-content">
+        <!-- 光晕效果 -->
+        <div class="success-glow"></div>
+        
+        <!-- 星星效果 -->
+        <div class="success-stars">
+          <span class="star"></span>
+          <span class="star"></span>
+          <span class="star"></span>
+          <span class="star"></span>
+          <span class="star"></span>
+        </div>
+        
+        <!-- 成功图标 -->
+        <div class="success-checkmark-wrapper">
+          <div class="success-circle">
+            <svg class="success-checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+              <circle class="success-checkmark-circle" cx="26" cy="26" r="25"/>
+              <path class="success-checkmark-check" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+          </div>
+        </div>
+        
+        <!-- 文字内容 -->
+        <h2 class="success-title">${title}</h2>
+        <p class="success-message">${message}</p>
+        
+        <!-- 进度条 -->
+        <div class="success-progress-bar">
+          <div class="success-progress"></div>
+        </div>
+        
+        <!-- 彩带效果 -->
+        <div class="confetti-container" id="confetti-container"></div>
+      </div>
+    </div>
+  `;
+  
+  // 插入到body
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  // 获取modal元素
+  const modal = document.getElementById('success-animation-modal');
+  
+  // 添加彩带粒子
+  const confettiContainer = document.getElementById('confetti-container');
+  if (confettiContainer) {
+    createConfetti(confettiContainer, 30);
+  }
+  
+  // 显示动画
+  setTimeout(() => {
+    modal.classList.add('show');
+  }, 10);
+  
+  // 播放成功音效（如果需要）
+  playSuccessSound();
+  
+  // 自动关闭
+  setTimeout(() => {
+    closeSuccessAnimation(modal, callback);
+  }, duration);
+  
+  // 点击背景关闭
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      closeSuccessAnimation(modal, callback);
+    }
+  });
+}
+
+/**
+ * 创建彩带粒子效果
+ * @param {HTMLElement} container - 容器元素
+ * @param {number} count - 粒子数量
+ */
+function createConfetti(container, count) {
+  for (let i = 0; i < count; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = Math.random() * 100 + '%';
+    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+    container.appendChild(confetti);
+  }
+}
+
+/**
+ * 关闭成功动画
+ * @param {HTMLElement} modal - 模态框元素
+ * @param {function} callback - 回调函数
+ */
+function closeSuccessAnimation(modal, callback) {
+  if (!modal) return;
+  
+  modal.style.animation = 'fadeOut 0.3s ease';
+  
+  setTimeout(() => {
+    modal.remove();
+    if (callback && typeof callback === 'function') {
+      callback();
+    }
+  }, 300);
+}
+
+/**
+ * 播放成功音效（可选）
+ */
+function playSuccessSound() {
+  // 如果需要音效，可以在这里添加
+  // const audio = new Audio('path/to/success-sound.mp3');
+  // audio.play().catch(e => console.log('音效播放失败'));
+}
+
+// 添加fadeOut动画样式（如果还没有）
+if (!document.querySelector('#fadeOutStyle')) {
+  const style = document.createElement('style');
+  style.id = 'fadeOutStyle';
+  style.textContent = `
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// ====== 修改登录成功处理 ======
+// 找到 handleLogin 函数中的成功处理部分，替换为：
+// 在登录成功的地方（大约在第652行附近）
+function handleLoginWithAnimation() {
+  const login = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+  const errorElement = document.getElementById('login-error');
+
+  if (errorElement) {
+    errorElement.textContent = '';
+    errorElement.style.display = 'none';
+  }
+
+  if (!login || !password) {
+    showTempErrorMessage(errorElement, '用户名/邮箱和密码不能为空');
+    return;
+  }
+
+  console.log('开始登录:', login);
+  
+  secureFetch('https://api.am-all.com.cn/api/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ login, password })
+  })
+  .then(data => {
+    console.log('登录成功:', data);
+    
+    if (data.token && data.user) {
+      localStorage.setItem('token', data.token);
+      currentUser = data.user;
+      localStorage.setItem('userInfo', JSON.stringify(data.user));
+      
+      // 显示成功动画
+      showSuccessAnimation(
+        '登录成功',
+        `欢迎回来，${data.user.nickname || data.user.username}！`,
+        2500,
+        () => {
+          // 动画结束后更新界面
+          updateUserInfo(data.user);
+          showUserInfo();
+          setupUserDropdown();
+          
+          // 异步获取权限并更新侧边栏
+          fetchUserPermissions(data.token).then(permissions => {
+            localStorage.setItem('userPermissions', JSON.stringify(permissions));
+            updateSidebarVisibility(currentUser);
+          });
+          
+          // 跳转到首页
+          loadPage('home');
+        }
+      );
+      
+      return data;
+    } else {
+      throw new Error(data.error || '登录失败');
+    }
+  })
+  .catch(error => {
+    console.error('登录失败:', {
+      error: error.message,
+      status: error.status,
+      details: error.details
+    });
+    
+    let userMessage = '登录失败';
+    if (error.status === 401) {
+      userMessage = '用户名或密码错误';
+    } else if (error.status === 500) {
+      userMessage = '服务器内部错误，请稍后再试';
+    }
+    
+    showTempErrorMessage(errorElement, userMessage);
+  });
+}
+
+// ====== 修改注册成功处理 ======
+// 找到 handleRegister 函数中的成功处理部分，替换为：
+function handleRegisterWithAnimation() {
+  const username = document.getElementById('register-username').value;
+  const nickname = document.getElementById('register-nickname').value;
+  const email = document.getElementById('register-email').value;
+  const password = document.getElementById('register-password').value;
+  const confirmPassword = document.getElementById('register-confirm-password').value;
+  const verificationCode = document.getElementById('register-verification-code').value;
+  const errorElement = document.getElementById('register-error');
+
+  if (errorElement) {
+    errorElement.textContent = '';
+    errorElement.style.display = 'none';
+  }
+
+  if (!username || !password || !email || !verificationCode) {
+    showTempErrorMessage(errorElement, '用户名、密码、邮箱和验证码不能为空');
+    return;
+  }
+
+  if (username.length < 6 || username.length > 20) {
+    showTempErrorMessage(errorElement, '用户名长度需在6-20个字符之间');
+    return;
+  }
+
+  if (nickname && (nickname.length < 6 || nickname.length > 20)) {
+    showTempErrorMessage(errorElement, '昵称长度需在6-20个字符之间');
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showTempErrorMessage(errorElement, '邮箱格式不正确');
+    return;
+  }
+
+  if (password.length < 8 || password.length > 16) {
+    showTempErrorMessage(errorElement, '密码长度需在8-16个字符之间');
+    return;
+  }
+  
+  if (password !== confirmPassword) {
+    showTempErrorMessage(errorElement, '两次输入的密码不一致');
+    return;
+  }
+
+  fetch('https://api.am-all.com.cn/api/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ username, password, nickname, email, verificationCode })
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => { throw err; });
+    }
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      localStorage.setItem('token', data.token);
+      
+      // 显示成功动画
+      showSuccessAnimation(
+        '注册成功',
+        `欢迎加入，${nickname || username}！`,
+        3000,
+        () => {
+          // 动画结束后更新界面
+          updateUserInfo(data.user);
+          showUserInfo();
+          loadPage('home');
+        }
+      );
+    } else {
+      throw new Error(data.error || '注册失败');
+    }
+  })
+  .catch(error => {
+    showTempErrorMessage(errorElement, error.error || '注册失败');
+  });
+}
+
 // 保存和恢复侧边栏滚动位置
 function saveSidebarScroll() {
   const sidebar = document.querySelector('.sidebar');
@@ -1147,25 +1457,30 @@ function handleLogin() {
     
     if (data.token && data.user) {
       localStorage.setItem('token', data.token);
-      
-      // 保存基本用户信息
       currentUser = data.user;
       localStorage.setItem('userInfo', JSON.stringify(data.user));
       
-      // 立即更新用户信息显示
-      updateUserInfo(data.user);
-      showUserInfo();
-      setupUserDropdown();
-      
-      // 异步获取权限并更新侧边栏
-      fetchUserPermissions(data.token).then(permissions => {
-        localStorage.setItem('userPermissions', JSON.stringify(permissions));
-        // 确保更新侧边栏
-        updateSidebarVisibility(currentUser);
-      });
-      
-      // 跳转到首页
-      loadPage('home');
+      // 显示成功动画
+      showSuccessAnimation(
+        '登录成功',
+        `欢迎回来，${data.user.nickname || data.user.username}！`,
+        2500,
+        () => {
+          // 动画结束后更新界面
+          updateUserInfo(data.user);
+          showUserInfo();
+          setupUserDropdown();
+          
+          // 异步获取权限并更新侧边栏
+          fetchUserPermissions(data.token).then(permissions => {
+            localStorage.setItem('userPermissions', JSON.stringify(permissions));
+            updateSidebarVisibility(currentUser);
+          });
+          
+          // 跳转到首页
+          loadPage('home');
+        }
+      );
       
       return data;
     } else {
@@ -1251,9 +1566,19 @@ function handleRegister() {
   .then(data => {
     if (data.success) {
       localStorage.setItem('token', data.token);
-      updateUserInfo(data.user);
-      showUserInfo();
-      loadPage('home');
+      
+      // 显示成功动画
+      showSuccessAnimation(
+        '注册成功',
+        `欢迎加入，${nickname || username}！`,
+        3000,
+        () => {
+          // 动画结束后更新界面
+          updateUserInfo(data.user);
+          showUserInfo();
+          loadPage('home');
+        }
+      );
     } else {
       throw new Error(data.error || '注册失败');
     }
