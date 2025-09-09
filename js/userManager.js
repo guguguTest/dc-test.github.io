@@ -274,46 +274,75 @@ class UserManager {
     this.renderUsers();
   }
 
-  async saveUserChanges(userId) {
-    try {
-      const token = localStorage.getItem('token');
-      const row = document.querySelector(`tr[data-user-id="${userId}"]`);
-      if (!row) throw new Error('找不到用户行');
+async saveUserChanges(userId) {
+  try {
+    const token = localStorage.getItem('token');
+    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+    if (!row) throw new Error('找不到用户行');
 
-      const updates = {
-        username: row.querySelector('[data-field="username"]')?.value,
-        email: row.querySelector('[data-field="email"]')?.value,
-        user_rank: row.querySelector('[data-field="user_rank"]')?.value,
-        rankSp: row.querySelector('[data-field="rankSp"]')?.value,
-        points: row.querySelector('[data-field="points"]')?.value,
-        point2: row.querySelector('[data-field="point2"]')?.value,
-        game_server: row.querySelector('[data-field="game_server"]')?.value,
-        keychip: row.querySelector('[data-field="keychip"]')?.value,
-        guid: row.querySelector('[data-field="guid"]')?.value,
-        banState: row.querySelector('[data-field="banState"]')?.value,
-        avatar: row.querySelector('[data-field="avatar"]')?.value
-      };
+    const updates = {
+      username: row.querySelector('[data-field="username"]')?.value,
+      email: row.querySelector('[data-field="email"]')?.value,
+      user_rank: row.querySelector('[data-field="user_rank"]')?.value,
+      rankSp: row.querySelector('[data-field="rankSp"]')?.value,
+      points: row.querySelector('[data-field="points"]')?.value,
+      point2: row.querySelector('[data-field="point2"]')?.value,
+      game_server: row.querySelector('[data-field="game_server"]')?.value,
+      keychip: row.querySelector('[data-field="keychip"]')?.value,
+      guid: row.querySelector('[data-field="guid"]')?.value,
+      banState: row.querySelector('[data-field="banState"]')?.value,
+      avatar: row.querySelector('[data-field="avatar"]')?.value
+    };
 
-      const resp = await fetch(`https://api.am-all.com.cn/api/admin/users/${userId}`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      });
-      if (!resp.ok) {
-        const txt = await resp.text();
-        throw new Error(txt || `更新用户信息失败: ${resp.status}`);
-      }
-      const result = await resp.json();
-      if (!result.success) throw new Error(result.error || '更新用户信息失败');
-
-      if (typeof showSuccessMessage === 'function') showSuccessMessage(result.message || '用户信息更新成功');
-      this.editingUserId = null;
-      this.loadUsers();
-    } catch (err) {
-      console.error('保存用户信息失败:', err);
-      if (typeof showErrorMessage === 'function') showErrorMessage('保存用户信息失败: ' + err.message);
+    const resp = await fetch(`https://api.am-all.com.cn/api/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    if (!resp.ok) {
+      const txt = await resp.text();
+      throw new Error(txt || `更新用户信息失败: ${resp.status}`);
     }
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.error || '更新用户信息失败');
+
+    if (typeof showSuccessMessage === 'function') showSuccessMessage(result.message || '用户信息更新成功');
+    
+    // 如果修改的是当前登录用户，更新本地存储和界面显示
+    const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (currentUser && currentUser.id === userId) {
+      // 重新获取用户信息
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch('https://api.am-all.com.cn/api/user', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(user => {
+          // 更新本地存储
+          localStorage.setItem('userInfo', JSON.stringify(user));
+          // 立即更新界面显示
+          if (typeof updateUserInfo === 'function') {
+            updateUserInfo(user);
+          }
+          // 更新全局变量
+          if (typeof window.currentUser !== 'undefined') {
+            window.currentUser = user;
+          }
+        })
+        .catch(err => {
+          console.error('更新当前用户信息失败:', err);
+        });
+      }
+    }
+    
+    this.editingUserId = null;
+    this.loadUsers();
+  } catch (err) {
+    console.error('保存用户信息失败:', err);
+    if (typeof showErrorMessage === 'function') showErrorMessage('保存用户信息失败: ' + err.message);
   }
+}
 
   createPermissionModal() {
     // 单例
