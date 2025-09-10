@@ -823,125 +823,225 @@ download: `
 
 // 用户设置页面
 'user-settings': `
-  <div class="section">
-    <h1 class="page-title">用户设置</h1>
+  <div class="user-settings-container">
+    <div class="settings-header">
+      <h1 class="settings-title">
+        <i class="fas fa-user-cog"></i>
+        <span>用户设置</span>
+      </h1>
+    </div>
     
-    <div class="user-settings-form">
-      <!-- 头像设置 -->
-      <div class="setting-section">
-        <h3><i class="fas fa-image me-2"></i>头像设置</h3>
-        <div class="d-flex flex-column align-items-center">
-          <!-- 添加头像预览 -->
-          <div class="avatar-preview-container mb-3">
-            <img id="settings-avatar" class="user-avatar-large" src="" alt="用户头像">
+    <div class="settings-content">
+      <!-- 用户概览卡片 -->
+      <div class="user-overview-card">
+        <div class="user-overview-bg"></div>
+        <div class="user-overview-content">
+          <div class="user-avatar-section">
+            <div class="avatar-wrapper">
+              <img id="settings-avatar" class="user-avatar-display" src="" alt="用户头像">
+              <div class="avatar-upload-overlay">
+                <i class="fas fa-camera"></i>
+              </div>
+            </div>
+            <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
           </div>
           
-          <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
-          <button id="change-avatar-btn" class="btn btn-outline-primary mb-4">
-            <i class="fas fa-upload me-2"></i>上传新头像
-          </button>
-          
-          <div id="avatar-crop-section" style="display: none;">
-            <h4>调整头像</h4>
-            <div class="avatar-crop-container" id="avatar-crop-container"></div>
-            <div class="d-flex justify-content-center mt-3">
-              <button id="cancel-avatar-btn" class="btn btn-outline-secondary me-2">
-                <i class="fas fa-times me-2"></i>取消
-              </button>
-              <button id="save-avatar-btn" class="btn btn-primary">
-                <i class="fas fa-save me-2"></i>保存
-              </button>
+          <div class="user-info-summary">
+            <h2 id="settings-username" class="user-display-name"></h2>
+            <p id="settings-email" class="user-email"></p>
+            <div class="user-badges">
+              <span class="badge-uid">UID: <span id="settings-uid"></span></span>
+              <span id="settings-user-state"></span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 个人信息设置 -->
-		<div class="setting-section">
-		  <h3><i class="fas fa-user me-2"></i>个人信息</h3>
-		  <div class="form-group">
-			<label>UID</label>
-			<div id="settings-uid" class="form-control-static"></div>
-		  </div>
-		  <div class="form-group">
-			<label>用户名</label>
-			<div id="settings-username" class="form-control-static"></div>
-		  </div>
-		  <div class="form-group">
-			<label>邮箱</label>
-			<div id="settings-email" class="form-control-static"></div>
-		  </div>
-		  <div class="form-group">
-			<label>账户状态</label>
-			<div id="settings-user-state" class="form-control-static"></div>
-		  </div>
-		  <div class="form-group">
-			<label for="settings-nickname">昵称</label>
-			<input type="text" id="settings-nickname" class="form-control" maxlength="20">
-			<div class="char-counter"><span id="settings-nickname-counter">0</span>/20</div>
-		  </div>
-		  <div class="setting-actions">
-			<button id="save-profile-btn" class="btn btn-primary">保存个人信息</button>
-		  </div>
-		</div>
-
-      <!-- 积分显示 -->
-      <div class="setting-section">
-        <h3><i class="fas fa-coins me-2"></i>积分</h3>
-        <div class="form-group">
-          <label>总积分</label>
-          <div id="settings-total-points" class="form-control-static"></div>
-        </div>
-        <div class="form-group">
-          <label>普通积分</label>
-          <div id="settings-points" class="form-control-static"></div>
-        </div>
-        <div class="form-group">
-          <label>鸽屋积分</label>
-          <div id="settings-point2" class="form-control-static"></div>
+      <!-- 头像裁剪模态框 -->
+      <div id="avatar-crop-section" class="avatar-crop-modal" style="display: none;">
+        <div class="crop-modal-content">
+          <h3>调整头像</h3>
+          <div id="avatar-crop-container" class="crop-container"></div>
+          <div class="crop-actions">
+            <button id="cancel-avatar-btn" class="btn-secondary">
+              <i class="fas fa-times"></i> 取消
+            </button>
+            <button id="save-avatar-btn" class="btn-primary">
+              <i class="fas fa-check"></i> 保存
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- 查分绑定信息 - 修复后的卡片样式 -->
-      <div class="setting-section" id="ccb-binding-section" style="display: none;">
-        <h3><i class="fas fa-gamepad me-2"></i>查分绑定信息</h3>
-        <div class="form-group">
-          <label>服务器:</label>
-          <div id="ccb-server-info" class="form-control-static"></div>
-        </div>
-        <div class="form-group">
-          <label>KeyChip:</label>
-          <div id="ccb-keychip-info" class="form-control-static"></div>
-        </div>
-        <div class="form-group">
-          <label>游戏卡号:</label>
-          <div id="ccb-guid-info" class="form-control-static"></div>
-        </div>
-        <div class="setting-actions">
-          <button type="button" class="btn btn-danger" id="ccb-unbind-settings-btn">
-            <i class="fas fa-unlink me-2"></i>解绑查分信息
+      <!-- 设置选项卡 -->
+      <div class="settings-tabs">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="profile">
+            <i class="fas fa-user"></i>
+            <span>个人信息</span>
+          </button>
+          <button class="tab-btn" data-tab="points">
+            <i class="fas fa-coins"></i>
+            <span>积分信息</span>
+          </button>
+          <button class="tab-btn" data-tab="security">
+            <i class="fas fa-shield-alt"></i>
+            <span>安全设置</span>
+          </button>
+          <button class="tab-btn" data-tab="binding">
+            <i class="fas fa-gamepad"></i>
+            <span>游戏绑定</span>
           </button>
         </div>
-      </div>
 
-      <!-- 密码设置 -->
-      <div class="setting-section">
-        <h3><i class="fas fa-lock me-2"></i>修改密码</h3>
-        <div class="form-group">
-          <label for="current-password">当前密码</label>
-          <input type="password" id="current-password" class="form-control">
+        <!-- 个人信息选项卡 -->
+        <div class="tab-content active" id="profile-tab">
+          <div class="settings-card">
+            <div class="card-header">
+              <h3><i class="fas fa-id-card"></i> 基本信息</h3>
+            </div>
+            <div class="card-body">
+              <div class="info-row">
+                <label>用户名</label>
+                <div class="info-value" id="settings-username-display"></div>
+              </div>
+              <div class="info-row">
+                <label>邮箱</label>
+                <div class="info-value" id="settings-email-display"></div>
+              </div>
+              <div class="form-group">
+                <label for="settings-nickname">
+                  设置昵称
+                </label>
+                <div class="input-wrapper">
+                  <input type="text" id="settings-nickname" class="form-input" maxlength="20" placeholder="设置您的昵称">
+                  <span class="char-counter"><span id="settings-nickname-counter">0</span>/20</span>
+                </div>
+              </div>
+              <button id="save-profile-btn" class="btn-primary btn-block">
+                <i class="fas fa-save"></i> 保存个人信息
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="new-password">新密码</label>
-          <input type="password" id="new-password" class="form-control" maxlength="16">
-          <div class="char-counter"><span id="new-password-counter">0</span>/16</div>
+
+        <!-- 积分信息选项卡 -->
+        <div class="tab-content" id="points-tab">
+          <div class="settings-card">
+            <div class="card-header">
+              <h3><i class="fas fa-chart-line"></i> 积分统计</h3>
+            </div>
+            <div class="card-body">
+              <div class="points-grid">
+                <div class="points-item">
+                  <div class="points-icon">
+                    <i class="fas fa-star"></i>
+                  </div>
+                  <div class="points-info">
+                    <div class="points-label">总积分</div>
+                    <div class="points-value" id="settings-total-points">0</div>
+                  </div>
+                </div>
+                <div class="points-item">
+                  <div class="points-icon">
+                    <i class="fas fa-coins"></i>
+                  </div>
+                  <div class="points-info">
+                    <div class="points-label">普通积分</div>
+                    <div class="points-value" id="settings-points">0</div>
+                  </div>
+                </div>
+                <div class="points-item">
+                  <div class="points-icon">
+                    <i class="fas fa-dove"></i>
+                  </div>
+                  <div class="points-info">
+                    <div class="points-label">鸽屋积分</div>
+                    <div class="points-value" id="settings-point2">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="confirm-password">确认新密码</label>
-          <input type="password" id="confirm-password" class="form-control" maxlength="16">
+
+        <!-- 安全设置选项卡 -->
+        <div class="tab-content" id="security-tab">
+          <div class="settings-card">
+            <div class="card-header">
+              <h3><i class="fas fa-lock"></i> 修改密码</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="current-password">
+                  <i class="fas fa-key"></i> 当前密码
+                </label>
+                <input type="password" id="current-password" class="form-input" placeholder="请输入当前密码">
+              </div>
+              <div class="form-group">
+                <label for="new-password">
+                  <i class="fas fa-lock"></i> 新密码
+                </label>
+                <div class="input-wrapper">
+                  <input type="password" id="new-password" class="form-input" maxlength="16" placeholder="请输入新密码">
+                  <span class="char-counter"><span id="new-password-counter">0</span>/16</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="confirm-password">
+                  <i class="fas fa-lock"></i> 确认新密码
+                </label>
+                <input type="password" id="confirm-password" class="form-input" maxlength="16" placeholder="请再次输入新密码">
+              </div>
+              <button id="save-password-btn" class="btn-primary btn-block">
+                <i class="fas fa-save"></i> 更新密码
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="setting-actions">
-          <button id="save-password-btn" class="btn btn-primary">保存密码</button>
+
+        <!-- 游戏绑定选项卡 -->
+        <div class="tab-content" id="binding-tab">
+          <div class="settings-card" id="ccb-binding-section" style="display: none;">
+            <div class="card-header">
+              <h3><i class="fas fa-link"></i> 查分绑定信息</h3>
+            </div>
+            <div class="card-body">
+              <div class="binding-info">
+                <div class="binding-item">
+                  <i class="fas fa-server"></i>
+                  <div>
+                    <label>服务器</label>
+                    <div class="binding-value" id="ccb-server-info">-</div>
+                  </div>
+                </div>
+                <div class="binding-item">
+                  <i class="fas fa-microchip"></i>
+                  <div>
+                    <label>KeyChip</label>
+                    <div class="binding-value" id="ccb-keychip-info">-</div>
+                  </div>
+                </div>
+                <div class="binding-item">
+                  <i class="fas fa-id-badge"></i>
+                  <div>
+                    <label>游戏卡号</label>
+                    <div class="binding-value" id="ccb-guid-info">-</div>
+                  </div>
+                </div>
+              </div>
+              <button id="ccb-unbind-settings-btn" class="btn-danger btn-block">
+                <i class="fas fa-unlink"></i> 解绑查分信息
+              </button>
+            </div>
+          </div>
+          
+          <div class="settings-card" id="no-binding-message">
+            <div class="card-body text-center">
+              <i class="fas fa-unlink empty-icon"></i>
+              <p>暂无绑定信息</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

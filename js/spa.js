@@ -1143,9 +1143,12 @@ if (userAvatarMobile) {
     settingsAvatar.src = avatarUrl;
   }
   
-  if (settingsUsername) {
-    settingsUsername.textContent = user.username;
-  }
+if (settingsUsername) {
+  const displayText = user.nickname ? 
+    `${user.nickname} (${user.username})` : 
+    user.username;
+  settingsUsername.textContent = displayText;
+}
   if (settingsEmail) {
     settingsEmail.textContent = user.email || '未设置';
   }
@@ -1978,232 +1981,302 @@ async function loadPage(pageId) {
         languageModule.initLanguage();
       }
       
-      if (pageId === 'user-settings') {
-        const token = localStorage.getItem('token');
-        if (token) {
-          fetchUserInfo(token);
-        } else {
-          loadPage('login');
+if (pageId === 'user-settings') {
+  const token = localStorage.getItem('token');
+  if (token) {
+    fetchUserInfo(token);
+  } else {
+    loadPage('login');
+  }
+  
+  // 添加选项卡切换功能
+  setTimeout(() => {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    if (tabBtns.length > 0) {
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetTab = btn.getAttribute('data-tab');
+          
+          // 切换按钮状态
+          tabBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          // 切换内容显示
+          tabContents.forEach(content => {
+            content.classList.remove('active');
+            if (content.id === `${targetTab}-tab`) {
+              content.classList.add('active');
+            }
+          });
+        });
+      });
+    }
+    
+    // 点击头像区域触发上传
+    const avatarWrapper = document.querySelector('.avatar-wrapper');
+    const avatarUpload = document.getElementById('avatar-upload');
+    
+    if (avatarWrapper && avatarUpload) {
+      avatarWrapper.addEventListener('click', () => {
+        avatarUpload.click();
+      });
+    }
+    
+    // 检查是否有绑定信息，显示相应内容
+    const bindingSection = document.getElementById('ccb-binding-section');
+    const noBindingMessage = document.getElementById('no-binding-message');
+    
+    if (currentUser && currentUser.game_server && currentUser.keychip && currentUser.guid) {
+      if (bindingSection) bindingSection.style.display = 'block';
+      if (noBindingMessage) noBindingMessage.style.display = 'none';
+    } else {
+      if (bindingSection) bindingSection.style.display = 'none';
+      if (noBindingMessage) noBindingMessage.style.display = 'block';
+    }
+    
+    // 更新显示的用户名和邮箱
+    const usernameDisplay = document.getElementById('settings-username-display');
+    const emailDisplay = document.getElementById('settings-email-display');
+    
+    if (usernameDisplay && currentUser) {
+      usernameDisplay.textContent = currentUser.username || '-';
+    }
+    if (emailDisplay && currentUser) {
+      emailDisplay.textContent = currentUser.email || '未设置';
+    }
+  }, 100);
+  
+  // 头像上传处理
+  const changeAvatarBtn = document.getElementById('change-avatar-btn');
+  const avatarUpload = document.getElementById('avatar-upload');
+  const cancelAvatarBtn = document.getElementById('cancel-avatar-btn');
+  
+  if (avatarUpload) {
+    avatarUpload.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        if (file.size > 150 * 1024) {
+          showErrorMessage('头像大小不能超过150KB');
+          return;
         }
         
-        const changeAvatarBtn = document.getElementById('change-avatar-btn');
-        const avatarUpload = document.getElementById('avatar-upload');
-        const cancelAvatarBtn = document.getElementById('cancel-avatar-btn');
+        if (cropper) {
+          cropper.destroy();
+          cropper = null;
+        }
         
-        if (changeAvatarBtn && avatarUpload) {
-          changeAvatarBtn.addEventListener('click', () => {
-            avatarUpload.click();
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const cropContainer = document.getElementById('avatar-crop-container');
+          const cropSection = document.getElementById('avatar-crop-section');
+          
+          cropContainer.innerHTML = '';
+          const img = document.createElement('img');
+          img.id = 'avatar-to-crop';
+          img.src = event.target.result;
+          img.style.maxWidth = '100%';
+          img.style.maxHeight = '300px';
+          
+          cropContainer.appendChild(img);
+          
+          cropper = new Cropper(img, {
+            aspectRatio: 1,
+            viewMode: 1,
+            autoCropArea: 0.8,
+            movable: true,
+            zoomable: true,
+            rotatable: false,
+            scalable: false,
+            guides: true,
+            highlight: false,
+            background: false,
+            cropBoxResizable: true,
+            minCropBoxWidth: 100,
+            minCropBoxHeight: 100
           });
           
-          avatarUpload.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-              if (file.size > 150 * 1024) {
-                showErrorMessage('头像大小不能超过150KB');
-                return;
-              }
+          cropSection.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+  
+  if (cancelAvatarBtn) {
+    cancelAvatarBtn.addEventListener('click', function() {
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+      }
+      document.getElementById('avatar-crop-section').style.display = 'none';
+      document.getElementById('avatar-upload').value = '';
+    });
+  }
+  
+  const saveAvatarBtn = document.getElementById('save-avatar-btn');
+  if (saveAvatarBtn) {
+    saveAvatarBtn.addEventListener('click', function() {
+      if (cropper) {
+        const canvas = cropper.getCroppedCanvas({
+          width: 200,
+          height: 200
+        });
+        
+        canvas.toBlob(function(blob) {
+          if (blob.size > 150 * 1024) {
+            showErrorMessage('裁剪后的头像大小不能超过150KB');
+            return;
+          }
+          
+          const formData = new FormData();
+          formData.append('avatar', blob, 'avatar.png');
+          
+          const token = localStorage.getItem('token');
+          fetch('https://api.am-all.com.cn/api/user/avatar', {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              updateUserInfo(data.user);
+              document.getElementById('avatar-crop-section').style.display = 'none';
+              document.getElementById('avatar-upload').value = '';
+              showSuccessMessage('头像更新成功');
               
               if (cropper) {
                 cropper.destroy();
                 cropper = null;
               }
-              
-              const reader = new FileReader();
-              reader.onload = function(event) {
-                const cropContainer = document.getElementById('avatar-crop-container');
-                const previewImg = document.getElementById('avatar-preview');
-                
-                cropContainer.innerHTML = '';
-                const img = document.createElement('img');
-                img.id = 'avatar-to-crop';
-                img.src = event.target.result;
-                img.style.maxWidth = '200px';
-                img.style.maxHeight = '200px';
-                
-                cropContainer.appendChild(img);
-                
-                cropper = new Cropper(img, {
-                  aspectRatio: 1,
-                  viewMode: 1,
-                  autoCropArea: 0.8,
-                  movable: true,
-                  zoomable: true,
-                  rotatable: false,
-                  scalable: false,
-                  guides: true,
-                  highlight: false,
-                  background: false,
-                  cropBoxResizable: true,
-                  minCropBoxWidth: 100,
-                  minCropBoxHeight: 100,
-                  crop: function(event) {
-                    const canvas = this.cropper.getCroppedCanvas({
-                      width: 200,
-                      height: 200
-                    });
-                    
-                    const context = canvas.getContext('2d');
-                    context.beginPath();
-                    context.arc(100, 100, 100, 0, Math.PI * 2, true);
-                    context.closePath();
-                    context.clip();
-                  }
-                });
-                
-                document.getElementById('avatar-crop-section').style.display = 'block';
-              };
-              reader.readAsDataURL(file);
-            }
-          });
-        }
-        
-        if (cancelAvatarBtn) {
-          cancelAvatarBtn.addEventListener('click', function() {
-            if (cropper) {
-              cropper.destroy();
-              cropper = null;
-            }
-            document.getElementById('avatar-crop-section').style.display = 'none';
-            document.getElementById('avatar-upload').value = '';
-          });
-        }
-        
-        const saveAvatarBtn = document.getElementById('save-avatar-btn');
-        if (saveAvatarBtn) {
-          saveAvatarBtn.addEventListener('click', function() {
-            if (cropper) {
-              const canvas = cropper.getCroppedCanvas({
-                width: 200,
-                height: 200
-              });
-              
-              const context = canvas.getContext('2d');
-              context.beginPath();
-              context.arc(100, 100, 100, 0, Math.PI * 2, true);
-              context.closePath();
-              context.clip();
-              
-              canvas.toBlob(function(blob) {
-                if (blob.size > 150 * 1024) {
-                  showErrorMessage('裁剪后的头像大小不能超过150KB');
-                  return;
-                }
-                
-                const formData = new FormData();
-                formData.append('avatar', blob, 'avatar.png');
-                
-                const token = localStorage.getItem('token');
-                fetch('https://api.am-all.com.cn/api/user/avatar', {
-                  method: 'PUT',
-                  headers: {
-                    'Authorization': `Bearer ${token}`
-                  },
-                  body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                  if (data.success) {
-                    updateUserInfo(data.user);
-                    document.getElementById('avatar-crop-section').style.display = 'none';
-                    document.getElementById('avatar-upload').value = '';
-                    showSuccessMessage('头像更新成功');
-                  } else {
-                    showErrorMessage('头像更新失败: ' + (data.error || '未知错误'));
-                  }
-                })
-                .catch(error => {
-                  console.error('头像更新错误:', error);
-                  showErrorMessage('头像更新失败');
-                });
-              }, 'image/png', 0.9);
             } else {
-              showErrorMessage('请先选择并裁剪头像');
+              showErrorMessage('头像更新失败: ' + (data.error || '未知错误'));
             }
+          })
+          .catch(error => {
+            console.error('头像更新错误:', error);
+            showErrorMessage('头像更新失败');
           });
-        }
-        
-        const saveProfileBtn = document.getElementById('save-profile-btn');
-        if (saveProfileBtn) {
-          saveProfileBtn.addEventListener('click', function() {
-            const nickname = document.getElementById('settings-nickname').value;
-            
-            if (nickname && (nickname.length < 6 || nickname.length > 20)) {
-              showErrorMessage('昵称长度需在6-20个字符之间');
-              return;
-            }
-            
-            const token = localStorage.getItem('token');
-            fetch('https://api.am-all.com.cn/api/user/profile', {
-              method: 'PUT',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ nickname })
-            })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                updateUserInfo(data.user);
-                showSuccessMessage('个人信息更新成功');
-              } else {
-                showErrorMessage('个人信息更新失败: ' + (data.error || '未知错误'));
-              }
-            })
-            .catch(error => {
-              console.error('个人信息更新错误:', error);
-              showErrorMessage('个人信息更新失败');
-            });
-          });
-        }
-        
-        // 显示查分绑定信息
-        setTimeout(displayCCBBindingInfo, 100);
-        
-        const savePasswordBtn = document.getElementById('save-password-btn');
-        if (savePasswordBtn) {
-          savePasswordBtn.addEventListener('click', function() {
-            const currentPassword = document.getElementById('current-password').value;
-            const newPassword = document.getElementById('new-password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            
-            if (newPassword !== confirmPassword) {
-              showErrorMessage('两次输入的新密码不一致');
-              return;
-            }
-            
-            if (newPassword.length < 8 || newPassword.length > 16) {
-              showErrorMessage('密码长度需在8-16个字符之间');
-              return;
-            }
-            
-            const token = localStorage.getItem('token');
-            fetch('https://api.am-all.com.cn/api/user/password', {
-              method: 'PUT',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ currentPassword, newPassword })
-            })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                showSuccessMessage('密码更新成功');
-                document.getElementById('current-password').value = '';
-                document.getElementById('new-password').value = '';
-                document.getElementById('confirm-password').value = '';
-              } else {
-                showErrorMessage('密码更新失败: ' + (data.error || '未知错误'));
-              }
-            })
-            .catch(error => {
-              console.error('密码更新错误:', error);
-              showErrorMessage('密码更新失败');
-            });
-          });
-        }
+        }, 'image/png', 0.9);
+      } else {
+        showErrorMessage('请先选择并裁剪头像');
       }
+    });
+  }
+  
+  const saveProfileBtn = document.getElementById('save-profile-btn');
+  if (saveProfileBtn) {
+    saveProfileBtn.addEventListener('click', function() {
+      const nickname = document.getElementById('settings-nickname').value;
+      
+      if (nickname && (nickname.length < 6 || nickname.length > 20)) {
+        showErrorMessage('昵称长度需在6-20个字符之间');
+        return;
+      }
+      
+      const token = localStorage.getItem('token');
+      fetch('https://api.am-all.com.cn/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ nickname })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          updateUserInfo(data.user);
+          showSuccessMessage('个人信息更新成功');
+        } else {
+          showErrorMessage('个人信息更新失败: ' + (data.error || '未知错误'));
+        }
+      })
+      .catch(error => {
+        console.error('个人信息更新错误:', error);
+        showErrorMessage('个人信息更新失败');
+      });
+    });
+  }
+  
+  // 显示查分绑定信息
+  setTimeout(displayCCBBindingInfo, 100);
+  
+  const savePasswordBtn = document.getElementById('save-password-btn');
+  if (savePasswordBtn) {
+    savePasswordBtn.addEventListener('click', function() {
+      const currentPassword = document.getElementById('current-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        showErrorMessage('请填写所有密码字段');
+        return;
+      }
+      
+      if (newPassword !== confirmPassword) {
+        showErrorMessage('两次输入的新密码不一致');
+        return;
+      }
+      
+      if (newPassword.length < 8 || newPassword.length > 16) {
+        showErrorMessage('密码长度需在8-16个字符之间');
+        return;
+      }
+      
+      const token = localStorage.getItem('token');
+      fetch('https://api.am-all.com.cn/api/user/password', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ currentPassword, newPassword })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showSuccessMessage('密码更新成功');
+          document.getElementById('current-password').value = '';
+          document.getElementById('new-password').value = '';
+          document.getElementById('confirm-password').value = '';
+          document.getElementById('new-password-counter').textContent = '0';
+        } else {
+          showErrorMessage('密码更新失败: ' + (data.error || '未知错误'));
+        }
+      })
+      .catch(error => {
+        console.error('密码更新错误:', error);
+        showErrorMessage('密码更新失败');
+      });
+    });
+  }
+  
+  // 字符计数器
+  const nicknameInput = document.getElementById('settings-nickname');
+  if (nicknameInput) {
+    nicknameInput.addEventListener('input', function() {
+      const counter = document.getElementById('settings-nickname-counter');
+      if (counter) {
+        counter.textContent = this.value.length;
+      }
+    });
+  }
+  
+  const newPasswordInput = document.getElementById('new-password');
+  if (newPasswordInput) {
+    newPasswordInput.addEventListener('input', function() {
+      const counter = document.getElementById('new-password-counter');
+      if (counter) {
+        counter.textContent = this.value.length;
+      }
+    });
+  }
+}
 
       if (pageId === 'settings') {
         // 初始化设置值
