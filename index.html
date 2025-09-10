@@ -25,69 +25,68 @@
 <body>
   <!-- 顶部导航栏 -->
   <nav class="top-navbar">
-    <div class="d-flex align-items-center">
-      <button class="mobile-toggle me-3">
+    <!-- 左侧移动端菜单按钮 -->
+    <div class="navbar-left">
+      <button class="mobile-toggle">
         <i class="fas fa-bars"></i>
       </button>
+    </div>
+    
+    <!-- 中央标题 -->
+    <div class="navbar-center">
       <div class="brand">
-        <i class="fas fa-database"></i>
         <span id="navbar-brand">DATA CENTER</span>
       </div>
     </div>
     
-    <ul class="nav-links">
-      <li><a href="https://performai.evilleaker.com/">
-        <i class="fas fa-home me-1"></i> 
-        <span id="nav-home-text">主页</span>
-      </a></li>
-    </ul>
-    
-    <!-- 用户区域 (PC视图) -->
-    <div class="user-area-container">
-      <div class="language-selector">
-        <button class="language-btn">
-          <i class="fas fa-globe"></i>
-          <span id="language-text">语言</span>
-        </button>
-        <div class="language-dropdown">
-          <a href="?lang=zh-cn" class="language-item">中文</a>
-          <a href="?lang=en-us" class="language-item">English</a>
-          <a href="?lang=ja-jp" class="language-item">日本語</a>
+    <!-- 右侧用户区域 -->
+    <div class="navbar-right">
+      <div class="user-area-container">
+        <div class="language-selector">
+          <button class="language-btn">
+            <i class="fas fa-globe"></i>
+            <span id="language-text">语言</span>
+          </button>
+          <div class="language-dropdown">
+            <a href="?lang=zh-cn" class="language-item">中文</a>
+            <a href="?lang=en-us" class="language-item">English</a>
+            <a href="?lang=ja-jp" class="language-item">日本語</a>
+          </div>
+        </div>
+        <div class="user-area" id="user-area-pc">
+          <!-- 登录前 -->
+          <div class="auth-links" id="auth-links-pc">
+            <a href="#" data-page="login" id="login-link-pc">登录</a>
+            <span class="divider">/</span>
+            <a href="#" data-page="register" id="register-link-pc">注册</a>
+          </div>
+          
+          <!-- 登录后 -->
+          <div class="user-info" id="user-info-pc" style="display: none;">
+            <img id="user-avatar-pc" class="user-avatar-pc" src="https://api.am-all.com.cn/avatars/default_avatar.png">
+            <div class="user-basic-info">
+              <span id="user-nickname-pc" class="user-nickname"></span>
+              <span id="user-uid-pc" class="user-uid"></span>
+            </div>
+            <div class="user-dropdown">
+              <!-- 这里显示用户组 -->
+              <div class="dropdown-rank">
+                <span id="dropdown-rank">普通用户</span>
+              </div>
+              <!-- 这里显示UID -->
+              <div class="dropdown-uid">
+                <i class="fas fa-id-card me-2"></i>
+                <span id="dropdown-uid"></span>
+              </div>
+              <div class="dropdown-points" id="dropdown-points">
+                <i class="fas fa-coins me-2"></i>积分: 0
+              </div>
+              <a href="#" data-page="user-settings">用户设置</a>
+              <a href="#" id="logout-pc">退出登录</a>
+            </div>
+          </div>
         </div>
       </div>
-    <div class="user-area" id="user-area-pc">
-      <!-- 登录前 -->
-      <div class="auth-links" id="auth-links-pc">
-        <a href="#" data-page="login" id="login-link-pc">登录</a>
-        <span class="divider">/</span>
-        <a href="#" data-page="register" id="register-link-pc">注册</a>
-      </div>
-      
-      <!-- 登录后 -->
-      <div class="user-info" id="user-info-pc" style="display: none;">
-        <img id="user-avatar-pc" class="user-avatar-pc" src="https://api.am-all.com.cn/avatars/default_avatar.png">
-        <div class="user-basic-info">
-          <span id="user-nickname-pc" class="user-nickname"></span>
-          <span id="user-uid-pc" class="user-uid"></span>
-        </div>
-        <div class="user-dropdown">
-          <!-- 这里显示用户组 -->
-          <div class="dropdown-rank">
-            <span id="dropdown-rank">普通用户</span>
-          </div>
-          <!-- 这里显示UID -->
-          <div class="dropdown-uid">
-            <i class="fas fa-id-card me-2"></i>
-            <span id="dropdown-uid"></span>
-          </div>
-          <div class="dropdown-points" id="dropdown-points">
-            <i class="fas fa-coins me-2"></i>积分: 0
-          </div>
-          <a href="#" data-page="user-settings">用户设置</a>
-          <a href="#" id="logout-pc">退出登录</a>
-        </div>
-      </div>
-    </div>
     </div>
   </nav>
   
@@ -98,44 +97,44 @@
       <span class="sidebar-title"></span>
     </div>
 
-  <!-- 用户区域 (移动视图) -->
-  <div class="sidebar-user-area" id="user-area-mobile">
-    <!-- 登录前 -->
-    <div class="auth-links" id="auth-links-mobile">
-      <a href="#" data-page="login" class="mobile-auth-btn">
-        <i class="fas fa-sign-in-alt me-2"></i>
-        <span>登录</span>
-      </a>
+    <!-- 用户区域 (移动视图) -->
+    <div class="sidebar-user-area" id="user-area-mobile">
+      <!-- 登录前 -->
+      <div class="auth-links" id="auth-links-mobile">
+        <a href="#" data-page="login" class="mobile-auth-btn">
+          <i class="fas fa-sign-in-alt me-2"></i>
+          <span>登录</span>
+        </a>
 
-      <a href="#" data-page="register" class="mobile-auth-btn">
-        <i class="fas fa-user-plus me-2"></i>
-        <span>注册</span>
-      </a>
-    </div>
-    
-    <!-- 移动端用户信息 -->
-    <div class="user-info" id="user-info-mobile" style="display: none;">
-      <div class="user-basic">
-        <img id="user-avatar-mobile" class="user-avatar-mobile" src="https://api.am-all.com.cn/avatars/default_avatar.png">
-        <div class="user-info-text">
-          <div id="user-nickname-mobile" class="user-nickname"></div>
-          <div id="user-email-mobile" class="user-email"></div>
-          <div id="user-uid-mobile" class="user-uid"></div>
-          <div id="user-points-mobile" class="user-points"></div>
+        <a href="#" data-page="register" class="mobile-auth-btn">
+          <i class="fas fa-user-plus me-2"></i>
+          <span>注册</span>
+        </a>
+      </div>
+      
+      <!-- 移动端用户信息 -->
+      <div class="user-info" id="user-info-mobile" style="display: none;">
+        <div class="user-basic">
+          <img id="user-avatar-mobile" class="user-avatar-mobile" src="https://api.am-all.com.cn/avatars/default_avatar.png">
+          <div class="user-info-text">
+            <div id="user-nickname-mobile" class="user-nickname"></div>
+            <div id="user-email-mobile" class="user-email"></div>
+            <div id="user-uid-mobile" class="user-uid"></div>
+            <div id="user-points-mobile" class="user-points"></div>
+          </div>
+        </div>
+        <div class="user-actions">
+          <!-- 用户设置按钮 - 修改为按钮样式 -->
+          <a href="#" data-page="user-settings" class="mobile-user-action-btn">
+            <i class="fas fa-cog me-2"></i>用户设置
+          </a>
+          <!-- 退出登录按钮 - 修改为按钮样式 -->
+          <a href="#" id="logout-mobile" class="mobile-user-action-btn">
+            <i class="fas fa-sign-out-alt me-2"></i>退出登录
+          </a>
         </div>
       </div>
-      <div class="user-actions">
-        <!-- 用户设置按钮 - 修改为按钮样式 -->
-        <a href="#" data-page="user-settings" class="mobile-user-action-btn">
-          <i class="fas fa-cog me-2"></i>用户设置
-        </a>
-        <!-- 退出登录按钮 - 修改为按钮样式 -->
-        <a href="#" id="logout-mobile" class="mobile-user-action-btn">
-          <i class="fas fa-sign-out-alt me-2"></i>退出登录
-        </a>
-      </div>
     </div>
-  </div>
 
     <ul class="sidebar-nav">
       <li><a href="#" class="active" data-page="home">
@@ -194,10 +193,10 @@
     </div>
 
     <ul class="sidebar-nav" id="admin-section-nav" style="display: none;">
-	  <li><a href="#" data-page="user-manager" id="sidebar-user-manager" style="display: none;">
-	    <i class="fas fa-users me-2"></i>
-	    <span>用户管理</span>
-	  </a></li>
+      <li><a href="#" data-page="user-manager" id="sidebar-user-manager" style="display: none;">
+        <i class="fas fa-users me-2"></i>
+        <span>用户管理</span>
+      </a></li>
       <li><a href="#" data-page="announcement-admin" id="sidebar-announcement-admin" style="display: none;">
         <i class="fas fa-bullhorn me-2"></i>
         <span>公告管理</span>
