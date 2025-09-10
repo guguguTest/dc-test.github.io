@@ -14,21 +14,61 @@
 }
 
 /* 未登录状态链接 */
+/* 未登录状态链接 */
 .auth-links a {
   color: #fff;
   text-decoration: none;
   font-size: 14px;
-  padding: 0 8px;
-  transition: opacity 0.2s;
+  padding: 8px 16px;
+  margin: 0 4px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  display: inline-block;
+  font-weight: 500;
+  background: rgba(52, 73, 94, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
 }
 
 .auth-links a:hover {
-  opacity: 0.8;
+  background: rgba(52, 73, 94, 0.95);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* 特殊样式：登录按钮 */
+.auth-links a[data-page="login"] {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 1px solid transparent;
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.auth-links a[data-page="login"]:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+/* 特殊样式：注册按钮 */
+.auth-links a[data-page="register"] {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  border: 1px solid transparent;
+  color: white;
+  box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+}
+
+.auth-links a[data-page="register"]:hover {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  box-shadow: 0 4px 16px rgba(46, 204, 113, 0.4);
+  transform: translateY(-2px);
 }
 
 .auth-links .divider {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.5);
   font-size: 12px;
+  margin: 0 8px;
 }
 
 /* ====== PC端专属样式 ====== */
