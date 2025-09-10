@@ -1,9 +1,9 @@
-/* 主框架样式 - 优化版 */
+/* 主框架样式 - 现代化优化版 */
 :root {
   --sidebar-width: 250px;
   --sidebar-collapsed-width: 60px;
   
-  /* 优化的配色方案 */
+  /* 原有的配色方案 */
   --primary-color: #1e293b;
   --primary-light: #334155;
   --secondary-color: #3b82f6;
@@ -18,6 +18,31 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  
+  /* 新增现代化配色方案 - 用于特殊页面 */
+  --modern-primary-color: #667eea;
+  --modern-primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --modern-secondary-color: #f093fb;
+  --modern-secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --modern-success-color: #4ecdc4;
+  --modern-success-gradient: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  --modern-warning-color: #ffecd2;
+  --modern-warning-gradient: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  --modern-error-color: #ff6b6b;
+  --modern-error-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  --modern-background-color: #f8fafc;
+  /* 调整背景渐变，使其非常浅，确保文字清晰可读 */
+  --modern-background-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+  --modern-card-background: rgba(255, 255, 255, 0.95);
+  --modern-text-primary: #2d3748;
+  --modern-text-secondary: #718096;
+  --modern-border-color: rgba(226, 232, 240, 0.8);
+  --modern-shadow-light: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --modern-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --modern-shadow-heavy: 0 16px 48px rgba(0, 0, 0, 0.15);
+  --modern-border-radius: 16px;
+  --modern-border-radius-small: 8px;
+  --modern-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -27,13 +52,40 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  /* 使用更浅的现代化背景 */
+  background: var(--modern-background-gradient);
   background-attachment: fixed;
   color: var(--text-color);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* 自定义滚动条美化 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--modern-primary-gradient);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--modern-secondary-gradient);
+}
+
+html, body {
+  height: 100%;
+  overflow: auto;
 }
 
 /* 顶部导航栏 - 优化样式 */
@@ -58,62 +110,21 @@ body {
 }
 
 .brand {
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 12px;
   color: var(--primary-color);
-  letter-spacing: -0.025em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .brand i {
-  color: var(--secondary-color);
-  font-size: 2rem;
-  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
-  transition: transform 0.3s ease;
-}
-
-.brand:hover i {
-  transform: rotate(10deg) scale(1.1);
+  display: none;
 }
 
 .nav-links {
-  display: flex;
-  gap: 25px;
-  font-size: 1.1rem;
-}
-
-.nav-links a {
-  color: var(--text-color);
-  text-decoration: none;
-  transition: all 0.3s ease;
-  position: relative;
-  padding: 5px 12px;
-  border-radius: 8px;
-  font-weight: 500;
-}
-
-.nav-links a:hover {
-  color: var(--secondary-color);
-  background: rgba(59, 130, 246, 0.1);
-}
-
-.nav-links a::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 12px;
-  right: 12px;
-  height: 2px;
-  background: var(--secondary-color);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
-  border-radius: 2px;
-}
-
-.nav-links a:hover::after {
-  transform: scaleX(1);
+  display: none !important;
 }
 
 .language-selector {
@@ -201,7 +212,7 @@ body {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: env(safe-area-inset-bottom, 20px);
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   border-right: 1px solid var(--border-color);
 }
 
@@ -262,6 +273,7 @@ body {
 .sidebar-nav {
   list-style: none;
   padding: 20px 12px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 20px));
 }
 
 .sidebar-nav li {
@@ -381,6 +393,14 @@ body {
   display: none;
 }
 
+.sidebar::after {
+  content: "";
+  display: block;
+  height: env(safe-area-inset-bottom, 20px);
+  width: 100%;
+  flex-shrink: 0;
+}
+
 /* 主内容区 */
 .main-content {
   margin-top: 70px;
@@ -388,10 +408,19 @@ body {
   padding: 30px;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: calc(100vh - 70px);
+  height: auto;
+  overflow-y: auto;
+  padding-bottom: 20px;
 }
 
 .main-content.collapsed {
   margin-left: var(--sidebar-collapsed-width);
+}
+
+#content-container {
+  min-height: 100%;
+  padding-bottom: 20px;
+  background: transparent;
 }
 
 .page-title {
@@ -559,6 +588,10 @@ footer {
     transform: translateX(-100%);
   }
   
+  .sidebar-toggle {
+    display: none !important;
+  }
+  
   .sidebar.show {
     transform: translateX(0);
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
@@ -571,6 +604,25 @@ footer {
   .mobile-toggle {
     display: block;
   }
+  
+  .navbar-left {
+    flex: 0 0 auto;
+  }
+  
+  .navbar-center {
+    position: static;
+    transform: none;
+    flex: 1;
+    margin: 0 15px;
+  }
+  
+  .top-navbar .brand {
+    font-size: 1.2rem;
+  }
+  
+  .navbar-right {
+    flex: 0 0 auto;
+  }
 }
 
 @media (max-width: 768px) {
@@ -579,11 +631,16 @@ footer {
   }
   
   .brand {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
   }
   
   .page-title {
     font-size: 2rem;
+  }
+  
+  .navbar-center {
+    margin: 0 10px;
   }
 }
 
@@ -608,28 +665,34 @@ footer {
   }
 }
 
+/* 顶部导航栏布局调整 */
+.navbar-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.navbar-center {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.navbar-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 /* 优化的过渡效果 */
 * {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 修复移动端滚动问题 */
-html, body {
-  height: auto;
-  overflow-y: auto;
-}
-
-.main-content {
-  height: auto;
-  overflow-y: auto;
-  padding-bottom: 20px;
-}
-
-/* 新增移动端侧边栏按钮隐藏 */
-@media (max-width: 992px) {
-  .sidebar-toggle {
-    display: none !important;
-  }
 }
 
 /* 移动端侧边栏打开时禁止主页面滚动 */
@@ -638,23 +701,6 @@ html, body {
   position: fixed;
   width: 100%;
   height: 100%;
-}
-
-/* 增强侧边栏底部安全区域处理 */
-.sidebar {
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-}
-
-.sidebar::after {
-  content: "";
-  display: block;
-  height: env(safe-area-inset-bottom, 20px);
-  width: 100%;
-  flex-shrink: 0;
-}
-
-.sidebar-nav {
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 20px));
 }
 
 /* 添加平滑的焦点样式 */
@@ -704,84 +750,4 @@ i {
 
 .shadow-hover:hover {
   box-shadow: var(--shadow-xl);
-}
-
-/* ========== 顶部导航栏布局调整 ========== */
-/* 导航栏三段式布局 */
-.navbar-left {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.navbar-center {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.navbar-right {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-/* 调整品牌标题样式 */
-.top-navbar .brand {
-  font-size: 1.4rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  color: var(--primary-color);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-/* 移除图标 */
-.top-navbar .brand i {
-  display: none;
-}
-
-/* 移除导航链接 */
-.nav-links {
-  display: none !important;
-}
-
-/* 响应式调整 */
-@media (max-width: 992px) {
-  .navbar-left {
-    flex: 0 0 auto;
-  }
-  
-  .navbar-center {
-    position: static;
-    transform: none;
-    flex: 1;
-    margin: 0 15px;
-  }
-  
-  .top-navbar .brand {
-    font-size: 1.2rem;
-  }
-  
-  .navbar-right {
-    flex: 0 0 auto;
-  }
-}
-
-@media (max-width: 768px) {
-  .top-navbar .brand {
-    font-size: 1.1rem;
-    letter-spacing: 0.02em;
-  }
-  
-  .navbar-center {
-    margin: 0 10px;
-  }
 }
