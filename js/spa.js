@@ -2877,58 +2877,88 @@ function updateActiveMenuItem(activePage) {
   } catch (e) { console.warn('[updateActiveMenuItem] error:', e); }
 }
 
+// 初始化订单录入页面（增强版）
 function initOrderEntryPage() {
   loadOrders();
   
-  document.getElementById('order-search-btn').addEventListener('click', function() {
-    currentPage = 1;
-    loadOrders();
-  });
+  // 搜索功能
+  const searchBtn = document.getElementById('order-search-btn');
+  const searchInput = document.getElementById('order-search-input');
   
-  document.getElementById('order-search-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
+  if (searchBtn) {
+    searchBtn.addEventListener('click', function() {
       currentPage = 1;
       loadOrders();
-    }
-  });
+    });
+  }
   
+  if (searchInput) {
+    // 支持回车搜索
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        currentPage = 1;
+        loadOrders();
+      }
+    });
+    
+    // 添加清空按钮的支持
+    searchInput.addEventListener('input', function(e) {
+      if (e.target.value === '') {
+        currentPage = 1;
+        loadOrders();
+      }
+    });
+  }
+
+  // 添加订单按钮
   const addBtn = document.getElementById('add-order-btn');
   if (addBtn) {
     addBtn.addEventListener('click', function() {
       showOrderModal();
     });
   }
-  
+
+  // 编辑订单按钮
   const editBtn = document.getElementById('edit-order-btn');
   if (editBtn) {
     editBtn.addEventListener('click', function() {
       if (selectedOrderIds.length === 1) {
-        const order = currentOrders.find(function(o){ return o.id === selectedOrderIds[0]; });
+        const order = currentOrders.find(o => o.id === selectedOrderIds[0]);
         if (order) {
           showOrderModal(order);
         }
+      } else if (selectedOrderIds.length === 0) {
+        showErrorMessage('请先选择一个订单');
       } else {
-        showErrorMessage('请选择一条订单进行编辑');
+        showErrorMessage('只能同时编辑一个订单');
       }
     });
   }
   
+  // 删除订单按钮
   const deleteBtn = document.getElementById('delete-order-btn');
   if (deleteBtn) {
     deleteBtn.addEventListener('click', function() {
       if (selectedOrderIds.length > 0) {
-        deleteOrders(selectedOrderIds);
+        const confirmMsg = selectedOrderIds.length === 1 ? 
+          '确定要删除这个订单吗？' : 
+          `确定要删除选中的 ${selectedOrderIds.length} 个订单吗？`;
+        
+        if (confirm(confirmMsg + '\n此操作不可撤销！')) {
+          deleteOrders(selectedOrderIds);
+        }
       } else {
         showErrorMessage('请选择要删除的订单');
       }
     });
   }
-  
+
+  // 全选复选框
   const selectAll = document.getElementById('select-all');
   if (selectAll) {
     selectAll.addEventListener('change', function(e) {
       const checkboxes = document.querySelectorAll('.order-checkbox');
-      checkboxes.forEach(function(cb) {
+      checkboxes.forEach(cb => {
         cb.checked = e.target.checked;
         const orderId = parseInt(cb.dataset.id);
         if (e.target.checked) {
@@ -2936,13 +2966,14 @@ function initOrderEntryPage() {
             selectedOrderIds.push(orderId);
           }
         } else {
-          selectedOrderIds = selectedOrderIds.filter(function(id){ return id !== orderId; });
+          selectedOrderIds = selectedOrderIds.filter(id => id !== orderId);
         }
       });
       updateActionButtons();
     });
   }
 
+  // 表单提交
   const orderForm = document.getElementById('order-form');
   if (orderForm) {
     orderForm.addEventListener('submit', function(e) {
@@ -2951,29 +2982,53 @@ function initOrderEntryPage() {
     });
   }
   
-  const redeemedCheckbox = document.getElementById('redeemed');
-  if (redeemedCheckbox) {
-    redeemedCheckbox.addEventListener('change', function(e) {
-      if (e.target.checked && document.getElementById('order-id').value) {
-        if (!confirm('确定要将此订单标记为已兑换吗？此操作将影响积分计算！')) {
-          e.target.checked = false;
-        }
-      }
-    });
-  }
-
-  const closeBtn = document.querySelector('.order-modal .close');
+  // 关闭模态框按钮
+  const closeBtn = document.querySelector('#order-modal .close');
   if (closeBtn) {
     closeBtn.addEventListener('click', function() {
       closeOrderModal();
     });
   }
   
-  window.addEventListener('click', function(e) {
-    if (e.target === document.getElementById('order-modal')) {
-      closeOrderModal();
+  // 点击模态框外部关闭
+  const modal = document.getElementById('order-modal');
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeOrderModal();
+      }
+    });
+  }
+  
+  // ESC键关闭模态框
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('order-modal');
+      if (modal && modal.classList.contains('show')) {
+        closeOrderModal();
+      }
     }
   });
+}
+
+// 更新操作按钮状态
+function updateActionButtons() {
+  const deleteBtn = document.getElementById('delete-order-btn');
+  const editBtn = document.getElementById('edit-order-btn');
+  
+  if (deleteBtn) {
+    deleteBtn.disabled = selectedOrderIds.length === 0;
+    // 更新删除按钮文字
+    if (selectedOrderIds.length > 0) {
+      deleteBtn.innerHTML = `<i class="fas fa-trash-alt"></i><span>删除选中(${selectedOrderIds.length})</span>`;
+    } else {
+      deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i><span>删除选中</span>';
+    }
+  }
+  
+  if (editBtn) {
+    editBtn.disabled = selectedOrderIds.length !== 1;
+  }
 }
 
 async function loadOrders() {
@@ -3017,6 +3072,7 @@ async function loadOrders() {
   }
 }
 
+// 渲染订单列表
 function renderOrders(orders) {
   const tbody = document.getElementById('orders-body');
   if (!tbody) return;
@@ -3024,7 +3080,15 @@ function renderOrders(orders) {
   tbody.innerHTML = '';
   
   if (orders.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center">没有找到订单</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7">
+          <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>暂无订单数据</p>
+          </div>
+        </td>
+      </tr>`;
     return;
   }
   
@@ -3036,14 +3100,23 @@ function renderOrders(orders) {
     const price = typeof order.price === 'number' ? order.price : parseFloat(order.price || 0);
     const formattedPrice = isNaN(price) ? '0.00' : price.toFixed(2);
     
+    // 修复：正确判断兑换状态
+    const isRedeemed = order.redeemed === true || order.redeemed === 1 || order.redeemed === '1';
+    
     tr.innerHTML = `
-      <td><input type="checkbox" class="order-checkbox" data-id="${order.id}"></td>
+      <td>
+        <input type="checkbox" class="order-checkbox" data-id="${order.id}">
+      </td>
       <td>${index + 1}</td>
-      <td>${order.taobao_id}</td>
-      <td>${order.product_name}</td>
-      <td>${order.order_number}</td>
-      <td>${formattedPrice}</td>
-      <td>${order.redeemed ? '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>已兑换</span>' : '<span class="badge bg-warning"><i class="fas fa-exclamation-circle me-1"></i>未兑换</span>'}</td>
+      <td>${order.taobao_id || '-'}</td>
+      <td title="${order.product_name || '-'}">${order.product_name || '-'}</td>
+      <td>${order.order_number || '-'}</td>
+      <td>¥${formattedPrice}</td>
+      <td>
+        ${isRedeemed ? 
+          '<span class="status-badge redeemed"><i class="fas fa-check-circle"></i>已兑换</span>' : 
+          '<span class="status-badge pending"><i class="fas fa-clock"></i>未兑换</span>'}
+      </td>
     `;
     tbody.appendChild(tr);
     
@@ -3194,14 +3267,7 @@ function renderPagination(pagination) {
   container.appendChild(ul);
 }
 
-function updateActionButtons() {
-  const deleteBtn = document.getElementById('delete-order-btn');
-  const editBtn = document.getElementById('edit-order-btn');
-  
-  if (deleteBtn) deleteBtn.disabled = selectedOrderIds.length === 0;
-  if (editBtn) editBtn.disabled = selectedOrderIds.length !== 1;
-}
-
+// 显示订单模态框（修复编辑时的兑换状态显示）
 function showOrderModal(order = null) {
   const modal = document.getElementById('order-modal');
   const form = document.getElementById('order-form');
@@ -3210,47 +3276,68 @@ function showOrderModal(order = null) {
   if (!modal || !form || !title) return;
   
   if (order) {
-    title.textContent = '编辑订单';
+    title.innerHTML = '<i class="fas fa-edit me-2"></i>编辑订单';
     document.getElementById('order-id').value = order.id;
-    document.getElementById('taobao-id').value = order.taobao_id;
-    document.getElementById('product-name').value = order.product_name;
-    document.getElementById('order-number').value = order.order_number;
-    document.getElementById('price').value = order.price;
-    document.getElementById('redeemed').checked = order.redeemed;
+    document.getElementById('taobao-id').value = order.taobao_id || '';
+    document.getElementById('product-name').value = order.product_name || '';
+    document.getElementById('order-number').value = order.order_number || '';
+    document.getElementById('price').value = order.price || '';
+    
+    // 修复：正确设置兑换状态选择框的值
+    const redeemedSelect = document.getElementById('redeemed');
+    const isRedeemed = order.redeemed === true || order.redeemed === 1 || order.redeemed === '1';
+    redeemedSelect.value = isRedeemed ? 'true' : 'false';
   } else {
-    title.textContent = '添加订单';
+    title.innerHTML = '<i class="fas fa-plus-circle me-2"></i>添加订单';
     form.reset();
     document.getElementById('order-id').value = '';
-    document.getElementById('redeemed').checked = false;
+    document.getElementById('redeemed').value = 'false';
   }
   
-  modal.style.display = 'block';
   modal.classList.add('show');
 }
 
+// 关闭订单模态框
 function closeOrderModal() {
   const modal = document.getElementById('order-modal');
   if (modal) {
-    modal.style.display = 'none';
     modal.classList.remove('show');
+    // 清空表单
+    const form = document.getElementById('order-form');
+    if (form) {
+      form.reset();
+      document.getElementById('order-id').value = '';
+    }
   }
 }
 
+// 保存订单（修复兑换状态的保存）
 async function saveOrder() {
   try {
     const form = document.getElementById('order-form');
     if (!form) return;
     
     const orderId = document.getElementById('order-id').value;
-    const taobaoId = document.getElementById('taobao-id').value;
-    const productName = document.getElementById('product-name').value;
-    const orderNumber = document.getElementById('order-number').value;
+    const taobaoId = document.getElementById('taobao-id').value.trim();
+    const productName = document.getElementById('product-name').value.trim();
+    const orderNumber = document.getElementById('order-number').value.trim();
     const price = parseFloat(document.getElementById('price').value);
-    const redeemed = document.getElementById('redeemed').checked;
+    
+    // 修复：正确获取兑换状态的布尔值
+    const redeemedValue = document.getElementById('redeemed').value;
+    const redeemed = redeemedValue === 'true' || redeemedValue === '1';
+    
     const token = localStorage.getItem('token');
     
+    // 验证必填字段
     if (!taobaoId || !productName || !orderNumber || isNaN(price)) {
       showErrorMessage('请填写所有必填字段');
+      return;
+    }
+    
+    // 验证价格
+    if (price < 0) {
+      showErrorMessage('价格不能为负数');
       return;
     }
     
@@ -3275,7 +3362,7 @@ async function saveOrder() {
         product_name: productName,
         order_number: orderNumber,
         price: price,
-        redeemed: redeemed
+        redeemed: redeemed  // 发送布尔值
       })
     });
     
@@ -3285,8 +3372,18 @@ async function saveOrder() {
     }
     
     closeOrderModal();
-    loadOrders();
-    showSuccessMessage(`订单${orderId ? '更新' : '添加'}成功`);
+    await loadOrders();
+    
+    // 显示成功动画（如果有的话）
+    if (typeof showSuccessAnimation === 'function') {
+      showSuccessAnimation(
+        `订单${orderId ? '更新' : '添加'}成功`,
+        `订单号: ${orderNumber}`,
+        2000
+      );
+    } else {
+      showSuccessMessage(`订单${orderId ? '更新' : '添加'}成功`);
+    }
   } catch (error) {
     console.error('保存订单错误:', error);
     showErrorMessage(`保存订单失败: ${error.message}`);

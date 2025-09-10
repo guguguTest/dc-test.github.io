@@ -503,94 +503,160 @@ download: `
 
 
 	// 订单录入页面
-	'order-entry': `
-	  <div class="section">
-		<h1 class="page-title">订单录入</h1>
-		<button class="back-button" data-page="home">
-		  <i class="fas fa-arrow-left me-2"></i>
-		  <span>返回</span>
-		</button>
-		
-		<div class="order-search-box">
-		  <div class="input-group">
-			<input type="text" id="order-search-input" class="form-control" placeholder="搜索订单...">
-			<button class="btn btn-primary" id="order-search-btn">
-			  <i class="fas fa-search"></i>
-			</button>
-		  </div>
-		</div>
-		
-		<div class="order-actions">
-		  <button class="btn btn-success" id="add-order-btn">
-			<i class="fas fa-plus me-2"></i>添加
-		  </button>
-		  <button class="btn btn-danger" id="delete-order-btn" disabled>
-			<i class="fas fa-trash me-2"></i>删除
-		  </button>
-		  <button class="btn btn-warning" id="edit-order-btn" disabled>
-			<i class="fas fa-edit me-2"></i>修改
-		  </button>
-		</div>
-		
-		<div class="table-responsive">
-		  <table class="table table-hover" id="orders-table">
-			<thead>
-			  <tr>
-				<th><input type="checkbox" id="select-all"></th>
-				<th>ID</th>
-				<th>淘宝ID</th>
-				<th>商品名称</th>
-				<th>订单号</th>
-				<th>价格(元)</th>
-				<th>兑换状态</th>
-			  </tr>
-			</thead>
-			<tbody id="orders-body">
-			  <!-- 订单数据将通过JavaScript动态填充 -->
-			</tbody>
-		  </table>
-		</div>
-		
-		<div class="pagination-container">
-		  <div id="pagination-controls"></div>
-		</div>
-	  </div>
-	  
-	  <!-- 订单编辑模态框 -->
-	  <div class="modal" id="order-modal">
-		<div class="modal-content">
-		  <span class="close">&times;</span>
-		  <h2 id="modal-title">添加订单</h2>
-		  <form id="order-form">
-			<input type="hidden" id="order-id">
-			<div class="form-group">
-			  <label for="taobao-id">淘宝ID</label>
-			  <input type="text" id="taobao-id" class="form-control" required>
-			</div>
-			<div class="form-group">
-			  <label for="product-name">商品名称</label>
-			  <input type="text" id="product-name" class="form-control" required>
-			</div>
-			<div class="form-group">
-			  <label for="order-number">订单号</label>
-			  <input type="text" id="order-number" class="form-control" required>
-			</div>
-			<div class="form-group">
-			  <label for="price">价格(元)</label>
-			  <input type="number" id="price" class="form-control" step="0.01" required>
-			</div>
-			<div class="form-group">
-			  <label for="redeemed">兑换状态</label>
-			  <select id="redeemed" class="form-control">
-				<option value="0">未兑换</option>
-				<option value="1">已兑换</option>
-			  </select>
-			</div>
-			<button type="submit" class="btn btn-primary">保存</button>
-		  </form>
-		</div>
-	  </div>
-	`,
+  'order-entry': `
+    <div class="order-entry-container">
+      <div class="section">
+        <h1 class="page-title">
+          <i class="fas fa-clipboard-list me-2"></i>
+          订单录入管理
+        </h1>
+        <button class="back-button" data-page="home">
+          <i class="fas fa-arrow-left me-2"></i>
+          <span>返回首页</span>
+        </button>
+        
+        <!-- 搜索栏 -->
+        <div class="order-search-box">
+          <div class="input-group">
+            <input type="text" 
+                   id="order-search-input" 
+                   class="form-control" 
+                   placeholder="输入淘宝ID、商品名称或订单号搜索...">
+            <button class="btn btn-primary" id="order-search-btn">
+              <i class="fas fa-search"></i>
+              <span>搜索</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="order-actions">
+          <button class="btn btn-success" id="add-order-btn">
+            <i class="fas fa-plus-circle"></i>
+            <span>添加订单</span>
+          </button>
+          <button class="btn btn-warning" id="edit-order-btn" disabled>
+            <i class="fas fa-edit"></i>
+            <span>修改订单</span>
+          </button>
+          <button class="btn btn-danger" id="delete-order-btn" disabled>
+            <i class="fas fa-trash-alt"></i>
+            <span>删除选中</span>
+          </button>
+        </div>
+        
+        <!-- 表格容器 -->
+        <div class="table-container">
+          <div class="table-responsive">
+            <table class="table" id="orders-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px;">
+                    <input type="checkbox" id="select-all" class="order-checkbox">
+                  </th>
+                  <th style="width: 60px;">序号</th>
+                  <th>淘宝ID</th>
+                  <th>商品名称</th>
+                  <th>订单号</th>
+                  <th style="width: 100px;">价格(元)</th>
+                  <th style="width: 120px;">兑换状态</th>
+                </tr>
+              </thead>
+              <tbody id="orders-body">
+                <!-- 订单数据将通过JavaScript动态填充 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- 分页控件 -->
+        <div class="pagination-container">
+          <div id="pagination-controls"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 订单编辑模态框 -->
+    <div id="order-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-title">添加订单</h2>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="order-form">
+            <input type="hidden" id="order-id">
+            
+            <div class="form-group">
+              <label for="taobao-id">
+                <i class="fas fa-user me-1"></i>
+                淘宝ID
+              </label>
+              <input type="text" 
+                     id="taobao-id" 
+                     class="form-control" 
+                     placeholder="请输入淘宝用户ID" 
+                     required>
+            </div>
+            
+            <div class="form-group">
+              <label for="product-name">
+                <i class="fas fa-box me-1"></i>
+                商品名称
+              </label>
+              <input type="text" 
+                     id="product-name" 
+                     class="form-control" 
+                     placeholder="请输入商品名称" 
+                     required>
+            </div>
+            
+            <div class="form-group">
+              <label for="order-number">
+                <i class="fas fa-hashtag me-1"></i>
+                订单号
+              </label>
+              <input type="text" 
+                     id="order-number" 
+                     class="form-control" 
+                     placeholder="请输入订单号（唯一）" 
+                     required>
+            </div>
+            
+            <div class="form-group">
+              <label for="price">
+                <i class="fas fa-yen-sign me-1"></i>
+                价格(元)
+              </label>
+              <input type="number" 
+                     id="price" 
+                     class="form-control" 
+                     step="0.01" 
+                     min="0" 
+                     placeholder="0.00" 
+                     required>
+            </div>
+            
+            <div class="form-group">
+              <label for="redeemed">
+                <i class="fas fa-exchange-alt me-1"></i>
+                兑换状态
+              </label>
+              <select id="redeemed" class="form-control">
+                <option value="false">未兑换</option>
+                <option value="true">已兑换</option>
+              </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save me-2"></i>
+              保存订单
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  `,
 
 	// 兑换页面
 	'exchange': `
