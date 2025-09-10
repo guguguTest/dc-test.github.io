@@ -15,159 +15,153 @@ class AnnouncementSystem {
     this.setupEventListeners();
   }
 
-	// 设置事件监听器
-	setupEventListeners() {
-	  // 使用事件委托来处理动态生成的公告项
-	  document.addEventListener('click', (e) => {
-		// 检查点击的是否是公告项或其中的元素
-		const announcementItem = e.target.closest('.announcement-item, .announcement-card, .announcement-simple-item');
-		if (announcementItem) {
-		  const id = announcementItem.dataset.id;
-		  if (id) {
-			e.preventDefault();
-			this.showAnnouncementDetail(id);
-		  }
-		}
+  // 设置事件监听器
+  setupEventListeners() {
+    // 使用事件委托来处理动态生成的公告项
+    document.addEventListener('click', (e) => {
+      // 检查点击的是否是公告项或其中的元素
+      const announcementItem = e.target.closest('.announcement-item, .announcement-card, .announcement-simple-item');
+      if (announcementItem) {
+        const id = announcementItem.dataset.id;
+        if (id) {
+          e.preventDefault();
+          this.showAnnouncementDetail(id);
+        }
+      }
 
-		// 关闭公告弹窗
-		if (e.target.classList.contains('announcement-modal-close') || 
-			e.target.classList.contains('announcement-modal-ok')) {
-		  this.hideAnnouncementModal();
-		}
+      // 关闭公告弹窗
+      if (e.target.classList.contains('announcement-modal-close') || 
+          e.target.classList.contains('announcement-modal-ok')) {
+        this.hideAnnouncementModal();
+      }
 
-		// 点击弹窗外部关闭
-		if (e.target.classList.contains('announcement-modal')) {
-		  this.hideAnnouncementModal();
-		}
+      // 点击弹窗外部关闭
+      if (e.target.classList.contains('announcement-modal')) {
+        this.hideAnnouncementModal();
+      }
 
-		// 分页点击事件 - 修复：使用不同的data属性名称避免与SPA路由冲突
-		if (e.target.classList.contains('page-link')) {
-		  e.preventDefault();
-		  e.stopPropagation();
-		  
-		  // 修改：使用 data-announcement-page 而不是 data-page
-		  const page = parseInt(e.target.dataset.announcementPage);
-		  if (page && page !== this.currentPage) {
-			this.currentPage = page;
-			this.loadAnnouncements();
-			
-			// 滚动到公告容器顶部
-			const container = document.getElementById('announcements-container');
-			if (container) {
-			  container.scrollIntoView({ behavior: 'smooth' });
-			}
-		  }
-		}
-	  });
-	}
-
-// 加载公告列表 - 添加错误处理和边界检查
-async loadAnnouncements() {
-  try {
-    const container = document.getElementById('announcements-container');
-    if (!container) {
-      console.error('公告容器不存在');
-      return;
-    }
-    
-    // 显示加载状态
-    container.innerHTML = '<div class="loading-announcements">加载公告中...</div>';
-    
-    // 修改：每页显示5条普通公告
-    const response = await fetch(`https://api.am-all.com.cn/api/announcements?page=${this.currentPage}&limit=5`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP错误: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (data.error) {
-      console.error('加载公告失败:', data.error);
-      container.innerHTML = '<div class="no-announcements">加载公告失败</div>';
-      return;
-    }
-    
-    this.pinnedAnnouncements = data.pinned || [];
-    this.announcements = data.announcements || [];
-    this.totalPages = data.pagination?.totalPages || 1;
-    
-    // 修改：添加分页边界检查
-    if (this.currentPage > this.totalPages && this.totalPages > 0) {
-      this.currentPage = this.totalPages;
-      await this.loadAnnouncements(); // 使用await确保重新加载完成
-      return;
-    }
-    
-    this.renderAnnouncements();
-  } catch (error) {
-    console.error('加载公告失败:', error);
-    const container = document.getElementById('announcements-container');
-    if (container) {
-      container.innerHTML = '<div class="no-announcements">加载公告失败，请刷新重试</div>';
-    }
-  }
-}
-
-// 渲染公告列表
-renderAnnouncements() {
-  const container = document.getElementById('announcements-container');
-  if (!container) return;
-  
-  let html = '';
-  
-  // 渲染置顶公告
-  if (this.pinnedAnnouncements.length > 0) {
-    html += `
-      <div class="pinned-announcements-section">
-        <div class="pinned-announcements-header">
-          <i class="fas fa-thumbtack"></i>
-          <h3>置顶公告</h3>
-        </div>
-        <div class="announcement-list">
-    `;
-    
-    this.pinnedAnnouncements.forEach(announcement => {
-      html += this.renderAnnouncementItem(announcement);
+      // 分页点击事件
+      if (e.target.classList.contains('page-link')) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const page = parseInt(e.target.dataset.announcementPage);
+        if (page && page !== this.currentPage) {
+          this.currentPage = page;
+          this.loadAnnouncements();
+          
+          const container = document.getElementById('announcements-container');
+          if (container) {
+            container.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      }
     });
-    
-    html += `
-        </div>
-      </div>
-    `;
   }
-  
-  // 渲染普通公告
-  if (this.announcements.length > 0) {
-    html += `
-      <div class="normal-announcements-section">
-        <div class="normal-announcements-header">
-          <i class="fas fa-list"></i>
-          <h3>最新公告</h3>
+
+  // 加载公告列表
+  async loadAnnouncements() {
+    try {
+      const container = document.getElementById('announcements-container');
+      if (!container) {
+        console.error('公告容器不存在');
+        return;
+      }
+      
+      container.innerHTML = '<div class="loading-announcements">加载公告中...</div>';
+      
+      const response = await fetch(`https://api.am-all.com.cn/api/announcements?page=${this.currentPage}&limit=5`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP错误: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error('加载公告失败:', data.error);
+        container.innerHTML = '<div class="no-announcements">加载公告失败</div>';
+        return;
+      }
+      
+      this.pinnedAnnouncements = data.pinned || [];
+      this.announcements = data.announcements || [];
+      this.totalPages = data.pagination?.totalPages || 1;
+      
+      if (this.currentPage > this.totalPages && this.totalPages > 0) {
+        this.currentPage = this.totalPages;
+        await this.loadAnnouncements();
+        return;
+      }
+      
+      this.renderAnnouncements();
+    } catch (error) {
+      console.error('加载公告失败:', error);
+      const container = document.getElementById('announcements-container');
+      if (container) {
+        container.innerHTML = '<div class="no-announcements">加载公告失败，请刷新重试</div>';
+      }
+    }
+  }
+
+  // 渲染公告列表
+  renderAnnouncements() {
+    const container = document.getElementById('announcements-container');
+    if (!container) return;
+    
+    let html = '';
+    
+    // 渲染置顶公告
+    if (this.pinnedAnnouncements.length > 0) {
+      html += `
+        <div class="pinned-announcements-section">
+          <div class="pinned-announcements-header">
+            <i class="fas fa-thumbtack"></i>
+            <h3>置顶公告</h3>
+          </div>
+          <div class="announcement-list">
+      `;
+      
+      this.pinnedAnnouncements.forEach(announcement => {
+        html += this.renderAnnouncementItem(announcement);
+      });
+      
+      html += `
+          </div>
         </div>
-        <div class="announcement-list">
-    `;
-    
-    this.announcements.forEach(announcement => {
-      html += this.renderAnnouncementItem(announcement);
-    });
-    
-    html += `
-        </div>
-    `;
-    
-    // 渲染分页
-    if (this.totalPages > 1) {
-      html += this.renderPagination();
+      `;
     }
     
-    html += `</div>`;
-  } else {
-    html += '<div class="no-announcements">暂无公告</div>';
+    // 渲染普通公告
+    if (this.announcements.length > 0) {
+      html += `
+        <div class="normal-announcements-section">
+          <div class="normal-announcements-header">
+            <i class="fas fa-list"></i>
+            <h3>最新公告</h3>
+          </div>
+          <div class="announcement-list">
+      `;
+      
+      this.announcements.forEach(announcement => {
+        html += this.renderAnnouncementItem(announcement);
+      });
+      
+      html += `
+          </div>
+      `;
+      
+      if (this.totalPages > 1) {
+        html += this.renderPagination();
+      }
+      
+      html += `</div>`;
+    } else if (this.pinnedAnnouncements.length === 0) {
+      html += '<div class="no-announcements">暂无公告</div>';
+    }
+    
+    container.innerHTML = html;
   }
-  
-  container.innerHTML = html;
-}
 
   // 渲染单个公告项
   renderAnnouncementItem(announcement) {
@@ -197,36 +191,30 @@ renderAnnouncements() {
     return typeMap[type] || '通知';
   }
 
-	// 渲染分页 - 修复：使用不同的data属性名称避免与SPA路由冲突
-	renderPagination() {
-	  let html = '<div class="announcement-pagination"><ul class="pagination">';
-	  
-	  // 上一页
-	  if (this.currentPage > 1) {
-		// 修改：使用 data-announcement-page 而不是 data-page
-		html += `<li class="page-item"><a class="page-link" href="javascript:void(0);" data-announcement-page="${this.currentPage - 1}">上一页</a></li>`;
-	  }
-	  
-	  // 页码
-	  const startPage = Math.max(1, this.currentPage - 2);
-	  const endPage = Math.min(this.totalPages, startPage + 4);
-	  
-	  for (let i = startPage; i <= endPage; i++) {
-		// 修改：使用 data-announcement-page 而不是 data-page
-		html += `<li class="page-item ${i === this.currentPage ? 'active' : ''}">
-		  <a class="page-link" href="javascript:void(0);" data-announcement-page="${i}">${i}</a>
-		</li>`;
-	  }
-	  
-	  // 下一页
-	  if (this.currentPage < this.totalPages) {
-		// 修改：使用 data-announcement-page 而不是 data-page
-		html += `<li class="page-item"><a class="page-link" href="javascript:void(0);" data-announcement-page="${this.currentPage + 1}">下一页</a></li>`;
-	  }
-	  
-	  html += '</ul></div>';
-	  return html;
-	}
+  // 渲染分页
+  renderPagination() {
+    let html = '<div class="announcement-pagination"><ul class="pagination">';
+    
+    if (this.currentPage > 1) {
+      html += `<li class="page-item"><a class="page-link" href="javascript:void(0);" data-announcement-page="${this.currentPage - 1}">上一页</a></li>`;
+    }
+    
+    const startPage = Math.max(1, this.currentPage - 2);
+    const endPage = Math.min(this.totalPages, startPage + 4);
+    
+    for (let i = startPage; i <= endPage; i++) {
+      html += `<li class="page-item ${i === this.currentPage ? 'active' : ''}">
+        <a class="page-link" href="javascript:void(0);" data-announcement-page="${i}">${i}</a>
+      </li>`;
+    }
+    
+    if (this.currentPage < this.totalPages) {
+      html += `<li class="page-item"><a class="page-link" href="javascript:void(0);" data-announcement-page="${this.currentPage + 1}">下一页</a></li>`;
+    }
+    
+    html += '</ul></div>';
+    return html;
+  }
 
   // 显示公告详情
   async showAnnouncementDetail(id) {
@@ -247,7 +235,6 @@ renderAnnouncements() {
 
   // 显示公告弹窗
   showAnnouncementModal(announcement) {
-    // 创建或获取弹窗
     let modal = document.getElementById('announcement-modal');
     if (!modal) {
       modal = document.createElement('div');
@@ -268,34 +255,16 @@ renderAnnouncements() {
         </div>
       `;
       document.body.appendChild(modal);
-      
-      // 添加关闭事件监听
-      modal.querySelector('.announcement-modal-close').addEventListener('click', () => {
-        this.hideAnnouncementModal();
-      });
-      
-      modal.querySelector('.announcement-modal-ok').addEventListener('click', () => {
-        this.hideAnnouncementModal();
-      });
-      
-      // 点击外部关闭
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          this.hideAnnouncementModal();
-        }
-      });
     }
     
-    // 填充内容
     const titleElement = modal.querySelector('.announcement-modal-title');
     const contentElement = modal.querySelector('.announcement-modal-content.html-content');
     
     if (titleElement) titleElement.textContent = announcement.title;
     if (contentElement) contentElement.innerHTML = announcement.content;
     
-    // 显示弹窗
     modal.classList.add('show');
-    document.body.style.overflow = 'hidden'; // 防止背景滚动
+    document.body.style.overflow = 'hidden';
   }
 
   // 隐藏公告弹窗
@@ -303,7 +272,7 @@ renderAnnouncements() {
     const modal = document.getElementById('announcement-modal');
     if (modal) {
       modal.classList.remove('show');
-      document.body.style.overflow = ''; // 恢复背景滚动
+      document.body.style.overflow = '';
     }
   }
 }
@@ -315,66 +284,176 @@ class AnnouncementAdminSystem {
     this._lastSaveAt = 0;
     this.currentAnnouncement = null;
     this.isEditing = false;
-    this.editorElement = null; // 存储编辑器元素引用
-    this.currentEditorParent = null; // 存储当前编辑器父元素
+    this.editorModal = null;
   }
 
   // 初始化公告管理系统
   init() {
+    console.log('初始化公告管理系统');
+    // 先清理可能存在的旧弹窗
+    this.cleanupOldModals();
+    // 创建新弹窗
+    this.createEditorModal();
     this.loadAnnouncements();
-    this.setupEventListeners();
-    this.setupEditor();
-    
-    // 获取编辑器元素引用
-    this.editorElement = document.getElementById('announcement-editor');
+    // 延迟设置事件监听器，确保DOM准备就绪
+    setTimeout(() => {
+      this.setupEventListeners();
+      this.setupEditor();
+    }, 100);
   }
 
-  // 设置事件监听器
+  // 清理旧的弹窗
+  cleanupOldModals() {
+    const oldModals = document.querySelectorAll('#announcement-editor-modal');
+    oldModals.forEach(modal => modal.remove());
+  }
+
+  // 创建编辑器弹窗
+  createEditorModal() {
+    // 确保没有重复的弹窗
+    this.cleanupOldModals();
+    
+    const modalHtml = `
+      <div id="announcement-editor-modal" class="announcement-editor-modal">
+        <div class="announcement-editor" id="announcement-editor">
+          <div class="announcement-editor-header">
+            <h3 id="editor-title">新建公告</h3>
+            <button type="button" class="announcement-editor-close" id="editor-close-btn">&times;</button>
+          </div>
+          <div class="announcement-editor-body">
+            <div class="form-group">
+              <label for="announcement-title">公告标题</label>
+              <input type="text" id="announcement-title" placeholder="请输入公告标题" />
+            </div>
+            
+            <div class="form-group">
+              <label for="announcement-type">公告类型</label>
+              <select id="announcement-type">
+                <option value="notice">通知</option>
+                <option value="update">更新</option>
+                <option value="important">重要</option>
+                <option value="top">置顶</option>
+              </select>
+            </div>
+            
+            <div class="form-group form-group-checkbox">
+              <input type="checkbox" id="announcement-pinned" />
+              <label for="announcement-pinned">置顶公告</label>
+            </div>
+            
+            <div class="form-group">
+              <label for="announcement-editor-content">公告内容</label>
+              <div class="editor-toolbar">
+                <button type="button" data-command="bold" title="粗体"><i class="fas fa-bold"></i></button>
+                <button type="button" data-command="italic" title="斜体"><i class="fas fa-italic"></i></button>
+                <button type="button" data-command="underline" title="下划线"><i class="fas fa-underline"></i></button>
+                <button type="button" data-command="createLink" title="链接"><i class="fas fa-link"></i></button>
+                <button type="button" data-command="insertUnorderedList" title="无序列表"><i class="fas fa-list-ul"></i></button>
+                <button type="button" data-command="insertOrderedList" title="有序列表"><i class="fas fa-list-ol"></i></button>
+                <button type="button" data-command="formatBlock" title="标题"><i class="fas fa-heading"></i></button>
+                <button type="button" data-command="insertImage" title="图片"><i class="fas fa-image"></i></button>
+              </div>
+              <div id="announcement-editor-content" class="editor-content" contenteditable="true"></div>
+            </div>
+          </div>
+          <div class="announcement-editor-footer">
+            <button type="button" id="save-announcement-btn">保存公告</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // 直接插入到body末尾
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    this.editorModal = document.getElementById('announcement-editor-modal');
+  }
+
+  // 设置事件监听器 - 修复版本
   setupEventListeners() {
-    // 新建公告按钮
-    const createBtn = document.getElementById('create-announcement-btn');
-    if (createBtn) {
-      createBtn.addEventListener('click', () => {
-        this.showEditor();
-      });
-    }
-
-    // 保存公告按钮
-    const saveBtn = document.getElementById('save-announcement-btn');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', () => {
-        this.saveAnnouncement();
-      });
-    }
-
-    // 取消编辑按钮
-    const cancelBtn = document.getElementById('cancel-announcement-btn');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => {
-        this.hideEditor();
-      });
-    }
+    const self = this;
+    
+    // 使用事件委托处理所有按钮点击 - 这是关键修复
+    document.addEventListener('click', function(e) {
+      // 新建公告按钮
+      if (e.target && e.target.id === 'create-announcement-btn') {
+        e.preventDefault();
+        console.log('点击新建公告');
+        self.showEditor(null);
+        return;
+      }
+      
+      // 【关键修复】保存公告按钮 - 使用事件委托确保可靠性
+      if (e.target && e.target.id === 'save-announcement-btn') {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('保存按钮被点击 - 通过事件委托');
+        self.saveAnnouncement();
+        return;
+      }
+      
+      // 关闭编辑器按钮
+      if (e.target && e.target.id === 'editor-close-btn') {
+        e.preventDefault();
+        console.log('关闭编辑器');
+        self.hideEditor();
+        return;
+      }
+      
+      // 点击弹窗外部关闭
+      if (e.target && e.target.id === 'announcement-editor-modal') {
+        console.log('点击弹窗外部，关闭编辑器');
+        self.hideEditor();
+        return;
+      }
+      
+      // 编辑按钮
+      const editBtn = e.target.closest('.btn-edit');
+      if (editBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = editBtn.dataset.id;
+        console.log('编辑公告:', id);
+        self.editAnnouncement(id);
+        return;
+      }
+      
+      // 删除按钮
+      const deleteBtn = e.target.closest('.btn-delete');
+      if (deleteBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = deleteBtn.dataset.id;
+        console.log('删除公告:', id);
+        self.deleteAnnouncement(id);
+        return;
+      }
+    });
   }
 
   // 设置编辑器
   setupEditor() {
     const editor = document.getElementById('announcement-editor-content');
     if (editor) {
-      editor.contentEditable = true;
-      
-      // 添加工具栏功能
       const toolbar = document.querySelector('.editor-toolbar');
       if (toolbar) {
         toolbar.querySelectorAll('button').forEach(button => {
           button.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             const command = button.dataset.command;
             
-            if (command === 'createLink' || command === 'insertImage') {
+            if (command === 'createLink') {
               const url = prompt('请输入URL:');
               if (url) {
                 document.execCommand(command, false, url);
               }
+            } else if (command === 'insertImage') {
+              const url = prompt('请输入图片URL:');
+              if (url) {
+                document.execCommand(command, false, url);
+              }
+            } else if (command === 'formatBlock') {
+              document.execCommand(command, false, '<h3>');
             } else {
               document.execCommand(command, false, null);
             }
@@ -416,54 +495,39 @@ class AnnouncementAdminSystem {
     let html = '';
     
     if (announcements.length === 0) {
-      html = '<div class="no-announcements text-center py-4">暂无公告</div>';
+      html = '<div class="no-announcements text-center py-4" style="grid-column: 1/-1;">暂无公告</div>';
     } else {
       announcements.forEach(announcement => {
         const date = new Date(announcement.created_at).toLocaleDateString('zh-CN');
         const typeClass = announcement.type || 'notice';
         const typeText = this.getTypeText(announcement.type);
-        const pinnedIcon = announcement.is_pinned ? '<i class="fas fa-thumbtack text-warning me-1"></i>' : '';
+        const pinnedIcon = announcement.is_pinned ? '<i class="fas fa-thumbtack admin-announcement-pinned"></i>' : '';
         
         html += `
-          <div class="admin-announcement-item" data-id="${announcement.id}">
+          <div class="admin-announcement-item" data-id="${announcement.id}" data-type="${typeClass}">
+            ${pinnedIcon}
             <div class="admin-announcement-header">
-              <span class="announcement-type ${typeClass}">${pinnedIcon}${typeText}</span>
+              <span class="admin-announcement-type ${typeClass}">${typeText}</span>
               <h4 class="admin-announcement-title">${announcement.title}</h4>
-              <span class="admin-announcement-date">${date}</span>
+              <div class="admin-announcement-date">${date}</div>
             </div>
             <div class="admin-announcement-content">
-              ${announcement.content.substring(0, 100)}${announcement.content.length > 100 ? '...' : ''}
+              ${announcement.content.replace(/<[^>]*>/g, '').substring(0, 100)}${announcement.content.length > 100 ? '...' : ''}
             </div>
             <div class="admin-announcement-actions">
               <button class="btn-edit" data-id="${announcement.id}">
-                <i class="fas fa-edit me-1"></i>编辑
+                <i class="fas fa-edit"></i> 编辑
               </button>
               <button class="btn-delete" data-id="${announcement.id}">
-                <i class="fas fa-trash me-1"></i>删除
+                <i class="fas fa-trash"></i> 删除
               </button>
             </div>
-            <div class="announcement-editor-container" id="editor-container-${announcement.id}" style="display: none;"></div>
           </div>
         `;
       });
     }
     
     container.innerHTML = html;
-    
-    // 添加编辑和删除事件
-    container.querySelectorAll('.btn-edit').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = e.target.closest('.btn-edit').dataset.id;
-        this.editAnnouncement(id);
-      });
-    });
-    
-    container.querySelectorAll('.btn-delete').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = e.target.closest('.btn-delete').dataset.id;
-        this.deleteAnnouncement(id);
-      });
-    });
   }
 
   // 获取类型文本
@@ -477,78 +541,152 @@ class AnnouncementAdminSystem {
     return typeMap[type] || '通知';
   }
 
-  // 显示编辑器 - 修改为在指定公告项下方显示
-  showEditor(announcement = null, parentElement = null) {
-    // 如果提供了父元素，将编辑器移动到该元素内
-    if (parentElement) {
-      const editorContainer = parentElement.querySelector('.announcement-editor-container');
-      if (editorContainer) {
-        editorContainer.appendChild(this.editorElement);
-        editorContainer.style.display = 'block';
-      }
-    } else {
-      // 新建公告时，将编辑器放回顶部
-      const adminContainer = document.querySelector('.announcement-admin-container');
-      if (adminContainer && this.editorElement.parentNode !== adminContainer) {
-        adminContainer.insertBefore(this.editorElement, adminContainer.firstChild.nextSibling);
-      }
-    }
+  // 显示编辑器 - 移除不稳定的setTimeout事件绑定
+  showEditor(announcement) {
+    console.log('显示编辑器，公告数据:', announcement);
     
-    // 显示编辑器
-    this.editorElement.style.display = 'block';
+    // 强制重新获取元素，确保是最新的
+    const titleInput = document.querySelector('#announcement-editor-modal #announcement-title');
+    const typeSelect = document.querySelector('#announcement-editor-modal #announcement-type');
+    const pinnedCheckbox = document.querySelector('#announcement-editor-modal #announcement-pinned');
+    const contentEditor = document.querySelector('#announcement-editor-modal #announcement-editor-content');
+    const editorTitle = document.querySelector('#announcement-editor-modal #editor-title');
     
+    // 设置编辑状态
     this.isEditing = announcement !== null;
     this.currentAnnouncement = announcement;
     
-    // 填充数据
-    if (announcement) {
-      document.getElementById('announcement-title').value = announcement.title;
-      document.getElementById('announcement-type').value = announcement.type;
-      document.getElementById('announcement-pinned').checked = announcement.is_pinned;
-      document.getElementById('announcement-editor-content').innerHTML = announcement.content;
-    } else {
-      document.getElementById('announcement-title').value = '';
-      document.getElementById('announcement-type').value = 'notice';
-      document.getElementById('announcement-pinned').checked = false;
-      document.getElementById('announcement-editor-content').innerHTML = '';
+    // 先清空所有字段
+    if (titleInput) {
+      titleInput.value = '';
+    }
+    if (typeSelect) {
+      typeSelect.value = 'notice';
+    }
+    if (pinnedCheckbox) {
+      pinnedCheckbox.checked = false;
+    }
+    if (contentEditor) {
+      contentEditor.innerHTML = '';
     }
     
-    // 滚动到编辑器位置
-    this.editorElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // 更新标题
+    if (editorTitle) {
+      editorTitle.textContent = this.isEditing ? '编辑公告' : '新建公告';
+    }
+    
+    // 如果是编辑模式，填充数据
+    if (announcement) {
+      if (titleInput) {
+        titleInput.value = announcement.title || '';
+      }
+      if (typeSelect) {
+        typeSelect.value = announcement.type || 'notice';
+      }
+      if (pinnedCheckbox) {
+        pinnedCheckbox.checked = announcement.is_pinned === true || announcement.is_pinned === 1;
+      }
+      if (contentEditor) {
+        contentEditor.innerHTML = announcement.content || '';
+      }
+    }
+    
+    // 显示弹窗
+    if (this.editorModal) {
+      this.editorModal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+      
+      // 强制重绘，确保更新显示
+      this.editorModal.offsetHeight;
+    }
+    
+    console.log('编辑器状态:', {
+      isEditing: this.isEditing,
+      title: titleInput?.value,
+      content: contentEditor?.innerHTML?.substring(0, 50)
+    });
   }
 
   // 隐藏编辑器
   hideEditor() {
-    this.editorElement.style.display = 'none';
+    console.log('隐藏编辑器');
     
-    // 隐藏所有编辑器容器
-    document.querySelectorAll('.announcement-editor-container').forEach(container => {
-      container.style.display = 'none';
-    });
+    if (this.editorModal) {
+      this.editorModal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+    
+    // 清空表单
+    const titleInput = document.querySelector('#announcement-editor-modal #announcement-title');
+    const typeSelect = document.querySelector('#announcement-editor-modal #announcement-type');
+    const pinnedCheckbox = document.querySelector('#announcement-editor-modal #announcement-pinned');
+    const contentEditor = document.querySelector('#announcement-editor-modal #announcement-editor-content');
+    
+    if (titleInput) titleInput.value = '';
+    if (typeSelect) typeSelect.value = 'notice';
+    if (pinnedCheckbox) pinnedCheckbox.checked = false;
+    if (contentEditor) contentEditor.innerHTML = '';
     
     this.currentAnnouncement = null;
     this.isEditing = false;
   }
 
-  // 保存公告
+  // 保存公告 - 修复版本，添加更详细的错误处理
   async saveAnnouncement() {
-    const title = document.getElementById('announcement-title').value;
-    const type = document.getElementById('announcement-type').value;
-    const isPinned = document.getElementById('announcement-pinned').checked;
-    const content = document.getElementById('announcement-editor-content').innerHTML;
-    
-    if (!title || !content) {
-      alert('标题和内容不能为空');
-      return;
-    }
+    console.log('执行保存...');
     
     try {
+      // 重新获取元素
+      const titleInput = document.querySelector('#announcement-editor-modal #announcement-title');
+      const typeSelect = document.querySelector('#announcement-editor-modal #announcement-type');
+      const pinnedCheckbox = document.querySelector('#announcement-editor-modal #announcement-pinned');
+      const contentEditor = document.querySelector('#announcement-editor-modal #announcement-editor-content');
+      
+      if (!titleInput || !typeSelect || !pinnedCheckbox || !contentEditor) {
+        console.error('无法找到表单元素');
+        alert('表单元素未找到，请刷新页面重试');
+        return;
+      }
+      
+      const title = titleInput.value.trim();
+      const type = typeSelect.value;
+      const isPinned = pinnedCheckbox.checked;
+      const content = contentEditor.innerHTML.trim();
+      const textContent = contentEditor.innerText.trim();
+      
+      console.log('保存数据:', {
+        title: title,
+        type: type,
+        isPinned: isPinned,
+        contentLength: content.length,
+        textContentLength: textContent.length
+      });
+      
+      if (!title) {
+        alert('请输入公告标题');
+        titleInput.focus();
+        return;
+      }
+      
+      if (!textContent) {
+        alert('请输入公告内容');
+        contentEditor.focus();
+        return;
+      }
+      
       const token = localStorage.getItem('token');
+      if (!token) {
+        alert('请先登录');
+        return;
+      }
+      
       const url = this.isEditing ? 
         `https://api.am-all.com.cn/api/announcements/${this.currentAnnouncement.id}` : 
         'https://api.am-all.com.cn/api/announcements';
       
       const method = this.isEditing ? 'PUT' : 'POST';
+      
+      console.log('发送请求:', { url, method, title, type, isPinned });
       
       const response = await fetch(url, {
         method,
@@ -566,22 +704,26 @@ class AnnouncementAdminSystem {
       
       const result = await response.json();
       
-      if (result.error) {
-        alert('保存失败: ' + result.error);
-        return;
+      console.log('保存响应:', result);
+      
+      if (!response.ok || result.error) {
+        throw new Error(result.error || `HTTP ${response.status}: ${response.statusText}`);
       }
       
-      if (Date.now() - this._successNotifiedAt > 800) { alert('保存成功'); this._successNotifiedAt = Date.now(); }
+      alert(this.isEditing ? '更新成功' : '创建成功');
       this.hideEditor();
       this.loadAnnouncements();
+      
     } catch (error) {
       console.error('保存公告失败:', error);
-      alert('保存失败');
+      alert('保存失败: ' + error.message);
     }
   }
 
-  // 编辑公告 - 修改为在对应公告项下方显示编辑器
+  // 编辑公告
   async editAnnouncement(id) {
+    console.log('开始编辑公告:', id);
+    
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`https://api.am-all.com.cn/api/announcements/${id}`, {
@@ -591,19 +733,18 @@ class AnnouncementAdminSystem {
       });
       
       const announcement = await response.json();
+      console.log('获取到的公告数据:', announcement);
       
       if (announcement.error) {
         alert('加载公告失败: ' + announcement.error);
         return;
       }
       
-      // 找到对应的公告项元素
-      const announcementItem = document.querySelector(`.admin-announcement-item[data-id="${id}"]`);
-      if (announcementItem) {
-        this.showEditor(announcement, announcementItem);
-      } else {
+      // 延迟一下再显示，确保DOM更新
+      setTimeout(() => {
         this.showEditor(announcement);
-      }
+      }, 50);
+      
     } catch (error) {
       console.error('加载公告失败:', error);
       alert('加载公告失败');
@@ -642,10 +783,6 @@ class AnnouncementAdminSystem {
 }
 
 // 初始化公告系统
-let announcementSystem = null;
-let announcementAdminSystem = null;
-
-// 确保这些函数被正确导出到全局作用域
 window.initAnnouncementSystem = function(){
   try{
     if (!window.announcementSystem) window.announcementSystem = new AnnouncementSystem();
@@ -658,4 +795,14 @@ window.initAnnouncementAdminSystem = function(){
     if (!window.announcementAdminSystem) window.announcementAdminSystem = new AnnouncementAdminSystem();
     window.announcementAdminSystem.init();
   }catch(e){ console.error('initAnnouncementAdminSystem error:', e);} 
+};
+
+// 全局保存函数 - 作为备用（保留兼容性）
+window.saveAnnouncement = function() {
+  console.log('全局保存函数被调用');
+  if (window.announcementAdminSystem) {
+    window.announcementAdminSystem.saveAnnouncement();
+  } else {
+    console.error('announcementAdminSystem 未初始化');
+  }
 };
