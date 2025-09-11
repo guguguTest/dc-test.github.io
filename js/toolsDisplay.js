@@ -3,6 +3,32 @@
 (function(global) {
   'use strict';
 
+  // 获取当前用户信息
+  async function getCurrentUserInfo() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      global.currentUser = null;
+      return;
+    }
+
+    try {
+      const response = await fetch('https://api.am-all.com.cn/api/user', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        global.currentUser = userData;
+        console.log('当前用户信息:', userData);
+      } else {
+        global.currentUser = null;
+      }
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
+      global.currentUser = null;
+    }
+  }
+
   // 初始化工具展示页面
   async function initToolsDisplay() {
     const container = document.getElementById('content-container');
@@ -38,6 +64,9 @@
       </div>
     `;
 
+    // 先获取当前用户信息
+    await getCurrentUserInfo();
+    
     // 加载工具
     await loadTools();
 
@@ -74,18 +103,56 @@
       return;
     }
 
+    // 确保正确获取用户信息
     const user = global.currentUser;
-    const userRank = user ? (user.user_rank || 0) : 0;
-    const userSpecialGroup = user ? (user.rankSp || null) : null;
-    const userPoints = user ? (user.points || 0) : 0;
+    console.log('渲染工具时的用户信息:', user);
+    
+    const userRank = user ? (parseInt(user.user_rank) || 0) : 0;
+    const userSpecialGroup = user ? (user.rankSp !== undefined ? String(user.rankSp) : null) : null;
+    const userPoints = user ? (parseInt(user.points) || 0) : 0;
+    
+    console.log('用户权限信息:', { userRank, userSpecialGroup, userPoints });
 
     grid.innerHTML = tools.map(tool => {
       // 检查权限
-      const needsLogin = !user && (tool.access_level > 0 || tool.special_group || tool.required_points > 0);
-      const lackRank = user && tool.access_level > userRank;
-      const lackSpecial = user && tool.special_group && tool.special_group !== userSpecialGroup;
-      const lackPoints = user && tool.required_points > userPoints;
-      const canAccess = !needsLogin && !lackRank && !lackSpecial && !lackPoints;
+      const hasPermissionRequirements = tool.access_level > 0 || tool.special_group || tool.required_points > 0;
+      const needsLogin = !user && hasPermissionRequirements;
+
+      // 已登录用户的权限检查
+      let lackRank = false;
+      let lackSpecial = false;
+      let lackPoints = false;
+
+      if (user) {
+        // 用户组权限检查：用户等级必须 >= 工具要求的最低等级
+        lackRank = tool.access_level > 0 && userRank < tool.access_level;
+        
+        // 特殊用户组检查：必须匹配
+        if (tool.special_group) {
+          // 管理员(rank >= 5)可以无视特殊组限制
+          const isAdmin = userRank >= 5;
+          if (!isAdmin) {
+            const toolSpecial = String(tool.special_group).trim();
+            const userSpecial = userSpecialGroup ? String(userSpecialGroup).trim() : '';
+            lackSpecial = toolSpecial !== '' && toolSpecial !== '0' && userSpecial !== toolSpecial;
+          }
+        }
+        
+        // 积分检查
+        lackPoints = tool.required_points > 0 && userPoints < tool.required_points;
+      }
+
+      console.log(`工具 ${tool.title} 权限检查:`, {
+        needsLogin,
+        lackRank,
+        lackSpecial,
+        lackPoints,
+        toolRequirements: {
+          access_level: tool.access_level,
+          special_group: tool.special_group,
+          required_points: tool.required_points
+        }
+      });
 
       // 构建元数据标签
       let metaTags = '';
@@ -97,7 +164,8 @@
           </span>
         `;
       }
-      if (tool.file_size) {
+      
+      if (tool.tool_type === 'link' && tool.file_size) {
         metaTags += `
           <span class="tool-meta-tag">
             <i class="fas fa-file"></i>
@@ -105,6 +173,7 @@
           </span>
         `;
       }
+      
       if (tool.required_points > 0) {
         metaTags += `
           <span class="tool-meta-tag meta-points">
@@ -113,6 +182,7 @@
           </span>
         `;
       }
+      
       if (tool.access_level > 0 || tool.special_group) {
         let permText = '';
         if (tool.access_level > 0) {
@@ -121,7 +191,9 @@
         }
         if (tool.special_group) {
           if (permText) permText += '+';
-          permText += `特殊组${tool.special_group}`;
+          const specialText = tool.special_group == 1 ? 'maimoller' : 
+                           tool.special_group == 2 ? '协同管理员' : `特殊组${tool.special_group}`;
+          permText += specialText;
         }
         metaTags += `
           <span class="tool-meta-tag meta-permission">
@@ -132,10 +204,7 @@
       }
 
       // 按钮文本和状态
-      let buttonText = '使用工具';
-      let buttonIcon = 'fas fa-arrow-right';
-      let buttonClass = 'tool-action-btn';
-      let buttonAction = '';
+      let buttonText, buttonIcon, buttonClass = 'tool-action-btn', buttonAction = '';
 
       if (needsLogin) {
         buttonText = '需要登录';
@@ -143,18 +212,32 @@
         buttonClass += ' disabled';
         buttonAction = 'onclick="handleToolLogin()"';
       } else if (lackRank) {
-        buttonText = '权限不足';
+        const rankNames = ['普通', '初级', '中级', '高级', '贵宾', '管理员'];
+        buttonText = `需要${rankNames[tool.access_level]}或以上`;
         buttonIcon = 'fas fa-lock';
         buttonClass += ' disabled';
+        buttonAction = `onclick="alert('您的用户组权限不足，需要${rankNames[tool.access_level]}用户组或以上')"`;
       } else if (lackSpecial) {
-        buttonText = '需要特殊权限';
+        const specialText = tool.special_group == 1 ? 'maimoller' : 
+                         tool.special_group == 2 ? '协同管理员' : `特殊组${tool.special_group}`;
+        buttonText = `需要${specialText}权限`;
         buttonIcon = 'fas fa-user-lock';
         buttonClass += ' disabled';
+        buttonAction = `onclick="alert('需要${specialText}特殊用户组权限')"`;
       } else if (lackPoints) {
         buttonText = `需要 ${tool.required_points} 积分`;
         buttonIcon = 'fas fa-coins';
         buttonClass += ' disabled';
+        buttonAction = `onclick="alert('积分不足，需要 ${tool.required_points} 积分，您当前有 ${userPoints} 积分')"`;
       } else {
+        // 可以使用工具
+        if (tool.tool_type === 'link') {
+          buttonText = tool.required_points > 0 ? `下载 (-${tool.required_points}积分)` : '下载';
+          buttonIcon = 'fas fa-download';
+        } else {
+          buttonText = tool.required_points > 0 ? `使用工具 (-${tool.required_points}积分)` : '使用工具';
+          buttonIcon = 'fas fa-arrow-right';
+        }
         buttonAction = `onclick="useTool(${tool.id})"`;
       }
 
@@ -194,6 +277,11 @@
 
       // 如果需要积分，先扣除
       if (tool.required_points > 0 && token) {
+        // 确认扣除积分
+        if (!confirm(`使用此工具需要消耗 ${tool.required_points} 积分，确定继续吗？`)) {
+          return;
+        }
+
         const accessResponse = await fetch(`https://api.am-all.com.cn/api/tools/${toolId}/access`, {
           method: 'POST',
           headers: { 
@@ -229,12 +317,18 @@
 
       if (tool.required_points > 0) {
         if (typeof showSuccessMessage === 'function') {
-          showSuccessMessage(`已扣除 ${tool.required_points} 积分`);
+          showSuccessMessage(`成功使用工具，已扣除 ${tool.required_points} 积分`);
+        } else {
+          alert(`成功使用工具，已扣除 ${tool.required_points} 积分`);
         }
+        // 刷新工具列表以更新按钮状态
+        setTimeout(() => {
+          getCurrentUserInfo().then(() => loadTools());
+        }, 1000);
       }
     } catch (error) {
       console.error('使用工具失败:', error);
-      alert('使用工具失败');
+      alert('使用工具失败，请稍后重试');
     }
   };
 
@@ -242,6 +336,8 @@
   window.handleToolLogin = function() {
     if (typeof loadPage === 'function') {
       loadPage('login');
+    } else {
+      window.location.href = '/login.html';
     }
   };
 
@@ -267,5 +363,6 @@
 
   // 导出初始化函数
   global.initToolsDisplay = initToolsDisplay;
+  global.loadTools = loadTools;
 
 })(window);
