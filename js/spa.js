@@ -5,7 +5,6 @@ let cropper = null;
 
 // 新增变量
 let currentOrders = [];
-let selectedOrderIds = [];
 let currentPage = 1;
 const ordersPerPage = 50;
 
@@ -2991,61 +2990,6 @@ function initOrderEntryPage() {
     });
   }
 
-  // 编辑订单按钮
-  const editBtn = document.getElementById('edit-order-btn');
-  if (editBtn) {
-    editBtn.addEventListener('click', function() {
-      if (selectedOrderIds.length === 1) {
-        const order = currentOrders.find(o => o.id === selectedOrderIds[0]);
-        if (order) {
-          showOrderModal(order);
-        }
-      } else if (selectedOrderIds.length === 0) {
-        showErrorMessage('请先选择一个订单');
-      } else {
-        showErrorMessage('只能同时编辑一个订单');
-      }
-    });
-  }
-  
-  // 删除订单按钮
-  const deleteBtn = document.getElementById('delete-order-btn');
-  if (deleteBtn) {
-    deleteBtn.addEventListener('click', function() {
-      if (selectedOrderIds.length > 0) {
-        const confirmMsg = selectedOrderIds.length === 1 ? 
-          '确定要删除这个订单吗？' : 
-          `确定要删除选中的 ${selectedOrderIds.length} 个订单吗？`;
-        
-        if (confirm(confirmMsg + '\n此操作不可撤销！')) {
-          deleteOrders(selectedOrderIds);
-        }
-      } else {
-        showErrorMessage('请选择要删除的订单');
-      }
-    });
-  }
-
-  // 全选复选框
-  const selectAll = document.getElementById('select-all');
-  if (selectAll) {
-    selectAll.addEventListener('change', function(e) {
-      const checkboxes = document.querySelectorAll('.order-checkbox');
-      checkboxes.forEach(cb => {
-        cb.checked = e.target.checked;
-        const orderId = parseInt(cb.dataset.id);
-        if (e.target.checked) {
-          if (!selectedOrderIds.includes(orderId)) {
-            selectedOrderIds.push(orderId);
-          }
-        } else {
-          selectedOrderIds = selectedOrderIds.filter(id => id !== orderId);
-        }
-      });
-      updateActionButtons();
-    });
-  }
-
   // 表单提交
   const orderForm = document.getElementById('order-form');
   if (orderForm) {
@@ -3084,26 +3028,6 @@ function initOrderEntryPage() {
   });
 }
 
-// 更新操作按钮状态
-function updateActionButtons() {
-  const deleteBtn = document.getElementById('delete-order-btn');
-  const editBtn = document.getElementById('edit-order-btn');
-  
-  if (deleteBtn) {
-    deleteBtn.disabled = selectedOrderIds.length === 0;
-    // 更新删除按钮文字
-    if (selectedOrderIds.length > 0) {
-      deleteBtn.innerHTML = `<i class="fas fa-trash-alt"></i><span>删除选中(${selectedOrderIds.length})</span>`;
-    } else {
-      deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i><span>删除选中</span>';
-    }
-  }
-  
-  if (editBtn) {
-    editBtn.disabled = selectedOrderIds.length !== 1;
-  }
-}
-
 async function loadOrders() {
   try {
     const search = document.getElementById('order-search-input').value;
@@ -3135,10 +3059,6 @@ async function loadOrders() {
     renderOrders(currentOrders);
     renderPagination(data.pagination);
     
-    selectedOrderIds = [];
-    updateActionButtons();
-    const selectAll = document.getElementById('select-all');
-    if (selectAll) selectAll.checked = false;
   } catch (error) {
     console.error('加载订单错误:', error);
     showErrorMessage('加载订单失败: ' + error.message);
@@ -3173,13 +3093,10 @@ function renderOrders(orders) {
     const price = typeof order.price === 'number' ? order.price : parseFloat(order.price || 0);
     const formattedPrice = isNaN(price) ? '0.00' : price.toFixed(2);
     
-    // 修复：正确判断兑换状态
+    // 正确判断兑换状态
     const isRedeemed = order.redeemed === true || order.redeemed === 1 || order.redeemed === '1';
     
     tr.innerHTML = `
-      <td>
-        <input type="checkbox" class="order-checkbox" data-id="${order.id}">
-      </td>
       <td>${index + 1}</td>
       <td>${order.taobao_id || '-'}</td>
       <td title="${order.product_name || '-'}">${order.product_name || '-'}</td>
@@ -3190,27 +3107,79 @@ function renderOrders(orders) {
           '<span class="status-badge redeemed"><i class="fas fa-check-circle"></i>已兑换</span>' : 
           '<span class="status-badge pending"><i class="fas fa-clock"></i>未兑换</span>'}
       </td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary me-2" onclick="editOrder(${order.id})" title="编辑订单">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteOrder(${order.id})" title="删除订单">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </td>
     `;
     tbody.appendChild(tr);
-    
-    const checkbox = tr.querySelector('.order-checkbox');
-    if (checkbox) {
-      checkbox.addEventListener('change', (e) => {
-        const orderId = parseInt(e.target.dataset.id);
-        if (e.target.checked) {
-          if (!selectedOrderIds.includes(orderId)) {
-            selectedOrderIds.push(orderId);
-          }
-        } else {
-          selectedOrderIds = selectedOrderIds.filter(id => id !== orderId);
-          const selectAll = document.getElementById('select-all');
-          if (selectAll) selectAll.checked = false;
-        }
-        updateActionButtons();
-      });
-    }
   });
 }
+
+// 新增编辑订单函数：
+function editOrder(orderId) {
+  const order = currentOrders.find(o => o.id === orderId);
+  if (order) {
+    showOrderModal(order);
+  } else {
+    showErrorMessage('订单不存在');
+  }
+}
+
+// 新增删除订单函数：
+function deleteOrder(orderId) {
+  const order = currentOrders.find(o => o.id === orderId);
+  if (!order) {
+    showErrorMessage('订单不存在');
+    return;
+  }
+  
+  if (confirm(`确定要删除订单 "${order.order_number}" 吗？\n此操作不可撤销！`)) {
+    deleteOrderById(orderId);
+  }
+}
+
+// 新增根据ID删除订单的函数：
+async function deleteOrderById(id) {
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`https://api.am-all.com.cn/api/orders/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('删除订单失败');
+    }
+    
+    // 重新加载订单列表
+    await loadOrders();
+    
+    // 显示成功动画（如果有的话）
+    if (typeof showSuccessAnimation === 'function') {
+      showSuccessAnimation(
+        '删除成功',
+        '订单已删除',
+        2000
+      );
+    } else {
+      showSuccessMessage('订单删除成功');
+    }
+  } catch (error) {
+    console.error('删除订单错误:', error);
+    showErrorMessage('删除订单失败: ' + error.message);
+  }
+}
+
+window.editOrder = editOrder;
+window.deleteOrder = deleteOrder;
 
 function renderPagination(pagination) {
   const container = document.getElementById('pagination-controls');
@@ -3460,39 +3429,6 @@ async function saveOrder() {
   } catch (error) {
     console.error('保存订单错误:', error);
     showErrorMessage(`保存订单失败: ${error.message}`);
-  }
-}
-
-async function deleteOrders(ids) {
-  try {
-    if (!ids || ids.length === 0) return;
-    
-    if (!confirm(`确定要删除选中的 ${ids.length} 个订单吗？此操作不可撤销！`)) {
-      return;
-    }
-    
-    const token = localStorage.getItem('token');
-    const promises = ids.map(id => 
-      fetch(`https://api.am-all.com.cn/api/orders/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-    );
-    
-    const results = await Promise.all(promises);
-    const allSuccess = results.every(res => res.ok);
-    
-    if (allSuccess) {
-      loadOrders();
-      showSuccessMessage(`成功删除 ${ids.length} 个订单`);
-    } else {
-      throw new Error('部分订单删除失败');
-    }
-  } catch (error) {
-    console.error('删除订单错误:', error);
-    showErrorMessage('删除订单失败: ' + error.message);
   }
 }
 
