@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="shortcut icon" href="https://oss.am-all.com.cn/asset/img/main/favicon.png">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>ICF Editor</title>
+	<script type="text/javascript" src="./js/crypto.js"></script>
+	<script type="text/javascript" src="./js/FileSaver.min.js"></script>
+	<style type="text/css">
+		html, body, #filedrop {
+			margin: 0px;
+			padding: 0px;
+		}
+		body {
+			font-size: 12px;
+		}
+		#filedrop {
+			box-sizing: border-box;
+			display: none;
+			position: fixed;
+			width: 100%;
+			height: 100%;
+			left: 0;
+			top: 0;
+			z-index: 99999;
+			background: #7fb8e3;
+			border: 1em dashed #60a7dc;
+			transition: opacity 0.3s ease-out;
+			opacity: 0;
+		}
+		#filedrop::before {
+			content: "Drop ICF Here";
+			position: absolute;
+			top: calc(50% - 0.5em);
+			width: 100%;
+			font-size: 4em;
+			display: block;
+			font-family: sans-serif;
+			text-align: center;
+			color: #004D81;
+		}
+		#main, #controls {
+			margin: 1em;
+		}
+		#dump, #editor {
+			margin: 0px;
+			padding: 0px;
+			font-family: monospace;
+		}
+		#editor {
+			border-top: 1px solid #ccc;
+		}
+		#editor li {
+			list-style-position: inside;
+			font-size: 1.5em;
+			margin: 0px;
+			border-bottom: 1px solid #ccc;
+			height: calc(2.5em - 1px);
+			padding-top: 1.5em;
+		}
+		#dump {
+			position: absolute;
+			right: 1.5em;
+			display: inline-block;
+			line-height: 1.5em;
+			white-space: pre;
+		}
+		.error {
+			color: red;
+		}
+	</style>
+	<script type="text/javascript" src="./js/icfedit.js"></script>
+</head>
+<body>
+	<br>
+	<div id="filedrop"></div>
+	<div id="controls">
+		<label><input type="checkbox" id="ctrl_decrypt" checked/> Show Decrypted Dumps</label>
+		<button id="ctrl_reset">Clear Editor</button>
+		<button id="ctrl_export" disabled>Save ICF</button>
+		<p class="error" id="errmsg"></p>
+	</div>
+	<div id="main">
+		<code id="dump" contenteditable>or paste xxd here...</code>
+		<ol id="editor" contenteditable>
+			<li>SXXXACA0</li>
+		</ol>
+	</table>
+
+	<script type="text/javascript">
+		// Controls
+		var decryptBtn = document.getElementById('ctrl_decrypt');
+		decryptBtn.addEventListener('click', function() {
+			if (!exportBtn.disabled) {
+				renderDump(window.icfdata);
+			}
+		});
+		var exportBtn = document.getElementById('ctrl_export');
+		exportBtn.addEventListener('click', function() {
+			var dlname = icf_infer_filename(window.icfdata) || 'ICF1';
+			var dldata = icf_encrypt(window.icfdata);
+			var dlblob = new Blob([dldata], {type: "application/octet-stream"});
+			saveAs(dlblob, dlname);
+		});
+		document.getElementById('ctrl_reset').addEventListener('click', function() {
+			if (confirm('Unsaved edits will be lost. Reset?')) {
+				localStorage.removeItem('icfdata');
+				location.reload();
+			}
+		})
+		var errmsg = document.getElementById('errmsg');
+
+		// File dropping
+		var dropZone = document.getElementById('filedrop');
+
+		function showDropZone(e) {
+			if (e.dataTransfer.types[0] != 'Files') {
+				return;
+			}
+			dropZone.style.display = "block";
+			setTimeout(function() {
+				dropZone.style.opacity = "0.8";
+			}, 1);
+		}
+		function hideDropZone() {
+			dropZone.style.opacity = "0.0";
+			setTimeout(function() {
+				dropZone.style.display = "none";
+				dropZone.style.opacity = "0.0";
+			},310);
+		}
+
+		function allowDrag(e) {
+			if (e.dataTransfer.types[0] == 'Files') {
+				e.dataTransfer.dropEffect = 'copy';
+				e.preventDefault();
+			}
+		}
+
+		function handleDrop(e) {
+			e.preventDefault();
+			hideDropZone();
+			var xfer = e.dataTransfer;
+			var files = [];
+			if (xfer.items) {
+				Array.from(xfer.items).forEach(function(f) {
+					if (f.kind == 'file') {
+						files.push(f.getAsFile());
+					}
+				})
+			} else if (xfer.files) {
+				files = Array.from(xfer.files);
+			}
+			files.forEach(processFile);
+			console.log(files);
+		}
+
+		function processFile(file) {
+			if (file.size > 0x2800) {
+				file = file.slice(0,0x2800);
+			}
+			file.arrayBuffer().then(function(buffer) {
+				var data = icf_decrypt(new Uint8Array(buffer));
+				var error = icf_sanity_error(data);
+				if (!error) {
+					importData(data);
+				} else {
+					errmsg.innerText = error;
+				}
+			});
+		}
+
+		window.addEventListener('dragenter', showDropZone);
+		dropZone.addEventListener('dragenter', allowDrag);
+		dropZone.addEventListener('dragover', allowDrag);
+		dropZone.addEventListener('dragleave', hideDropZone);
+		dropZone.addEventListener('drop', handleDrop);
+
+		// Editing
+		window.icfdata = new Uint8Array(0x40);
+		var dumpZone = document.getElementById('dump');
+		var editZone = document.getElementById('editor');
+		dumpZone.addEventListener('input', function() {
+			var data = xxd_decode(dumpZone.innerText);
+			if (!data) {
+				exportBtn.disabled = true;
+				errmsg.innerText = "Malformed Hex Dump";
+				return;
+			}
+			if (!decryptBtn.checked) {
+				data = icf_decrypt(data);
+			} else if (icf_sanity_error(data)) {
+				var trydec = icf_decrypt(data);
+				if (!icf_sanity_error(trydec)) {
+					data = trydec;
+					renderDump(data);
+				}
+			}
+			window.icfdata = data;
+			renderEditor(data);
+		});
+		dumpZone.addEventListener('blur', function() {
+			if (!exportBtn.disabled) {
+				renderDump(window.icfdata);
+				localStorage['icfdata'] = bin2hex(window.icfdata);
+			}
+		});
+
+		editZone.addEventListener('input', function() {
+			if (editZone.childElementCount == 0) {
+				// Leave an empty entry
+				editZone.innerHTML = '<li></li>';
+				return;
+			}
+			var lines = [];
+			for (var i = 0; i < editZone.children.length; i++) {
+				var line = editZone.children[i].innerText.trim();
+				if (line.indexOf('\n') != -1) {
+					// Probably pasted. Re-layout
+					lines = editZone.innerText.split('\n');
+					editZone.innerHTML = '';
+					for (var i = 0; i < lines.length; i++) {
+						var li = document.createElement('li');
+						li.innerText = lines[i].trim();
+						editZone.appendChild(li);
+					}
+					break;
+				}
+				if (i != editZone.children.length-1 || line.length > 0) {
+					lines.push(line);
+				}
+			}
+			var entries = icf_encode(lines);
+			var dumphtml = "";
+			var hasError = false;
+			for (var i = 0; i < entries.length; i++) {
+				var entry = entries[i];
+				if (entry instanceof Uint8Array) {
+					// OK
+					dumphtml += xxd_encode(entry, i * 0x40, '<br>');
+					editZone.children[i].className = '';
+				} else {
+					// Error
+					hasError = true;
+					dumphtml += '<br><span class="error">' + entry + '</span><br><br><br>';
+				}
+			}
+			exportBtn.disabled = hasError;
+			if (!hasError) {
+				window.icfdata = new Uint8Array(entries[0].buffer);
+				renderDump(window.icfdata);
+				localStorage['icfdata'] = bin2hex(window.icfdata);
+			} else {
+				dumpZone.innerHTML = dumphtml;
+				errmsg.innerText = '';
+			}
+		});
+
+		function renderEditor(data) {
+			var entries = icf_decode(data);
+			if (!entries || !entries.length) {
+				errmsg.innerText = "";
+				exportBtn.disabled = true;
+				return false;
+			}
+			if (entries.error) {
+				errmsg.innerText = entries.error;
+				exportBtn.disabled = true;
+				return false;
+			}
+			errmsg.innerText = "";
+			if (entries.length != editZone.children.length) {
+				editZone.innerHTML = "";
+				for (var i = 0; i < entries.length; i++) {
+					editZone.appendChild(document.createElement('li'));
+				}
+			}
+			var hasError = false;
+			for (var i = 0; i < entries.length; i++) {
+				editZone.children[i].innerText = entries[i];
+				editZone.children[i].className = entries[i][0] == '!' ? 'error' : '';
+				hasError ||= entries[i][0] == '!';
+			}
+			exportBtn.disabled = hasError;
+		}
+
+		function renderDump(data) {
+			if (!decryptBtn.checked) {
+				data = icf_encrypt(data);
+			}
+			dumpZone.innerText = xxd_encode(data);
+		}
+
+		function importData(data) {
+			renderDump(data);
+			renderEditor(data);
+			if (!exportBtn.disabled) {
+				window.icfdata = data;
+				localStorage['icfdata'] = bin2hex(window.icfdata);
+			}
+		}
+
+		// Load from localStorage
+		if (localStorage['icfdata']) {
+			importData(hex2bin(localStorage['icfdata']));
+		}
+	</script>
+</body>
+</html>

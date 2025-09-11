@@ -1251,6 +1251,21 @@ download: `
           </div>
 
           <div class="tools-container">
+
+            <div class="tool-card">
+              <div class="tool-icon">
+                <i class="fas fa-file-code"></i>
+              </div>
+              <div class="tool-content">
+                <h3 class="tool-title">ICF 编辑器</h3>
+                <p class="tool-description">用于编辑和查看ICF文件</p>
+                <div class="tool-meta">
+                  <span><i class="fas fa-history"></i> 最后更新: 2025/07/10</span>
+                </div>
+                <a href="#" class="tool-link" data-page="icfeditor">使用</a>
+              </div>
+            </div>
+
             <div class="tool-card">
               <div class="tool-icon">
                 <i class="fas fa-file-archive"></i>
