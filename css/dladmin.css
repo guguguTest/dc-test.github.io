@@ -158,9 +158,11 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
   position: relative;
   z-index: 1;
+  width: 100%;
 }
 
 .table-responsive::before {
@@ -186,6 +188,7 @@
   border: none;
   margin: 0;
   width: 100%;
+  min-width: 900px;
   border-collapse: collapse;
 }
 
@@ -492,28 +495,44 @@
   }
 }
 
-@media (max-width: 992px) {
-  #downloads-table {
-    font-size: 0.9rem;
-  }
-  
-  #downloads-table th,
-  #downloads-table td {
-    padding: 12px 15px;
-  }
-  
-  /* 隐藏不重要的列 */
-  #downloads-table th:nth-child(3),
-  #downloads-table td:nth-child(3),
-  #downloads-table th:nth-child(4),
-  #downloads-table td:nth-child(4),
-  #downloads-table th:nth-child(6),
-  #downloads-table td:nth-child(6) {
-    display: none;
+/* PC端保持横向表格布局，不隐藏列 */
+@media (max-width: 992px) and (min-width: 769px) {
+  .section {
+    padding: 1.2rem;
   }
   
   .page-title {
     font-size: 2rem;
+  }
+  
+  /* 确保表格容器有横向滚动 */
+  .table-responsive {
+    overflow-x: auto;
+    width: 100%;
+  }
+  
+  /* 设置表格最小宽度，防止过度压缩 */
+  #downloads-table {
+    min-width: 800px;
+    font-size: 0.85rem;
+  }
+  
+  #downloads-table th,
+  #downloads-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+  
+  /* 保持按钮横向排列 */
+  #downloads-table td:last-child {
+    white-space: nowrap;
+  }
+  
+  #downloads-table .btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    margin: 0 2px;
+    min-width: auto;
   }
 }
 
