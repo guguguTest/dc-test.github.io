@@ -401,15 +401,15 @@ html, body {
   flex-shrink: 0;
 }
 
-/* 主内容区 */
+/* 主内容区 - 修改为自适应高度 */
 .main-content {
   margin-top: 70px;
   margin-left: var(--sidebar-width);
   padding: 30px;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: calc(100vh - 70px);
-  height: auto;
-  overflow-y: auto;
+  min-height: auto; /* 完全移除最小高度限制 */
+  height: auto; /* 改为自动高度 */
+  overflow-y: visible; /* 改为可见 */
   padding-bottom: 20px;
 }
 
@@ -418,7 +418,8 @@ html, body {
 }
 
 #content-container {
-  min-height: 100%;
+  height: auto; /* 改为自动高度 */
+  min-height: auto; /* 移除最小高度限制 */
   padding-bottom: 20px;
   background: transparent;
 }
@@ -445,6 +446,7 @@ html, body {
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
 
+/* 修改section样式，使其自适应内容高度 */
 .section {
   background: white;
   border-radius: 16px;
@@ -453,6 +455,10 @@ html, body {
   margin-bottom: 30px;
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
+  height: auto; /* 自动高度 */
+  min-height: auto; /* 移除最小高度 */
+  width: 100%; /* 确保宽度正确 */
+  overflow: visible; /* 允许内容溢出 */
 }
 
 .section:hover {

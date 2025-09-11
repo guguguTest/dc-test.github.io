@@ -12,15 +12,15 @@
     display: block;
 }
 
-/* ICF Editor 特定样式 */
+/* ICF Editor 特定样式 - 修改为自适应高度 */
 .iframe-container {
-  min-height: 800px;
+  min-height: 600px; /* 减少最小高度 */
   position: relative;
 }
 
 .icf-editor-iframe {
   width: 100%;
-  min-height: 800px;
+  height: 600px; /* 使用固定高度而不是最小高度 */
   border: none;
   background: transparent;
 }
@@ -70,6 +70,7 @@
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   border: 1px solid #eaeaea;
+  height: auto; /* 改为自动高度 */
 }
 
 .tool-card:hover {
@@ -102,7 +103,7 @@
   color: #666;
   line-height: 1.6;
   margin-bottom: 20px;
-  min-height: 60px;
+  min-height: auto; /* 改为自动高度 */
 }
 
 .tool-meta {
@@ -225,7 +226,8 @@
   text-align: center;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: auto; /* 改为自动高度 */
+  min-height: 200px; /* 设置合理的最小高度 */
 }
 
 .help-card:hover {
@@ -517,6 +519,15 @@ input:checked + .slider:before {
   
   .switch {
     align-self: flex-end;
+  }
+  
+  /* iframe 移动端调整 */
+  .iframe-container {
+    min-height: 400px;
+  }
+  
+  .icf-editor-iframe {
+    height: 400px;
   }
 }
 
