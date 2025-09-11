@@ -1972,7 +1972,26 @@ async function loadPage(pageId) {
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
   
-  setTimeout(() => {
+setTimeout(() => {
+    // ===== 特殊处理tools页面 =====
+    if (pageId === 'tools') {
+      if (typeof initToolsDisplay === 'function') {
+        initToolsDisplay();
+      } else {
+        console.error('initToolsDisplay 函数未定义');
+        contentContainer.innerHTML = '<div class="section"><h1>加载失败</h1><p>工具页面模块未加载</p></div>';
+      }
+      
+      if (typeof languageModule !== 'undefined') {
+        languageModule.initLanguage();
+      }
+      
+      document.body.classList.remove('spa-loading');
+      updateActiveMenuItem(pageId);
+      return; // 重要：直接返回，不继续执行后续代码
+    }
+    // ===== 特殊处理结束 =====
+    
     if (pages[pageId]) {
       contentContainer.innerHTML = pages[pageId];
       

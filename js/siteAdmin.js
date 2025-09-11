@@ -58,6 +58,11 @@ function ensureAdmin(pageId) {
               <div class="admin-entry-desc">维护可供查询的游戏列表（标题、显示名）。</div>
               <div class="admin-actions"><button class="admin-btn admin-btn-ghost" type="button">进入</button></div>
             </a>
+			<a class="admin-card admin-entry" id="entry-tools">
+			  <div class="admin-entry-title">实用工具管理</div>
+			  <div class="admin-entry-desc">管理网站的实用工具，包括内部页面和下载链接。</div>
+			  <div class="admin-actions"><button class="admin-btn admin-btn-ghost" type="button">进入</button></div>
+			</a>
           </div>
         </div>
       </div>
@@ -67,6 +72,7 @@ function ensureAdmin(pageId) {
 
     root.querySelector('#entry-servers').onclick = (e) => { e.preventDefault(); renderCCBServersPage(); };
     root.querySelector('#entry-games').onclick   = (e) => { e.preventDefault(); renderCCBGamesPage();  };
+	root.querySelector('#entry-tools').onclick = (e) => { e.preventDefault(); if (typeof initToolsAdmin === 'function') {initToolsAdmin();}};
   }
 
   // ---- 二级页：查分服务器设置（读取公开端点；编辑=删除后新增）----
