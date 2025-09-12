@@ -265,72 +265,164 @@
     grid.style.display = 'grid';
   }
 
-  // 使用工具
-  window.useTool = async function(toolId) {
-    try {
-      const token = localStorage.getItem('token');
-      
-      // 先获取工具信息
-      const toolResponse = await fetch(`https://api.am-all.com.cn/api/tools/${toolId}`);
-      if (!toolResponse.ok) throw new Error('获取工具信息失败');
-      const tool = await toolResponse.json();
-
-      // 如果需要积分，先扣除
-      if (tool.required_points > 0 && token) {
-        // 确认扣除积分
-        if (!confirm(`使用此工具需要消耗 ${tool.required_points} 积分，确定继续吗？`)) {
-          return;
-        }
-
-        const accessResponse = await fetch(`https://api.am-all.com.cn/api/tools/${toolId}/access`, {
-          method: 'POST',
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (!accessResponse.ok) {
-          const error = await accessResponse.json();
-          alert(error.error || '使用失败');
-          return;
-        }
-        
-        // 更新用户积分显示
-        const result = await accessResponse.json();
-        if (global.currentUser && result.new_points !== undefined) {
-          global.currentUser.points = result.new_points;
-          if (typeof updateUserInfo === 'function') {
-            updateUserInfo(global.currentUser);
-          }
-        }
-      }
-
-      // 根据类型处理
-      if (tool.tool_type === 'page') {
-        // 内部页面跳转
-        window.location.href = tool.target_url;
-      } else {
-        // 外部链接新窗口打开
-        window.open(tool.target_url, '_blank');
-      }
-
-      if (tool.required_points > 0) {
-        if (typeof showSuccessMessage === 'function') {
-          showSuccessMessage(`成功使用工具，已扣除 ${tool.required_points} 积分`);
+  // 创建工具iframe容器
+  function createToolIframeContainer(tool) {
+    const container = document.getElementById('content-container');
+    if (!container) return;
+    
+    // 保存当前页面内容用于返回
+    const previousContent = container.innerHTML;
+    
+    container.innerHTML = `
+      <div class="tool-iframe-container">
+        <div class="tool-iframe-header">
+          <div class="tool-iframe-info">
+            <i class="${tool.icon_class || 'fas fa-tools'} tool-iframe-icon"></i>
+            <h2 class="tool-iframe-title">${tool.title}</h2>
+          </div>
+          <div class="tool-iframe-actions">
+            <button class="tool-iframe-refresh-btn" id="tool-iframe-refresh">
+              <i class="fas fa-sync-alt"></i>
+              <span>刷新</span>
+            </button>
+            <button class="tool-iframe-back-btn" id="tool-iframe-back">
+              <i class="fas fa-arrow-left"></i>
+              <span>返回工具列表</span>
+            </button>
+          </div>
+        </div>
+        <div class="tool-iframe-wrapper">
+          <iframe 
+            id="tool-iframe-content"
+            src="${tool.target_url}"
+            class="tool-iframe-frame"
+            frameborder="0"
+            allowfullscreen
+          ></iframe>
+          <div class="tool-iframe-loading" id="tool-iframe-loading">
+            <div class="tool-iframe-spinner"></div>
+            <p>正在加载工具...</p>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // 绑定返回按钮事件
+    const backBtn = document.getElementById('tool-iframe-back');
+    if (backBtn) {
+      backBtn.addEventListener('click', function() {
+        // 返回到工具列表页面
+        if (typeof initToolsDisplay === 'function') {
+          initToolsDisplay();
         } else {
-          alert(`成功使用工具，已扣除 ${tool.required_points} 积分`);
+          container.innerHTML = previousContent;
         }
-        // 刷新工具列表以更新按钮状态
+      });
+    }
+    
+    // 绑定刷新按钮事件
+    const refreshBtn = document.getElementById('tool-iframe-refresh');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', function() {
+        const iframe = document.getElementById('tool-iframe-content');
+        if (iframe) {
+          iframe.src = iframe.src; // 重新加载iframe
+        }
+      });
+    }
+    
+    // iframe加载完成后隐藏loading
+    const iframe = document.getElementById('tool-iframe-content');
+    const loading = document.getElementById('tool-iframe-loading');
+    
+    if (iframe && loading) {
+      iframe.addEventListener('load', function() {
+        loading.style.display = 'none';
+      });
+      
+      // 处理iframe加载错误
+      iframe.addEventListener('error', function() {
+        loading.innerHTML = `
+          <div class="tool-iframe-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>工具加载失败</p>
+            <button onclick="document.getElementById('tool-iframe-back').click()">返回</button>
+          </div>
+        `;
+      });
+    }
+  }
+
+  // 使用工具
+window.useTool = async function(toolId) {
+  try {
+    const token = localStorage.getItem('token');
+    
+    // 先获取工具信息
+    const toolResponse = await fetch(`https://api.am-all.com.cn/api/tools/${toolId}`);
+    if (!toolResponse.ok) throw new Error('获取工具信息失败');
+    const tool = await toolResponse.json();
+
+    // 如果需要积分，先扣除
+    if (tool.required_points > 0 && token) {
+      // 确认扣除积分
+      if (!confirm(`使用此工具需要消耗 ${tool.required_points} 积分，确定继续吗？`)) {
+        return;
+      }
+
+      const accessResponse = await fetch(`https://api.am-all.com.cn/api/tools/${toolId}/access`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!accessResponse.ok) {
+        const error = await accessResponse.json();
+        alert(error.error || '使用失败');
+        return;
+      }
+      
+      // 更新用户积分显示
+      const result = await accessResponse.json();
+      if (global.currentUser && result.new_points !== undefined) {
+        global.currentUser.points = result.new_points;
+        if (typeof updateUserInfo === 'function') {
+          updateUserInfo(global.currentUser);
+        }
+      }
+    }
+
+    // 根据类型处理 - 修改这部分
+    if (tool.tool_type === 'page') {
+      // 内部页面使用iframe显示
+      createToolIframeContainer(tool);
+    } else {
+      // 外部链接新窗口打开
+      window.open(tool.target_url, '_blank');
+    }
+
+    if (tool.required_points > 0) {
+      if (typeof showSuccessMessage === 'function') {
+        showSuccessMessage(`成功使用工具，已扣除 ${tool.required_points} 积分`);
+      } else if (tool.tool_type !== 'page') {
+        // 只在非页面类型时显示alert（页面类型已经切换了界面）
+        alert(`成功使用工具，已扣除 ${tool.required_points} 积分`);
+      }
+      
+      // 如果是外部链接类型，刷新工具列表
+      if (tool.tool_type !== 'page') {
         setTimeout(() => {
           getCurrentUserInfo().then(() => loadTools());
         }, 1000);
       }
-    } catch (error) {
-      console.error('使用工具失败:', error);
-      alert('使用工具失败，请稍后重试');
     }
-  };
+  } catch (error) {
+    console.error('使用工具失败:', error);
+    alert('使用工具失败，请稍后重试');
+  }
+};
 
   // 处理登录
   window.handleToolLogin = function() {
