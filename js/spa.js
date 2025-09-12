@@ -1999,13 +1999,13 @@ setTimeout(() => {
         languageModule.initLanguage();
       }
       
-if (pageId === 'user-settings') {
-  const token = localStorage.getItem('token');
-  if (token) {
-    fetchUserInfo(token);
-  } else {
-    loadPage('login');
-  }
+	if (pageId === 'user-settings') {
+	  const token = localStorage.getItem('token');
+	  if (token) {
+		fetchUserInfo(token);
+	  } else {
+		loadPage('login');
+	  }
   
   // 添加选项卡切换功能
   setTimeout(() => {
@@ -2358,8 +2358,8 @@ if (pageId === 'user-settings') {
 		  }
 		}
 		
-if (pageId === 'download') {
-// 从本地存储获取用户信息
+	if (pageId === 'download') {
+	// 从本地存储获取用户信息
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         
         // 即使权限不足也尝试加载内容，因为可能有公开内容
@@ -2744,6 +2744,12 @@ if (pageId === 'download') {
         }, 100);
       }
       
+	    if (pageId === 'messages') {
+		  if (typeof initMessagesPage === 'function') {
+			setTimeout(initMessagesPage, 100);
+		  }
+		}
+	  
       if (pageId === 'home') {
         // 初始化公告系统
         try {
