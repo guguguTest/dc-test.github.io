@@ -3825,11 +3825,28 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // 阻止其他链接的默认行为（仅限SPA内部导航）
+    // 修复：排除消息系统相关的链接点击
+    const isMessageSystemClick = e.target.closest('.message-dropdown') || 
+                                  e.target.closest('.message-dropdown-mobile') ||
+                                  e.target.closest('.message-item') ||
+                                  e.target.closest('.chat-modal') ||
+                                  e.target.closest('#system-message-modal') ||
+                                  e.target.closest('[data-message-id]');
+    
+    if (isMessageSystemClick) {
+      // 让消息系统自己处理点击事件
+      return;
+    }
+    
     const spaLink = e.target.closest('a[href^="#"]') || 
             e.target.closest('a[href^="/"]') && !e.target.closest('a[href^="http"]');
     if (spaLink) {
-      e.preventDefault();
-      console.log('SPA链接被阻止:', spaLink.href);
+      // 只阻止真正的导航链接，不阻止功能性链接
+      const href = spaLink.getAttribute('href');
+      if (href && href !== '#' && !href.includes('javascript:')) {
+        e.preventDefault();
+        // console.log('SPA链接被阻止:', spaLink.href); // 注释掉调试信息
+      }
     }
   });
 

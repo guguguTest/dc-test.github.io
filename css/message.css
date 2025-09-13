@@ -7,6 +7,13 @@
   align-items: center;
   cursor: pointer;
   margin-right: 15px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.message-icon-wrapper:hover {
+  background: rgba(0, 123, 255, 0.1);
 }
 
 /* 移动端消息图标 */
@@ -16,6 +23,13 @@
   align-items: center;
   cursor: pointer;
   margin-right: 10px;
+  padding: 6px;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.message-icon-wrapper-mobile:hover {
+  background: rgba(0, 123, 255, 0.1);
 }
 
 @media (max-width: 768px) {
@@ -42,18 +56,19 @@
 .message-icon {
   font-size: 20px;
   color: #6c757d;
-  transition: color 0.3s;
+  transition: all 0.3s;
 }
 
 .message-icon:hover {
   color: #495057;
+  transform: scale(1.1);
 }
 
 .message-badge {
   position: absolute;
   top: -8px;
   right: -8px;
-  background: #dc3545;
+  background: linear-gradient(135deg, #ff4d4d, #dc3545);
   color: white;
   border-radius: 50%;
   min-width: 20px;
@@ -64,13 +79,33 @@
   font-size: 11px;
   font-weight: bold;
   padding: 0 4px;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.4);
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
+  0% { 
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.4);
+  }
+  50% { 
+    transform: scale(1.15);
+    box-shadow: 0 3px 8px rgba(220, 53, 69, 0.6);
+  }
+  100% { 
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.4);
+  }
+}
+
+@keyframes badge-animate {
   0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  50% { transform: scale(1.3); }
   100% { transform: scale(1); }
+}
+
+.badge-animate {
+  animation: badge-animate 0.3s ease;
 }
 
 /* 消息下拉菜单 - PC端 */
@@ -261,133 +296,169 @@
 /* 消息中心页面 */
 .message-center {
   padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .message-center-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #e9ecef;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 3px solid linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: 12px;
+  padding: 25px;
 }
 
 .message-center-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #343a40;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.message-center-title::before {
+  content: '';
+  width: 5px;
+  height: 32px;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
 }
 
 .message-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .message-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
   border: none;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.message-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 
 .message-btn-primary {
-  background: #007bff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
 
 .message-btn-primary:hover {
-  background: #0056b3;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+  background: linear-gradient(135deg, #5569d8 0%, #6a4291 100%);
 }
 
 .message-btn-danger {
-  background: #dc3545;
+  background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
   color: white;
-}
-
-.message-btn-danger:hover {
-  background: #c82333;
 }
 
 .message-btn-secondary {
-  background: #6c757d;
+  background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
   color: white;
-}
-
-.message-btn-secondary:hover {
-  background: #545b62;
 }
 
 /* 消息列表表格 */
 .message-table {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+  border: 1px solid #e2e8f0;
 }
 
 .message-table table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .message-table th {
-  background: #f8f9fa;
-  padding: 12px 15px;
+  background: linear-gradient(180deg, #f7fafc 0%, #edf2f7 100%);
+  padding: 14px 16px;
   text-align: left;
   font-weight: 600;
-  color: #495057;
-  border-bottom: 2px solid #dee2e6;
+  color: #2d3748;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .message-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #f1f3f5;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f7fafc;
+  color: #4a5568;
+  font-size: 14px;
+}
+
+.message-table tr {
+  transition: all 0.2s;
 }
 
 .message-table tr:hover {
-  background: #f8f9fa;
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
 }
 
 .message-table tr.unread {
-  background: #e7f3ff;
-  font-weight: 500;
+  background: linear-gradient(90deg, rgba(66, 153, 225, 0.1) 0%, rgba(72, 187, 120, 0.1) 100%);
+  font-weight: 600;
+}
+
+.message-table tr.unread td {
+  color: #2d3748;
 }
 
 .message-checkbox {
   width: 18px;
   height: 18px;
   cursor: pointer;
+  accent-color: #667eea;
 }
 
 .message-type-badge {
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 6px 12px;
+  border-radius: 20px;
   font-size: 12px;
-  font-weight: 500;
-  display: inline-block;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .message-type-badge.user {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3);
 }
 
 .message-type-badge.system {
-  background: #fff3e0;
-  color: #f57c00;
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(237, 137, 54, 0.3);
 }
 
 .message-type-badge.notification {
-  background: #f3e5f5;
-  color: #7b1fa2;
+  background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(159, 122, 234, 0.3);
 }
 
 /* 聊天弹窗 */
@@ -629,45 +700,169 @@
 /* 系统消息管理 */
 .system-message-admin {
   padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .admin-message-form {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+  margin-bottom: 25px;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-message-form h3 {
+  color: #2d3748;
+  font-weight: 600;
   margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-message-form h3::before {
+  content: '';
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  border-radius: 2px;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-  color: #495057;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 14px;
 }
 
 .form-control {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
+  padding: 10px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
   outline: none;
   font-size: 14px;
-  transition: border-color 0.3s;
+  transition: all 0.3s;
+  background: white;
 }
 
 .form-control:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
 }
 
 .form-control.textarea {
   min-height: 120px;
   resize: vertical;
+  font-family: inherit;
+}
+
+/* 系统消息详情弹窗样式 */
+.system-message-detail {
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.system-message-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+}
+
+.system-message-header-content {
+  flex: 1;
+}
+
+.system-message-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.system-message-meta {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.system-message-meta .message-type-badge {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.system-message-meta .message-date {
+  color: rgba(255,255,255,0.9);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.system-message-body {
+  padding: 25px;
+  background: #f7fafc;
+}
+
+.sender-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.sender-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 3px solid #e2e8f0;
+}
+
+.sender-details {
+  flex: 1;
+}
+
+.sender-name {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+
+.sender-role {
+  font-size: 13px;
+  color: #718096;
+}
+
+.message-content-box {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.message-content-text {
+  color: #2d3748;
+  line-height: 1.7;
+  font-size: 15px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 /* 移动端适配 */
@@ -696,5 +891,107 @@
   
   .message-table table {
     min-width: 600px;
+  }
+  
+  .system-message-detail {
+    width: 95% !important;
+    margin: 10px auto;
+  }
+}
+
+/* 通用模态框样式 */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1200;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s;
+}
+
+.modal.show {
+  display: flex !important;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow: auto;
+  position: relative;
+  animation: slideUp 0.3s;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  position: relative;
+  border-bottom: 1px solid #e9ecef;
+  padding: 20px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: white;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+  line-height: 1;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  opacity: 1;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e9ecef;
+  text-align: right;
+  background: #f8f9fa;
+}
+
+.btn-ok {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s;
+  font-size: 14px;
+}
+
+.btn-ok:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
