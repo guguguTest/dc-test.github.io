@@ -1990,6 +1990,38 @@ setTimeout(() => {
       updateActiveMenuItem(pageId);
       return; // 重要：直接返回，不继续执行后续代码
     }
+
+    // 消息中心 - 不使用 await
+    if (pageId === 'message-center') {
+      if (typeof renderMessageCenter === 'function') {
+        renderMessageCenter();
+      } else {
+        contentContainer.innerHTML = '<div class="section"><h1>消息中心</h1><p>消息系统加载失败</p></div>';
+      }
+      
+      // 延迟移除加载状态，让页面有时间渲染
+      setTimeout(() => {
+        document.body.classList.remove('spa-loading');
+        updateActiveMenuItem(pageId);
+      }, 100);
+      
+      return;
+    }
+
+    // 系统消息管理页面
+    if (pageId === 'system-message-admin') {
+      document.body.classList.add('spa-loading');
+    
+      try {
+        if (typeof renderSystemMessageAdmin === 'function') {
+          renderSystemMessageAdmin();
+        }
+      } finally {
+        document.body.classList.remove('spa-loading');
+        updateActiveMenuItem(pageId);
+    }
+    return;
+  }
     // ===== 特殊处理结束 =====
     
     if (pages[pageId]) {
@@ -1999,13 +2031,13 @@ setTimeout(() => {
         languageModule.initLanguage();
       }
       
-if (pageId === 'user-settings') {
-  const token = localStorage.getItem('token');
-  if (token) {
-    fetchUserInfo(token);
-  } else {
-    loadPage('login');
-  }
+	if (pageId === 'user-settings') {
+	  const token = localStorage.getItem('token');
+	  if (token) {
+		fetchUserInfo(token);
+	  } else {
+		loadPage('login');
+	  }
   
   // 添加选项卡切换功能
   setTimeout(() => {
@@ -2781,7 +2813,7 @@ if (pageId === 'download') {
           showSuccessMessage('兑换码功能尚未开放');
         });
       }
-      
+
       // 用户管理页面
       if (pageId === 'user-manager') {
         // 后端统一鉴权；此处仅初始化页面逻辑

@@ -63,6 +63,11 @@ function ensureAdmin(pageId) {
 			  <div class="admin-entry-desc">管理网站的实用工具，包括内部页面和下载链接。</div>
 			  <div class="admin-actions"><button class="admin-btn admin-btn-ghost" type="button">进入</button></div>
 			</a>
+			<a class="admin-card admin-entry" id="entry-system-message">
+			  <div class="admin-entry-title">系统消息管理</div>
+			  <div class="admin-entry-desc">发送系统消息和管理自动消息模板。</div>
+			  <div class="admin-actions"><button class="admin-btn admin-btn-ghost" type="button">进入</button></div>
+			</a>
           </div>
         </div>
       </div>
@@ -73,6 +78,7 @@ function ensureAdmin(pageId) {
     root.querySelector('#entry-servers').onclick = (e) => { e.preventDefault(); renderCCBServersPage(); };
     root.querySelector('#entry-games').onclick   = (e) => { e.preventDefault(); renderCCBGamesPage();  };
 	root.querySelector('#entry-tools').onclick = (e) => { e.preventDefault(); if (typeof initToolsAdmin === 'function') {initToolsAdmin();}};
+	root.querySelector('#entry-system-message').onclick = (e) => { e.preventDefault(); if (typeof renderSystemMessageAdmin === 'function') { renderSystemMessageAdmin(); } };
   }
 
   // ---- 二级页：查分服务器设置（读取公开端点；编辑=删除后新增）----
