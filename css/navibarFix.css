@@ -1,0 +1,54 @@
+/* 让左中右三个区域平均分配空间 */
+.top-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 左侧区域 - 使用flex: 1 */
+.navbar-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  justify-content: flex-start;
+}
+
+/* 中央区域 - 使用flex: 0 让内容决定宽度 */
+.navbar-center {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px; /* 给标题一些呼吸空间 */
+}
+
+/* 右侧区域 - 使用flex: 1 与左侧平衡 */
+.navbar-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* 确保品牌标题不会换行 */
+.navbar-center .brand {
+  white-space: nowrap;
+}
+
+/* 移动端响应式调整 */
+@media (max-width: 768px) {
+  /* 移动端使用更紧凑的布局 */
+  .navbar-left {
+    flex: 0 0 auto; /* 只占用必要空间 */
+  }
+  
+  .navbar-center {
+    flex: 1; /* 占用剩余空间 */
+    padding: 0 10px;
+  }
+  
+  .navbar-right {
+    flex: 0 0 auto; /* 只占用必要空间 */
+  }
+}

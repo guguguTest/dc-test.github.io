@@ -11,15 +11,15 @@ const CursorManager = {
     },
     custom1: {
       name: '井盖',
-      description: '个性化鼠标样式',
+      description: 'Dungeon & Fighter',
       class: 'cursor-custom1',
       icon: 'fas fa-circle',
       image: 'https://oss.am-all.com.cn/asset/img/cursor/cursor1_preview.png',
       value: 'custom1'
     },
     custom2: {
-      name: 'まひろ',
-      description: '可爱风格鼠标',
+      name: '緒山 まひろ',
+      description: 'お兄ちゃんはおしまい！',
       class: 'cursor-custom2',
       icon: 'fas fa-heart',
       image: 'https://oss.am-all.com.cn/asset/img/cursor/cursor2_preview.png',

@@ -2389,23 +2389,48 @@ if (pageId === 'settings') {
     rememberLanguage.checked = localStorage.getItem('rememberLanguage') === 'true';
   }
   
-  // 添加语言切换事件监听器
+  // 添加语言切换事件监听器（修复版：不刷新页面）
   if (languageSelect) {
     languageSelect.addEventListener('change', function() {
       const lang = this.value;
       const remember = document.getElementById('remember-language').checked;
       
+      // 保存语言设置
+      localStorage.setItem('language', lang);
       if (remember) {
-        localStorage.setItem('language', lang);
+        localStorage.setItem('savedLanguage', lang);
       }
       
-      // 更新URL参数并重新加载页面（与顶部导航栏相同的机制）
+      // 直接调用语言模块更新，不刷新页面
+      if (typeof languageModule !== 'undefined' && languageModule.setLanguage) {
+        // 显示加载提示（可选）
+        const loadingEl = document.querySelector('.spa-loader');
+        if (loadingEl) {
+          loadingEl.style.display = 'flex';
+        }
+        
+        // 使用 setTimeout 确保UI更新流畅
+        setTimeout(() => {
+          languageModule.setLanguage(lang);
+          
+          // 隐藏加载提示
+          if (loadingEl) {
+            loadingEl.style.display = 'none';
+          }
+          
+          // 显示成功提示
+          if (typeof showSuccessMessage === 'function') {
+            showSuccessMessage('语言已切换为: ' + (lang === 'zh-cn' ? '中文' : lang === 'en-us' ? 'English' : '日本語'));
+          }
+        }, 50);
+      }
+      
+      // 更新URL参数（不刷新页面）
       const url = new URL(window.location);
       url.searchParams.set('lang', lang);
       window.history.replaceState({}, '', url);
       
-      // 重新加载页面以应用语言更改
-      window.location.reload();
+      // 重要：移除了 window.location.reload() 调用
     });
   }
   
@@ -2413,6 +2438,14 @@ if (pageId === 'settings') {
   if (rememberLanguage) {
     rememberLanguage.addEventListener('change', function() {
       localStorage.setItem('rememberLanguage', this.checked);
+      if (this.checked) {
+        const currentLang = document.getElementById('language-select').value;
+        localStorage.setItem('savedLanguage', currentLang);
+        showSuccessMessage('已启用语言记忆功能');
+      } else {
+        localStorage.removeItem('savedLanguage');
+        showSuccessMessage('已关闭语言记忆功能');
+      }
     });
   }
   
@@ -2433,18 +2466,25 @@ if (pageId === 'settings') {
     }
   }, 100);
   
-  // 修改保存按钮事件
+  // 修改保存按钮事件（移除页面刷新）
   const saveBtn = document.getElementById('save-settings');
   if (saveBtn) {
     saveBtn.addEventListener('click', function() {
       const language = document.getElementById('language-select').value;
       const rememberLanguage = document.getElementById('remember-language').checked;
       
+      // 保存设置
       localStorage.setItem('language', language);
       localStorage.setItem('rememberLanguage', rememberLanguage);
       
+      if (rememberLanguage) {
+        localStorage.setItem('savedLanguage', language);
+      }
+      
       // 鼠标样式已经在选择时自动保存，这里只需要显示成功消息
       showSuccessMessage('设置已保存');
+      
+      // 移除了 setTimeout 和 window.location.reload()
     });
   }
 }
@@ -2525,13 +2565,13 @@ function initCursorSettingsManually() {
   });
 }
 
-// 应用鼠标样式的备用函数
-function applyCursorStyle(styleName) {
-  // 移除所有鼠标样式类
-  document.body.classList.remove('cursor-default', 'cursor-custom1', 'cursor-custom2');
-  
-  // 应用新的鼠标样式
-  document.body.classList.add(`cursor-${styleName}`);
+		// 应用鼠标样式的备用函数
+		function applyCursorStyle(styleName) {
+		  // 移除所有鼠标样式类
+		  document.body.classList.remove('cursor-default', 'cursor-custom1', 'cursor-custom2');
+		  
+		  // 应用新的鼠标样式
+		  document.body.classList.add(`cursor-${styleName}`);
 }
 
 		if (pageId === 'user-manager') {
@@ -2542,8 +2582,8 @@ function applyCursorStyle(styleName) {
 		  }
 		}
 		
-if (pageId === 'download') {
-// 从本地存储获取用户信息
+		if (pageId === 'download') {
+		// 从本地存储获取用户信息
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         
         // 即使权限不足也尝试加载内容，因为可能有公开内容

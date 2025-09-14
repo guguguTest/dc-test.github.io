@@ -645,7 +645,7 @@ download: `
 	// 兑换页面
 	'exchange': `
 	  <div class="section">
-		<h1 class="page-title">兑换</h1>
+		<h1 class="page-title">兑换码</h1>
 		<button class="back-button" data-page="home">
 		  <i class="fas fa-arrow-left me-2"></i>
 		  <span>返回</span>
