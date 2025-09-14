@@ -6,10 +6,7 @@ const languageModule = (function() {
         const translations = {
             'zh-cn': {
                 // 导航栏
-                'navbar-brand': 'DATA CENTER',
-                'nav-home-text': '返回EvilLeaker主页',
-                'nav-download-text': 'N/A',
-                'nav-about-text': '关于',
+                'navbar-brand': 'EVIL LEAKER',
                 'language-text': '语言',
                 
                 // 侧边栏
@@ -19,9 +16,9 @@ const languageModule = (function() {
                 'sidebar-help': '帮助',
                 'sidebar-game-download': '游戏下载',
                 'sidebar-archive': '资源存档',
-				'sidebar-tools': '实用工具',
-				'sidebar-patcher': '补丁工具',
-				'sidebar-fortune': '每日签到',
+                'sidebar-tools': '实用工具',
+                'sidebar-patcher': '补丁工具',
+                'sidebar-fortune': '每日签到',
                 
                 // 主内容-下载
                 'download-heading': '下载',
@@ -86,10 +83,7 @@ const languageModule = (function() {
 
             'en-us': {
                 // 导航栏
-                'navbar-brand': 'DATA CENTER',
-                'nav-home-text': 'Home Page',
-                'nav-download-text': 'Downloads',
-                'nav-about-text': 'About',
+                'navbar-brand': 'EVIL LEAKER',
                 'language-text': 'Language',
 
                 // 侧边栏
@@ -99,9 +93,9 @@ const languageModule = (function() {
                 'sidebar-help': 'Help',
                 'sidebar-game-download': 'Game Downloads',
                 'sidebar-archive': 'Archive',
-				'sidebar-tools': 'Tools',
-				'sidebar-patcher': 'Patcher',
-				'sidebar-fortune': 'Daily Fortune',
+                'sidebar-tools': 'Tools',
+                'sidebar-patcher': 'Patcher',
+                'sidebar-fortune': 'Daily Fortune',
 
                 // 主内容-下载
                 'download-heading': 'Download',
@@ -165,25 +159,22 @@ const languageModule = (function() {
             },
 
             'ja-jp': {
-				// 顶部导航栏
-                'navbar-brand': 'DATA CENTER',
-                'nav-home-text': 'ホームページ',
-                'nav-download-text': 'N/A',
-                'nav-about-text': 'について',
+                // 顶部导航栏
+                'navbar-brand': 'EVIL LEAKER',
                 'language-text': '言語',
-				
-				// 侧边栏
+                
+                // 侧边栏
                 'sidebar-home': 'トップページ',
                 'sidebar-data': 'ダウンロード',
                 'sidebar-settings': '設定',
                 'sidebar-help': 'ヘルプ',
                 'sidebar-game-download': 'ゲームダウンロード',
                 'sidebar-archive': 'アーカイブ',
-				'sidebar-tools': 'ツール',
-				'sidebar-patcher': 'パッチツール',
-				'sidebar-fortune': 'おみくじ',
-				
-				// 下载页面
+                'sidebar-tools': 'ツール',
+                'sidebar-patcher': 'パッチツール',
+                'sidebar-fortune': 'おみくじ',
+                
+                // 下载页面
                 'download-heading': 'ダウンロード',
                 'game-heading': 'ゲーム',
                 'archive-heading': 'アーカイブ',
@@ -318,97 +309,74 @@ const languageModule = (function() {
 
 // 初始化多语言功能
 document.addEventListener("DOMContentLoaded", function() {
-    // 获取DOM元素
-    const languageBtn = document.querySelector('.language-btn');
-    const languageDropdown = document.querySelector('.language-dropdown');
-    
     // 初始化语言
     languageModule.initLanguage();
     
-    // 语言切换功能
-    document.querySelectorAll('.language-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const lang = this.getAttribute('href').split('=')[1];
-            
-            // 保存语言选择
-            localStorage.setItem('language', lang);
-            const rememberLanguage = localStorage.getItem('rememberLanguage') === 'true';
-            if (rememberLanguage) {
-                localStorage.setItem('savedLanguage', lang);
-            }
-            
-            // 设置语言（不重新加载页面）
-            languageModule.setLanguage(lang);
-            
-            // 关闭下拉菜单
-            if (languageDropdown) {
-                languageDropdown.classList.remove('show');
-            }
-        });
-    });
-
-    // 语言下拉菜单显示/隐藏功能
-    if (languageBtn) {
-        languageBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            if (languageDropdown) {
-                languageDropdown.classList.toggle('show');
-            }
-        });
-    }
-    
-    // 点击页面其他地方关闭下拉菜单
+    // 统一的事件处理系统
     document.addEventListener('click', function(e) {
-        if (languageDropdown && languageDropdown.classList.contains('show')) {
-            if (!e.target.closest('.language-selector')) {
-                languageDropdown.classList.remove('show');
+        // 处理语言按钮点击
+        const languageBtn = e.target.closest('.language-btn');
+        if (languageBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // 找到对应的下拉菜单
+            const dropdown = languageBtn.nextElementSibling;
+            if (dropdown && dropdown.classList.contains('language-dropdown')) {
+                // 关闭其他所有下拉菜单
+                document.querySelectorAll('.language-dropdown.show').forEach(d => {
+                    if (d !== dropdown) {
+                        d.classList.remove('show');
+                    }
+                });
+                
+                // 切换当前下拉菜单
+                dropdown.classList.toggle('show');
             }
+            return;
+        }
+        
+        // 处理语言选项点击
+        const languageItem = e.target.closest('.language-item');
+        if (languageItem) {
+            e.preventDefault();
+            const href = languageItem.getAttribute('href');
+            if (href) {
+                const lang = href.split('=')[1];
+                
+                // 保存语言选择
+                localStorage.setItem('language', lang);
+                const rememberLanguage = localStorage.getItem('rememberLanguage') === 'true';
+                if (rememberLanguage) {
+                    localStorage.setItem('savedLanguage', lang);
+                }
+                
+                // 设置语言（不重新加载页面）
+                languageModule.setLanguage(lang);
+                
+                // 关闭所有下拉菜单
+                document.querySelectorAll('.language-dropdown.show').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+            return;
+        }
+        
+        // 点击其他地方关闭所有语言下拉菜单
+        if (!e.target.closest('.language-selector') && 
+            !e.target.closest('.language-selector-mobile') && 
+            !e.target.closest('.language-selector-pc') &&
+            !e.target.closest('.language-dropdown')) {
+            document.querySelectorAll('.language-dropdown.show').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
         }
     });
-});
-
-// 语言菜单点击事件处理
-document.addEventListener('DOMContentLoaded', function() {
-  // 处理语言按钮点击
-  const languageBtns = document.querySelectorAll('.language-btn');
-  
-  languageBtns.forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // 找到对应的下拉菜单
-      const dropdown = this.nextElementSibling;
-      if (dropdown && dropdown.classList.contains('language-dropdown')) {
-        // 关闭其他下拉菜单
-        document.querySelectorAll('.language-dropdown.show').forEach(d => {
-          if (d !== dropdown) {
-            d.classList.remove('show');
-          }
+    
+    // 防止下拉菜单内部点击冒泡（备用）
+    document.querySelectorAll('.language-dropdown').forEach(dropdown => {
+        dropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
         });
-        
-        // 切换当前下拉菜单
-        dropdown.classList.toggle('show');
-      }
     });
-  });
-  
-  // 点击外部关闭下拉菜单
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.language-selector') && 
-        !e.target.closest('.language-selector-mobile') && 
-        !e.target.closest('.language-selector-pc')) {
-      document.querySelectorAll('.language-dropdown.show').forEach(dropdown => {
-        dropdown.classList.remove('show');
-      });
-    }
-  });
-  
-  // 防止下拉菜单内部点击冒泡
-  document.querySelectorAll('.language-dropdown').forEach(dropdown => {
-    dropdown.addEventListener('click', function(e) {
-      e.stopPropagation();
-    });
-  });
 });

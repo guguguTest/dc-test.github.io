@@ -379,17 +379,62 @@
 }
 
 .message-btn {
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 8px 16px; /* 减小内边距 */
+  border-radius: 6px; /* 减小圆角 */
   border: none;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px; /* 减小字体 */
+  font-weight: 500; /* 减轻字重 */
   cursor: pointer;
   transition: all 0.3s;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px; /* 减小图标间距 */
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 移动端进一步缩小 */
+@media (max-width: 768px) {
+  .message-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    gap: 4px;
+  }
+  
+  .message-btn i {
+    font-size: 12px;
+  }
+
+  /* 移动端按钮组换行显示 */
+  .message-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .message-actions .message-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 系统消息管理页面标题样式 */
+.system-message-list-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 30px 0 20px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.system-message-list-title::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  border-radius: 2px;
 }
 
 .message-btn:hover {
@@ -475,15 +520,17 @@
 }
 
 .message-type-badge {
-  padding: 6px 12px;
+  padding: 4px 10px; /* 减小内边距 */
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 11px; /* 减小字体大小 */
   font-weight: 600;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px; /* 减小图标间距 */
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px; /* 减小字间距 */
+  white-space: nowrap; /* 防止文字换行 */
+  min-width: fit-content; /* 自适应宽度 */
 }
 
 .message-type-badge.user {
@@ -502,6 +549,34 @@
   background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
   color: white;
   box-shadow: 0 2px 4px rgba(159, 122, 234, 0.3);
+}
+
+/* 新增自动消息徽章样式 */
+.message-type-badge.auto {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(72, 187, 120, 0.3);
+}
+
+/* 在表格中的徽章特殊处理 */
+.message-table .message-type-badge {
+  font-size: 10px; /* 表格中更小的字体 */
+  padding: 3px 8px; /* 更紧凑的内边距 */
+  letter-spacing: 0.1px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .message-type-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    gap: 2px;
+  }
+  
+  .message-table .message-type-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
 }
 
 /* 聊天弹窗 - 优化高度 */
@@ -952,10 +1027,11 @@
 .system-message-meta .message-type-badge {
   background: rgba(255,255,255,0.2);
   color: white;
-  padding: 4px 12px;
+  padding: 3px 10px; /* 调整内边距 */
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 11px; /* 统一字体大小 */
   font-weight: 600;
+  white-space: nowrap; /* 防止换行 */
 }
 
 .system-message-meta .message-date {
@@ -1017,6 +1093,108 @@
   font-size: 15px;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+/* 自动消息设置弹窗样式 */
+.auto-message-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1100;
+  align-items: center;
+  justify-content: center;
+}
+
+.auto-message-modal.show {
+  display: flex;
+}
+
+.auto-message-container {
+  background: white;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  border-radius: 12px;
+  overflow: hidden;
+  animation: slideUp 0.3s;
+}
+
+.auto-message-header {
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.auto-message-title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.auto-message-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auto-message-close:hover {
+  opacity: 1;
+}
+
+.auto-message-body {
+  padding: 20px;
+  max-height: calc(80vh - 80px);
+  overflow-y: auto;
+}
+
+/* 表单控件大小优化 */
+.admin-message-form .form-control {
+  padding: 8px 12px; /* 减小内边距 */
+  font-size: 14px;
+}
+
+.admin-message-form .form-group label {
+  font-size: 13px; /* 减小标签字体 */
+}
+
+/* 移动端表单优化 */
+@media (max-width: 768px) {
+  .admin-message-form {
+    padding: 15px;
+  }
+  
+  .admin-message-form h3 {
+    font-size: 18px;
+  }
+  
+  .auto-message-container {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .auto-message-header {
+    padding: 15px;
+  }
+  
+  .auto-message-title {
+    font-size: 18px;
+  }
 }
 
 /* 系统消息弹窗移动端适配 */
