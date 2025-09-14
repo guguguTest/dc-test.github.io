@@ -1145,49 +1145,167 @@ download: `
     'data-center': `<div class="section"><h1>数据中心</h1><p>数据中心内容...</p></div>`,
 	
 	// 设置页面
-	settings: `
-	  <div class="settings-container">
-		<h1 class="page-title" id="option-title">设置</h1>
-		<button class="back-button" data-page="home">
-		  <i class="fas fa-arrow-left me-2"></i>
-		  <span id="back-to-home">返回</span>
-		</button>
-		
-		<div class="setting-card">
-		  <div class="setting-header">
-			<i class="fas fa-language me-2"></i>
-			<span id="lang-option">语言设置</span>
-		  </div>
-		  <div class="setting-body">
-			<div class="form-group">
-			  <label for="language-select">界面语言</label>
-			  <select id="language-select" class="form-control">
-				<option value="zh-cn">简体中文</option>
-				<option value="en-us">English</option>
-				<option value="ja-jp">日本語</option>
-			  </select>
-			</div>
-			<div class="setting-item">
-			  <div>
-				<span id="option-item">记住语言偏好</span>
-				<div class="setting-description" id="option-text">下次访问时自动使用您选择的语言</div>
-			  </div>
-			  <label class="switch">
-				<input type="checkbox" id="remember-language">
-				<span class="slider"></span>
-			  </label>
-			</div>
-		  </div>
-		</div>
-		
-		<div class="settings-buttons">
-		  <button class="save-btn" id="save-settings">
-			<i class="fas fa-save me-2"></i>
-			<span id="option-save">保存设置</span>
-		  </button>
-		</div>
-	  </div>
-	`,
+settings: `
+  <div class="settings-container">
+    <h1 class="page-title" id="option-title">设置</h1>
+    <button class="back-button" data-page="home">
+      <i class="fas fa-arrow-left me-2"></i>
+      <span id="back-to-home">返回</span>
+    </button>
+    
+    <!-- 语言设置卡片 -->
+    <div class="setting-card">
+      <div class="setting-header">
+        <i class="fas fa-language me-2"></i>
+        <span id="lang-option">语言设置</span>
+      </div>
+      <div class="setting-body">
+        <div class="form-group">
+          <label for="language-select">界面语言</label>
+          <select id="language-select" class="form-control">
+            <option value="zh-cn">简体中文</option>
+            <option value="en-us">English</option>
+            <option value="ja-jp">日本語</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <div>
+            <span id="option-item">记住语言偏好</span>
+            <div class="setting-description" id="option-text">下次访问时自动使用您选择的语言</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="remember-language">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 鼠标样式设置卡片 -->
+    <div class="setting-card" id="cursor-settings-card">
+      <div class="setting-header">
+        <i class="fas fa-mouse-pointer me-2"></i>
+        <span>鼠标样式</span>
+      </div>
+      <div class="setting-body">
+        <!-- 移动端提示 -->
+        <div class="cursor-mobile-hint">
+          <i class="fas fa-info-circle me-2"></i>
+          鼠标样式设置仅在桌面设备上生效
+        </div>
+        
+        <div class="setting-description" style="margin-bottom: 15px;">
+          选择您喜欢的鼠标指针样式，让浏览体验更加个性化
+        </div>
+        
+        <!-- 鼠标样式预览容器 - 这里是关键 -->
+        <div id="cursor-preview-container">
+          <!-- JavaScript将在这里生成选项 -->
+          <div class="text-center" style="padding: 20px; color: #999;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
+            <p style="margin-top: 10px;">加载中...</p>
+          </div>
+        </div>
+        
+        <div class="setting-description" style="margin-top: 15px; font-size: 0.85rem; color: #94a3b8;">
+          <i class="fas fa-info-circle me-1"></i>
+          提示：自定义鼠标样式需要加载额外资源，首次使用可能需要几秒钟加载
+        </div>
+      </div>
+    </div>
+    
+    <div class="settings-buttons">
+      <button class="save-btn" id="save-settings">
+        <i class="fas fa-save me-2"></i>
+        <span id="option-save">保存设置</span>
+      </button>
+    </div>
+  </div>
+  
+  <!-- 在页面底部添加初始化脚本 -->
+  <script>
+    // 页面加载后立即初始化鼠标设置
+    setTimeout(function() {
+      console.log('初始化鼠标设置界面...');
+      
+      const container = document.getElementById('cursor-preview-container');
+      if (!container) {
+        console.error('找不到鼠标预览容器');
+        return;
+      }
+      
+      const currentStyle = localStorage.getItem('cursorStyle') || 'default';
+      
+      // 鼠标样式配置
+      const cursorStyles = {
+        default: {
+          name: '默认',
+          description: '系统默认鼠标',
+          icon: 'fas fa-mouse-pointer',
+          value: 'default'
+        },
+        custom1: {
+          name: '井盖',
+          description: '个性化鼠标样式',
+          icon: 'fas fa-circle',
+          value: 'custom1'
+        },
+        custom2: {
+          name: 'まひろ',
+          description: '可爱风格鼠标',
+          icon: 'fas fa-heart',
+          value: 'custom2'
+        }
+      };
+      
+      // 创建预览卡片
+      let html = '<div class="cursor-preview">';
+      
+      Object.entries(cursorStyles).forEach(([key, style]) => {
+        const isActive = key === currentStyle;
+        html += \`
+          <div class="cursor-option \${isActive ? 'active' : ''}" data-cursor="\${key}">
+            <div class="cursor-option-icon">
+              <i class="\${style.icon}"></i>
+            </div>
+            <div class="cursor-option-name">\${style.name}</div>
+            <div class="cursor-option-desc">\${style.description}</div>
+          </div>
+        \`;
+      });
+      
+      html += '</div>';
+      container.innerHTML = html;
+      
+      // 添加点击事件
+      container.querySelectorAll('.cursor-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+          const cursorType = this.dataset.cursor;
+          
+          // 更新UI
+          document.querySelectorAll('.cursor-option').forEach(opt => {
+            opt.classList.remove('active');
+          });
+          this.classList.add('active');
+          
+          // 保存设置
+          localStorage.setItem('cursorStyle', cursorType);
+          
+          // 应用样式
+          document.body.classList.remove('cursor-default', 'cursor-custom1', 'cursor-custom2');
+          document.body.classList.add('cursor-' + cursorType);
+          
+          // 显示成功消息
+          if (typeof showSuccessMessage === 'function') {
+            showSuccessMessage('鼠标样式已切换为: ' + cursorStyles[cursorType].name);
+          }
+        });
+      });
+      
+      console.log('鼠标设置界面初始化完成');
+    }, 100);
+  </script>
+`,
 	
     // ICF Editor
     icfeditor: `

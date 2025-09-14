@@ -1,0 +1,199 @@
+/* 鼠标样式定义 */
+:root {
+  --cursor-default: auto;
+  --cursor-pointer: pointer;
+}
+
+/* 默认鼠标样式 */
+body.cursor-default {
+  cursor: var(--cursor-default);
+}
+
+body.cursor-default a,
+body.cursor-default button,
+body.cursor-default [role="button"],
+body.cursor-default .clickable,
+body.cursor-default input[type="submit"],
+body.cursor-default input[type="button"],
+body.cursor-default select,
+body.cursor-default .sidebar-nav a,
+body.cursor-default .tool-card,
+body.cursor-default .help-card,
+body.cursor-default .patcher-card {
+  cursor: pointer;
+}
+
+/* 自定义鼠标1 - 井盖 */
+body.cursor-custom1 {
+  cursor: url('https://oss.am-all.com.cn/asset/img/cursor/cursor1_jinggai.cur'), auto;
+}
+
+body.cursor-custom1 a,
+body.cursor-custom1 button,
+body.cursor-custom1 [role="button"],
+body.cursor-custom1 .clickable,
+body.cursor-custom1 input[type="submit"],
+body.cursor-custom1 input[type="button"],
+body.cursor-custom1 select,
+body.cursor-custom1 .sidebar-nav a,
+body.cursor-custom1 .tool-card,
+body.cursor-custom1 .help-card,
+body.cursor-custom1 .patcher-card {
+  cursor: url('https://oss.am-all.com.cn/asset/img/cursor/cursor1_jinggai_pointer.cur'), pointer;
+}
+
+/* 自定义鼠标2 - まひろ */
+body.cursor-custom2 {
+  cursor: url('https://oss.am-all.com.cn/asset/img/cursor/cursor2_mahiro.cur'), auto;
+}
+
+body.cursor-custom2 a,
+body.cursor-custom2 button,
+body.cursor-custom2 [role="button"],
+body.cursor-custom2 .clickable,
+body.cursor-custom2 input[type="submit"],
+body.cursor-custom2 input[type="button"],
+body.cursor-custom2 select,
+body.cursor-custom2 .sidebar-nav a,
+body.cursor-custom2 .tool-card,
+body.cursor-custom2 .help-card,
+body.cursor-custom2 .patcher-card {
+  cursor: url('https://oss.am-all.com.cn/asset/img/cursor/cursor2_mahiro_pointer.cur'), pointer;
+}
+
+/* 文本输入框特殊光标 */
+body.cursor-custom1 input[type="text"],
+body.cursor-custom1 input[type="password"],
+body.cursor-custom1 input[type="email"],
+body.cursor-custom1 input[type="number"],
+body.cursor-custom1 textarea,
+body.cursor-custom2 input[type="text"],
+body.cursor-custom2 input[type="password"],
+body.cursor-custom2 input[type="email"],
+body.cursor-custom2 input[type="number"],
+body.cursor-custom2 textarea {
+  cursor: text;
+}
+
+/* 禁用状态光标 */
+body.cursor-custom1 [disabled],
+body.cursor-custom1 .disabled,
+body.cursor-custom2 [disabled],
+body.cursor-custom2 .disabled {
+  cursor: not-allowed !important;
+}
+
+/* 加载状态光标 */
+body.cursor-custom1 .loading,
+body.cursor-custom2 .loading,
+.spa-loading body.cursor-custom1,
+.spa-loading body.cursor-custom2 {
+  cursor: wait !important;
+}
+
+/* 鼠标样式预览卡片 */
+.cursor-preview {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.cursor-option {
+  flex: 1;
+  min-width: 150px;
+  padding: 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.cursor-option:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.cursor-option.active {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.cursor-option-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  color: #64748b;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cursor-option.active .cursor-option-icon {
+  color: #3b82f6;
+}
+
+.cursor-option-image {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+.cursor-option-name {
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 5px;
+  font-size: 1.1rem;
+}
+
+.cursor-option-desc {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+/* 动画效果 */
+@keyframes cursorPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.cursor-option.active .cursor-option-icon {
+  animation: cursorPulse 2s infinite;
+}
+
+/* 移动端提示 */
+.cursor-mobile-hint {
+  display: none;
+  padding: 12px;
+  background: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 20px;
+  color: #92400e;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .cursor-mobile-hint {
+    display: block;
+  }
+  
+  .cursor-preview {
+    /* 在移动端隐藏鼠标设置 */
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}

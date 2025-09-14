@@ -2328,59 +2328,162 @@ setTimeout(() => {
   }
 }
 
-      if (pageId === 'settings') {
-        // 初始化设置值
-        const languageSelect = document.getElementById('language-select');
-        const rememberLanguage = document.getElementById('remember-language');
-        
-        if (languageSelect) {
-          languageSelect.value = localStorage.getItem('language') || 'zh-cn';
-        }
-        if (rememberLanguage) {
-          rememberLanguage.checked = localStorage.getItem('rememberLanguage') === 'true';
-        }
-        
-        // 添加语言切换事件监听器
-        if (languageSelect) {
-          languageSelect.addEventListener('change', function() {
-            const lang = this.value;
-            const remember = document.getElementById('remember-language').checked;
-            
-            if (remember) {
-              localStorage.setItem('language', lang);
-            }
-            
-            // 更新URL参数并重新加载页面（与顶部导航栏相同的机制）
-            const url = new URL(window.location);
-            url.searchParams.set('lang', lang);
-            window.history.replaceState({}, '', url);
-            
-            // 重新加载页面以应用语言更改
-            window.location.reload();
-          });
-        }
-        
-        // 记住语言偏好开关事件
-        if (rememberLanguage) {
-          rememberLanguage.addEventListener('change', function() {
-            localStorage.setItem('rememberLanguage', this.checked);
-          });
-        }
-        
-        // 修改保存按钮事件
-        const saveBtn = document.getElementById('save-settings');
-        if (saveBtn) {
-          saveBtn.addEventListener('click', function() {
-            const language = document.getElementById('language-select').value;
-            const rememberLanguage = document.getElementById('remember-language').checked;
-            
-            localStorage.setItem('language', language);
-            localStorage.setItem('rememberLanguage', rememberLanguage);
-            
-            showSuccessMessage('设置已保存');
-          });
-        }
+if (pageId === 'settings') {
+  // 初始化设置值
+  const languageSelect = document.getElementById('language-select');
+  const rememberLanguage = document.getElementById('remember-language');
+  
+  if (languageSelect) {
+    languageSelect.value = localStorage.getItem('language') || 'zh-cn';
+  }
+  if (rememberLanguage) {
+    rememberLanguage.checked = localStorage.getItem('rememberLanguage') === 'true';
+  }
+  
+  // 添加语言切换事件监听器
+  if (languageSelect) {
+    languageSelect.addEventListener('change', function() {
+      const lang = this.value;
+      const remember = document.getElementById('remember-language').checked;
+      
+      if (remember) {
+        localStorage.setItem('language', lang);
       }
+      
+      // 更新URL参数并重新加载页面（与顶部导航栏相同的机制）
+      const url = new URL(window.location);
+      url.searchParams.set('lang', lang);
+      window.history.replaceState({}, '', url);
+      
+      // 重新加载页面以应用语言更改
+      window.location.reload();
+    });
+  }
+  
+  // 记住语言偏好开关事件
+  if (rememberLanguage) {
+    rememberLanguage.addEventListener('change', function() {
+      localStorage.setItem('rememberLanguage', this.checked);
+    });
+  }
+  
+  // ===== 重要：初始化鼠标样式设置 =====
+  setTimeout(() => {
+    // 方法1：如果有全局函数
+    if (typeof window.initCursorSettings === 'function') {
+      window.initCursorSettings();
+    }
+    // 方法2：直接调用CursorManager
+    else if (typeof CursorManager !== 'undefined' && CursorManager.initSettingsUI) {
+      CursorManager.initSettingsUI();
+    }
+    // 方法3：手动创建界面
+    else {
+      console.log('正在手动初始化鼠标设置界面...');
+      initCursorSettingsManually();
+    }
+  }, 100);
+  
+  // 修改保存按钮事件
+  const saveBtn = document.getElementById('save-settings');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+      const language = document.getElementById('language-select').value;
+      const rememberLanguage = document.getElementById('remember-language').checked;
+      
+      localStorage.setItem('language', language);
+      localStorage.setItem('rememberLanguage', rememberLanguage);
+      
+      // 鼠标样式已经在选择时自动保存，这里只需要显示成功消息
+      showSuccessMessage('设置已保存');
+    });
+  }
+}
+
+// 手动初始化鼠标设置界面的备用函数
+function initCursorSettingsManually() {
+  const container = document.getElementById('cursor-preview-container');
+  if (!container) {
+    console.error('找不到鼠标预览容器');
+    return;
+  }
+  
+  const currentStyle = localStorage.getItem('cursorStyle') || 'default';
+  
+  // 鼠标样式配置
+  const cursorStyles = {
+    default: {
+      name: '默认',
+      description: '系统默认鼠标',
+      icon: 'fas fa-mouse-pointer',
+      value: 'default'
+    },
+    custom1: {
+      name: '井盖',
+      description: '个性化鼠标样式',
+      icon: 'fas fa-circle',
+      value: 'custom1'
+    },
+    custom2: {
+      name: 'まひろ',
+      description: '可爱风格鼠标',
+      icon: 'fas fa-heart',
+      value: 'custom2'
+    }
+  };
+  
+  // 创建预览卡片
+  let html = '<div class="cursor-preview">';
+  
+  Object.entries(cursorStyles).forEach(([key, style]) => {
+    const isActive = key === currentStyle;
+    html += `
+      <div class="cursor-option ${isActive ? 'active' : ''}" data-cursor="${key}">
+        <div class="cursor-option-icon">
+          <i class="${style.icon}"></i>
+        </div>
+        <div class="cursor-option-name">${style.name}</div>
+        <div class="cursor-option-desc">${style.description}</div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  container.innerHTML = html;
+  
+  // 添加点击事件
+  container.querySelectorAll('.cursor-option').forEach(option => {
+    option.addEventListener('click', function(e) {
+      const cursorType = this.dataset.cursor;
+      
+      // 更新UI
+      document.querySelectorAll('.cursor-option').forEach(opt => {
+        opt.classList.remove('active');
+      });
+      this.classList.add('active');
+      
+      // 保存设置
+      localStorage.setItem('cursorStyle', cursorType);
+      
+      // 应用样式
+      applyCursorStyle(cursorType);
+      
+      // 显示成功消息
+      if (typeof showSuccessMessage === 'function') {
+        showSuccessMessage(`鼠标样式已切换为: ${cursorStyles[cursorType].name}`);
+      }
+    });
+  });
+}
+
+// 应用鼠标样式的备用函数
+function applyCursorStyle(styleName) {
+  // 移除所有鼠标样式类
+  document.body.classList.remove('cursor-default', 'cursor-custom1', 'cursor-custom2');
+  
+  // 应用新的鼠标样式
+  document.body.classList.add(`cursor-${styleName}`);
+}
 
 		if (pageId === 'user-manager') {
 		  // 权限已在前面通过 /api/check-permission 检查
