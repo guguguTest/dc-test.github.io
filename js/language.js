@@ -367,3 +367,48 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
+// 语言菜单点击事件处理
+document.addEventListener('DOMContentLoaded', function() {
+  // 处理语言按钮点击
+  const languageBtns = document.querySelectorAll('.language-btn');
+  
+  languageBtns.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // 找到对应的下拉菜单
+      const dropdown = this.nextElementSibling;
+      if (dropdown && dropdown.classList.contains('language-dropdown')) {
+        // 关闭其他下拉菜单
+        document.querySelectorAll('.language-dropdown.show').forEach(d => {
+          if (d !== dropdown) {
+            d.classList.remove('show');
+          }
+        });
+        
+        // 切换当前下拉菜单
+        dropdown.classList.toggle('show');
+      }
+    });
+  });
+  
+  // 点击外部关闭下拉菜单
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.language-selector') && 
+        !e.target.closest('.language-selector-mobile') && 
+        !e.target.closest('.language-selector-pc')) {
+      document.querySelectorAll('.language-dropdown.show').forEach(dropdown => {
+        dropdown.classList.remove('show');
+      });
+    }
+  });
+  
+  // 防止下拉菜单内部点击冒泡
+  document.querySelectorAll('.language-dropdown').forEach(dropdown => {
+    dropdown.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+  });
+});

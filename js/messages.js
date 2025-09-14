@@ -15,6 +15,13 @@
 
   // 初始化消息系统
   function initMessageSystem() {
+    // 先检查登录状态
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // 未登录不初始化消息系统
+      return;
+    }
+    
     // 添加消息图标到导航栏
     addMessageIconToNavbar();
     
@@ -30,43 +37,83 @@
 
   // 添加消息图标到导航栏
   function addMessageIconToNavbar() {
-    const navbarRight = document.querySelector('.navbar-right');
-    
-    if (!navbarRight) return;
-    
     // 检查是否已存在
     if (document.getElementById('message-icon-wrapper')) return;
     
     // PC端消息图标
-    const messageIconHTML = `
-      <div class="message-icon-wrapper" id="message-icon-wrapper">
-        <i class="fas fa-envelope message-icon"></i>
-        <span class="message-badge" id="message-badge" style="display: none;">0</span>
-        <div class="message-dropdown" id="message-dropdown"></div>
-      </div>
-    `;
+    const pcPlaceholder = document.getElementById('pc-message-placeholder');
+    if (pcPlaceholder) {
+      const pcMessageIconHTML = `
+        <div class="message-icon-wrapper" id="message-icon-wrapper">
+          <i class="fas fa-envelope message-icon"></i>
+          <span class="message-badge" id="message-badge" style="display: none;">0</span>
+          <div class="message-dropdown" id="message-dropdown"></div>
+        </div>
+      `;
+      pcPlaceholder.innerHTML = pcMessageIconHTML;
+    }
     
     // 移动端消息图标
-    const mobileMessageIconHTML = `
-      <div class="message-icon-wrapper-mobile" id="message-icon-wrapper-mobile">
-        <i class="fas fa-envelope message-icon"></i>
-        <span class="message-badge" id="message-badge-mobile" style="display: none;">0</span>
-        <div class="message-dropdown-mobile" id="message-dropdown-mobile"></div>
-      </div>
-    `;
-    
-    // PC端添加到右侧
-    const userArea = navbarRight.querySelector('.user-area-container');
-    if (userArea) {
-      userArea.insertAdjacentHTML('afterbegin', messageIconHTML);
-    }
-    
-    // 移动端添加到导航栏中间（标题前）
-    const navbarCenter = document.querySelector('.navbar-center');
-    if (navbarCenter) {
-      navbarCenter.insertAdjacentHTML('afterbegin', mobileMessageIconHTML);
+    const mobilePlaceholder = document.getElementById('mobile-message-placeholder');
+    if (mobilePlaceholder) {
+      const mobileMessageIconHTML = `
+        <div class="message-icon-wrapper-mobile" id="message-icon-wrapper-mobile">
+          <i class="fas fa-envelope message-icon"></i>
+          <span class="message-badge" id="message-badge-mobile" style="display: none;">0</span>
+          <div class="message-dropdown-mobile" id="message-dropdown-mobile"></div>
+        </div>
+      `;
+      mobilePlaceholder.innerHTML = mobileMessageIconHTML;
     }
   }
+
+  // 添加清理消息系统函数（退出登录时调用）
+  function cleanupMessageSystem() {
+    // 清除定时器
+    if (messageCheckInterval) {
+      clearInterval(messageCheckInterval);
+      messageCheckInterval = null;
+    }
+    
+    // 移除消息图标
+    const pcWrapper = document.getElementById('message-icon-wrapper');
+    const mobileWrapper = document.getElementById('message-icon-wrapper-mobile');
+    
+    if (pcWrapper) {
+      pcWrapper.remove();
+    }
+    
+    if (mobileWrapper) {
+      mobileWrapper.remove();
+    }
+    
+    // 清空占位符
+    const pcPlaceholder = document.getElementById('pc-message-placeholder');
+    const mobilePlaceholder = document.getElementById('mobile-message-placeholder');
+    
+    if (pcPlaceholder) {
+      pcPlaceholder.innerHTML = '';
+    }
+    
+    if (mobilePlaceholder) {
+      mobilePlaceholder.innerHTML = '';
+    }
+    
+    // 重置变量
+    unreadCount = 0;
+    currentChatUser = null;
+    currentConversation = [];
+  }
+
+  // 修改DOMContentLoaded事件处理
+  document.addEventListener('DOMContentLoaded', function() {
+    // 检查登录状态后再初始化
+    const token = localStorage.getItem('token');
+    if (token) {
+      // 延迟初始化，确保用户信息已加载
+      setTimeout(initMessageSystem, 500);
+    }
+  });
 
   // 检查未读消息
   async function checkUnreadMessages() {
@@ -336,63 +383,63 @@
     }
   }
 
-// 打开消息
-async function openMessage(messageId) {
-  // 确保 messageId 是数字类型
-  messageId = parseInt(messageId);
-  
-  if (isNaN(messageId)) {
-    console.error('无效的消息ID:', messageId);
-    return;
-  }
-  
-  const token = localStorage.getItem('token');
-  if (!token) return;
-  
-  try {
-    // 标记为已读
-    await fetch(`${API_BASE_URL}/api/messages/${messageId}/read`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+  // 打开消息
+  async function openMessage(messageId) {
+    // 确保 messageId 是数字类型
+    messageId = parseInt(messageId);
     
-    // 获取消息详情
-    const response = await fetch(`${API_BASE_URL}/api/messages/${messageId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (response.ok) {
-      const message = await response.json();
-      
-      console.log('打开消息:', message); // 调试日志
-      
-      // 根据消息类型处理
-      if (message.message_type === 'system' || message.message_type === 'notification' || message.message_type === 'auto') {
-        // 系统消息、通知和自动消息显示只读详情窗口
-        closeMessageDropdown(); // 先关闭下拉菜单
-        showSystemMessage(message);
-      } else if (message.message_type === 'user') {
-        // 用户消息打开聊天窗口
-        closeMessageDropdown();
-        openChatModal(message.sender_id);
-      } else {
-        // 其他类型默认显示详情窗口
-        closeMessageDropdown();
-        showSystemMessage(message);
-      }
-      
-      // 更新未读计数
-      checkUnreadMessages();
+    if (isNaN(messageId)) {
+      console.error('无效的消息ID:', messageId);
+      return;
     }
-  } catch (error) {
-    console.error('打开消息失败:', error);
-    showErrorMessage('打开消息失败');
+    
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+      // 标记为已读
+      await fetch(`${API_BASE_URL}/api/messages/${messageId}/read`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      // 获取消息详情
+      const response = await fetch(`${API_BASE_URL}/api/messages/${messageId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const message = await response.json();
+        
+        console.log('打开消息:', message); // 调试日志
+        
+        // 根据消息类型处理
+        if (message.message_type === 'system' || message.message_type === 'notification' || message.message_type === 'auto') {
+          // 系统消息、通知和自动消息显示只读详情窗口
+          closeMessageDropdown(); // 先关闭下拉菜单
+          showSystemMessage(message);
+        } else if (message.message_type === 'user') {
+          // 用户消息打开聊天窗口
+          closeMessageDropdown();
+          openChatModal(message.sender_id);
+        } else {
+          // 其他类型默认显示详情窗口
+          closeMessageDropdown();
+          showSystemMessage(message);
+        }
+        
+        // 更新未读计数
+        checkUnreadMessages();
+      }
+    } catch (error) {
+      console.error('打开消息失败:', error);
+      showErrorMessage('打开消息失败');
+    }
   }
-}
 
   // 打开消息中心 - 修复跳转问题
   function openMessageCenter() {
@@ -821,75 +868,99 @@ async function openMessage(messageId) {
     }
   }
 
-// 显示系统消息
-function showSystemMessage(message) {
-  // 先关闭已存在的模态框
-  const existingModal = document.getElementById('system-message-modal');
-  if (existingModal) {
-    existingModal.remove();
-  }
-  
-  const modalHTML = `
-    <div class="modal show" id="system-message-modal">
-      <div class="modal-content system-message-detail" style="max-width: 600px;">
-        <div class="modal-header system-message-header">
-          <div class="system-message-header-content">
-            <h5 class="system-message-title">${escapeHtml(message.title)}</h5>
-            <div class="system-message-meta">
-              <span class="message-type-badge ${message.message_type}">
-                <i class="fas ${getMessageTypeIcon(message.message_type)} me-1"></i>
-                ${getMessageTypeLabel(message.message_type)}
-              </span>
-              <span class="message-date">
-                <i class="fas fa-clock me-1"></i>
-                ${formatTime(message.created_at)}
-              </span>
+  // 显示系统消息（修复按钮无效问题）
+  function showSystemMessage(message) {
+    // 先关闭已存在的模态框
+    const existingModal = document.getElementById('system-message-modal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    const modalHTML = `
+      <div class="modal show" id="system-message-modal">
+        <div class="modal-content system-message-detail" style="max-width: 600px;">
+          <div class="modal-header system-message-header">
+            <div class="system-message-header-content">
+              <h5 class="system-message-title">${escapeHtml(message.title)}</h5>
+              <div class="system-message-meta">
+                <span class="message-type-badge ${message.message_type}">
+                  <i class="fas ${getMessageTypeIcon(message.message_type)} me-1"></i>
+                  ${getMessageTypeLabel(message.message_type)}
+                </span>
+                <span class="message-date">
+                  <i class="fas fa-clock me-1"></i>
+                  ${formatTime(message.created_at)}
+                </span>
+              </div>
+            </div>
+            <button type="button" class="modal-close" id="system-message-close-btn">&times;</button>
+          </div>
+          <div class="modal-body system-message-body">
+            <div class="sender-info">
+              <img src="${message.sender_avatar || '/avatars/default_avatar.png'}" alt="" class="sender-avatar">
+              <div class="sender-details">
+                <div class="sender-name">${escapeHtml(message.sender_name || '系统')}</div>
+                <div class="sender-role">系统管理员</div>
+              </div>
+            </div>
+            <div class="message-content-box">
+              <div class="message-content-text">
+                ${escapeHtml(message.content)}
+              </div>
             </div>
           </div>
-          <button type="button" class="modal-close" onclick="closeSystemMessageModal()">&times;</button>
-        </div>
-        <div class="modal-body system-message-body">
-          <div class="sender-info">
-            <img src="${message.sender_avatar || '/avatars/default_avatar.png'}" alt="" class="sender-avatar">
-            <div class="sender-details">
-              <div class="sender-name">${escapeHtml(message.sender_name || '系统')}</div>
-              <div class="sender-role">系统管理员</div>
-            </div>
+          <div class="modal-footer">
+            <button class="btn-ok" id="system-message-ok-btn">
+              <i class="fas fa-check me-2"></i>
+              我知道了
+            </button>
           </div>
-          <div class="message-content-box">
-            <div class="message-content-text">
-              ${escapeHtml(message.content)}
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-ok" onclick="closeSystemMessageModal()">
-            <i class="fas fa-check me-2"></i>
-            我知道了
-          </button>
         </div>
       </div>
-    </div>
-  `;
-  
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
-  
-  // 添加点击背景关闭功能
-  const modal = document.getElementById('system-message-modal');
-  if (modal) {
-    modal.addEventListener('click', function(e) {
-      if (e.target === this) {
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // 获取新创建的模态框
+    const modal = document.getElementById('system-message-modal');
+    
+    // 绑定关闭按钮事件
+    const closeBtn = document.getElementById('system-message-close-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
         closeSystemMessageModal();
-      }
-    });
+      });
+    }
+    
+    // 绑定确认按钮事件
+    const okBtn = document.getElementById('system-message-ok-btn');
+    if (okBtn) {
+      okBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        closeSystemMessageModal();
+      });
+    }
+    
+    // 添加点击背景关闭功能
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeSystemMessageModal();
+        }
+      });
+    }
   }
-}
 
   // 关闭系统消息模态框
   function closeSystemMessageModal() {
     const modal = document.getElementById('system-message-modal');
     if (modal) {
-      modal.remove();
+      // 添加淡出动画
+      modal.style.animation = 'fadeOut 0.3s ease';
+      setTimeout(() => {
+        modal.remove();
+      }, 300);
     }
   }
 
@@ -1036,6 +1107,8 @@ function showSystemMessage(message) {
   global.deleteSelectedMessages = deleteSelectedMessages;
   global.toggleSelectAll = toggleSelectAll;
   global.selectAllMessages = selectAllMessages;
+  global.cleanupMessageSystem = cleanupMessageSystem;
+  global.initMessageSystem = initMessageSystem;
   
   // 在DOM加载完成后初始化
   if (document.readyState === 'loading') {

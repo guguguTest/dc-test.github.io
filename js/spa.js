@@ -1473,9 +1473,25 @@ function handleLogin() {
           showUserInfo();
           setupUserDropdown();
           
+          // 初始化消息系统（登录成功后）
+          if (typeof initMessageSystem === 'function') {
+            setTimeout(() => {
+              try {
+                initMessageSystem();
+                console.log('消息系统初始化成功');
+              } catch (error) {
+                console.error('消息系统初始化失败:', error);
+              }
+            }, 500);
+          }
+          
           // 异步获取权限并更新侧边栏
           fetchUserPermissions(data.token).then(permissions => {
             localStorage.setItem('userPermissions', JSON.stringify(permissions));
+            updateSidebarVisibility(currentUser);
+          }).catch(error => {
+            console.error('获取用户权限失败:', error);
+            // 即使权限获取失败，也继续其他操作
             updateSidebarVisibility(currentUser);
           });
           
@@ -1501,6 +1517,8 @@ function handleLogin() {
       userMessage = '用户名或密码错误';
     } else if (error.status === 500) {
       userMessage = '服务器内部错误，请稍后再试';
+    } else if (error.message) {
+      userMessage = error.message;
     }
     
     showTempErrorMessage(errorElement, userMessage);
@@ -1547,6 +1565,7 @@ function handleRegister() {
     showTempErrorMessage(errorElement, '密码长度需在8-16个字符之间');
     return;
   }
+  
   if (password !== confirmPassword) {
     showTempErrorMessage(errorElement, '两次输入的密码不一致');
     return;
@@ -1568,6 +1587,8 @@ function handleRegister() {
   .then(data => {
     if (data.success) {
       localStorage.setItem('token', data.token);
+      currentUser = data.user;
+      localStorage.setItem('userInfo', JSON.stringify(data.user));
       
       // 显示成功动画
       showSuccessAnimation(
@@ -1578,6 +1599,19 @@ function handleRegister() {
           // 动画结束后更新界面
           updateUserInfo(data.user);
           showUserInfo();
+          
+          // 初始化消息系统（注册成功后）
+          if (typeof initMessageSystem === 'function') {
+            setTimeout(() => {
+              try {
+                initMessageSystem();
+                console.log('消息系统初始化成功');
+              } catch (error) {
+                console.error('消息系统初始化失败:', error);
+              }
+            }, 500);
+          }
+          
           loadPage('home');
         }
       );
@@ -1592,6 +1626,16 @@ function handleRegister() {
 
 // 退出登录
 function handleLogout() {
+  // 清理消息系统
+  if (typeof cleanupMessageSystem === 'function') {
+    try {
+      cleanupMessageSystem();
+      console.log('消息系统已清理');
+    } catch (error) {
+      console.error('清理消息系统失败:', error);
+    }
+  }
+  
   // 清除本地存储
   localStorage.removeItem('token');
   localStorage.removeItem('userInfo');
@@ -1609,6 +1653,11 @@ function handleLogout() {
       updateSidebarVisibility(null);
     }
   }, 100);
+  
+  // 显示退出成功提示（可选）
+  if (typeof showSuccessMessage === 'function') {
+    showSuccessMessage('已成功退出登录');
+  }
   
   // 跳转到首页
   loadPage('home');
