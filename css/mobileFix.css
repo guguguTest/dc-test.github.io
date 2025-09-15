@@ -1,0 +1,302 @@
+/* 移动端优化样式 - 解决底部遮挡和滑动问题 */
+
+/* 1. 强制隐藏PC端侧边栏开关按钮 */
+.sidebar-toggle {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 1.5 PC端隐藏移动端汉堡菜单 */
+@media (min-width: 993px) {
+  .mobile-toggle {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+/* 只在移动端显示汉堡菜单 */
+@media (max-width: 992px) {
+  .mobile-toggle {
+    display: flex !important;
+    visibility: visible !important;
+  }
+}
+
+/* 2. 修复底部被浏览器功能栏遮挡 */
+@media (max-width: 992px) {
+  /* 主内容区域底部安全距离 */
+  .main-content {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 20px)) !important;
+    margin-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
+  /* 侧边栏底部安全距离 */
+  .sidebar {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 20px)) !important;
+    /* 防止侧边栏滑动影响主页面 */
+    position: fixed;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* 确保侧边栏内容不被遮挡 */
+  .sidebar-nav {
+    padding-bottom: calc(30px + env(safe-area-inset-bottom, 20px)) !important;
+  }
+  
+  .sidebar-user-area {
+    margin-bottom: 10px;
+  }
+  
+  /* 内容容器底部间距 */
+  #content-container {
+    padding-bottom: calc(30px + env(safe-area-inset-bottom, 20px)) !important;
+  }
+}
+
+/* 2. 侧边栏展开时的遮罩层 */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 899;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sidebar-overlay.show {
+  display: block;
+  opacity: 1;
+}
+
+/* 3. 改进的移动端侧边栏状态 */
+@media (max-width: 992px) {
+  /* 侧边栏关闭状态 */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+  
+  /* 侧边栏打开状态 */
+  .sidebar.show {
+    transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* 防止主页面滚动 */
+  body.sidebar-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100vh;
+  }
+}
+
+/* 4. 汉堡菜单动画样式 */
+.mobile-toggle {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-toggle .hamburger {
+  position: relative;
+  width: 24px;
+  height: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.mobile-toggle .hamburger span {
+  display: block;
+  height: 2.5px;
+  width: 100%;
+  background-color: var(--primary-color, #1e293b);
+  border-radius: 3px;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-origin: center;
+  position: absolute;
+  left: 0;
+}
+
+.mobile-toggle .hamburger span:nth-child(1) {
+  top: 0;
+}
+
+.mobile-toggle .hamburger span:nth-child(2) {
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.3s ease;
+}
+
+.mobile-toggle .hamburger span:nth-child(3) {
+  bottom: 0;
+}
+
+/* 汉堡菜单变X动画 - 更流畅的效果 */
+.mobile-toggle.active .hamburger span:nth-child(1) {
+  transform: rotate(45deg);
+  top: 50%;
+  margin-top: -1px;
+}
+
+.mobile-toggle.active .hamburger span:nth-child(2) {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.mobile-toggle.active .hamburger span:nth-child(3) {
+  transform: rotate(-45deg);
+  bottom: 50%;
+  margin-bottom: -1px;
+}
+
+/* 悬停效果 */
+@media (hover: hover) {
+  .mobile-toggle:hover .hamburger span {
+    background-color: var(--secondary-color, #3b82f6);
+  }
+}
+
+/* 5. 优化滚动行为 */
+@media (max-width: 992px) {
+  /* 侧边栏独立滚动 */
+  .sidebar {
+    /* 使用 iOS 弹性滚动 */
+    -webkit-overflow-scrolling: touch;
+    /* 防止滚动穿透 */
+    overscroll-behavior: contain;
+    /* 滚动时不影响其他元素 */
+    touch-action: pan-y;
+  }
+  
+  /* 主内容独立滚动 */
+  .main-content {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+  
+  /* 防止滚动到边界时的抖动 */
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .sidebar {
+    scrollbar-width: none;
+  }
+}
+
+/* 6. 页面高度适配 */
+@media (max-width: 992px) {
+  /* 使用视口高度减去顶部导航栏 */
+  .sidebar {
+    height: calc(100vh - 70px);
+    height: calc(100vh - 70px - env(safe-area-inset-bottom, 0));
+    max-height: calc(100vh - 70px);
+  }
+  
+  .main-content {
+    min-height: calc(100vh - 70px);
+    min-height: calc(100vh - 70px - env(safe-area-inset-bottom, 0));
+  }
+}
+
+/* 7. 改进触摸响应 */
+@media (max-width: 992px) {
+  /* 提升触摸响应速度 */
+  .sidebar-nav a,
+  .mobile-toggle,
+  .language-btn,
+  button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* 增加可点击区域 */
+  .sidebar-nav a {
+    padding: 14px 16px;
+    margin: 2px 0;
+  }
+  
+  .mobile-toggle {
+    padding: 8px;
+    margin: -8px;
+  }
+}
+
+/* 8. 修复iOS Safari特定问题 */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific fixes */
+  .sidebar {
+    /* 修复iOS弹性滚动问题 */
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+  
+  body.sidebar-open {
+    /* 防止iOS背景滚动 */
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+  }
+}
+
+/* 9. 安全区域适配 */
+@media (max-width: 992px) {
+  /* iPhone X及以上机型适配 */
+  @supports (padding: max(0px)) {
+    .sidebar {
+      padding-left: max(12px, env(safe-area-inset-left));
+      padding-right: max(12px, env(safe-area-inset-right));
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+    
+    .main-content {
+      padding-bottom: max(30px, env(safe-area-inset-bottom));
+    }
+    
+    .top-navbar {
+      padding-left: max(20px, env(safe-area-inset-left));
+      padding-right: max(20px, env(safe-area-inset-right));
+    }
+  }
+}
+
+/* 10. 平滑过渡效果 */
+@media (max-width: 992px) {
+  /* 优化动画性能 */
+  .sidebar,
+  .sidebar-overlay,
+  .mobile-toggle .hamburger span {
+    will-change: transform, opacity;
+  }
+  
+  /* 动画结束后清理 */
+  .sidebar:not(.show),
+  .sidebar-overlay:not(.show) {
+    will-change: auto;
+  }
+}
