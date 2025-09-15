@@ -1,5 +1,3 @@
-
-// --- helper: get permission modal root safely
 function __getPermissionModalRoot(){
   return document.getElementById('permission-modal-root')
       || document.getElementById('permission-modal')
@@ -414,7 +412,10 @@ async saveUserChanges(userId) {
       { id: 'user-manager', name: '用户管理' },
       { id: 'ccb', name: '游戏查分' },
       { id: 'order-entry', name: '订单录入' },
-      { id: 'exchange', name: '积分兑换' }
+      { id: 'exchange', name: '积分兑换' },
+	  { id: 'point-shop', name: '积分商店' },
+	  { id: 'points-shop-admin', name: '积分商品管理' },
+      { id: 'point2-shop-admin', name: '鸽屋积分商品管理' }
     ];
 
     const list = this.permissionModal.querySelector('#permission-list');

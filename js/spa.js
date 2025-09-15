@@ -11,7 +11,8 @@ const ordersPerPage = 50;
 // 受保护的页面
 const PROTECTED_PAGES = [
   'download','tools','dllpatcher','fortune','user-settings',
-  'ccb','exchange','announcement-admin','site-admin','download-admin','order-entry','user-manager'
+  'ccb','exchange','announcement-admin','site-admin','download-admin','order-entry','user-manager',
+  'point-shop', 'points-shop-admin', 'point2-shop-admin'
 ];
 
 // 数据源
@@ -420,6 +421,88 @@ function handleUnbindFromSettings() {
     });
 }
 
+function displayShippingBindingInfo() {
+    const shippingSection = document.getElementById('shipping-binding-section');
+    const noShippingMessage = document.getElementById('no-shipping-message');
+    
+    if (!shippingSection || !noShippingMessage) return;
+    
+    // 获取积分商店的收货地址信息
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    secureFetch('https://api.am-all.com.cn/api/shop/shipping-address', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(result => {
+        if (result.success && result.address) {
+            // 显示收货信息
+            shippingSection.style.display = 'block';
+            noShippingMessage.style.display = 'none';
+            
+            document.getElementById('shipping-name').textContent = result.address.receiver_name || '-';
+            document.getElementById('shipping-phone').textContent = result.address.contact_phone || '-';
+            document.getElementById('shipping-address').textContent = result.address.shipping_address || '-';
+            document.getElementById('shipping-postal-code').textContent = result.address.taobao_id || '-';
+            
+            // 添加事件监听器
+            const unbindBtn = document.getElementById('unbind-shipping-btn');
+            if (unbindBtn) {
+                unbindBtn.replaceWith(unbindBtn.cloneNode(true));
+                document.getElementById('unbind-shipping-btn').addEventListener('click', handleUnbindShipping);
+            }
+        } else {
+            // 显示无绑定信息提示
+            shippingSection.style.display = 'none';
+            noShippingMessage.style.display = 'block';
+            
+            // 添加前往绑定按钮事件
+            const addBtn = document.getElementById('add-shipping-btn');
+            if (addBtn) {
+                addBtn.replaceWith(addBtn.cloneNode(true));
+                document.getElementById('add-shipping-btn').addEventListener('click', () => {
+                    loadPage('point-shop');
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.error('获取收货信息失败:', error);
+        shippingSection.style.display = 'none';
+        noShippingMessage.style.display = 'block';
+    });
+}
+
+function handleUnbindShipping() {
+    if (!confirm('确定要解绑收货信息吗？解绑后需要重新绑定才能使用积分商城。')) {
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    
+    secureFetch('https://api.am-all.com.cn/api/shop/shipping-address', {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(result => {
+        if (result.success) {
+            showSuccessMessage('收货信息解绑成功');
+            // 更新显示
+            displayShippingBindingInfo();
+        } else {
+            showErrorMessage(result.error || '解绑失败');
+        }
+    })
+    .catch(error => {
+        console.error('解绑失败:', error);
+        showErrorMessage('解绑失败: ' + (error.error || '服务器错误'));
+    });
+}
+
 // 获取随机推荐行动（修复重复问题）
 function getRandomRecommendations() {
   const actions = ['出勤', '家勤', '越级', '下埋', '理论'];
@@ -465,7 +548,8 @@ async function updateSidebarVisibility(user) {
   // 定义所有页面
 	const allPages = [
 	  'home', 'download', 'tools', 'dllpatcher', 'settings', 'help', 'fortune', 'user-settings',
-	  'ccb', 'exchange', 'announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry'
+	  'ccb', 'exchange', 'announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry',
+	  'point-shop', 'points-shop-admin', 'point2-shop-admin'
 	];
 
   // 存储每个页面的可见性
@@ -538,7 +622,10 @@ async function updateSidebarVisibility(user) {
 	'sidebar-site-admin': 'site-admin', 
     'sidebar-download-admin': 'download-admin',
     'sidebar-user-manager': 'user-manager',
-    'sidebar-order-entry': 'order-entry'
+    'sidebar-order-entry': 'order-entry',
+	'sidebar-point-shop': 'point-shop',
+    'sidebar-points-shop-admin': 'points-shop-admin', 
+    'sidebar-point2-shop-admin': 'point2-shop-admin'
   };
 
   for (const [id, pid] of Object.entries(legacyMap)) {
@@ -559,23 +646,22 @@ async function updateSidebarVisibility(user) {
   // 处理分类标题
   // 等待一段时间确保所有元素都已更新
   setTimeout(() => {
-    // 功能分类
-    const functionTitle = document.querySelector('.sidebar-section-title');
-    const functionNav = functionTitle ? functionTitle.nextElementSibling : null;
-    
-    if (functionTitle && functionNav && functionNav.tagName === 'UL') {
-      if (!token) {
-        // 未登录时隐藏功能分类
-        setDisplay(functionTitle, false);
-        setDisplay(functionNav, false);
-      } else {
-        // 检查功能分类下是否有可见项
-        const functionPages = ['fortune', 'ccb', 'exchange'];
-        const hasVisibleFunction = functionPages.some(p => pageVisibility[p]);
-        setDisplay(functionTitle, hasVisibleFunction);
-        setDisplay(functionNav, hasVisibleFunction);
-      }
-    }
+	// 功能分类
+	const functionTitle = document.querySelector('.sidebar-section-title');
+	const functionNav = functionTitle ? functionTitle.nextElementSibling : null;
+
+	if (functionTitle && functionNav && functionNav.tagName === 'UL') {
+	  if (!token) {
+		setDisplay(functionTitle, false);
+		setDisplay(functionNav, false);
+	  } else {
+		// 添加 point-shop 到功能页面列表
+		const functionPages = ['fortune', 'ccb', 'exchange', 'point-shop'];
+		const hasVisibleFunction = functionPages.some(p => pageVisibility[p]);
+		setDisplay(functionTitle, hasVisibleFunction);
+		setDisplay(functionNav, hasVisibleFunction);
+	  }
+	}
 
 	// 管理分类
 	const adminTitle = document.getElementById('admin-section-title');
@@ -587,7 +673,7 @@ async function updateSidebarVisibility(user) {
 		setDisplay(adminNav, false);
 	  } else {
 		// 包含 site-admin 在内的所有管理页面
-		const adminPages = ['announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry'];
+		const adminPages = ['announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry', 'points-shop-admin', 'point2-shop-admin'];
 		const hasVisibleAdmin = adminPages.some(p => pageVisibility[p]);
 		
 		console.log('管理页面可见性:', adminPages.map(p => `${p}: ${pageVisibility[p]}`));
@@ -2000,6 +2086,7 @@ async function loadPage(pageId) {
   document.documentElement.scrollTop = 0;
   
 setTimeout(() => {
+
     // ===== 特殊处理tools页面 =====
     if (pageId === 'tools') {
       if (typeof initToolsDisplay === 'function') {
@@ -2034,6 +2121,23 @@ setTimeout(() => {
       
       return;
     }
+
+	// ===== 特殊处理积分商店页面 =====
+	if (pageId === 'point-shop' || pageId === 'points-shop-admin' || pageId === 'point2-shop-admin') {
+	  contentContainer.innerHTML = '<div class="section"><div class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div></div>';
+	  
+	  if (pageId === 'point-shop' && typeof initPointShop === 'function') {
+		initPointShop();
+	  } else if (pageId === 'points-shop-admin' && typeof initShopAdmin === 'function') {
+		initShopAdmin('points');
+	  } else if (pageId === 'point2-shop-admin' && typeof initShopAdmin === 'function') {
+		initShopAdmin('point2');
+	  }
+	  
+	  document.body.classList.remove('spa-loading');
+	  updateActiveMenuItem(pageId);
+	  return;
+	}
 
     // 系统消息管理页面
     if (pageId === 'system-message-admin') {
@@ -2282,6 +2386,9 @@ setTimeout(() => {
   
   // 显示查分绑定信息
   setTimeout(displayCCBBindingInfo, 100);
+  
+  // 显示收货绑定信息
+  setTimeout(displayShippingBindingInfo, 100);
   
   const savePasswordBtn = document.getElementById('save-password-btn');
   if (savePasswordBtn) {
@@ -2585,8 +2692,6 @@ function initCursorSettingsManually() {
         try { if (typeof initCCBPage === 'function') setTimeout(initCCBPage, 50); }
         catch(e){ console.error('初始化 ccb 页面失败:', e); }
       }
-
-
 
       if (pageId === 'download-detail') {
         // 从URL参数获取下载ID

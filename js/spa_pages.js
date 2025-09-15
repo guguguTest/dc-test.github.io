@@ -873,8 +873,8 @@ download: `
             <span>安全设置</span>
           </button>
           <button class="tab-btn" data-tab="binding">
-            <i class="fas fa-gamepad"></i>
-            <span>游戏绑定</span>
+            <i class="fas fa-link"></i>
+            <span>绑定管理</span>
           </button>
         </div>
 
@@ -984,11 +984,12 @@ download: `
           </div>
         </div>
 
-        <!-- 游戏绑定选项卡 -->
+        <!-- 绑定管理选项卡 -->
         <div class="tab-content" id="binding-tab">
+          <!-- 查分绑定卡片 -->
           <div class="settings-card" id="ccb-binding-section" style="display: none;">
             <div class="card-header">
-              <h3><i class="fas fa-link"></i> 查分绑定信息</h3>
+              <h3><i class="fas fa-gamepad"></i> 查分绑定信息</h3>
             </div>
             <div class="card-body">
               <div class="binding-info">
@@ -1020,10 +1021,69 @@ download: `
             </div>
           </div>
           
-          <div class="settings-card" id="no-binding-message">
+          <!-- 无查分绑定提示 -->
+          <div class="settings-card" id="no-binding-message" style="display: none;">
             <div class="card-body text-center">
-              <i class="fas fa-unlink empty-icon"></i>
-              <p>暂无绑定信息</p>
+              <i class="fas fa-gamepad empty-icon"></i>
+              <h4>暂无查分绑定</h4>
+              <p class="text-muted mt-2">前往游戏查分页面进行绑定</p>
+              <button class="btn-primary mt-3" onclick="loadPage('ccb')">
+                <i class="fas fa-link"></i> 前往绑定
+              </button>
+            </div>
+          </div>
+          
+          <!-- 收货信息卡片 -->
+          <div class="settings-card" id="shipping-binding-section" style="display: none;">
+            <div class="card-header">
+              <h3><i class="fas fa-truck"></i> 收货绑定信息</h3>
+            </div>
+            <div class="card-body">
+              <div class="binding-info">
+                <div class="binding-item">
+                  <i class="fas fa-user"></i>
+                  <div>
+                    <label>收件人</label>
+                    <div class="binding-value" id="shipping-name">-</div>
+                  </div>
+                </div>
+                <div class="binding-item">
+                  <i class="fas fa-phone"></i>
+                  <div>
+                    <label>联系电话</label>
+                    <div class="binding-value" id="shipping-phone">-</div>
+                  </div>
+                </div>
+                <div class="binding-item">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <div>
+                    <label>收货地址</label>
+                    <div class="binding-value" id="shipping-address">-</div>
+                  </div>
+                </div>
+                <div class="binding-item">
+                  <i class="fas fa-shopping-cart"></i>
+                  <div>
+                    <label>淘宝ID</label>
+                    <div class="binding-value" id="shipping-postal-code">-</div>
+                  </div>
+                </div>
+              </div>
+              <button id="unbind-shipping-btn" class="btn-danger btn-block">
+                <i class="fas fa-unlink"></i> 解绑收货信息
+              </button>
+            </div>
+          </div>
+          
+          <!-- 无收货信息提示 -->
+          <div class="settings-card" id="no-shipping-message" style="display: none;">
+            <div class="card-body text-center">
+              <i class="fas fa-box-open empty-icon"></i>
+              <h4>暂无收货绑定</h4>
+              <p class="text-muted mt-2">需要先绑定收货信息才能使用积分商城</p>
+              <button id="add-shipping-btn" class="btn-primary mt-3">
+                <i class="fas fa-link"></i> 前往绑定
+              </button>
             </div>
           </div>
         </div>

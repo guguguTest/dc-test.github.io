@@ -890,3 +890,115 @@ i {
 .shadow-hover:hover {
   box-shadow: var(--shadow-xl);
 }
+
+/* 收货信息卡片样式 */
+.shipping-info-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.shipping-info-card .info-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.shipping-info-card .info-row:last-child {
+  border-bottom: none;
+}
+
+.shipping-info-card .info-label {
+  flex: 0 0 120px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.shipping-info-card .info-value {
+  flex: 1;
+  color: #212529;
+}
+
+.shipping-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.no-shipping-info {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.no-shipping-info .empty-icon {
+  font-size: 48px;
+  color: #dee2e6;
+  margin-bottom: 20px;
+}
+
+.no-shipping-info .hint-text {
+  color: #6c757d;
+  font-size: 14px;
+  margin: 10px 0 20px;
+}
+
+/* 绑定信息样式 */
+.binding-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.binding-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.binding-item i {
+  font-size: 20px;
+  color: var(--secondary-color);
+  width: 30px;
+  text-align: center;
+}
+
+.binding-item label {
+  display: block;
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+.binding-value {
+  font-size: 14px;
+  color: #212529;
+  font-weight: 500;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #dee2e6;
+  margin-bottom: 15px;
+}
+
+.btn-block {
+  width: 100%;
+  display: block;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+.mt-2 {
+  margin-top: 0.5rem !important;
+}
+
+.mt-3 {
+  margin-top: 1rem !important;
+}
