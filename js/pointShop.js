@@ -962,7 +962,17 @@ function renderAdminOrders(orders, pagination, shopType) {
       'physical': '实体商品'
     }[order.item_type] || '未知';
     
-    const statusText = order.order_status === 'completed' ? '已完成' : '处理中';
+    // 状态映射
+    const statusMap = {
+      'pending': '待处理',
+      'processing': '处理中',
+      'shipped': '已发货',
+      'completed': '已完成',
+      'cancelled': '已取消'
+    };
+    
+    const currentStatus = order.order_status || 'processing';
+    const statusText = statusMap[currentStatus] || '处理中';
     
     let shippingInfo = '-';
     if (order.shipping_info) {
@@ -985,7 +995,15 @@ function renderAdminOrders(orders, pagination, shopType) {
         <td>${order.price}</td>
         <td>${order.redemption_code || '-'}</td>
         <td>${shippingInfo}</td>
-        <td><span class="status-badge ${order.order_status}">${statusText}</span></td>
+        <td>
+          <select class="status-select" data-order="${order.order_number}" onchange="updateOrderStatus('${order.order_number}', this.value)">
+            <option value="pending" ${currentStatus === 'pending' ? 'selected' : ''}>待处理</option>
+            <option value="processing" ${currentStatus === 'processing' ? 'selected' : ''}>处理中</option>
+            <option value="shipped" ${currentStatus === 'shipped' ? 'selected' : ''}>已发货</option>
+            <option value="completed" ${currentStatus === 'completed' ? 'selected' : ''}>已完成</option>
+            <option value="cancelled" ${currentStatus === 'cancelled' ? 'selected' : ''}>已取消</option>
+          </select>
+        </td>
         <td>${new Date(order.created_at).toLocaleString()}</td>
       </tr>
     `;
@@ -997,6 +1015,24 @@ function renderAdminOrders(orders, pagination, shopType) {
     loadAdminOrders(shopType, page, search);
   });
 }
+
+// 添加更新订单状态的函数
+window.updateOrderStatus = async function(orderNumber, newStatus) {
+  try {
+    const res = await secureFetch(`https://api.am-all.com.cn/api/admin/shop/orders/${orderNumber}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status: newStatus })
+    });
+    
+    if (res.success) {
+      showSuccessMessage('订单状态已更新');
+    }
+  } catch (error) {
+    showErrorMessage('更新状态失败：' + error.message);
+    // 恢复原状态
+    location.reload();
+  }
+};
 
 // ========== 搜索管理员兑换记录 ==========
 window.searchAdminOrders = function(shopType) {

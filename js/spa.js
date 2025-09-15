@@ -3240,6 +3240,51 @@ function showErrorMessage(message) {
   document.getElementById('message-modal').classList.add('show');
 }
 
+// 显示信息消息
+function showInfoMessage(message) {
+  const modal = document.getElementById('message-modal');
+  if (!modal) {
+    const modalHTML = `
+      <div id="message-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="modal-title">提示信息</h5>
+            <button type="button" class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p id="modal-content">${message}</p>
+          </div>
+          <div class="modal-footer">
+            <button id="modal-ok" class="btn-ok">确定</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // 添加事件监听器
+    document.querySelector('#message-modal .modal-close').addEventListener('click', () => {
+      document.getElementById('message-modal').classList.remove('show');
+    });
+    
+    document.getElementById('modal-ok').addEventListener('click', () => {
+      document.getElementById('message-modal').classList.remove('show');
+    });
+    
+    document.getElementById('message-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('show');
+      }
+    });
+  } else {
+    // 确保标题正确
+    document.getElementById('modal-title').textContent = '提示信息';
+    document.getElementById('modal-content').textContent = message;
+  }
+  
+  document.getElementById('message-modal').classList.add('show');
+}
+
 // 更新活动菜单项
 
 function normalizePageId(pid) {
