@@ -750,54 +750,123 @@ window.toggleLimitInput = function() {
     }
   };
   
-  // 保存商品
-window.saveItem = async function(itemId, shopType) {
-  const form = document.getElementById('item-form');
-  const formData = new FormData(form);
-  
-  const enableLimit = document.getElementById('enable-limit').checked;
-  const maxPerUser = enableLimit ? parseInt(formData.get('max_per_user')) : null;
-  
-  const data = {
-    item_name: formData.get('item_name'),
-    item_description: formData.get('item_description'),
-    price: parseInt(formData.get('price')),
-    stock: parseInt(formData.get('stock')),
-    item_image: formData.get('item_image'),
-    shop_type: shopType,
-    max_per_user: maxPerUser,
-    item_type: 'physical',
-    is_active: true
-  };
-  
-  if (shopType === 'points') {
-    data.item_type = formData.get('item_type') || 'physical';
-    if (data.item_type === 'upgrade') {
-      data.upgrade_rank = parseInt(formData.get('upgrade_rank')) || null;
-    }
-  }
-  
-  try {
-    const url = itemId ? 
-      `https://api.am-all.com.cn/api/admin/shop/items/${itemId}` :
-      'https://api.am-all.com.cn/api/admin/shop/items';
-    
-    const method = itemId ? 'PUT' : 'POST';
-    
-    const res = await secureFetch(url, {
-      method: method,
-      body: JSON.stringify(data)
-    });
-    
-    if (res.success) {
-      showSuccessMessage(itemId ? '更新成功' : '添加成功');
-      document.querySelector('.modal').remove();
-      loadAdminItems(shopType);
-    }
-  } catch (error) {
-    showErrorMessage('保存失败：' + error.message);
-  }
-};
+    // 保存商品
+	window.saveItem = async function(itemId, shopType) {
+	  const form = document.getElementById('item-form');
+	  const formData = new FormData(form);
+	  
+	  console.log('=== 前端保存商品调试 ===');
+	  console.log('商品ID:', itemId);
+	  console.log('商店类型:', shopType);
+	  
+	  // 获取表单值
+	  const enableLimit = document.getElementById('enable-limit')?.checked || false;
+	  const maxPerUserInput = document.getElementById('max-per-user');
+	  const maxPerUser = enableLimit && maxPerUserInput ? parseInt(maxPerUserInput.value) : null;
+	  
+	  // 构建要发送的数据对象，确保所有字段都有值（即使是null）
+	  const data = {
+		item_name: formData.get('item_name') || '',
+		item_description: formData.get('item_description') || '',
+		price: parseInt(formData.get('price')) || 0,
+		stock: parseInt(formData.get('stock')) || 0,
+		item_image: formData.get('item_image') || null,
+		shop_type: shopType,
+		max_per_user: maxPerUser,
+		is_active: true
+	  };
+	  
+	  // 只在编辑模式下包含这些字段，创建时由后端处理
+	  if (itemId) {
+		// 编辑模式：包含所有字段
+		if (shopType === 'points') {
+		  data.item_type = formData.get('item_type') || 'physical';
+		  if (data.item_type === 'upgrade') {
+			const upgradeRankValue = formData.get('upgrade_rank');
+			data.upgrade_rank = upgradeRankValue ? parseInt(upgradeRankValue) : null;
+		  } else {
+			data.upgrade_rank = null;
+		  }
+		} else {
+		  data.item_type = 'physical';
+		  data.upgrade_rank = null;
+		}
+	  } else {
+		// 创建模式：让后端使用默认值
+		if (shopType === 'points') {
+		  data.item_type = formData.get('item_type') || 'physical';
+		  if (data.item_type === 'upgrade') {
+			const upgradeRankValue = formData.get('upgrade_rank');
+			data.upgrade_rank = upgradeRankValue ? parseInt(upgradeRankValue) : null;
+		  }
+		}
+	  }
+	  
+	  // 验证必填字段
+	  if (!data.item_name) {
+		showErrorMessage('商品名称不能为空');
+		return;
+	  }
+	  
+	  if (!data.price || data.price <= 0) {
+		showErrorMessage('价格必须大于0');
+		return;
+	  }
+	  
+	  if (data.stock < 0) {
+		showErrorMessage('库存不能为负数');
+		return;
+	  }
+	  
+	  // 打印最终发送的数据
+	  console.log('发送的数据对象:', data);
+	  console.log('JSON字符串:', JSON.stringify(data));
+	  
+	  // 检查是否有undefined值
+	  Object.keys(data).forEach(key => {
+		if (data[key] === undefined) {
+		  console.warn(`警告: 字段 ${key} 的值是 undefined`);
+		}
+	  });
+	  
+	  try {
+		const url = itemId ? 
+		  `https://api.am-all.com.cn/api/admin/shop/items/${itemId}` :
+		  'https://api.am-all.com.cn/api/admin/shop/items';
+		
+		const method = itemId ? 'PUT' : 'POST';
+		
+		console.log('请求URL:', url);
+		console.log('请求方法:', method);
+		
+		const token = localStorage.getItem('token');
+		const response = await fetch(url, {
+		  method: method,
+		  headers: {
+			'Authorization': `Bearer ${token}`,
+			'Content-Type': 'application/json'
+		  },
+		  body: JSON.stringify(data)
+		});
+		
+		const res = await response.json();
+		console.log('服务器响应:', res);
+		
+		if (res.success || res.id) {
+		  showSuccessMessage(itemId ? '更新成功' : '添加成功');
+		  document.querySelector('.modal').remove();
+		  loadAdminItems(shopType);
+		} else {
+		  showErrorMessage(res.error || '操作失败');
+		  if (res.details) {
+			console.error('错误详情:', res.details);
+		  }
+		}
+	  } catch (error) {
+		showErrorMessage('保存失败：' + error.message);
+		console.error('保存商品错误:', error);
+	  }
+	};
 
 // ========== 显示管理员兑换记录 ==========
 window.showAdminOrders = async function(shopType) {
