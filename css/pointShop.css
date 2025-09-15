@@ -666,3 +666,287 @@
   font-size: 24px;
   margin-right: 10px;
 }
+
+/* ========== 新增兑换记录相关样式 ========== */
+
+/* 管理页搜索栏 */
+.admin-search-bar {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.admin-search-bar input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+/* 收货信息单元格 */
+.shipping-info-cell {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.shipping-info-cell div {
+  margin: 2px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+/* 兑换码样式 */
+.redemption-code {
+  font-family: 'Courier New', monospace;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.btn-copy {
+  background: #17a2b8;
+  color: white;
+  padding: 3px 8px;
+  margin-left: 5px;
+}
+
+.btn-copy:hover {
+  background: #138496;
+}
+
+/* 订单号样式 */
+.order-number {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #666;
+}
+
+/* 限购设置样式优化 */
+.limit-setting {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 5px;
+}
+
+.limit-setting label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.limit-setting input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.limit-setting input[type="number"] {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 120px;
+  font-size: 14px;
+}
+
+.limit-setting input[type="number"]:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+}
+
+/* 订单状态徽章 */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.status-badge.completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.cancelled {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* 分页样式优化 */
+#orders-pagination,
+#admin-orders-pagination {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.pagination {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  padding: 10px;
+  background: white;
+  border-radius: 5px;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.pagination button:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.pagination .current-page {
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pagination span {
+  padding: 0 5px;
+  color: #999;
+}
+
+/* 表格响应式优化 */
+@media (max-width: 1200px) {
+  .orders-table {
+    font-size: 13px;
+  }
+  
+  .orders-table th,
+  .orders-table td {
+    padding: 8px;
+  }
+  
+  .shipping-info-cell {
+    font-size: 11px;
+  }
+  
+  .shipping-info-cell div {
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .orders-container {
+    overflow-x: auto;
+  }
+  
+  .orders-table {
+    min-width: 800px;
+    font-size: 12px;
+  }
+  
+  .admin-search-bar {
+    flex-direction: column;
+  }
+  
+  .admin-search-bar input {
+    width: 100%;
+  }
+  
+  .pagination button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .limit-setting {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .limit-setting input[type="number"] {
+    width: 100%;
+  }
+}
+
+/* 按钮组样式 */
+.shop-header-right {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .shop-header-right {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .shop-header-right .btn {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+/* 信息提示样式 */
+.btn-info {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover {
+  background: #138496;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(23,162,184,0.3);
+}
+
+/* 空数据提示 */
+.empty-cell {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 14px;
+}
+
+/* 加载动画优化 */
+.loading-cell {
+  text-align: center;
+  padding: 40px;
+  color: #667eea;
+}
+
+.loading-cell i {
+  font-size: 24px;
+  margin-right: 10px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
