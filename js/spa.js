@@ -23,13 +23,6 @@ const MUSIC_DATA_URLS = [
 let announcementsData = [];
 
 // ====== 成功动画提示功能 ======
-/**
- * 显示成功动画提示
- * @param {string} title - 标题文字
- * @param {string} message - 提示信息
- * @param {number} duration - 自动关闭时间（毫秒），默认3000
- * @param {function} callback - 关闭后的回调函数
- */
 function showSuccessAnimation(title, message, duration = 3000, callback = null) {
   // 如果已存在成功动画，先移除
   const existingModal = document.getElementById('success-animation-modal');
@@ -111,11 +104,6 @@ function showSuccessAnimation(title, message, duration = 3000, callback = null) 
   });
 }
 
-/**
- * 创建彩带粒子效果
- * @param {HTMLElement} container - 容器元素
- * @param {number} count - 粒子数量
- */
 function createConfetti(container, count) {
   for (let i = 0; i < count; i++) {
     const confetti = document.createElement('div');
@@ -127,11 +115,6 @@ function createConfetti(container, count) {
   }
 }
 
-/**
- * 关闭成功动画
- * @param {HTMLElement} modal - 模态框元素
- * @param {function} callback - 回调函数
- */
 function closeSuccessAnimation(modal, callback) {
   if (!modal) return;
   
@@ -145,9 +128,6 @@ function closeSuccessAnimation(modal, callback) {
   }, 300);
 }
 
-/**
- * 播放成功音效（可选）
- */
 function playSuccessSound() {
   // 如果需要音效，可以在这里添加
   // const audio = new Audio('path/to/success-sound.mp3');
@@ -168,8 +148,6 @@ if (!document.querySelector('#fadeOutStyle')) {
 }
 
 // ====== 修改登录成功处理 ======
-// 找到 handleLogin 函数中的成功处理部分，替换为：
-// 在登录成功的地方（大约在第652行附近）
 function handleLoginWithAnimation() {
   const login = document.getElementById('login-username').value;
   const password = document.getElementById('login-password').value;
