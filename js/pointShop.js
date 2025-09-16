@@ -610,8 +610,13 @@
       
       console.log('兑换响应:', res);
       
-      // 成功处理
-      showSuccessMessage('兑换成功！');
+      // 修复：先获取并关闭特定的商品详情模态框
+      const detailModal = document.querySelector('.modal.show .shop-detail-modal');
+      const modalParent = detailModal ? detailModal.closest('.modal') : null;
+      
+      if (modalParent) {
+        modalParent.remove();
+      }
       
       // 更新用户积分显示
       if (res.user) {
@@ -641,21 +646,20 @@
         }
       }
       
-      // 关闭详情弹窗
-      const modal = document.querySelector('.modal');
-      if (modal) {
-        modal.remove();
-      }
-      
       // 刷新商品列表
       loadShopItems(currentShopType);
       
-      // 显示兑换码（如果有）
-      if (res.redemption_code) {
-        setTimeout(() => {
-          alert(`兑换码：${res.redemption_code}\n请妥善保管！`);
-        }, 500);
-      }
+      // 延迟显示成功消息和兑换码
+      setTimeout(() => {
+        showSuccessMessage('兑换成功！');
+        
+        // 显示兑换码（如果有）
+        if (res.redemption_code) {
+          setTimeout(() => {
+            alert(`兑换码：${res.redemption_code}\n请妥善保管！`);
+          }, 500);
+        }
+      }, 100);
       
     } catch (error) {
       console.error('兑换失败:', error);
@@ -1028,14 +1032,18 @@
       
       console.log('服务器响应:', res);
       
-      // 成功处理
-      showSuccessMessage(itemId ? '更新成功' : '添加成功');
+      // 修复：先获取并关闭特定的商品编辑模态框
+      const itemModal = document.querySelector('.modal.show .item-modal');
+      const modalParent = itemModal ? itemModal.closest('.modal') : null;
       
-      // 关闭弹窗
-      const modal = document.querySelector('.modal');
-      if (modal) {
-        modal.remove();
+      if (modalParent) {
+        modalParent.remove();
       }
+      
+      // 延迟显示成功消息，确保模态框已关闭
+      setTimeout(() => {
+        showSuccessMessage(itemId ? '更新成功' : '添加成功');
+      }, 100);
       
       // 重新加载商品列表
       loadAdminItems(shopType);
