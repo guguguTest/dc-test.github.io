@@ -1,5 +1,6 @@
 // mobileOptimizeFix.js - 修复移动端侧边栏问题的脚本
 // 解决手机真机上侧边栏无法关闭和重复打开的问题
+// 修复遮罩层不显示的问题
 
 (function() {
     'use strict';
@@ -85,20 +86,10 @@
         createOverlay: function() {
             const overlay = document.createElement('div');
             overlay.className = 'sidebar-overlay';
-            overlay.style.cssText = `
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 899;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            `;
+            // 移除内联样式，完全使用CSS类控制
             document.body.appendChild(overlay);
             this.elements.overlay = overlay;
+            console.log('[SidebarManager] 遮罩层已创建');
         },
         
         // 设置汉堡菜单
@@ -144,11 +135,8 @@
             
             const { sidebar, overlay, mobileToggle, body } = this.elements;
             
-            // 显示遮罩层
-            overlay.style.display = 'block';
-            setTimeout(() => {
-                overlay.style.opacity = '1';
-            }, 10);
+            // 使用类名控制遮罩层显示
+            overlay.classList.add('show');
             
             // 添加显示类
             sidebar.classList.add('show');
@@ -170,6 +158,7 @@
             setTimeout(() => {
                 this.isOpen = true;
                 this.isAnimating = false;
+                console.log('[SidebarManager] 侧边栏已打开');
             }, 300);
         },
         
@@ -183,11 +172,8 @@
             
             const { sidebar, overlay, mobileToggle, body } = this.elements;
             
-            // 隐藏遮罩层
-            overlay.style.opacity = '0';
-            setTimeout(() => {
-                overlay.style.display = 'none';
-            }, 300);
+            // 使用类名控制遮罩层隐藏
+            overlay.classList.remove('show');
             
             // 移除显示类
             sidebar.classList.remove('show');
@@ -202,6 +188,7 @@
             setTimeout(() => {
                 this.isOpen = false;
                 this.isAnimating = false;
+                console.log('[SidebarManager] 侧边栏已关闭');
             }, 300);
         },
         
@@ -231,14 +218,17 @@
                         self.toggle();
                     }
                 }, false);
+                console.log('[SidebarManager] 汉堡菜单事件已绑定');
             }
             
             // 遮罩层点击关闭
             if (overlay) {
                 overlay.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     self.close();
                 }, false);
+                console.log('[SidebarManager] 遮罩层点击事件已绑定');
             }
             
             // 侧边栏链接点击关闭
@@ -287,6 +277,23 @@
                     this._lastY = e.touches[0].clientY;
                 }, { passive: true });
             }
+            
+            // 防止遮罩层下的内容被点击
+            document.body.addEventListener('click', function(e) {
+                if (self.isOpen && window.innerWidth <= 992) {
+                    const isClickInSidebar = sidebar && sidebar.contains(e.target);
+                    const isClickOnToggle = mobileToggle && mobileToggle.contains(e.target);
+                    const isClickOnOverlay = overlay && overlay.contains(e.target);
+                    
+                    // 如果点击不在侧边栏、汉堡菜单或遮罩层上，阻止事件
+                    if (!isClickInSidebar && !isClickOnToggle && !isClickOnOverlay) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // 关闭侧边栏
+                        self.close();
+                    }
+                }
+            }, true); // 使用捕获阶段
         },
         
         // 重置状态
@@ -296,8 +303,7 @@
             if (window.innerWidth <= 992) {
                 // 移动端：确保侧边栏关闭
                 sidebar.classList.remove('show');
-                overlay.style.display = 'none';
-                overlay.style.opacity = '0';
+                overlay.classList.remove('show');
                 mobileToggle.classList.remove('active');
                 body.classList.remove('mobile-sidebar-open');
                 body.style.cssText = '';
@@ -306,6 +312,7 @@
             } else {
                 // PC端：隐藏移动端控件
                 mobileToggle.style.display = 'none';
+                overlay.classList.remove('show');
             }
         }
     };
