@@ -5,7 +5,184 @@
   let currentShopType = 'points';
   let currentUser = null;
   let shippingAddress = null;
+  const BASE_URL = 'https://api.am-all.com.cn';
   
+  // ========== 工具函数定义 ==========
+  // 定义 secureFetch 函数
+  if (typeof window.secureFetch === 'undefined') {
+    window.secureFetch = async function(url, options = {}) {
+      const token = localStorage.getItem('token');
+      
+      // 合并默认headers
+      const defaultHeaders = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        defaultHeaders['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const fetchOptions = {
+        ...options,
+        headers: {
+          ...defaultHeaders,
+          ...(options.headers || {})
+        }
+      };
+      
+      try {
+        const response = await fetch(url, fetchOptions);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || `HTTP error! status: ${response.status}`);
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('secureFetch error:', error);
+        throw error;
+      }
+    };
+  }
+  
+  // 确保消息提示函数存在
+  if (typeof window.showSuccessMessage === 'undefined') {
+    window.showSuccessMessage = function(message) {
+      // 创建成功提示
+      const toast = document.createElement('div');
+      toast.className = 'toast success-toast';
+      toast.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>${message}</span>
+      `;
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #27ae60;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 5px;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    };
+  }
+  
+  if (typeof window.showErrorMessage === 'undefined') {
+    window.showErrorMessage = function(message) {
+      // 创建错误提示
+      const toast = document.createElement('div');
+      toast.className = 'toast error-toast';
+      toast.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i>
+        <span>${message}</span>
+      `;
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #e74c3c;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 5px;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    };
+  }
+  
+  if (typeof window.showInfoMessage === 'undefined') {
+    window.showInfoMessage = function(message) {
+      // 创建信息提示
+      const toast = document.createElement('div');
+      toast.className = 'toast info-toast';
+      toast.innerHTML = `
+        <i class="fas fa-info-circle"></i>
+        <span>${message}</span>
+      `;
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #3498db;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 5px;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    };
+  }
+  
+  // 添加CSS动画
+  if (!document.getElementById('toast-styles')) {
+    const style = document.createElement('style');
+    style.id = 'toast-styles';
+    style.innerHTML = `
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+      
+      .toast {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      
+      .toast i {
+        font-size: 18px;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  // ========== 初始化和基础功能 ==========
   // 初始化积分商城
   window.initPointShop = async function() {
     try {
@@ -150,180 +327,179 @@
   };
   
   // 渲染商店页面
-async function renderShopPage(shopType) {
-  const content = document.getElementById('content-container');
-  const shopName = shopType === 'points' ? '普通积分商店' : '鸽屋积分商店';
-  const pointsName = shopType === 'points' ? '普通积分' : '鸽屋积分';
-  const userPoints = shopType === 'points' ? currentUser.points : currentUser.point2;
-  
-  content.innerHTML = `
-    <div class="section">
-      <div class="shop-header">
-        <button class="btn-back" onclick="initPointShop()">
-          <i class="fas fa-arrow-left"></i> 返回
-        </button>
-        <h1 class="page-title">${shopName}</h1>
-        <div class="shop-header-right">
-          <button class="btn btn-info" onclick="showMyOrders('${shopType}')">
-            <i class="fas fa-history"></i> 兑换记录
+  async function renderShopPage(shopType) {
+    const content = document.getElementById('content-container');
+    const shopName = shopType === 'points' ? '普通积分商店' : '鸽屋积分商店';
+    const pointsName = shopType === 'points' ? '普通积分' : '鸽屋积分';
+    const userPoints = shopType === 'points' ? currentUser.points : currentUser.point2;
+    
+    content.innerHTML = `
+      <div class="section">
+        <div class="shop-header">
+          <button class="btn-back" onclick="initPointShop()">
+            <i class="fas fa-arrow-left"></i> 返回
           </button>
-          <div class="user-points">
-            <i class="fas fa-coins"></i> ${pointsName}：<span id="current-points">${userPoints || 0}</span>
+          <h1 class="page-title">${shopName}</h1>
+          <div class="shop-header-right">
+            <button class="btn btn-info" onclick="showMyOrders('${shopType}')">
+              <i class="fas fa-history"></i> 兑换记录
+            </button>
+            <div class="user-points">
+              <i class="fas fa-coins"></i> ${pointsName}：<span id="current-points">${userPoints || 0}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="shop-filters">
+          <div class="search-bar">
+            <input type="text" id="search-input" placeholder="搜索商品名称">
+            <button onclick="searchItems()"><i class="fas fa-search"></i></button>
+          </div>
+          <div class="price-filter">
+            <input type="number" id="min-price" placeholder="最低价">
+            <span>~</span>
+            <input type="number" id="max-price" placeholder="最高价">
+            <button onclick="searchItems()">筛选</button>
+          </div>
+        </div>
+        
+        <div class="shop-items" id="shop-items">
+          <div class="loading">
+            <i class="fas fa-spinner fa-spin"></i> 加载中...
           </div>
         </div>
       </div>
-      
-      <div class="shop-filters">
-        <div class="search-bar">
-          <input type="text" id="search-input" placeholder="搜索商品名称">
-          <button onclick="searchItems()"><i class="fas fa-search"></i></button>
-        </div>
-        <div class="price-filter">
-          <input type="number" id="min-price" placeholder="最低价">
-          <span>~</span>
-          <input type="number" id="max-price" placeholder="最高价">
-          <button onclick="searchItems()">筛选</button>
-        </div>
-      </div>
-      
-      <div class="shop-items" id="shop-items">
-        <div class="loading">
-          <i class="fas fa-spinner fa-spin"></i> 加载中...
-        </div>
-      </div>
-    </div>
-  `;
-  
-  loadShopItems(shopType);
-}
-
-// ========== 新增显示用户兑换记录函数 ==========
-window.showMyOrders = async function(shopType) {
-  const content = document.getElementById('content-container');
-  const shopName = shopType === 'points' ? '普通积分商店' : '鸽屋积分商店';
-  
-  content.innerHTML = `
-    <div class="section">
-      <div class="shop-header">
-        <button class="btn-back" onclick="openPointShop('${shopType}')">
-          <i class="fas fa-arrow-left"></i> 返回商店
-        </button>
-        <h1 class="page-title">${shopName} - 我的兑换记录</h1>
-      </div>
-      
-      <div class="orders-container">
-        <table class="orders-table">
-          <thead>
-            <tr>
-              <th>订单号</th>
-              <th>商品名称</th>
-              <th>类型</th>
-              <th>消耗积分</th>
-              <th>兑换码</th>
-              <th>状态</th>
-              <th>兑换时间</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="orders-tbody">
-            <tr>
-              <td colspan="8" class="loading-cell">
-                <i class="fas fa-spinner fa-spin"></i> 加载中...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div id="orders-pagination"></div>
-      </div>
-    </div>
-  `;
-  
-  loadUserOrders(shopType, 1);
-};
-
-// ========== 加载用户兑换记录 ==========
-async function loadUserOrders(shopType, page = 1) {
-  try {
-    const res = await secureFetch(`https://api.am-all.com.cn/api/shop/orders/my?shop_type=${shopType}&page=${page}`);
-    
-    if (res.success) {
-      renderUserOrders(res.orders, res.pagination, shopType);
-    }
-  } catch (error) {
-    showErrorMessage('加载兑换记录失败');
-  }
-}
-
-// ========== 渲染用户兑换记录 ==========
-function renderUserOrders(orders, pagination, shopType) {
-  const tbody = document.getElementById('orders-tbody');
-  
-  if (orders.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="8" class="empty-cell">暂无兑换记录</td>
-      </tr>
     `;
-    return;
+    
+    loadShopItems(shopType);
   }
-  
-  tbody.innerHTML = orders.map(order => {
-    const typeText = {
-      'virtual': '虚拟物品',
-      'upgrade': '用户组升级',
-      'physical': '实体商品'
-    }[order.item_type] || '未知';
+
+  // ========== 显示用户兑换记录函数 ==========
+  window.showMyOrders = async function(shopType) {
+    const content = document.getElementById('content-container');
+    const shopName = shopType === 'points' ? '普通积分商店' : '鸽屋积分商店';
     
-    const statusText = order.order_status === 'completed' ? '已完成' : '处理中';
-    
-    return `
-      <tr>
-        <td class="order-number">${order.order_number}</td>
-        <td>${order.item_name}</td>
-        <td>${typeText}</td>
-        <td>${order.price}</td>
-        <td>
-          ${order.redemption_code ? 
-            `<span class="redemption-code">${order.redemption_code}</span>
-             <button class="btn-small btn-copy" onclick="copyRedemptionCode('${order.redemption_code}')">
-               <i class="fas fa-copy"></i>
-             </button>` : 
-            '-'}
-        </td>
-        <td><span class="status-badge ${order.order_status}">${statusText}</span></td>
-        <td>${new Date(order.created_at).toLocaleString()}</td>
-        <td>
-          <button class="btn-small btn-info" onclick="showOrderDetail('${order.order_number}')">
-            <i class="fas fa-eye"></i> 详情
+    content.innerHTML = `
+      <div class="section">
+        <div class="shop-header">
+          <button class="btn-back" onclick="openPointShop('${shopType}')">
+            <i class="fas fa-arrow-left"></i> 返回商店
           </button>
-        </td>
-      </tr>
+          <h1 class="page-title">${shopName} - 我的兑换记录</h1>
+        </div>
+        
+        <div class="orders-container">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>商品名称</th>
+                <th>类型</th>
+                <th>消耗积分</th>
+                <th>兑换码</th>
+                <th>状态</th>
+                <th>兑换时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="orders-tbody">
+              <tr>
+                <td colspan="8" class="loading-cell">
+                  <i class="fas fa-spinner fa-spin"></i> 加载中...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div id="orders-pagination"></div>
+        </div>
+      </div>
     `;
-  }).join('');
-  
-  // 渲染分页
-  renderPagination('orders-pagination', pagination, (page) => loadUserOrders(shopType, page));
-}
+    
+    loadUserOrders(shopType, 1);
+  };
 
-// ========== 复制兑换码 ==========
-window.copyRedemptionCode = function(code) {
-  const textarea = document.createElement('textarea');
-  textarea.value = code;
-  textarea.style.position = 'fixed';
-  textarea.style.opacity = '0';
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
-  showSuccessMessage('兑换码已复制到剪贴板');
-};
+  // ========== 加载用户兑换记录 ==========
+  async function loadUserOrders(shopType, page = 1) {
+    try {
+      const res = await secureFetch(`https://api.am-all.com.cn/api/shop/orders/my?shop_type=${shopType}&page=${page}`);
+      
+      if (res.success) {
+        renderUserOrders(res.orders, res.pagination, shopType);
+      }
+    } catch (error) {
+      showErrorMessage('加载兑换记录失败');
+    }
+  }
 
-// ========== 显示订单详情 ==========
-window.showOrderDetail = function(orderNumber) {
-  // 这里可以实现显示订单详情的弹窗
-  showInfoMessage('订单号：' + orderNumber);
-};
+  // ========== 渲染用户兑换记录 ==========
+  function renderUserOrders(orders, pagination, shopType) {
+    const tbody = document.getElementById('orders-tbody');
+    
+    if (orders.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="empty-cell">暂无兑换记录</td>
+        </tr>
+      `;
+      return;
+    }
+    
+    tbody.innerHTML = orders.map(order => {
+      const typeText = {
+        'virtual': '虚拟物品',
+        'upgrade': '用户组升级',
+        'physical': '实体商品'
+      }[order.item_type] || '未知';
+      
+      const statusText = order.order_status === 'completed' ? '已完成' : '处理中';
+      
+      return `
+        <tr>
+          <td class="order-number">${order.order_number}</td>
+          <td>${order.item_name}</td>
+          <td>${typeText}</td>
+          <td>${order.price}</td>
+          <td>
+            ${order.redemption_code ? 
+              `<span class="redemption-code">${order.redemption_code}</span>
+               <button class="btn-small btn-copy" onclick="copyRedemptionCode('${order.redemption_code}')">
+                 <i class="fas fa-copy"></i>
+               </button>` : 
+              '-'}
+          </td>
+          <td><span class="status-badge ${order.order_status}">${statusText}</span></td>
+          <td>${new Date(order.created_at).toLocaleString()}</td>
+          <td>
+            <button class="btn-small btn-info" onclick="showOrderDetail('${order.order_number}')">
+              <i class="fas fa-eye"></i> 详情
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    // 渲染分页
+    renderPagination('orders-pagination', pagination, (page) => loadUserOrders(shopType, page));
+  }
 
+  // ========== 复制兑换码 ==========
+  window.copyRedemptionCode = function(code) {
+    const textarea = document.createElement('textarea');
+    textarea.value = code;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showSuccessMessage('兑换码已复制到剪贴板');
+  };
+
+  // ========== 显示订单详情 ==========
+  window.showOrderDetail = function(orderNumber) {
+    // 这里可以实现显示订单详情的弹窗
+    showInfoMessage('订单号：' + orderNumber);
+  };
 
   // 加载商品列表
   async function loadShopItems(shopType, search = '', minPrice = '', maxPrice = '') {
@@ -420,109 +596,134 @@ window.showOrderDetail = function(orderNumber) {
     }
   };
   
-  // 兑换商品
+  // 兑换商品（修复后的版本）
   window.redeemItem = async function(itemId) {
     if (!confirm('确定要兑换此商品吗？')) return;
     
     try {
+      console.log('开始兑换商品:', itemId);
+      
       const res = await secureFetch('https://api.am-all.com.cn/api/shop/redeem', {
         method: 'POST',
         body: JSON.stringify({ item_id: itemId })
       });
       
-      if (res.success) {
-        showSuccessMessage('兑换成功！');
-        
-        // 更新用户积分显示
-        const token = localStorage.getItem('token');
-        const userRes = await secureFetch('https://api.am-all.com.cn/api/user', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (userRes) {
-          currentUser = userRes;
-          localStorage.setItem('userInfo', JSON.stringify(userRes));
-          document.getElementById('current-points').textContent = 
-            currentShopType === 'points' ? userRes.points : userRes.point2;
+      console.log('兑换响应:', res);
+      
+      // 成功处理
+      showSuccessMessage('兑换成功！');
+      
+      // 更新用户积分显示
+      if (res.user) {
+        currentUser = res.user;
+        localStorage.setItem('userInfo', JSON.stringify(res.user));
+        const pointsElement = document.getElementById('current-points');
+        if (pointsElement) {
+          pointsElement.textContent = 
+            currentShopType === 'points' ? res.user.points : res.user.point2;
         }
-        
-        // 关闭详情弹窗
-        document.querySelector('.modal').remove();
-        
-        // 刷新商品列表
-        loadShopItems(currentShopType);
-        
-        // 显示兑换码（如果有）
-        if (res.redemption_code) {
-          alert(`兑换码：${res.redemption_code}\n请妥善保管！`);
+      } else {
+        // 如果响应中没有用户信息，重新获取
+        try {
+          const userRes = await secureFetch('https://api.am-all.com.cn/api/user');
+          
+          if (userRes) {
+            currentUser = userRes;
+            localStorage.setItem('userInfo', JSON.stringify(userRes));
+            const pointsElement = document.getElementById('current-points');
+            if (pointsElement) {
+              pointsElement.textContent = 
+                currentShopType === 'points' ? userRes.points : userRes.point2;
+            }
+          }
+        } catch (e) {
+          console.error('更新用户信息失败:', e);
         }
       }
+      
+      // 关闭详情弹窗
+      const modal = document.querySelector('.modal');
+      if (modal) {
+        modal.remove();
+      }
+      
+      // 刷新商品列表
+      loadShopItems(currentShopType);
+      
+      // 显示兑换码（如果有）
+      if (res.redemption_code) {
+        setTimeout(() => {
+          alert(`兑换码：${res.redemption_code}\n请妥善保管！`);
+        }, 500);
+      }
+      
     } catch (error) {
-      showErrorMessage('兑换失败：' + error.message);
+      console.error('兑换失败:', error);
+      showErrorMessage('兑换失败：' + (error.message || '未知错误'));
     }
   };
   
   // 商品管理页面
-window.initShopAdmin = async function(shopType) {
-  const content = document.getElementById('content-container');
-  const isPointShop = shopType === 'points';
-  const pageTitle = isPointShop ? '积分商品管理' : '鸽屋积分商品管理';
-  
-  content.innerHTML = `
-    <div class="section">
-      <h1 class="page-title">${pageTitle}</h1>
-      <div class="admin-toolbar">
-        <button class="btn btn-primary" onclick="showAddItemModal('${shopType}')">
-          <i class="fas fa-plus"></i> 新建商品
-        </button>
-        <button class="btn btn-info" onclick="showAdminOrders('${shopType}')">
-          <i class="fas fa-history"></i> 兑换记录
-        </button>
-        <button class="btn btn-secondary" onclick="selectAllItems()">
-          <i class="fas fa-check-square"></i> 全选
-        </button>
-        <button class="btn btn-secondary" onclick="unselectAllItems()">
-          <i class="fas fa-square"></i> 取消全选
-        </button>
-        <button class="btn btn-danger" onclick="deleteSelectedItems()">
-          <i class="fas fa-trash"></i> 删除选中
-        </button>
+  window.initShopAdmin = async function(shopType) {
+    const content = document.getElementById('content-container');
+    const isPointShop = shopType === 'points';
+    const pageTitle = isPointShop ? '积分商品管理' : '鸽屋积分商品管理';
+    
+    content.innerHTML = `
+      <div class="section">
+        <h1 class="page-title">${pageTitle}</h1>
+        <div class="admin-toolbar">
+          <button class="btn btn-primary" onclick="showAddItemModal('${shopType}')">
+            <i class="fas fa-plus"></i> 新建商品
+          </button>
+          <button class="btn btn-info" onclick="showAdminOrders('${shopType}')">
+            <i class="fas fa-history"></i> 兑换记录
+          </button>
+          <button class="btn btn-secondary" onclick="selectAllItems()">
+            <i class="fas fa-check-square"></i> 全选
+          </button>
+          <button class="btn btn-secondary" onclick="unselectAllItems()">
+            <i class="fas fa-square"></i> 取消全选
+          </button>
+          <button class="btn btn-danger" onclick="deleteSelectedItems()">
+            <i class="fas fa-trash"></i> 删除选中
+          </button>
+        </div>
+        
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th width="40"><input type="checkbox" id="select-all-checkbox"></th>
+                <th width="60">图片</th>
+                <th>商品名</th>
+                <th>介绍</th>
+                <th width="100">价格</th>
+                <th width="80">库存</th>
+                <th width="80">限购</th>
+                ${isPointShop ? '<th width="100">类型</th>' : ''}
+                <th width="120">操作</th>
+              </tr>
+            </thead>
+            <tbody id="items-tbody">
+              <tr>
+                <td colspan="${isPointShop ? 9 : 8}" class="loading-cell">
+                  <i class="fas fa-spinner fa-spin"></i> 加载中...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      
-      <div class="admin-table-container">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th width="40"><input type="checkbox" id="select-all-checkbox"></th>
-              <th width="60">图片</th>
-              <th>商品名</th>
-              <th>介绍</th>
-              <th width="100">价格</th>
-              <th width="80">库存</th>
-              <th width="80">限购</th>
-              ${isPointShop ? '<th width="100">类型</th>' : ''}
-              <th width="120">操作</th>
-            </tr>
-          </thead>
-          <tbody id="items-tbody">
-            <tr>
-              <td colspan="${isPointShop ? 9 : 8}" class="loading-cell">
-                <i class="fas fa-spinner fa-spin"></i> 加载中...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-  
-  loadAdminItems(shopType);
-  
-  document.getElementById('select-all-checkbox').addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.item-checkbox');
-    checkboxes.forEach(cb => cb.checked = this.checked);
-  });
-};
+    `;
+    
+    loadAdminItems(shopType);
+    
+    document.getElementById('select-all-checkbox').addEventListener('change', function() {
+      const checkboxes = document.querySelectorAll('.item-checkbox');
+      checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+  };
   
   // 加载管理商品列表
   async function loadAdminItems(shopType) {
@@ -538,53 +739,53 @@ window.initShopAdmin = async function(shopType) {
   }
   
   // 渲染管理商品列表
-function renderAdminItems(items, shopType) {
-  const tbody = document.getElementById('items-tbody');
-  const isPointShop = shopType === 'points';
-  
-  if (items.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="${isPointShop ? 9 : 8}" class="empty-cell">暂无商品</td>
-      </tr>
-    `;
-    return;
+  function renderAdminItems(items, shopType) {
+    const tbody = document.getElementById('items-tbody');
+    const isPointShop = shopType === 'points';
+    
+    if (items.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="${isPointShop ? 9 : 8}" class="empty-cell">暂无商品</td>
+        </tr>
+      `;
+      return;
+    }
+    
+    tbody.innerHTML = items.map(item => {
+      const typeText = {
+        'virtual': '虚拟物品',
+        'upgrade': '用户组升级',
+        'physical': '实体商品'
+      }[item.item_type] || '实体商品';
+      
+      const limitText = item.max_per_user ? `${item.max_per_user}次` : '不限';
+      
+      return `
+        <tr data-item-id="${item.id}">
+          <td><input type="checkbox" class="item-checkbox" value="${item.id}"></td>
+          <td>
+            <img src="${item.item_image ? BASE_URL + item.item_image : '/images/default-item.png'}" 
+                 class="admin-item-thumb" alt="${item.item_name}">
+          </td>
+          <td>${item.item_name}</td>
+          <td class="desc-cell">${item.item_description || '-'}</td>
+          <td>${item.price}</td>
+          <td>${item.stock}</td>
+          <td>${limitText}</td>
+          ${isPointShop ? `<td>${typeText}</td>` : ''}
+          <td>
+            <button class="btn-small btn-edit" onclick="editItem(${item.id}, '${shopType}')">
+              <i class="fas fa-edit"></i> 编辑
+            </button>
+            <button class="btn-small btn-delete" onclick="deleteItem(${item.id}, '${shopType}')">
+              <i class="fas fa-trash"></i> 删除
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
-  
-  tbody.innerHTML = items.map(item => {
-    const typeText = {
-      'virtual': '虚拟物品',
-      'upgrade': '用户组升级',
-      'physical': '实体商品'
-    }[item.item_type] || '实体商品';
-    
-    const limitText = item.max_per_user ? `${item.max_per_user}次` : '不限';
-    
-    return `
-      <tr data-item-id="${item.id}">
-        <td><input type="checkbox" class="item-checkbox" value="${item.id}"></td>
-        <td>
-          <img src="${item.item_image ? BASE_URL + item.item_image : '/images/default-item.png'}" 
-               class="admin-item-thumb" alt="${item.item_name}">
-        </td>
-        <td>${item.item_name}</td>
-        <td class="desc-cell">${item.item_description || '-'}</td>
-        <td>${item.price}</td>
-        <td>${item.stock}</td>
-        <td>${limitText}</td>
-        ${isPointShop ? `<td>${typeText}</td>` : ''}
-        <td>
-          <button class="btn-small btn-edit" onclick="editItem(${item.id}, '${shopType}')">
-            <i class="fas fa-edit"></i> 编辑
-          </button>
-          <button class="btn-small btn-delete" onclick="deleteItem(${item.id}, '${shopType}')">
-            <i class="fas fa-trash"></i> 删除
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
   
   // 显示添加商品弹窗
   window.showAddItemModal = function(shopType) {
@@ -605,109 +806,109 @@ function renderAdminItems(items, shopType) {
   };
   
   // 显示商品编辑弹窗
-function showItemModal(item, shopType) {
-  const isEdit = !!item;
-  const isPointShop = shopType === 'points';
-  
-  const modal = document.createElement('div');
-  modal.className = 'modal show';
-  modal.innerHTML = `
-    <div class="modal-content item-modal">
-      <div class="modal-header">
-        <h3>${isEdit ? '编辑商品' : '新建商品'}</h3>
-        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-      </div>
-      <form id="item-form" class="modal-body">
-        <div class="form-group">
-          <label>商品名 <span class="required">*</span></label>
-          <input type="text" name="item_name" value="${item?.item_name || ''}" required>
+  function showItemModal(item, shopType) {
+    const isEdit = !!item;
+    const isPointShop = shopType === 'points';
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.innerHTML = `
+      <div class="modal-content item-modal">
+        <div class="modal-header">
+          <h3>${isEdit ? '编辑商品' : '新建商品'}</h3>
+          <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
         </div>
-        
-        <div class="form-group">
-          <label>商品介绍</label>
-          <textarea name="item_description" rows="3">${item?.item_description || ''}</textarea>
-        </div>
-        
-        <div class="form-row">
+        <form id="item-form" class="modal-body">
           <div class="form-group">
-            <label>价格 <span class="required">*</span></label>
-            <input type="number" name="price" value="${item?.price || ''}" min="1" required>
+            <label>商品名 <span class="required">*</span></label>
+            <input type="text" name="item_name" value="${item?.item_name || ''}" required>
           </div>
           
           <div class="form-group">
-            <label>库存 <span class="required">*</span></label>
-            <input type="number" name="stock" value="${item?.stock || 0}" min="0" required>
-          </div>
-        </div>
-        
-        <div class="form-group limit-setting">
-          <label>
-            <input type="checkbox" id="enable-limit" ${item?.max_per_user ? 'checked' : ''} 
-                   onchange="toggleLimitInput()">
-            启用限购
-          </label>
-          <input type="number" name="max_per_user" id="max-per-user" 
-                 value="${item?.max_per_user || 1}" min="1" 
-                 style="display: ${item?.max_per_user ? 'inline-block' : 'none'};"
-                 placeholder="每人限购次数">
-        </div>
-        
-        ${isPointShop ? `
-          <div class="form-group">
-            <label>物品类型</label>
-            <select name="item_type" onchange="onItemTypeChange(this.value)">
-              <option value="physical" ${item?.item_type === 'physical' ? 'selected' : ''}>实体商品</option>
-              <option value="virtual" ${item?.item_type === 'virtual' ? 'selected' : ''}>虚拟物品</option>
-              <option value="upgrade" ${item?.item_type === 'upgrade' ? 'selected' : ''}>用户组升级</option>
-            </select>
+            <label>商品介绍</label>
+            <textarea name="item_description" rows="3">${item?.item_description || ''}</textarea>
           </div>
           
-          <div class="form-group" id="upgrade-rank-group" style="display: ${item?.item_type === 'upgrade' ? 'block' : 'none'}">
-            <label>升级到用户组</label>
-            <select name="upgrade_rank">
-              <option value="1" ${item?.upgrade_rank === 1 ? 'selected' : ''}>初级用户</option>
-              <option value="2" ${item?.upgrade_rank === 2 ? 'selected' : ''}>中级用户</option>
-              <option value="3" ${item?.upgrade_rank === 3 ? 'selected' : ''}>高级用户</option>
-              <option value="4" ${item?.upgrade_rank === 4 ? 'selected' : ''}>贵宾用户</option>
-              <option value="5" ${item?.upgrade_rank === 5 ? 'selected' : ''}>管理员</option>
-            </select>
-          </div>
-        ` : ''}
-        
-        <div class="form-group">
-          <label>商品图片</label>
-          <div class="image-upload-area">
-            <input type="file" id="item-image-file" accept="image/*" onchange="previewImage(this)">
-            <input type="hidden" name="item_image" value="${item?.item_image || ''}">
-            <div id="image-preview" ${item?.item_image ? '' : 'style="display:none"'}>
-              <img src="${item?.item_image ? BASE_URL + item.item_image : ''}" alt="">
+          <div class="form-row">
+            <div class="form-group">
+              <label>价格 <span class="required">*</span></label>
+              <input type="number" name="price" value="${item?.price || ''}" min="1" required>
+            </div>
+            
+            <div class="form-group">
+              <label>库存 <span class="required">*</span></label>
+              <input type="number" name="stock" value="${item?.stock || 0}" min="0" required>
             </div>
           </div>
+          
+          <div class="form-group limit-setting">
+            <label>
+              <input type="checkbox" id="enable-limit" ${item?.max_per_user ? 'checked' : ''} 
+                     onchange="toggleLimitInput()">
+              启用限购
+            </label>
+            <input type="number" name="max_per_user" id="max-per-user" 
+                   value="${item?.max_per_user || 1}" min="1" 
+                   style="display: ${item?.max_per_user ? 'inline-block' : 'none'};"
+                   placeholder="每人限购次数">
+          </div>
+          
+          ${isPointShop ? `
+            <div class="form-group">
+              <label>物品类型</label>
+              <select name="item_type" onchange="onItemTypeChange(this.value)">
+                <option value="physical" ${item?.item_type === 'physical' ? 'selected' : ''}>实体商品</option>
+                <option value="virtual" ${item?.item_type === 'virtual' ? 'selected' : ''}>虚拟物品</option>
+                <option value="upgrade" ${item?.item_type === 'upgrade' ? 'selected' : ''}>用户组升级</option>
+              </select>
+            </div>
+            
+            <div class="form-group" id="upgrade-rank-group" style="display: ${item?.item_type === 'upgrade' ? 'block' : 'none'}">
+              <label>升级到用户组</label>
+              <select name="upgrade_rank">
+                <option value="1" ${item?.upgrade_rank === 1 ? 'selected' : ''}>初级用户</option>
+                <option value="2" ${item?.upgrade_rank === 2 ? 'selected' : ''}>中级用户</option>
+                <option value="3" ${item?.upgrade_rank === 3 ? 'selected' : ''}>高级用户</option>
+                <option value="4" ${item?.upgrade_rank === 4 ? 'selected' : ''}>贵宾用户</option>
+                <option value="5" ${item?.upgrade_rank === 5 ? 'selected' : ''}>管理员</option>
+              </select>
+            </div>
+          ` : ''}
+          
+          <div class="form-group">
+            <label>商品图片</label>
+            <div class="image-upload-area">
+              <input type="file" id="item-image-file" accept="image/*" onchange="previewImage(this)">
+              <input type="hidden" name="item_image" value="${item?.item_image || ''}">
+              <div id="image-preview" ${item?.item_image ? '' : 'style="display:none"'}>
+                <img src="${item?.item_image ? BASE_URL + item.item_image : ''}" alt="">
+              </div>
+            </div>
+          </div>
+        </form>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="saveItem(${item?.id || 'null'}, '${shopType}')">
+            <i class="fas fa-save"></i> 保存
+          </button>
+          <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+            <i class="fas fa-times"></i> 取消
+          </button>
         </div>
-      </form>
-      <div class="modal-footer">
-        <button class="btn btn-primary" onclick="saveItem(${item?.id || 'null'}, '${shopType}')">
-          <i class="fas fa-save"></i> 保存
-        </button>
-        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
-          <i class="fas fa-times"></i> 取消
-        </button>
       </div>
-    </div>
-  `;
-  
-  document.body.appendChild(modal);
-}
-
-// ========== 切换限购输入框显示 ==========
-window.toggleLimitInput = function() {
-  const checkbox = document.getElementById('enable-limit');
-  const input = document.getElementById('max-per-user');
-  input.style.display = checkbox.checked ? 'inline-block' : 'none';
-  if (!checkbox.checked) {
-    input.value = '';
+    `;
+    
+    document.body.appendChild(modal);
   }
-};
+
+  // ========== 切换限购输入框显示 ==========
+  window.toggleLimitInput = function() {
+    const checkbox = document.getElementById('enable-limit');
+    const input = document.getElementById('max-per-user');
+    input.style.display = checkbox.checked ? 'inline-block' : 'none';
+    if (!checkbox.checked) {
+      input.value = '';
+    }
+  };
   
   // 物品类型变化
   window.onItemTypeChange = function(type) {
@@ -750,334 +951,311 @@ window.toggleLimitInput = function() {
     }
   };
   
-    // 保存商品
-	window.saveItem = async function(itemId, shopType) {
-	  const form = document.getElementById('item-form');
-	  const formData = new FormData(form);
-	  
-	  console.log('=== 前端保存商品调试 ===');
-	  console.log('商品ID:', itemId);
-	  console.log('商店类型:', shopType);
-	  
-	  // 获取表单值
-	  const enableLimit = document.getElementById('enable-limit')?.checked || false;
-	  const maxPerUserInput = document.getElementById('max-per-user');
-	  const maxPerUser = enableLimit && maxPerUserInput ? parseInt(maxPerUserInput.value) : null;
-	  
-	  // 构建要发送的数据对象，确保所有字段都有值（即使是null）
-	  const data = {
-		item_name: formData.get('item_name') || '',
-		item_description: formData.get('item_description') || '',
-		price: parseInt(formData.get('price')) || 0,
-		stock: parseInt(formData.get('stock')) || 0,
-		item_image: formData.get('item_image') || null,
-		shop_type: shopType,
-		max_per_user: maxPerUser,
-		is_active: true
-	  };
-	  
-	  // 只在编辑模式下包含这些字段，创建时由后端处理
-	  if (itemId) {
-		// 编辑模式：包含所有字段
-		if (shopType === 'points') {
-		  data.item_type = formData.get('item_type') || 'physical';
-		  if (data.item_type === 'upgrade') {
-			const upgradeRankValue = formData.get('upgrade_rank');
-			data.upgrade_rank = upgradeRankValue ? parseInt(upgradeRankValue) : null;
-		  } else {
-			data.upgrade_rank = null;
-		  }
-		} else {
-		  data.item_type = 'physical';
-		  data.upgrade_rank = null;
-		}
-	  } else {
-		// 创建模式：让后端使用默认值
-		if (shopType === 'points') {
-		  data.item_type = formData.get('item_type') || 'physical';
-		  if (data.item_type === 'upgrade') {
-			const upgradeRankValue = formData.get('upgrade_rank');
-			data.upgrade_rank = upgradeRankValue ? parseInt(upgradeRankValue) : null;
-		  }
-		}
-	  }
-	  
-	  // 验证必填字段
-	  if (!data.item_name) {
-		showErrorMessage('商品名称不能为空');
-		return;
-	  }
-	  
-	  if (!data.price || data.price <= 0) {
-		showErrorMessage('价格必须大于0');
-		return;
-	  }
-	  
-	  if (data.stock < 0) {
-		showErrorMessage('库存不能为负数');
-		return;
-	  }
-	  
-	  // 打印最终发送的数据
-	  console.log('发送的数据对象:', data);
-	  console.log('JSON字符串:', JSON.stringify(data));
-	  
-	  // 检查是否有undefined值
-	  Object.keys(data).forEach(key => {
-		if (data[key] === undefined) {
-		  console.warn(`警告: 字段 ${key} 的值是 undefined`);
-		}
-	  });
-	  
-	  try {
-		const url = itemId ? 
-		  `https://api.am-all.com.cn/api/admin/shop/items/${itemId}` :
-		  'https://api.am-all.com.cn/api/admin/shop/items';
-		
-		const method = itemId ? 'PUT' : 'POST';
-		
-		console.log('请求URL:', url);
-		console.log('请求方法:', method);
-		
-		const token = localStorage.getItem('token');
-		const response = await fetch(url, {
-		  method: method,
-		  headers: {
-			'Authorization': `Bearer ${token}`,
-			'Content-Type': 'application/json'
-		  },
-		  body: JSON.stringify(data)
-		});
-		
-		const res = await response.json();
-		console.log('服务器响应:', res);
-		
-		if (res.success || res.id) {
-		  showSuccessMessage(itemId ? '更新成功' : '添加成功');
-		  document.querySelector('.modal').remove();
-		  loadAdminItems(shopType);
-		} else {
-		  showErrorMessage(res.error || '操作失败');
-		  if (res.details) {
-			console.error('错误详情:', res.details);
-		  }
-		}
-	  } catch (error) {
-		showErrorMessage('保存失败：' + error.message);
-		console.error('保存商品错误:', error);
-	  }
-	};
-
-// ========== 显示管理员兑换记录 ==========
-window.showAdminOrders = async function(shopType) {
-  const content = document.getElementById('content-container');
-  const shopName = shopType === 'points' ? '普通积分商店' : '鸽屋积分商店';
-  
-  content.innerHTML = `
-    <div class="section">
-      <div class="shop-header">
-        <button class="btn-back" onclick="initShopAdmin('${shopType}')">
-          <i class="fas fa-arrow-left"></i> 返回管理
-        </button>
-        <h1 class="page-title">${shopName} - 所有兑换记录</h1>
-      </div>
-      
-      <div class="admin-search-bar">
-        <input type="text" id="order-search" placeholder="搜索订单号、用户名或商品名">
-        <button class="btn btn-primary" onclick="searchAdminOrders('${shopType}')">
-          <i class="fas fa-search"></i> 搜索
-        </button>
-      </div>
-      
-      <div class="orders-container">
-        <table class="orders-table">
-          <thead>
-            <tr>
-              <th>订单号</th>
-              <th>用户</th>
-              <th>商品名称</th>
-              <th>类型</th>
-              <th>消耗积分</th>
-              <th>兑换码</th>
-              <th>收货信息</th>
-              <th>状态</th>
-              <th>兑换时间</th>
-            </tr>
-          </thead>
-          <tbody id="admin-orders-tbody">
-            <tr>
-              <td colspan="9" class="loading-cell">
-                <i class="fas fa-spinner fa-spin"></i> 加载中...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div id="admin-orders-pagination"></div>
-      </div>
-    </div>
-  `;
-  
-  loadAdminOrders(shopType, 1);
-};
-
-// ========== 加载管理员兑换记录 ==========
-async function loadAdminOrders(shopType, page = 1, search = '') {
-  try {
-    const params = new URLSearchParams({
+  // 保存商品（修复后的版本）
+  window.saveItem = async function(itemId, shopType) {
+    const form = document.getElementById('item-form');
+    if (!form) {
+      showErrorMessage('表单未找到');
+      return;
+    }
+    
+    const formData = new FormData(form);
+    
+    console.log('=== 保存商品调试 ===');
+    console.log('商品ID:', itemId);
+    console.log('商店类型:', shopType);
+    
+    // 获取表单值
+    const enableLimit = document.getElementById('enable-limit')?.checked || false;
+    const maxPerUserInput = document.getElementById('max-per-user');
+    const maxPerUser = enableLimit && maxPerUserInput ? parseInt(maxPerUserInput.value) : null;
+    
+    // 构建要发送的数据对象
+    const data = {
+      item_name: formData.get('item_name') || '',
+      item_description: formData.get('item_description') || '',
+      price: parseInt(formData.get('price')) || 0,
+      stock: parseInt(formData.get('stock')) || 0,
+      item_image: formData.get('item_image') || null,
       shop_type: shopType,
-      page: page
-    });
-    
-    if (search) {
-      params.append('search', search);
-    }
-    
-    const res = await secureFetch(`https://api.am-all.com.cn/api/admin/shop/orders?${params}`);
-    
-    if (res.success) {
-      renderAdminOrders(res.orders, res.pagination, shopType);
-    }
-  } catch (error) {
-    showErrorMessage('加载兑换记录失败');
-  }
-}
-
-// ========== 渲染管理员兑换记录 ==========
-function renderAdminOrders(orders, pagination, shopType) {
-  const tbody = document.getElementById('admin-orders-tbody');
-  
-  if (orders.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="9" class="empty-cell">暂无兑换记录</td>
-      </tr>
-    `;
-    return;
-  }
-  
-  tbody.innerHTML = orders.map(order => {
-    const typeText = {
-      'virtual': '虚拟物品',
-      'upgrade': '用户组升级',
-      'physical': '实体商品'
-    }[order.item_type] || '未知';
-    
-    // 状态映射
-    const statusMap = {
-      'pending': '待处理',
-      'processing': '处理中',
-      'shipped': '已发货',
-      'completed': '已完成',
-      'cancelled': '已取消'
+      max_per_user: maxPerUser,
+      is_active: true
     };
     
-    const currentStatus = order.order_status || 'processing';
-    const statusText = statusMap[currentStatus] || '处理中';
+    // 处理商品类型相关字段
+    if (shopType === 'points') {
+      data.item_type = formData.get('item_type') || 'physical';
+      if (data.item_type === 'upgrade') {
+        const upgradeRankValue = formData.get('upgrade_rank');
+        data.upgrade_rank = upgradeRankValue ? parseInt(upgradeRankValue) : null;
+      } else {
+        data.upgrade_rank = null;
+      }
+    } else {
+      data.item_type = 'physical';
+      data.upgrade_rank = null;
+    }
     
-    let shippingInfo = '-';
-    if (order.shipping_info) {
-      const info = order.shipping_info;
-      shippingInfo = `
-        <div class="shipping-info-cell">
-          <div>淘宝ID: ${info.taobao_id}</div>
-          <div>收件人: ${info.receiver_name}</div>
-          <div>电话: ${info.contact_phone}</div>
+    // 验证必填字段
+    if (!data.item_name) {
+      showErrorMessage('商品名称不能为空');
+      return;
+    }
+    
+    if (!data.price || data.price <= 0) {
+      showErrorMessage('价格必须大于0');
+      return;
+    }
+    
+    if (data.stock < 0) {
+      showErrorMessage('库存不能为负数');
+      return;
+    }
+    
+    console.log('发送的数据:', data);
+    
+    try {
+      const url = itemId ? 
+        `https://api.am-all.com.cn/api/admin/shop/items/${itemId}` :
+        'https://api.am-all.com.cn/api/admin/shop/items';
+      
+      const method = itemId ? 'PUT' : 'POST';
+      
+      const res = await secureFetch(url, {
+        method: method,
+        body: JSON.stringify(data)
+      });
+      
+      console.log('服务器响应:', res);
+      
+      // 成功处理
+      showSuccessMessage(itemId ? '更新成功' : '添加成功');
+      
+      // 关闭弹窗
+      const modal = document.querySelector('.modal');
+      if (modal) {
+        modal.remove();
+      }
+      
+      // 重新加载商品列表
+      loadAdminItems(shopType);
+      
+    } catch (error) {
+      console.error('保存商品错误:', error);
+      showErrorMessage('保存失败：' + (error.message || '未知错误'));
+    }
+  };
+
+  // ========== 显示管理员兑换记录 ==========
+  window.showAdminOrders = async function(shopType) {
+    const content = document.getElementById('content-container');
+    const shopName = shopType === 'points' ? '普通积分商店' : '鸽屋积分商店';
+    
+    content.innerHTML = `
+      <div class="section">
+        <div class="shop-header">
+          <button class="btn-back" onclick="initShopAdmin('${shopType}')">
+            <i class="fas fa-arrow-left"></i> 返回管理
+          </button>
+          <h1 class="page-title">${shopName} - 所有兑换记录</h1>
         </div>
-      `;
-    }
-    
-    return `
-      <tr>
-        <td class="order-number">${order.order_number}</td>
-        <td>${order.nickname || order.username} (UID:${order.uid})</td>
-        <td>${order.item_name}</td>
-        <td>${typeText}</td>
-        <td>${order.price}</td>
-        <td>${order.redemption_code || '-'}</td>
-        <td>${shippingInfo}</td>
-        <td>
-          <select class="status-select" data-order="${order.order_number}" onchange="updateOrderStatus('${order.order_number}', this.value)">
-            <option value="pending" ${currentStatus === 'pending' ? 'selected' : ''}>待处理</option>
-            <option value="processing" ${currentStatus === 'processing' ? 'selected' : ''}>处理中</option>
-            <option value="shipped" ${currentStatus === 'shipped' ? 'selected' : ''}>已发货</option>
-            <option value="completed" ${currentStatus === 'completed' ? 'selected' : ''}>已完成</option>
-            <option value="cancelled" ${currentStatus === 'cancelled' ? 'selected' : ''}>已取消</option>
-          </select>
-        </td>
-        <td>${new Date(order.created_at).toLocaleString()}</td>
-      </tr>
+        
+        <div class="admin-search-bar">
+          <input type="text" id="order-search" placeholder="搜索订单号、用户名或商品名">
+          <button class="btn btn-primary" onclick="searchAdminOrders('${shopType}')">
+            <i class="fas fa-search"></i> 搜索
+          </button>
+        </div>
+        
+        <div class="orders-container">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>用户</th>
+                <th>商品名称</th>
+                <th>类型</th>
+                <th>消耗积分</th>
+                <th>兑换码</th>
+                <th>收货信息</th>
+                <th>状态</th>
+                <th>兑换时间</th>
+              </tr>
+            </thead>
+            <tbody id="admin-orders-tbody">
+              <tr>
+                <td colspan="9" class="loading-cell">
+                  <i class="fas fa-spinner fa-spin"></i> 加载中...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div id="admin-orders-pagination"></div>
+        </div>
+      </div>
     `;
-  }).join('');
-  
-  // 渲染分页
-  renderPagination('admin-orders-pagination', pagination, (page) => {
-    const search = document.getElementById('order-search')?.value || '';
-    loadAdminOrders(shopType, page, search);
-  });
-}
-
-// 添加更新订单状态的函数
-window.updateOrderStatus = async function(orderNumber, newStatus) {
-  try {
-    const res = await secureFetch(`https://api.am-all.com.cn/api/admin/shop/orders/${orderNumber}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ status: newStatus })
-    });
     
-    if (res.success) {
-      showSuccessMessage('订单状态已更新');
-    }
-  } catch (error) {
-    showErrorMessage('更新状态失败：' + error.message);
-    // 恢复原状态
-    location.reload();
-  }
-};
+    loadAdminOrders(shopType, 1);
+  };
 
-// ========== 搜索管理员兑换记录 ==========
-window.searchAdminOrders = function(shopType) {
-  const search = document.getElementById('order-search').value;
-  loadAdminOrders(shopType, 1, search);
-};
-
-// ========== 分页渲染函数 ==========
-function renderPagination(containerId, pagination, onPageChange) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  
-  const { currentPage, totalPages } = pagination;
-  
-  if (totalPages <= 1) {
-    container.innerHTML = '';
-    return;
-  }
-  
-  let html = '<div class="pagination">';
-  
-  // 上一页
-  if (currentPage > 1) {
-    html += `<button onclick="(${onPageChange})(${currentPage - 1})">上一页</button>`;
-  }
-  
-  // 页码
-  for (let i = 1; i <= totalPages; i++) {
-    if (i === currentPage) {
-      html += `<span class="current-page">${i}</span>`;
-    } else if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
-      html += `<button onclick="(${onPageChange})(${i})">${i}</button>`;
-    } else if (i === currentPage - 3 || i === currentPage + 3) {
-      html += `<span>...</span>`;
+  // ========== 加载管理员兑换记录 ==========
+  async function loadAdminOrders(shopType, page = 1, search = '') {
+    try {
+      const params = new URLSearchParams({
+        shop_type: shopType,
+        page: page
+      });
+      
+      if (search) {
+        params.append('search', search);
+      }
+      
+      const res = await secureFetch(`https://api.am-all.com.cn/api/admin/shop/orders?${params}`);
+      
+      if (res.success) {
+        renderAdminOrders(res.orders, res.pagination, shopType);
+      }
+    } catch (error) {
+      showErrorMessage('加载兑换记录失败');
     }
   }
-  
-  // 下一页
-  if (currentPage < totalPages) {
-    html += `<button onclick="(${onPageChange})(${currentPage + 1})">下一页</button>`;
+
+  // ========== 渲染管理员兑换记录 ==========
+  function renderAdminOrders(orders, pagination, shopType) {
+    const tbody = document.getElementById('admin-orders-tbody');
+    
+    if (orders.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="empty-cell">暂无兑换记录</td>
+        </tr>
+      `;
+      return;
+    }
+    
+    tbody.innerHTML = orders.map(order => {
+      const typeText = {
+        'virtual': '虚拟物品',
+        'upgrade': '用户组升级',
+        'physical': '实体商品'
+      }[order.item_type] || '未知';
+      
+      // 状态映射
+      const statusMap = {
+        'pending': '待处理',
+        'processing': '处理中',
+        'shipped': '已发货',
+        'completed': '已完成',
+        'cancelled': '已取消'
+      };
+      
+      const currentStatus = order.order_status || 'processing';
+      const statusText = statusMap[currentStatus] || '处理中';
+      
+      let shippingInfo = '-';
+      if (order.shipping_info) {
+        const info = order.shipping_info;
+        shippingInfo = `
+          <div class="shipping-info-cell">
+            <div>淘宝ID: ${info.taobao_id}</div>
+            <div>收件人: ${info.receiver_name}</div>
+            <div>电话: ${info.contact_phone}</div>
+          </div>
+        `;
+      }
+      
+      return `
+        <tr>
+          <td class="order-number">${order.order_number}</td>
+          <td>${order.nickname || order.username} (UID:${order.uid})</td>
+          <td>${order.item_name}</td>
+          <td>${typeText}</td>
+          <td>${order.price}</td>
+          <td>${order.redemption_code || '-'}</td>
+          <td>${shippingInfo}</td>
+          <td>
+            <select class="status-select" data-order="${order.order_number}" onchange="updateOrderStatus('${order.order_number}', this.value)">
+              <option value="pending" ${currentStatus === 'pending' ? 'selected' : ''}>待处理</option>
+              <option value="processing" ${currentStatus === 'processing' ? 'selected' : ''}>处理中</option>
+              <option value="shipped" ${currentStatus === 'shipped' ? 'selected' : ''}>已发货</option>
+              <option value="completed" ${currentStatus === 'completed' ? 'selected' : ''}>已完成</option>
+              <option value="cancelled" ${currentStatus === 'cancelled' ? 'selected' : ''}>已取消</option>
+            </select>
+          </td>
+          <td>${new Date(order.created_at).toLocaleString()}</td>
+        </tr>
+      `;
+    }).join('');
+    
+    // 渲染分页
+    renderPagination('admin-orders-pagination', pagination, (page) => {
+      const search = document.getElementById('order-search')?.value || '';
+      loadAdminOrders(shopType, page, search);
+    });
   }
-  
-  html += '</div>';
-  container.innerHTML = html;
-}
+
+  // 添加更新订单状态的函数
+  window.updateOrderStatus = async function(orderNumber, newStatus) {
+    try {
+      const res = await secureFetch(`https://api.am-all.com.cn/api/admin/shop/orders/${orderNumber}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (res.success) {
+        showSuccessMessage('订单状态已更新');
+      }
+    } catch (error) {
+      showErrorMessage('更新状态失败：' + error.message);
+      // 恢复原状态
+      location.reload();
+    }
+  };
+
+  // ========== 搜索管理员兑换记录 ==========
+  window.searchAdminOrders = function(shopType) {
+    const search = document.getElementById('order-search').value;
+    loadAdminOrders(shopType, 1, search);
+  };
+
+  // ========== 分页渲染函数 ==========
+  function renderPagination(containerId, pagination, onPageChange) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const { currentPage, totalPages } = pagination;
+    
+    if (totalPages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+    
+    let html = '<div class="pagination">';
+    
+    // 上一页
+    if (currentPage > 1) {
+      html += `<button onclick="(${onPageChange})(${currentPage - 1})">上一页</button>`;
+    }
+    
+    // 页码
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === currentPage) {
+        html += `<span class="current-page">${i}</span>`;
+      } else if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+        html += `<button onclick="(${onPageChange})(${i})">${i}</button>`;
+      } else if (i === currentPage - 3 || i === currentPage + 3) {
+        html += `<span>...</span>`;
+      }
+    }
+    
+    // 下一页
+    if (currentPage < totalPages) {
+      html += `<button onclick="(${onPageChange})(${currentPage + 1})">下一页</button>`;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+  }
   
   // 删除商品
   window.deleteItem = async function(itemId, shopType) {
@@ -1199,7 +1377,5 @@ function renderPagination(containerId, pagination, onPageChange) {
       showErrorMessage('解绑失败');
     }
   };
-  
-  const BASE_URL = 'https://api.am-all.com.cn';
   
 })();
