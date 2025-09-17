@@ -1737,6 +1737,16 @@ function handleLogout() {
     }
   }
   
+  // 清理好友系统
+  if (typeof cleanupFriendsSystem === 'function') {
+    try {
+      cleanupFriendsSystem();
+      console.log('好友系统已清理');
+    } catch (error) {
+      console.error('清理好友系统失败:', error);
+    }
+  }
+  
   // 清除本地存储
   localStorage.removeItem('token');
   localStorage.removeItem('userInfo');
@@ -2225,13 +2235,13 @@ setTimeout(() => {
         languageModule.initLanguage();
       }
       
-	if (pageId === 'user-settings') {
-	  const token = localStorage.getItem('token');
-	  if (token) {
-		fetchUserInfo(token);
-	  } else {
-		loadPage('login');
-	  }
+if (pageId === 'user-settings') {
+  const token = localStorage.getItem('token');
+  if (token) {
+    fetchUserInfo(token);
+  } else {
+    loadPage('login');
+  }
   
   // 添加选项卡切换功能
   setTimeout(() => {
@@ -2252,6 +2262,11 @@ setTimeout(() => {
             content.classList.remove('active');
             if (content.id === `${targetTab}-tab`) {
               content.classList.add('active');
+              
+              // 如果切换到隐私设置选项卡，初始化隐私设置
+              if (targetTab === 'privacy' && typeof renderPrivacySettings === 'function') {
+                renderPrivacySettings();
+              }
             }
           });
         });
