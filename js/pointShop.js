@@ -304,16 +304,16 @@
               </div>
             </div>
             
-            <div class="shop-card disabled">
-              <div class="shop-card-icon">
-                <i class="fas fa-star"></i>
-              </div>
-              <h3>CREDIT商店</h3>
-              <p>敬请期待</p>
-              <div class="shop-card-coming">
-                <i class="fas fa-clock"></i> 未开放
-              </div>
-            </div>
+			<div class="shop-card" onclick="initCreditShop()">
+			  <div class="shop-card-icon">
+				<i class="fas fa-gem"></i>
+			  </div>
+			  <h3>CREDIT点数商店</h3>
+			  <p>使用CREDIT点数兑换商品</p>
+			  <div class="shop-card-points">
+				当前CREDIT：<span class="points-value">${currentUser.credit || 0}</span>
+			  </div>
+			</div>
           </div>
         </div>
       </div>
@@ -889,6 +889,30 @@
               </div>
             </div>
           </div>
+
+			${isPointShop ? `
+			  <div class="form-group" id="virtual-type-group" style="display: ${item?.item_type === 'virtual' ? 'block' : 'none'}">
+				<label>虚拟物品功能</label>
+				<select name="virtual_type" onchange="onVirtualTypeChange(this.value)">
+				  <option value="code" ${item?.virtual_type === 'code' ? 'selected' : ''}>仅发行兑换码</option>
+				  <option value="points" ${item?.virtual_type === 'points' ? 'selected' : ''}>增加积分</option>
+				  <option value="credit" ${item?.virtual_type === 'credit' ? 'selected' : ''}>增加CREDIT</option>
+				  <option value="user_group" ${item?.virtual_type === 'user_group' ? 'selected' : ''}>变更用户组</option>
+				  <option value="coupon" ${item?.virtual_type === 'coupon' ? 'selected' : ''}>优惠券</option>
+				</select>
+			  </div>
+			  
+			  <div class="form-group" id="virtual-value-group" style="display: none">
+				<label id="virtual-value-label">数值</label>
+				<input type="number" name="virtual_value" id="virtual-value" min="1">
+				<select name="user_group_value" id="user-group-select" style="display: none">
+				  <option value="1">初级用户</option>
+				  <option value="2">中级用户</option>
+				  <option value="3">高级用户</option>
+				  <option value="4">贵宾用户</option>
+				</select>
+			  </div>
+			` : ''}
         </form>
         <div class="modal-footer">
           <button class="btn btn-primary" onclick="saveItem(${item?.id || 'null'}, '${shopType}')">
@@ -1387,3 +1411,49 @@
   };
   
 })();
+
+// 虚拟物品类型变化处理
+window.onVirtualTypeChange = function(type) {
+  const valueGroup = document.getElementById('virtual-value-group');
+  const valueLabel = document.getElementById('virtual-value-label');
+  const valueInput = document.getElementById('virtual-value');
+  const groupSelect = document.getElementById('user-group-select');
+  
+  if (!valueGroup) return;
+  
+  if (type === 'code' || type === 'coupon') {
+    valueGroup.style.display = 'none';
+  } else if (type === 'points') {
+    valueGroup.style.display = 'block';
+    valueLabel.textContent = '增加积分数量';
+    valueInput.style.display = 'block';
+    groupSelect.style.display = 'none';
+  } else if (type === 'credit') {
+    valueGroup.style.display = 'block';
+    valueLabel.textContent = '增加CREDIT数量';
+    valueInput.style.display = 'block';
+    groupSelect.style.display = 'none';
+  } else if (type === 'user_group') {
+    valueGroup.style.display = 'block';
+    valueLabel.textContent = '变更到用户组';
+    valueInput.style.display = 'none';
+    groupSelect.style.display = 'block';
+  }
+};
+
+// 修改物品类型变化处理，添加虚拟物品功能显示
+window.onItemTypeChange = function(type) {
+  const upgradeGroup = document.getElementById('upgrade-rank-group');
+  const virtualGroup = document.getElementById('virtual-type-group');
+  
+  if (upgradeGroup) {
+    upgradeGroup.style.display = type === 'upgrade' ? 'block' : 'none';
+  }
+  
+  if (virtualGroup) {
+    virtualGroup.style.display = type === 'virtual' ? 'block' : 'none';
+    if (type !== 'virtual') {
+      document.getElementById('virtual-value-group').style.display = 'none';
+    }
+  }
+};

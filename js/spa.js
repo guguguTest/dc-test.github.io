@@ -12,7 +12,8 @@ const ordersPerPage = 50;
 const PROTECTED_PAGES = [
   'download','tools','dllpatcher','fortune','user-settings',
   'ccb','exchange','announcement-admin','site-admin','download-admin','order-entry','user-manager',
-  'point-shop', 'points-shop-admin', 'point2-shop-admin'
+  'point-shop', 'points-shop-admin', 'point2-shop-admin',
+  'credit-shop-admin', 'redemption-code-admin'
 ];
 
 // 数据源
@@ -545,11 +546,12 @@ async function updateSidebarVisibility(user) {
     }
   };
 
-  // 定义所有页面
+    // 定义所有页面
 	const allPages = [
 	  'home', 'download', 'tools', 'dllpatcher', 'settings', 'help', 'fortune', 'user-settings',
 	  'ccb', 'exchange', 'announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry',
-	  'point-shop', 'points-shop-admin', 'point2-shop-admin'
+	  'point-shop', 'points-shop-admin', 'point2-shop-admin',
+	  'credit-shop-admin', 'redemption-code-admin'
 	];
 
   // 存储每个页面的可见性
@@ -625,7 +627,9 @@ async function updateSidebarVisibility(user) {
     'sidebar-order-entry': 'order-entry',
 	'sidebar-point-shop': 'point-shop',
     'sidebar-points-shop-admin': 'points-shop-admin', 
-    'sidebar-point2-shop-admin': 'point2-shop-admin'
+    'sidebar-point2-shop-admin': 'point2-shop-admin',
+    'sidebar-credit-shop-admin': 'credit-shop-admin',
+    'sidebar-redemption-code-admin': 'redemption-code-admin'
   };
 
   for (const [id, pid] of Object.entries(legacyMap)) {
@@ -673,7 +677,7 @@ async function updateSidebarVisibility(user) {
 		setDisplay(adminNav, false);
 	  } else {
 		// 包含 site-admin 在内的所有管理页面
-		const adminPages = ['announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry', 'points-shop-admin', 'point2-shop-admin'];
+		const adminPages = ['announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry', 'points-shop-admin', 'point2-shop-admin', 'credit-shop-admin', 'redemption-code-admin'];
 		const hasVisibleAdmin = adminPages.some(p => pageVisibility[p]);
 		
 		console.log('管理页面可见性:', adminPages.map(p => `${p}: ${pageVisibility[p]}`));
@@ -1033,7 +1037,19 @@ function fetchUserPermissions(token) {
 function updateUserInfo(user) {
   const defaultAvatarUrl = 'https://api.am-all.com.cn/avatars/default_avatar.png';
   const rankInfo = getUserRankInfo(user.user_rank || 0);
+
+  // 添加CREDIT显示更新
+  const dropdownCredit = document.getElementById('dropdown-credit');
+  if (dropdownCredit) {
+    dropdownCredit.innerHTML = `<i class="fas fa-star me-2"></i>CREDIT: ${user.credit || 0}`;
+  }
   
+  // 用户设置页面的CREDIT显示
+  const settingsCredit = document.getElementById('settings-credit');
+  if (settingsCredit) {
+    settingsCredit.textContent = user.credit || 0;
+  }
+
   // 使用用户自定义头像或默认头像
   let avatarUrl = defaultAvatarUrl;
 	if (user.avatar) {
@@ -1273,6 +1289,27 @@ if (settingsUsername) {
       sidebarUserArea.appendChild(rankIconMobile);
     }
     rankIconMobile.src = rankInfo.icon;
+  }
+}
+
+// 更新用户CREDIT点数
+function updateUserCredit(credit) {
+  if (currentUser) {
+    currentUser.credit = credit;
+    
+    // 更新所有CREDIT显示
+    const dropdownCredit = document.getElementById('dropdown-credit');
+    if (dropdownCredit) {
+      dropdownCredit.innerHTML = `<i class="fas fa-star me-2"></i>CREDIT: ${credit}`;
+    }
+    
+    const settingsCredit = document.getElementById('settings-credit');
+    if (settingsCredit) {
+      settingsCredit.textContent = credit;
+    }
+    
+    // 更新localStorage
+    localStorage.setItem('userInfo', JSON.stringify(currentUser));
   }
 }
 
@@ -2132,6 +2169,32 @@ setTimeout(() => {
 		initShopAdmin('points');
 	  } else if (pageId === 'point2-shop-admin' && typeof initShopAdmin === 'function') {
 		initShopAdmin('point2');
+	  }
+	  
+	  document.body.classList.remove('spa-loading');
+	  updateActiveMenuItem(pageId);
+	  return;
+	}
+
+	// CREDIT商店管理页面
+	if (pageId === 'credit-shop-admin') {
+	  contentContainer.innerHTML = '<div class="section"><div class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div></div>';
+	  
+	  if (typeof initCreditShopAdmin === 'function') {
+		initCreditShopAdmin();
+	  }
+	  
+	  document.body.classList.remove('spa-loading');
+	  updateActiveMenuItem(pageId);
+	  return;
+	}
+
+	// 发行代码管理页面
+	if (pageId === 'redemption-code-admin') {
+	  contentContainer.innerHTML = '<div class="section"><div class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div></div>';
+	  
+	  if (typeof initRedemptionCodeAdmin === 'function') {
+		initRedemptionCodeAdmin();
 	  }
 	  
 	  document.body.classList.remove('spa-loading');
@@ -3082,12 +3145,58 @@ function initCursorSettingsManually() {
         initOrderEntryPage();
       }
       
-      if (pageId === 'exchange') {
-        document.getElementById('redeem-order-btn').addEventListener('click', handleRedeemOrder);
-        document.getElementById('redeem-code-btn').addEventListener('click', () => {
-          showSuccessMessage('兑换码功能尚未开放');
-        });
-      }
+	if (pageId === 'exchange') {
+	  document.getElementById('redeem-order-btn').addEventListener('click', handleRedeemOrder);
+	  document.getElementById('redeem-code-btn').addEventListener('click', handleRedeemCode);
+	  
+	  // 添加查看记录按钮
+	  document.getElementById('view-order-history-btn')?.addEventListener('click', () => {
+		showRedemptionHistory('order');
+	  });
+	  document.getElementById('view-code-history-btn')?.addEventListener('click', () => {
+		showRedemptionHistory('code');
+	  });
+	}
+
+	// 新增兑换码处理函数
+	function handleRedeemCode() {
+	  const codeInput = document.getElementById('redeem-code-input').value;
+	  const resultDiv = document.getElementById('code-exchange-result');
+	  
+	  if (!codeInput) {
+		resultDiv.innerHTML = '<div class="error">请输入兑换码</div>';
+		return;
+	  }
+	  
+	  const token = localStorage.getItem('token');
+	  
+	  secureFetch('https://api.am-all.com.cn/api/redeem-code', {
+		method: 'POST',
+		headers: {
+		  'Authorization': `Bearer ${token}`,
+		  'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ code: codeInput })
+	  })
+	  .then(data => {
+		if (data.success) {
+		  resultDiv.innerHTML = `<div class="success">兑换成功：${data.message}</div>`;
+		  
+		  // 更新用户积分信息
+		  if (data.user) {
+			currentUser = data.user;
+			updateUserInfo(currentUser);
+		  }
+		  
+		  document.getElementById('redeem-code-input').value = '';
+		} else {
+		  throw new Error(data.error || '兑换失败');
+		}
+	  })
+	  .catch(error => {
+		resultDiv.innerHTML = `<div class="error">${error.message}</div>`;
+	  });
+	}
 
       // 用户管理页面
       if (pageId === 'user-manager') {

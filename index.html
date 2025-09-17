@@ -28,6 +28,8 @@
   <link rel="stylesheet" href="css/navibarFix.css">
   <link rel="stylesheet" href="css/pointShop.css">
   <link rel="stylesheet" href="css/mobileFix.css">
+  <link rel="stylesheet" href="css/creditShop.css">
+  <link rel="stylesheet" href="css/redemptionCode.css">
 </head>
 <body>
   <!-- 顶部导航栏 -->
@@ -113,6 +115,9 @@
               <div class="dropdown-points" id="dropdown-points">
                 <i class="fas fa-coins me-2"></i>积分: 0
               </div>
+			  <div class="dropdown-credit" id="dropdown-credit">
+				<i class="fas fa-star me-2"></i>CREDIT: 0
+			  </div>
               <a href="#" data-page="user-settings">用户设置</a>
               <a href="#" id="logout-pc">退出登录</a>
             </div>
@@ -246,6 +251,10 @@
 		<i class="fas fa-dove me-2"></i>
 		<span>鸽屋积分商品管理</span>
 	  </a></li>
+	  <li><a href="#" data-page="credit-shop-admin" id="sidebar-credit-shop-admin" style="display: none;">
+	    <i class="fas fa-star me-2"></i>
+	    <span>CREDIT点数商品管理</span>
+	  </a></li>
       <li><a href="#" data-page="order-entry" id="sidebar-order-entry" style="display: none;">
         <i class="fas fa-file-invoice me-2"></i>
         <span>订单录入</span>
@@ -291,5 +300,7 @@
   <script defer src="js/cursor.js"></script>
   <script defer src="js/pointShop.js"></script>
   <script defer src="js/mobileOptimize.js"></script>
+  <script defer src="js/creditShop.js"></script>
+  <script defer src="js/redemptionCode.js"></script>
 </body>
 </html>

@@ -1,70 +1,3 @@
-// 帮助内容数据
-const helpContentData = {
-  1: {
-    title: "下载指南",
-    content: `
-      <h3>本站资源下载说明</h3>
-      <ol>
-        <li>如需下载资源，请从左侧菜单进入下载页面选择需要的资源进行下载。</li>
-		<li>本站游戏资源提供最多不超过N-1的公开资源下载，如有新增资源请多关注首页公告。</li>
-      </ol>
-      
-      <div class="warning mt-4">
-        <strong><i class="fas fa-exclamation-circle me-2"></i> 注意：</strong>
-        <span>目前所有资源仅提供百度网盘下载方式</span>
-      </div>
-    `
-  },
-  2: {
-    title: "实用工具指南",
-    content: `
-      <h3>EvilLeaker系列工具</h3>
-      <h4><strong>Segatools Editor</strong></h4>
-	  <p>此工具可以方便快捷的修改所有游戏的segatools.ini，并且不需要您另行安装任何文本或代码编辑工具。</p>
-	  <p>本工具自带备份功能，在您读取并加载segatools.ini后，软件会自动备份您所选择的文件，不用担心修改出现任何问题。</p>
-	  <p>本工具同时具备自动更新功能，在您启动软件后如有新版本则会在日志区域显示新版本信息，如需下载更新请点击“帮助→更新”选项即可更新新版本。</p>
-	  
-	  <p><strong>软件使用指南</strong></p>
-	  <p>1.双击SegatoolsEditor.exe启动软件</p>
-	  <img src="https://oss.am-all.com.cn/asset/img/other/dc/software/sge-00.png" alt="00">
-	  <hr>
-	  <p>2.初次启动界面默认显示英文，请点击菜单栏“Language”切换为中文即可</p>
-	  <ul>
-        <li><strong>切换语言后软件会保存所选语言，下次启动后就会显示你所选择的语言。</strong></li>
-		<li><strong>软件会在“C:/Users/用户名/Documents/evilleaker”文件夹下自动建立配置文件“sgEditor_config.json”</strong></li>
-      </ul>
-	  <img src="https://oss.am-all.com.cn/asset/img/other/dc/software/sge-01.png" alt="01">
-	  <hr>
-      <p>3.软件在启动后会自动检查是否有新版本并在下方日志区提示，如需更新软件，请点击菜单栏“帮助→更新”选项</p>
-	  <img src="https://oss.am-all.com.cn/asset/img/other/dc/software/sge-02.png" alt="02">
-	  <hr>
-	  <p>4.按照下图步骤加载segatools.ini文件</p>
-	  <ul>
-		<li><strong>①点击“浏览文件”</strong></li>
-		<li><strong>②选择需要修改的“segatools.ini”文件</strong></li>
-		<li><strong>③点击“打开”</strong></li>
-		<li><strong>④点击“加载配置”</strong></li>
-	  </ul>
-	  <img src="https://oss.am-all.com.cn/asset/img/other/dc/software/sge-03.png" alt="03">
-	  <hr>
-	  <p>5.点击“选择配置节”下拉菜单来选择需要修改的配置</p>
-	  <ul>
-		<li><strong>在读取完文件的同时，软件会自动备份当前你读取的segatools.ini</strong></li>
-		<li><strong>备份路径为“C:/Users/用户名/Documents/evilleaker/ini_backup”文件夹中</strong></li>
-	  </ul>
-	  <img src="https://oss.am-all.com.cn/asset/img/other/dc/software/sge-04.png" alt="04">
-	  <hr>
-	  <p>6.点击相应的输入框来修改配置参数</p>
-	  <ul>
-		<li>①点击需要修改的值的输入框来修改参数</li>
-		<li>②在修改完的同时，软件会自动保存文件，你也可以手动点击“保存配置”来保存文件</li>
-		<li>③点击参数值框后的选项会切换当前值的有效性(相当于ini文件中的注释功能)，“有效”为取消注释激活配置，“无效”为注释掉配置使其不生效。</li>
-	  </ul>
-      <p>所有工具均可在<a href="#" data-page="tools">实用工具页面</a>下载</p>
-    `
-  }
-};
-
 // 页面内容定义
 const pages = {
 
@@ -944,6 +877,15 @@ download: `
                     <div class="points-value" id="settings-point2">0</div>
                   </div>
                 </div>
+				<div class="points-item">
+				  <div class="points-icon">
+					<i class="fas fa-gem"></i>
+				  </div>
+				  <div class="points-info">
+					<div class="points-label">CREDIT点数</div>
+					<div class="points-value" id="settings-credit">0</div>
+				  </div>
+				</div>
               </div>
             </div>
           </div>

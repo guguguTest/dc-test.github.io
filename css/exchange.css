@@ -33,6 +33,44 @@
   margin-bottom: 20px;
 }
 
+/* 卡片头部带按钮的布局 */
+.card-header-with-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.card-header-with-btn h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* 兑换记录按钮样式 */
+.btn-info {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  padding: 6px 14px;
+  font-size: 0.85em;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.btn-info:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-info:active {
+  transform: translateY(0);
+}
+
+/* 分隔线样式 */
 .exchange-divider {
   display: flex;
   align-items: center;
@@ -55,6 +93,7 @@
   font-weight: 500;
 }
 
+/* 提示信息样式 */
 .exchange-hint {
   margin-top: 15px;
   padding: 10px;
@@ -69,25 +108,59 @@
   font-size: 0.9rem;
 }
 
+/* 结果显示区域 */
 .exchange-result {
   margin-top: 15px;
-  min-height: 24px;
+  padding: 0;
+  min-height: 0;
+  display: none;
 }
 
-.exchange-result .success {
-  color: #28a745;
-  padding: 10px;
-  background: #f0fff4;
+.exchange-result.show {
+  display: block;
+  animation: slideDown 0.3s ease;
+}
+
+.exchange-result.success {
+  color: #155724;
+  padding: 12px 15px;
+  background: #d4edda;
   border-radius: 6px;
+  border: 1px solid #c3e6cb;
   border-left: 4px solid #28a745;
+  font-size: 0.95rem;
 }
 
-.exchange-result .error {
-  color: #dc3545;
-  padding: 10px;
-  background: #fff5f5;
+.exchange-result.error {
+  color: #721c24;
+  padding: 12px 15px;
+  background: #f8d7da;
   border-radius: 6px;
+  border: 1px solid #f5c6cb;
   border-left: 4px solid #dc3545;
+  font-size: 0.95rem;
+}
+
+.exchange-result.info {
+  color: #004085;
+  padding: 12px 15px;
+  background: #d1ecf1;
+  border-radius: 6px;
+  border: 1px solid #bee5eb;
+  border-left: 4px solid #17a2b8;
+  font-size: 0.95rem;
+}
+
+/* 滑入动画 */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 输入组样式 */
@@ -95,16 +168,28 @@
   display: flex;
   width: 100%;
   margin-bottom: 15px;
+  gap: 10px;
 }
 
 .input-group .form-control {
   flex: 1;
-  min-width: 0; /* 防止输入框溢出 */
-  margin-right: 10px; /* PC端增加右边距 */
+  min-width: 0;
   border-radius: 6px;
   border: 1px solid #ddd;
   padding: 10px 15px;
   font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.input-group .form-control:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.input-group .form-control::placeholder {
+  color: #999;
+  font-size: 0.95rem;
 }
 
 .input-group .btn {
@@ -112,6 +197,18 @@
   border-radius: 6px;
   padding: 10px 20px;
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.input-group .btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.input-group .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* 移动端适配 */
@@ -125,19 +222,55 @@
     padding: 20px;
   }
   
+  .exchange-card h3 {
+    font-size: 1.2rem;
+  }
+  
+  .card-header-with-btn {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .card-header-with-btn .btn-info {
+    align-self: stretch;
+    text-align: center;
+    padding: 8px 14px;
+  }
+  
   .input-group {
     flex-direction: column;
     gap: 10px;
   }
   
   .input-group .form-control {
-    margin-right: 0;
-    margin-bottom: 10px;
-    width: 100%; /* 移动端输入框宽度100% */
-    min-width: auto; /* 重置最小宽度 */
+    width: 100%;
+    min-width: auto;
   }
   
   .input-group .btn {
     width: 100%;
+    padding: 12px 20px;
+  }
+  
+  .exchange-result {
+    font-size: 0.9rem;
+  }
+  
+  .exchange-result.success,
+  .exchange-result.error,
+  .exchange-result.info {
+    padding: 10px 12px;
+  }
+}
+
+/* 平板适配 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .exchange-container {
+    max-width: 600px;
+  }
+  
+  .exchange-card {
+    max-width: 100%;
   }
 }
