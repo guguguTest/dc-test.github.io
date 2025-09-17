@@ -95,8 +95,8 @@
     }
   }
   
-  // 渲染CREDIT商店页面
-  async function renderCreditShopPage() {
+  // 渲染CREDIT商店页面（全局函数）
+  window.renderCreditShopPage = async function() {
     const content = document.getElementById('content-container');
     const userCredit = currentUser.credit || 0;
     
@@ -282,7 +282,7 @@
     }
   };
   
-  // 显示兑换记录
+  // 显示用户兑换记录
   window.showCreditOrders = async function() {
     const content = document.getElementById('content-container');
     
@@ -387,6 +387,11 @@
         </tr>
       `;
     }).join('');
+    
+    // 渲染分页
+    if (pagination) {
+      renderCreditPagination('orders-pagination', pagination, (page) => loadUserCreditOrders(page));
+    }
   }
   
   // CREDIT商品管理
@@ -448,6 +453,180 @@
       checkboxes.forEach(cb => cb.checked = this.checked);
     });
   };
+  
+  // 管理员查看所有兑换记录
+  window.showAdminCreditOrders = async function() {
+    const content = document.getElementById('content-container');
+    
+    content.innerHTML = `
+      <div class="section">
+        <div class="shop-header">
+          <button class="btn-back" onclick="initCreditShopAdmin()">
+            <i class="fas fa-arrow-left"></i> 返回管理
+          </button>
+          <h1 class="page-title">CREDIT商店 - 所有兑换记录</h1>
+        </div>
+        
+        <div class="admin-search-bar">
+          <input type="text" id="order-search" placeholder="搜索订单号、用户名或商品名">
+          <button class="btn btn-primary" onclick="searchAdminCreditOrders()">
+            <i class="fas fa-search"></i> 搜索
+          </button>
+        </div>
+        
+        <div class="orders-container">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>用户</th>
+                <th>商品名称</th>
+                <th>类型</th>
+                <th>消耗CREDIT</th>
+                <th>兑换码</th>
+                <th>优惠券码</th>
+                <th>状态</th>
+                <th>兑换时间</th>
+              </tr>
+            </thead>
+            <tbody id="admin-orders-tbody">
+              <tr>
+                <td colspan="9" class="loading-cell">
+                  <i class="fas fa-spinner fa-spin"></i> 加载中...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div id="admin-orders-pagination"></div>
+        </div>
+      </div>
+    `;
+    
+    loadAdminCreditOrders(1);
+  };
+  
+  // 加载管理员CREDIT订单
+  async function loadAdminCreditOrders(page = 1, search = '') {
+    try {
+      const params = new URLSearchParams({
+        shop_type: 'credit',
+        page: page
+      });
+      
+      if (search) {
+        params.append('search', search);
+      }
+      
+      const res = await secureFetch(`https://api.am-all.com.cn/api/admin/shop/orders?${params}`);
+      
+      if (res.success) {
+        renderAdminCreditOrders(res.orders, res.pagination);
+      }
+    } catch (error) {
+      showErrorMessage('加载兑换记录失败');
+    }
+  }
+  
+  // 渲染管理员CREDIT订单
+  function renderAdminCreditOrders(orders, pagination) {
+    const tbody = document.getElementById('admin-orders-tbody');
+    
+    if (orders.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="empty-cell">暂无兑换记录</td>
+        </tr>
+      `;
+      return;
+    }
+    
+    tbody.innerHTML = orders.map(order => {
+      const typeText = {
+        'virtual': '虚拟物品',
+        'physical': '实体商品'
+      }[order.item_type] || '未知';
+      
+      const statusText = order.order_status === 'completed' ? '已完成' : '处理中';
+      
+      return `
+        <tr>
+          <td class="order-number">${order.order_number}</td>
+          <td>${order.nickname || order.username} (UID:${order.uid})</td>
+          <td>${order.item_name}</td>
+          <td>${typeText}</td>
+          <td>${order.price}</td>
+          <td>
+            ${order.redemption_code ? 
+              `<span class="redemption-code">${order.redemption_code}</span>
+               <button class="btn-small btn-copy" onclick="copyRedemptionCode('${order.redemption_code}')">
+                 <i class="fas fa-copy"></i>
+               </button>` : 
+              '-'}
+          </td>
+          <td>
+            ${order.coupon_code ? 
+              `<span class="coupon-code">${order.coupon_code}</span>
+               <button class="btn-small btn-copy" onclick="copyRedemptionCode('${order.coupon_code}')">
+                 <i class="fas fa-copy"></i>
+               </button>` : 
+              '-'}
+          </td>
+          <td><span class="status-badge ${order.order_status}">${statusText}</span></td>
+          <td>${new Date(order.created_at).toLocaleString()}</td>
+        </tr>
+      `;
+    }).join('');
+    
+    // 渲染分页
+    if (pagination) {
+      renderCreditPagination('admin-orders-pagination', pagination, (page) => {
+        const search = document.getElementById('order-search')?.value || '';
+        loadAdminCreditOrders(page, search);
+      });
+    }
+  }
+  
+  // 搜索管理员CREDIT订单
+  window.searchAdminCreditOrders = function() {
+    const search = document.getElementById('order-search').value;
+    loadAdminCreditOrders(1, search);
+  };
+  
+  // CREDIT分页渲染函数
+  function renderCreditPagination(containerId, pagination, onPageChange) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const { currentPage, totalPages } = pagination;
+    
+    if (totalPages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+    
+    let html = '<div class="pagination">';
+    
+    if (currentPage > 1) {
+      html += `<button onclick="(${onPageChange})(${currentPage - 1})">上一页</button>`;
+    }
+    
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === currentPage) {
+        html += `<span class="current-page">${i}</span>`;
+      } else if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+        html += `<button onclick="(${onPageChange})(${i})">${i}</button>`;
+      } else if (i === currentPage - 3 || i === currentPage + 3) {
+        html += `<span>...</span>`;
+      }
+    }
+    
+    if (currentPage < totalPages) {
+      html += `<button onclick="(${onPageChange})(${currentPage + 1})">下一页</button>`;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+  }
   
   // 加载管理商品列表
   async function loadAdminCreditItems() {
@@ -676,6 +855,16 @@
     }
   };
   
+  // 切换限购输入框
+  window.toggleLimitInput = function() {
+    const checkbox = document.getElementById('enable-limit');
+    const input = document.getElementById('max-per-user');
+    input.style.display = checkbox.checked ? 'inline-block' : 'none';
+    if (!checkbox.checked) {
+      input.value = '';
+    }
+  };
+  
   // 预览图片
   window.previewCreditImage = async function(input) {
     if (input.files && input.files[0]) {
@@ -798,6 +987,18 @@
     }
   };
   
+  // 全选
+  window.selectAllItems = function() {
+    document.getElementById('select-all-checkbox').checked = true;
+    document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = true);
+  };
+  
+  // 取消全选
+  window.unselectAllItems = function() {
+    document.getElementById('select-all-checkbox').checked = false;
+    document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
+  };
+  
   // 删除选中商品
   window.deleteSelectedCreditItems = async function() {
     const checkboxes = document.querySelectorAll('.item-checkbox:checked');
@@ -823,6 +1024,19 @@
     } catch (error) {
       showErrorMessage('删除失败');
     }
+  };
+  
+  // 复制兑换码
+  window.copyRedemptionCode = function(code) {
+    const textarea = document.createElement('textarea');
+    textarea.value = code;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showSuccessMessage('已复制到剪贴板');
   };
   
 })();

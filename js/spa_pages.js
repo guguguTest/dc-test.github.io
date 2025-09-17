@@ -575,28 +575,31 @@ download: `
   </div>
 `,
 
-	// 兑换页面
+// 兑换页面
 	'exchange': `
 	  <div class="section">
 		<h1 class="page-title">兑换码</h1>
-		<button class="back-button" data-page="home">
+		<button class="back-button" onclick="loadPage('home')">
 		  <i class="fas fa-arrow-left me-2"></i>
 		  <span>返回</span>
 		</button>
 		
 		<div class="exchange-container">
 		  <div class="exchange-card">
-			<h3><i class="fas fa-ticket-alt me-2"></i>兑换码</h3>
+			<div class="card-header-with-btn">
+			  <h3><i class="fas fa-ticket-alt me-2"></i>兑换码</h3>
+			  <button class="btn-info" onclick="showUserRedemptionHistory('code')">
+				<i class="fas fa-history"></i> 兑换记录
+			  </button>
+			</div>
 			<p>请输入兑换码进行兑换</p>
 			<div class="input-group">
-			  <input type="text" class="form-control" id="exchange-code" disabled>
-			  <button class="btn btn-secondary" id="redeem-code-btn" disabled>
+			  <input type="text" class="form-control" id="exchange-code" placeholder="请输入兑换码">
+			  <button class="btn btn-primary" id="redeem-code-btn" onclick="redeemCode()">
 				<i class="fas fa-gift me-2"></i>兑换
 			  </button>
 			</div>
-			<div class="exchange-hint">
-			  <p>兑换码功能尚未开放</p>
-			</div>
+			<div class="exchange-result" id="code-exchange-result"></div>
 		  </div>
 		  
 		  <div class="exchange-divider">
@@ -604,15 +607,20 @@ download: `
 		  </div>
 		  
 		  <div class="exchange-card">
-			<h3><i class="fas fa-coins me-2"></i>鸽屋积分兑换</h3>
+			<div class="card-header-with-btn">
+			  <h3><i class="fas fa-coins me-2"></i>鸽屋积分兑换</h3>
+			  <button class="btn-info" onclick="showUserRedemptionHistory('points')">
+				<i class="fas fa-history"></i> 兑换记录
+			  </button>
+			</div>
 			<p>请输入淘宝订单号兑换积分</p>
 			<div class="input-group">
-			  <input type="text" class="form-control" id="order-number-input">
-			  <button class="btn btn-primary" id="redeem-order-btn">
+			  <input type="text" class="form-control" id="order-number-input" placeholder="请输入淘宝订单号">
+			  <button class="btn btn-primary" id="redeem-order-btn" onclick="redeemOrder()">
 				<i class="fas fa-exchange-alt me-2"></i>兑换
 			  </button>
 			</div>
-			<div class="exchange-result" id="exchange-result"></div>
+			<div class="exchange-result" id="order-exchange-result"></div>
 		  </div>
 		</div>
 	  </div>

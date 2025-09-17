@@ -3914,10 +3914,11 @@ async function saveOrder() {
 
 async function handleRedeemOrder() {
   const orderNumber = document.getElementById('order-number-input').value;
-  const resultDiv = document.getElementById('exchange-result');
+  const resultDiv = document.getElementById('order-exchange-result');
   
   if (!orderNumber) {
-    resultDiv.innerHTML = '<div class="error">请输入订单号</div>';
+    resultDiv.className = 'exchange-result show error';
+    resultDiv.textContent = '请输入订单号';
     return;
   }
   
@@ -3952,8 +3953,7 @@ async function handleRedeemOrder() {
       pointsEarned = data.points;
     }
     
-    resultDiv.innerHTML = `<div class="success">兑换成功！获得 ${pointsEarned} 鸽屋积分</div>`;
-    
+    // 更新用户信息
     if (currentUser) {
       if (data.point2 !== undefined) {
         currentUser.point2 = data.point2;
@@ -3963,10 +3963,25 @@ async function handleRedeemOrder() {
       updateUserInfo(currentUser);
     }
     
+    // 计算当前总积分
+    const totalPoints = (currentUser.points || 0) + (currentUser.point2 || 0);
+    
+    // 正确设置成功样式和消息
+    resultDiv.className = 'exchange-result show success';
+    resultDiv.textContent = `兑换成功！获得 ${pointsEarned} 鸽屋积分，当前总积分: ${totalPoints}`;
+    
     document.getElementById('order-number-input').value = '';
+    
+    // 5秒后自动隐藏成功消息
+    setTimeout(() => {
+      resultDiv.className = 'exchange-result';
+      resultDiv.style.display = 'none';
+    }, 5000);
+    
   } catch (error) {
     console.error('兑换错误:', error);
-    resultDiv.innerHTML = `<div class="error">${error.message}</div>`;
+    resultDiv.className = 'exchange-result show error';
+    resultDiv.textContent = error.message;
   }
 }
 

@@ -1826,3 +1826,30 @@
     opacity: 1;
   }
 }
+
+/* 积分显示样式 */
+#user-info-pc .dropdown-points {
+  padding: 8px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* CREDIT点数显示样式 */
+#user-info-pc .dropdown-credit {
+  padding: 8px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#user-info-pc .dropdown-uid i,
+#user-info-pc .dropdown-points i,
+#user-info-pc .dropdown-credit i {
+  margin-right: 8px;
+  font-size: 14px;
+}
