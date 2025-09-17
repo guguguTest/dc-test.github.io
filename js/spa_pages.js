@@ -428,8 +428,7 @@ download: `
     </div>
   `,
 
-
-	// 订单录入页面
+// 订单录入页面
 'order-entry': `
   <div class="order-entry-container">
     <div class="section">
@@ -817,6 +816,10 @@ download: `
             <i class="fas fa-link"></i>
             <span>绑定管理</span>
           </button>
+          <button class="tab-btn" data-tab="privacy">
+            <i class="fas fa-user-shield"></i>
+            <span>隐私设置</span>
+          </button>
         </div>
 
         <!-- 个人信息选项卡 -->
@@ -885,15 +888,15 @@ download: `
                     <div class="points-value" id="settings-point2">0</div>
                   </div>
                 </div>
-				<div class="points-item">
-				  <div class="points-icon">
-					<i class="fas fa-gem"></i>
-				  </div>
-				  <div class="points-info">
-					<div class="points-label">CREDIT点数</div>
-					<div class="points-value" id="settings-credit">0</div>
-				  </div>
-				</div>
+                <div class="points-item">
+                  <div class="points-icon">
+                    <i class="fas fa-gem"></i>
+                  </div>
+                  <div class="points-info">
+                    <div class="points-label">CREDIT点数</div>
+                    <div class="points-value" id="settings-credit">0</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1033,6 +1036,62 @@ download: `
               <p class="text-muted mt-2">需要先绑定收货信息才能使用积分商城</p>
               <button id="add-shipping-btn" class="btn-primary mt-3">
                 <i class="fas fa-link"></i> 前往绑定
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 隐私设置选项卡 -->
+        <div class="tab-content" id="privacy-tab">
+          <div class="settings-card">
+            <div class="card-header">
+              <h3><i class="fas fa-user-shield"></i> 隐私设置</h3>
+            </div>
+            <div class="card-body">
+              <div class="privacy-option">
+                <div class="privacy-option-title">
+                  <i class="fas fa-search"></i>
+                  <span>允许通过以下方式被搜索</span>
+                </div>
+                <div class="privacy-checkboxes">
+                  <div class="privacy-checkbox">
+                    <input type="checkbox" id="search-by-uid" value="uid" checked>
+                    <label for="search-by-uid">UID</label>
+                  </div>
+                  <div class="privacy-checkbox">
+                    <input type="checkbox" id="search-by-username" value="username" checked>
+                    <label for="search-by-username">用户名</label>
+                  </div>
+                  <div class="privacy-checkbox">
+                    <input type="checkbox" id="search-by-nickname" value="nickname" checked>
+                    <label for="search-by-nickname">昵称</label>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="privacy-option">
+                <div class="privacy-option-title">
+                  <i class="fas fa-envelope"></i>
+                  <span>消息接收设置</span>
+                </div>
+                <div class="privacy-radio-group">
+                  <div class="privacy-radio">
+                    <input type="radio" id="msg-all" name="message-privacy" value="all" checked>
+                    <label for="msg-all">接收所有人的消息</label>
+                  </div>
+                  <div class="privacy-radio">
+                    <input type="radio" id="msg-friends" name="message-privacy" value="friends">
+                    <label for="msg-friends">仅接收好友的消息</label>
+                  </div>
+                  <div class="privacy-radio">
+                    <input type="radio" id="msg-none" name="message-privacy" value="none">
+                    <label for="msg-none">不接收任何消息</label>
+                  </div>
+                </div>
+              </div>
+              
+              <button id="save-privacy-btn" class="btn-primary btn-block">
+                <i class="fas fa-save"></i> 保存隐私设置
               </button>
             </div>
           </div>

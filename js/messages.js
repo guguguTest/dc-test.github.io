@@ -1109,6 +1109,7 @@
   global.selectAllMessages = selectAllMessages;
   global.cleanupMessageSystem = cleanupMessageSystem;
   global.initMessageSystem = initMessageSystem;
+  global.openChatModal = openChatModal;
   
   // 在DOM加载完成后初始化
   if (document.readyState === 'loading') {

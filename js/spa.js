@@ -1555,7 +1555,7 @@ function handleLogin() {
     },
     body: JSON.stringify({ login, password })
   })
-  .then(data => {
+.then(data => {
     console.log('登录成功:', data);
     
     if (data.token && data.user) {
@@ -1586,13 +1586,22 @@ function handleLogin() {
             }, 500);
           }
           
+          // 添加：初始化好友系统
+          if (typeof initFriendsSystem === 'function') {
+            setTimeout(() => {
+              try {
+                window.friendsSystemInitialized = true; // 设置标记
+                initFriendsSystem();
+                console.log('好友系统初始化成功');
+              } catch (error) {
+                console.error('好友系统初始化失败:', error);
+              }
+            }, 600);
+          }
+          
           // 异步获取权限并更新侧边栏
           fetchUserPermissions(data.token).then(permissions => {
             localStorage.setItem('userPermissions', JSON.stringify(permissions));
-            updateSidebarVisibility(currentUser);
-          }).catch(error => {
-            console.error('获取用户权限失败:', error);
-            // 即使权限获取失败，也继续其他操作
             updateSidebarVisibility(currentUser);
           });
           
@@ -1602,10 +1611,8 @@ function handleLogin() {
       );
       
       return data;
-    } else {
-      throw new Error(data.error || '登录失败');
     }
-  })
+})
   .catch(error => {
     console.error('登录失败:', {
       error: error.message,
@@ -2271,6 +2278,12 @@ if (pageId === 'user-settings') {
           });
         });
       });
+    }
+    
+    // 绑定隐私设置保存按钮
+    const savePrivacyBtn = document.getElementById('save-privacy-btn');
+    if (savePrivacyBtn) {
+      savePrivacyBtn.addEventListener('click', savePrivacySettings);
     }
     
     // 点击头像区域触发上传
@@ -4470,3 +4483,110 @@ document.addEventListener('click', function(e){
   if (!pid) return;
   try { updateActiveMenuItem(pid); } catch(_) {}
 }, true);
+
+// ====== 隐私设置功能 ======
+// 渲染隐私设置界面
+function renderPrivacySettings() {
+  loadPrivacySettings();
+}
+
+// 加载隐私设置
+async function loadPrivacySettings() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('未登录，无法加载隐私设置');
+      return;
+    }
+    
+    const response = await secureFetch('https://api.am-all.com.cn/api/friends/privacy', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    console.log('隐私设置响应:', response); // 调试日志
+    
+    if (response && !response.error) {
+      // 设置搜索选项
+      const searchOptions = response.searchable_by ? response.searchable_by.split(',') : ['uid', 'username', 'nickname'];
+      
+      const uidCheckbox = document.getElementById('search-by-uid');
+      const usernameCheckbox = document.getElementById('search-by-username');
+      const nicknameCheckbox = document.getElementById('search-by-nickname');
+      
+      if (uidCheckbox) {
+        uidCheckbox.checked = searchOptions.includes('uid');
+        console.log('设置 UID 复选框:', searchOptions.includes('uid'));
+      }
+      if (usernameCheckbox) {
+        usernameCheckbox.checked = searchOptions.includes('username');
+        console.log('设置用户名复选框:', searchOptions.includes('username'));
+      }
+      if (nicknameCheckbox) {
+        nicknameCheckbox.checked = searchOptions.includes('nickname');
+        console.log('设置昵称复选框:', searchOptions.includes('nickname'));
+      }
+      
+      // 设置消息接收选项
+      const messagePrivacy = response.message_privacy || 'all';
+      const messageRadio = document.querySelector(`input[name="message-privacy"][value="${messagePrivacy}"]`);
+      if (messageRadio) {
+        messageRadio.checked = true;
+        console.log('设置消息隐私:', messagePrivacy);
+      }
+    }
+  } catch (error) {
+    console.error('加载隐私设置失败:', error);
+  }
+}
+
+// 保存隐私设置
+async function savePrivacySettings() {
+  const searchOptions = [];
+  const uidCheckbox = document.getElementById('search-by-uid');
+  const usernameCheckbox = document.getElementById('search-by-username');
+  const nicknameCheckbox = document.getElementById('search-by-nickname');
+  
+  if (uidCheckbox && uidCheckbox.checked) searchOptions.push('uid');
+  if (usernameCheckbox && usernameCheckbox.checked) searchOptions.push('username');
+  if (nicknameCheckbox && nicknameCheckbox.checked) searchOptions.push('nickname');
+  
+  const messageRadio = document.querySelector('input[name="message-privacy"]:checked');
+  const messagePrivacy = messageRadio ? messageRadio.value : 'all';
+  
+  // 至少要选择一种搜索方式
+  if (searchOptions.length === 0) {
+    showErrorMessage('至少选择一种搜索方式');
+    return;
+  }
+  
+  try {
+    const token = localStorage.getItem('token');
+    const response = await secureFetch('https://api.am-all.com.cn/api/friends/privacy', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        searchable_by: searchOptions.join(','),
+        message_privacy: messagePrivacy
+      })
+    });
+    
+    if (response && !response.error) {
+      showSuccessMessage('隐私设置已保存');
+    } else {
+      showErrorMessage(response.error || '保存失败');
+    }
+  } catch (error) {
+    console.error('保存隐私设置失败:', error);
+    showErrorMessage('保存失败，请稍后重试');
+  }
+}
+
+// 将这些函数暴露到全局作用域
+window.renderPrivacySettings = renderPrivacySettings;
+window.loadPrivacySettings = loadPrivacySettings;
+window.savePrivacySettings = savePrivacySettings;
