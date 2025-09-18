@@ -924,6 +924,19 @@ function renderFriendItem(friend) {
   }
 
   // 打开与好友的聊天窗口
+  function openChatWithFriend(friendId) {
+  // 先关闭好友下拉菜单
+  closeFriendsDropdown();
+  
+  // 如果消息系统中有打开聊天的方法，优先使用
+  if (typeof window.openChatModal === 'function') {
+    window.openChatModal(friendId);
+  } else {
+    // 否则使用本地的创建聊天窗口方法
+    createAndOpenChatModal(friendId);
+  }
+}
+
 function createAndOpenChatModal(userId) {
   const token = localStorage.getItem('token');
   if (!token) return;

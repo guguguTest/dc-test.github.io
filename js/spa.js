@@ -13,7 +13,7 @@ const PROTECTED_PAGES = [
   'download','tools','dllpatcher','fortune','user-settings',
   'ccb','exchange','announcement-admin','site-admin','download-admin','order-entry','user-manager',
   'point-shop', 'points-shop-admin', 'point2-shop-admin',
-  'credit-shop-admin', 'redemption-code-admin'
+  'credit-shop-admin', 'redemption-code-admin', 'emoji-admin'
 ];
 
 // 数据源
@@ -551,7 +551,7 @@ async function updateSidebarVisibility(user) {
 	  'home', 'download', 'tools', 'dllpatcher', 'settings', 'help', 'fortune', 'user-settings',
 	  'ccb', 'exchange', 'announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry',
 	  'point-shop', 'points-shop-admin', 'point2-shop-admin',
-	  'credit-shop-admin', 'redemption-code-admin'
+	  'credit-shop-admin', 'redemption-code-admin', 'emoji-admin'
 	];
 
   // 存储每个页面的可见性
@@ -629,7 +629,8 @@ async function updateSidebarVisibility(user) {
     'sidebar-points-shop-admin': 'points-shop-admin', 
     'sidebar-point2-shop-admin': 'point2-shop-admin',
     'sidebar-credit-shop-admin': 'credit-shop-admin',
-    'sidebar-redemption-code-admin': 'redemption-code-admin'
+    'sidebar-redemption-code-admin': 'redemption-code-admin',
+    'sidebar-emoji-admin': 'emoji-admin'
   };
 
   for (const [id, pid] of Object.entries(legacyMap)) {
@@ -1585,6 +1586,18 @@ function handleLogin() {
               }
             }, 500);
           }
+		  // 初始化表情系统（登录成功后）
+		  if (typeof initEmojiSystem === 'function') {
+			setTimeout(() => {
+			  try {
+				initEmojiSystem();
+				console.log('表情系统初始化成功');
+			  } catch (error) {
+				console.error('表情系统初始化失败:', error);
+			  }
+			}, 600);
+		  }
+
           
           // 添加：初始化好友系统
           if (typeof initFriendsSystem === 'function') {
@@ -2212,6 +2225,19 @@ setTimeout(() => {
 	  
 	  if (typeof initRedemptionCodeAdmin === 'function') {
 		initRedemptionCodeAdmin();
+	  }
+	  
+	  document.body.classList.remove('spa-loading');
+	  updateActiveMenuItem(pageId);
+	  return;
+	}
+
+	// 表情管理页面
+	if (pageId === 'emoji-admin') {
+	  contentContainer.innerHTML = '<div class="section"><div class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div></div>';
+	  
+	  if (typeof renderEmojiManagement === 'function') {
+		renderEmojiManagement();
 	  }
 	  
 	  document.body.classList.remove('spa-loading');

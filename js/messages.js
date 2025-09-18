@@ -784,56 +784,100 @@
   }
 
   // 渲染聊天消息
-  function renderChatMessages(messages) {
-    const messagesDiv = document.getElementById('chat-messages');
-    let html = '';
+function renderChatMessages(messages) {
+  const messagesDiv = document.getElementById('chat-messages');
+  let html = '';
+  
+  messages.forEach(msg => {
+    const isSent = msg.is_sent;
+    let messageContent = '';
     
-    messages.forEach(msg => {
-      const isSent = msg.is_sent;
-      html += `
-        <div class="chat-message ${isSent ? 'sent' : 'received'}">
-          <div class="message-bubble">
-            ${escapeHtml(msg.content)}
-            <div class="message-meta">${formatTime(msg.created_at)}</div>
-          </div>
+    // 检查消息类型
+    if (msg.message_type === 'emoji') {
+      try {
+        const emojiData = JSON.parse(msg.content);
+        messageContent = `<img src="${API_BASE_URL}${emojiData.emoji_path}" style="max-width: 120px; max-height: 120px;">`;
+      } catch (e) {
+        messageContent = escapeHtml(msg.content);
+      }
+    } else {
+      messageContent = escapeHtml(msg.content);
+    }
+    
+    html += `
+      <div class="chat-message ${isSent ? 'sent' : 'received'}">
+        <div class="message-bubble">
+          ${messageContent}
+          <div class="message-meta">${formatTime(msg.created_at)}</div>
         </div>
-      `;
-    });
-    
-    messagesDiv.innerHTML = html;
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }
+      </div>
+    `;
+  });
+  
+  messagesDiv.innerHTML = html;
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
 
   // 发送消息
-  async function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const content = input.value.trim();
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  
+  if (!content || !currentChatUser) return;
+  
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  
+  try {
+    // 处理表情标记
+    let processedContent = content;
+    let message_type = 'text';
     
-    if (!content || !currentChatUser) return;
+    // 检查是否是表情消息
+    if (content.startsWith('[emoji:') && content.endsWith(']')) {
+      message_type = 'emoji';
+      // 提取表情信息
+      const emojiMatch = content.match(/\[emoji:(\d+):(.*?)\]/);
+      if (emojiMatch) {
+        processedContent = JSON.stringify({
+          emoji_id: emojiMatch[1],
+          emoji_path: emojiMatch[2]
+        });
+      }
+    }
     
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        recipient_id: currentChatUser.id,
+        content: processedContent,
+        message_type: message_type
+      })
+    });
     
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          recipient_id: currentChatUser.id,
-          content: content,
-          message_type: 'user'
-        })
-      });
+    if (response.ok) {
+      input.value = '';
       
-      if (response.ok) {
-        input.value = '';
-        
-        // 添加到界面
-        const messagesDiv = document.getElementById('chat-messages');
-        const messageHTML = `
+      // 添加到界面
+      const messagesDiv = document.getElementById('chat-messages');
+      let messageHTML = '';
+      
+      if (message_type === 'emoji') {
+        const emojiData = JSON.parse(processedContent);
+        messageHTML = `
+          <div class="chat-message sent">
+            <div class="message-bubble">
+              <img src="${API_BASE_URL}${emojiData.emoji_path}" style="max-width: 120px; max-height: 120px;">
+              <div class="message-meta">刚刚</div>
+            </div>
+          </div>
+        `;
+      } else {
+        messageHTML = `
           <div class="chat-message sent">
             <div class="message-bubble">
               ${escapeHtml(content)}
@@ -841,16 +885,18 @@
             </div>
           </div>
         `;
-        messagesDiv.insertAdjacentHTML('beforeend', messageHTML);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
       }
-    } catch (error) {
-      console.error('发送消息失败:', error);
-      if (typeof showErrorMessage === 'function') {
-        showErrorMessage('发送失败');
-      }
+      
+      messagesDiv.insertAdjacentHTML('beforeend', messageHTML);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  } catch (error) {
+    console.error('发送消息失败:', error);
+    if (typeof showErrorMessage === 'function') {
+      showErrorMessage('发送失败');
     }
   }
+}
 
   // 处理聊天输入框回车
   function handleChatKeypress(event) {

@@ -130,3 +130,29 @@
 
 .page-title { font-size: 20px; font-weight: 700; color:#111827; margin: 6px 0; }
 .empty { color:#6b7280; font-size: 13px; padding: 8px 0; }
+
+.emoji-folder-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.emoji-folder-input-group .emoji-form-input {
+  flex: 1;
+}
+
+.emoji-form-btn {
+  padding: 8px 20px;
+  background: #1877f2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.emoji-upload-area.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f0f2f5;
+}
