@@ -580,6 +580,7 @@
 }
 
 /* 聊天弹窗 - 优化高度 */
+/* 聊天弹窗 - 完整修复PC拖动和移动端居中 */
 .chat-modal {
   display: none;
   position: fixed;
@@ -587,24 +588,59 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.5);
   z-index: 1100;
-  animation: fadeIn 0.3s;
-  padding: 20px; /* 添加内边距 */
 }
 
-.chat-modal.show {
+/* PC端可拖动模式 - 无遮罩 */
+.chat-modal.pc-draggable {
+  background: none; /* 无背景遮罩 */
+  pointer-events: none; /* 背景不阻挡点击 */
+}
+
+.chat-modal.pc-draggable .chat-container {
+  pointer-events: all; /* 聊天窗口可交互 */
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3); /* 增强阴影效果 */
+  border: 1px solid rgba(0, 0, 0, 0.2); /* 添加边框 */
+}
+
+/* 移动端居中模式 - 有遮罩 */
+.chat-modal.mobile-centered {
+  background: rgba(0,0,0,0.5); /* 半透明遮罩 */
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: fadeIn 0.3s;
+}
+
+.chat-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: -1;
+}
+
+.chat-modal.show {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* PC端拖动模式下不居中对齐 */
+.chat-modal.pc-draggable.show {
+  display: block !important;
+  align-items: initial;
+  justify-content: initial;
 }
 
 .chat-container {
   background: white;
   width: 100%;
-  max-width: 600px;
-  height: calc(100vh - 40px); /* 减少高度，留出边距 */
-  max-height: 600px; /* PC端最大高度 */
+  max-width: 500px; /* 减小默认最大宽度 */
+  height: calc(100vh - 40px);
+  max-height: 550px; /* 减小默认最大高度 */
   margin: auto;
   border-radius: 12px;
   display: flex;
@@ -612,6 +648,28 @@
   overflow: hidden;
   animation: slideUp 0.3s;
 }
+
+/* PC端可拖动容器样式 */
+.pc-draggable .chat-container {
+  position: fixed !important;
+  margin: 0;
+  resize: both; /* 允许调整大小 */
+  width: 450px; /* 固定初始宽度 */
+  height: 550px; /* 固定初始高度 */
+  min-width: 380px;
+  min-height: 450px;
+  max-width: 800px; /* 限制最大宽度 */
+  max-height: 80vh; /* 限制最大高度 */
+}
+
+/* 移动端容器样式 */
+.mobile-centered .chat-container {
+  position: relative !important;
+  max-width: calc(100% - 20px);
+  max-height: calc(100vh - 40px);
+  margin: 20px;
+}
+
 
 @keyframes slideUp {
   from {

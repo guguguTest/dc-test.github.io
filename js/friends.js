@@ -77,7 +77,7 @@
   }
 
   // 加载好友数据
-async function loadFriendsData() {
+  async function loadFriendsData() {
     const token = localStorage.getItem('token');
     if (!token) return;
     
@@ -106,11 +106,14 @@ async function loadFriendsData() {
             5: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_rainbow.png'
           };
           
+          // 确保rankSp字段正确（检查多种可能的字段名）
+          const hasRainbowEffect = friend.rank_sp === 1 || friend.rankSp === 1 || friend.user_rank === 5;
+          
           return {
             ...friend,
             userRank: friend.user_rank || 0,
             rankBackground: rankBackgrounds[friend.user_rank || 0],
-            rankSp: friend.rank_sp || 0,
+            rankSp: hasRainbowEffect ? 1 : 0,  // 确保七彩光环标识正确
             banState: friend.ban_state || 0,
             avatar: friend.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png',
             online: friend.online || false
@@ -163,7 +166,7 @@ async function loadFriendsData() {
       friendRequests = [];
       updateFriendsBadge();
     }
-}
+  }
 
   // 检查好友请求
   async function checkFriendRequests() {
@@ -547,8 +550,8 @@ async function loadFriendsData() {
     });
   }
 
-// 添加删除好友函数
-async function deleteFriend(friendId) {
+  // 添加删除好友函数
+  async function deleteFriend(friendId) {
     const token = localStorage.getItem('token');
     if (!token) return;
     
@@ -570,7 +573,7 @@ async function deleteFriend(friendId) {
       console.error('删除好友失败:', error);
       showErrorMessage('操作失败');
     }
-}
+  }
 
   // 渲染好友请求
   function renderFriendRequest(request) {
@@ -597,7 +600,7 @@ async function deleteFriend(friendId) {
   }
 
   // 渲染好友项
-function renderFriendItem(friend) {
+  function renderFriendItem(friend) {
     return `
         <div class="friend-item" 
              data-friend-id="${friend.id}"
@@ -635,7 +638,7 @@ function renderFriendItem(friend) {
             </div>
         </div>
     `;
-}
+  }
 
   // 渲染黑名单项
   function renderBlacklistItem(user) {
@@ -782,38 +785,38 @@ function renderFriendItem(friend) {
     resultsDiv.classList.add('show');
   }
 
-    // 发送好友请求
-	async function sendFriendRequest(userId) {
-	  const token = localStorage.getItem('token');
-	  if (!token) return;
-	  
-	  try {
-		const response = await fetch(`${API_BASE_URL}/api/friends/request`, {
-		  method: 'POST',
-		  headers: {
-			'Authorization': `Bearer ${token}`,
-			'Content-Type': 'application/json'
-		  },
-		  credentials: 'include',
-		  body: JSON.stringify({ 
-			receiver_id: parseInt(userId, 10),  // 确保是整数
-			message: ''  // 可选消息
-		  })
-		});
-		
-		if (response.ok) {
-		  showSuccessMessage('好友请求已发送');
-		  const searchBox = document.getElementById('friends-search-box');
-		  if (searchBox) searchBox.classList.remove('show');
-		} else {
-		  const error = await response.json();
-		  showErrorMessage(error.error || '发送失败');
-		}
-	  } catch (error) {
-		console.error('发送好友请求失败:', error);
-		showErrorMessage('发送失败');
-	  }
-	}
+  // 发送好友请求
+  async function sendFriendRequest(userId) {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/friends/request`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          receiver_id: parseInt(userId, 10),  // 确保是整数
+          message: ''  // 可选消息
+        })
+      });
+      
+      if (response.ok) {
+        showSuccessMessage('好友请求已发送');
+        const searchBox = document.getElementById('friends-search-box');
+        if (searchBox) searchBox.classList.remove('show');
+      } else {
+        const error = await response.json();
+        showErrorMessage(error.error || '发送失败');
+      }
+    } catch (error) {
+      console.error('发送好友请求失败:', error);
+      showErrorMessage('发送失败');
+    }
+  }
 
   // 接受好友请求
   async function acceptFriendRequest(requestId) {
@@ -923,79 +926,16 @@ function renderFriendItem(friend) {
     }
   }
 
-  // 打开与好友的聊天窗口
+  // 打开与好友的聊天窗口 - 修复函数定义
   function openChatWithFriend(friendId) {
-  // 先关闭好友下拉菜单
-  closeFriendsDropdown();
-  
-  // 如果消息系统中有打开聊天的方法，优先使用
-  if (typeof window.openChatModal === 'function') {
-    window.openChatModal(friendId);
-  } else {
-    // 否则使用本地的创建聊天窗口方法
-    createAndOpenChatModal(friendId);
+    // 调用消息系统的聊天函数
+    if (typeof window.openChatModal === 'function') {
+      window.openChatModal(friendId);
+    } else {
+      console.error('聊天功能未初始化');
+      showErrorMessage('聊天功能暂时不可用');
+    }
   }
-}
-
-function createAndOpenChatModal(userId) {
-  const token = localStorage.getItem('token');
-  if (!token) return;
-  
-  // 先获取用户信息
-  fetch(`${API_BASE_URL}/api/users/${userId}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  })
-  .then(response => response.json())
-  .then(user => {
-    // 创建或获取聊天模态框
-    let modal = document.getElementById('chat-modal');
-    if (!modal) {
-      const modalHTML = `
-        <div id="chat-modal" class="chat-modal">
-          <div class="chat-container">
-            <div class="chat-header">
-              <div class="chat-user-info">
-                <img src="" alt="" class="chat-avatar" id="chat-avatar">
-                <div>
-                  <div class="chat-username" id="chat-username"></div>
-                </div>
-              </div>
-              <button class="chat-close" onclick="closeChatModal()">&times;</button>
-            </div>
-            <div class="chat-messages" id="chat-messages"></div>
-            <div class="chat-input-area">
-              <input type="text" class="chat-input" id="chat-input" placeholder="输入消息..." onkeypress="handleChatKeypress(event)">
-              <button class="chat-send-btn" onclick="sendMessage()">发送</button>
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.insertAdjacentHTML('beforeend', modalHTML);
-      modal = document.getElementById('chat-modal');
-    }
-    
-    // 设置用户信息
-    document.getElementById('chat-username').textContent = user.nickname || user.username;
-    document.getElementById('chat-avatar').src = user.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png';
-    
-    // 显示模态框
-    modal.classList.add('show');
-    
-    // 设置当前聊天用户
-    window.currentChatUser = { id: userId, username: user.nickname || user.username, avatar: user.avatar };
-    
-    // 加载聊天记录
-    if (typeof window.loadChatHistory === 'function') {
-      window.loadChatHistory(userId);
-    }
-  })
-  .catch(error => {
-    console.error('打开聊天窗口失败:', error);
-    showErrorMessage('打开聊天窗口失败');
-  });
-}
 
   // 清理好友系统
   function cleanupFriendsSystem() {
@@ -1029,27 +969,6 @@ function createAndOpenChatModal(userId) {
       5: "url('https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_rainbow.png')"
     };
     return backgrounds[rank] || backgrounds[0];
-  }
-
-  function getUserRankIcon(rank) {
-    const icons = {
-      0: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_1.png',
-      1: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_2.png',
-      2: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_3.png',
-      3: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_4.png',
-      4: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_5.png',
-      5: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_6.png'
-    };
-    return icons[rank] || icons[0];
-  }
-
-  function getUserStateIcon(banState) {
-    const icons = {
-	  0: 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs0.png',
-      1: 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs1.png',
-      2: 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs2.png'
-    };
-    return icons[banState] || '';
   }
 
   function formatTime(timestamp) {

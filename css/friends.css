@@ -420,12 +420,13 @@
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.9);
   position: relative;
   z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* 七彩光环效果 */
+/* 七彩光环效果 - 好友列表专用版本 */
 .friend-avatar-rainbow {
   position: absolute;
   top: -3px;
@@ -435,17 +436,79 @@
   border-radius: 50%;
   background: conic-gradient(
     from 0deg,
-    #ff0080, #ff4000, #ffbf00, #ffff00, #80ff00,
-    #00ff00, #00ffbf, #00ffff, #0080ff, #0000ff,
-    #8000ff, #ff00ff, #ff0080
+    #ff0080,
+    #ff0040,
+    #ff4000,
+    #ff8000,
+    #ffbf00,
+    #ffff00,
+    #bfff00,
+    #80ff00,
+    #40ff00,
+    #00ff00,
+    #00ff40,
+    #00ff80,
+    #00ffbf,
+    #00ffff,
+    #00bfff,
+    #0080ff,
+    #0040ff,
+    #0000ff,
+    #4000ff,
+    #8000ff,
+    #bf00ff,
+    #ff00ff,
+    #ff00bf,
+    #ff0080
   );
-  animation: rainbow-rotate 4s linear infinite;
+  animation: friend-rainbow-rotate 4s linear infinite;
   z-index: 1;
+  filter: brightness(1.3) saturate(1.4);
+  box-shadow: 
+    0 0 10px rgba(255, 0, 128, 0.5),
+    0 0 20px rgba(255, 0, 128, 0.3),
+    0 0 30px rgba(255, 0, 128, 0.2);
 }
 
-@keyframes rainbow-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+/* 添加光晕效果 */
+.friend-avatar-rainbow::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: inherit;
+  filter: blur(6px);
+  opacity: 0.6;
+  z-index: -1;
+  animation: friend-rainbow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes friend-rainbow-rotate {
+  0% { 
+    transform: rotate(0deg);
+    filter: brightness(1.3) saturate(1.4) hue-rotate(0deg);
+  }
+  50% {
+    filter: brightness(1.4) saturate(1.5) hue-rotate(180deg);
+  }
+  100% { 
+    transform: rotate(360deg);
+    filter: brightness(1.3) saturate(1.4) hue-rotate(360deg);
+  }
+}
+
+@keyframes friend-rainbow-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
 }
 
 /* 用户信息 */
@@ -459,17 +522,25 @@
   font-size: 14px;
   font-weight: 600;
   color: white;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   margin-bottom: 2px;
-  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.7));
+  /* 适度的文字阴影效果 */
+  text-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.7),
+    0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .friend-status {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.95);
   display: flex;
   align-items: center;
   gap: 6px;
+  position: relative;
+  top: 3px;
+  /* 适度的文字阴影效果 */
+  text-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.6),
+    0 2px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* 账户状态图标 */
@@ -691,10 +762,18 @@
   
   .friend-name {
     font-size: 13px;
+    /* 移动端也使用相同的适度阴影 */
+    text-shadow: 
+      0 1px 3px rgba(0, 0, 0, 0.7),
+      0 2px 4px rgba(0, 0, 0, 0.4);
   }
   
   .friend-status {
     font-size: 11px;
+    /* 移动端也使用相同的适度阴影 */
+    text-shadow: 
+      0 1px 2px rgba(0, 0, 0, 0.6),
+      0 2px 3px rgba(0, 0, 0, 0.3);
   }
   
   .friend-rank-icon {

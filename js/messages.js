@@ -1,4 +1,4 @@
-// 消息系统JavaScript
+// 消息系统JavaScript - 完整修复版
 (function(global) {
   'use strict';
 
@@ -12,6 +12,7 @@
   let currentChatUser = null;
   let messageCheckInterval = null;
   let currentConversation = [];
+  let persistentChatModal = null; // 用于保持聊天窗口
 
   // 初始化消息系统
   function initMessageSystem() {
@@ -103,17 +104,8 @@
     unreadCount = 0;
     currentChatUser = null;
     currentConversation = [];
+    persistentChatModal = null;
   }
-
-  // 修改DOMContentLoaded事件处理
-  document.addEventListener('DOMContentLoaded', function() {
-    // 检查登录状态后再初始化
-    const token = localStorage.getItem('token');
-    if (token) {
-      // 延迟初始化，确保用户信息已加载
-      setTimeout(initMessageSystem, 500);
-    }
-  });
 
   // 检查未读消息
   async function checkUnreadMessages() {
@@ -633,14 +625,17 @@
     }
   }
 
-  // 创建聊天模态框
+  // 创建聊天模态框 - 完整修复PC拖动和移动端居中
   function createChatModal() {
+    const isMobile = window.innerWidth <= 768;
+    
     let modal = document.getElementById('chat-modal');
     if (!modal) {
       const modalHTML = `
-        <div id="chat-modal" class="chat-modal">
-          <div class="chat-container">
-            <div class="chat-header">
+        <div id="chat-modal" class="chat-modal ${!isMobile ? 'pc-draggable' : 'mobile-centered'}">
+          ${isMobile ? '<div class="chat-modal-overlay" onclick="closeChatModal()"></div>' : ''}
+          <div class="chat-container" id="chat-container">
+            <div class="chat-header" id="chat-header">
               <div class="chat-user-info">
                 <img src="" alt="" class="chat-avatar" id="chat-avatar" style="display: none;">
                 <div>
@@ -655,6 +650,9 @@
             </div>
             <div class="chat-messages" id="chat-messages"></div>
             <div class="chat-input-area">
+              <button class="emoji-btn" onclick="toggleChatEmojiPicker(this)">
+                <i class="far fa-smile"></i>
+              </button>
               <input type="text" class="chat-input" id="chat-input" placeholder="输入消息..." onkeypress="handleChatKeypress(event)">
               <button class="chat-send-btn" onclick="sendMessage()">发送</button>
             </div>
@@ -663,8 +661,137 @@
       `;
       document.body.insertAdjacentHTML('beforeend', modalHTML);
       modal = document.getElementById('chat-modal');
+      
+      // PC端添加拖动功能
+      if (!isMobile) {
+        enableDraggable(modal);
+      }
+    } else {
+      // 如果模态框已存在，检查是否需要更新移动/PC模式
+      updateChatModalMode(modal);
     }
+    
     return modal;
+  }
+
+  // 更新聊天窗口模式
+  function updateChatModalMode(modal) {
+    const isMobile = window.innerWidth <= 768;
+    const chatContainer = modal.querySelector('.chat-container');
+    
+    if (isMobile) {
+      // 切换到移动端模式
+      modal.classList.remove('pc-draggable');
+      modal.classList.add('mobile-centered');
+      
+      // 添加遮罩层
+      if (!modal.querySelector('.chat-modal-overlay')) {
+        modal.insertAdjacentHTML('afterbegin', '<div class="chat-modal-overlay" onclick="closeChatModal()"></div>');
+      }
+      
+      // 重置位置为居中
+      if (chatContainer) {
+        chatContainer.style.position = 'fixed';
+        chatContainer.style.top = '50%';
+        chatContainer.style.left = '50%';
+        chatContainer.style.transform = 'translate(-50%, -50%)';
+        chatContainer.removeAttribute('data-draggable-init');
+      }
+    } else {
+      // 切换到PC模式
+      modal.classList.remove('mobile-centered');
+      modal.classList.add('pc-draggable');
+      
+      // 移除遮罩层
+      const overlay = modal.querySelector('.chat-modal-overlay');
+      if (overlay) overlay.remove();
+      
+      // 启用拖动
+      enableDraggable(modal);
+    }
+  }
+
+  // 启用拖动功能（仅PC端）
+  function enableDraggable(modal) {
+    const chatContainer = modal.querySelector('.chat-container');
+    const chatHeader = modal.querySelector('.chat-header');
+    
+    if (!chatContainer || !chatHeader) return;
+    
+    // 检查是否已经初始化过拖动
+    if (chatContainer.dataset.draggableInit === 'true') return;
+    chatContainer.dataset.draggableInit = 'true';
+    
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+    
+    // 设置初始位置（居中）
+    chatContainer.style.position = 'fixed';
+    chatContainer.style.top = '50%';
+    chatContainer.style.left = '50%';
+    chatContainer.style.transform = 'translate(-50%, -50%)';
+    
+    chatHeader.style.cursor = 'move';
+    
+    function dragStart(e) {
+      // 忽略按钮点击
+      if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+        return;
+      }
+      
+      if (e.type === "touchstart") {
+        initialX = e.touches[0].clientX - xOffset;
+        initialY = e.touches[0].clientY - yOffset;
+      } else {
+        initialX = e.clientX - xOffset;
+        initialY = e.clientY - yOffset;
+      }
+      
+      if (e.target === chatHeader || chatHeader.contains(e.target)) {
+        isDragging = true;
+        chatContainer.style.transition = 'none'; // 禁用过渡效果
+      }
+    }
+    
+    function dragEnd(e) {
+      initialX = currentX;
+      initialY = currentY;
+      isDragging = false;
+      chatContainer.style.transition = ''; // 恢复过渡效果
+    }
+    
+    function drag(e) {
+      if (isDragging) {
+        e.preventDefault();
+        
+        if (e.type === "touchmove") {
+          currentX = e.touches[0].clientX - initialX;
+          currentY = e.touches[0].clientY - initialY;
+        } else {
+          currentX = e.clientX - initialX;
+          currentY = e.clientY - initialY;
+        }
+        
+        xOffset = currentX;
+        yOffset = currentY;
+        
+        setTranslate(currentX, currentY, chatContainer);
+      }
+    }
+    
+    function setTranslate(xPos, yPos, el) {
+      el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
+    }
+    
+    // 绑定鼠标事件
+    chatHeader.addEventListener('mousedown', dragStart);
+    document.addEventListener('mouseup', dragEnd);
+    document.addEventListener('mousemove', drag);
   }
 
   // 搜索用户
@@ -737,7 +864,7 @@
     await loadChatHistory(userId);
   }
 
-  // 打开聊天窗口
+  // 打开聊天窗口 - 改进支持持久化
   async function openChatModal(userId) {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -753,8 +880,11 @@
       if (response.ok) {
         const user = await response.json();
         const modal = createChatModal();
-        modal.classList.add('show');
         
+        // 检查窗口模式
+        updateChatModalMode(modal);
+        
+        modal.classList.add('show');
         selectChatUser(user.id, user.nickname || user.username, user.avatar);
       }
     } catch (error) {
@@ -783,120 +913,142 @@
     }
   }
 
-  // 渲染聊天消息
-function renderChatMessages(messages) {
-  const messagesDiv = document.getElementById('chat-messages');
-  let html = '';
-  
-  messages.forEach(msg => {
-    const isSent = msg.is_sent;
-    let messageContent = '';
+  // 渲染聊天消息 - 修复表情显示问题
+  function renderChatMessages(messages) {
+    const messagesDiv = document.getElementById('chat-messages');
+    let html = '';
     
-    // 检查消息类型
-    if (msg.message_type === 'emoji') {
-      try {
-        const emojiData = JSON.parse(msg.content);
-        messageContent = `<img src="${API_BASE_URL}${emojiData.emoji_path}" style="max-width: 120px; max-height: 120px;">`;
-      } catch (e) {
+    messages.forEach(msg => {
+      const isSent = msg.is_sent;
+      let messageContent = '';
+      
+      // 检查消息类型和内容格式 - 修复表情显示
+      if (msg.message_type === 'emoji' || (typeof msg.content === 'string' && msg.content.includes('emoji_path'))) {
+        try {
+          let emojiData;
+          
+          // 尝试解析JSON格式的表情数据
+          if (typeof msg.content === 'string') {
+            try {
+              emojiData = JSON.parse(msg.content);
+            } catch (e) {
+              // 如果解析失败，可能是文本形式的JSON，尝试提取路径
+              const match = msg.content.match(/"emoji_path":"([^"]+)"/);
+              if (match && match[1]) {
+                emojiData = { emoji_path: match[1] };
+              }
+            }
+          } else {
+            emojiData = msg.content;
+          }
+          
+          // 渲染表情图片
+          if (emojiData && emojiData.emoji_path) {
+            messageContent = `<img src="${API_BASE_URL}${emojiData.emoji_path}" style="max-width: 120px; max-height: 120px;">`;
+          } else {
+            messageContent = escapeHtml(msg.content);
+          }
+        } catch (e) {
+          console.error('解析表情消息失败:', e);
+          messageContent = escapeHtml(msg.content);
+        }
+      } else {
         messageContent = escapeHtml(msg.content);
       }
-    } else {
-      messageContent = escapeHtml(msg.content);
-    }
-    
-    html += `
-      <div class="chat-message ${isSent ? 'sent' : 'received'}">
-        <div class="message-bubble">
-          ${messageContent}
-          <div class="message-meta">${formatTime(msg.created_at)}</div>
+      
+      html += `
+        <div class="chat-message ${isSent ? 'sent' : 'received'}">
+          <div class="message-bubble">
+            ${messageContent}
+            <div class="message-meta">${formatTime(msg.created_at)}</div>
+          </div>
         </div>
-      </div>
-    `;
-  });
-  
-  messagesDiv.innerHTML = html;
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
-
-  // 发送消息
-async function sendMessage() {
-  const input = document.getElementById('chat-input');
-  const content = input.value.trim();
-  
-  if (!content || !currentChatUser) return;
-  
-  const token = localStorage.getItem('token');
-  if (!token) return;
-  
-  try {
-    // 处理表情标记
-    let processedContent = content;
-    let message_type = 'text';
-    
-    // 检查是否是表情消息
-    if (content.startsWith('[emoji:') && content.endsWith(']')) {
-      message_type = 'emoji';
-      // 提取表情信息
-      const emojiMatch = content.match(/\[emoji:(\d+):(.*?)\]/);
-      if (emojiMatch) {
-        processedContent = JSON.stringify({
-          emoji_id: emojiMatch[1],
-          emoji_path: emojiMatch[2]
-        });
-      }
-    }
-    
-    const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        recipient_id: currentChatUser.id,
-        content: processedContent,
-        message_type: message_type
-      })
+      `;
     });
     
-    if (response.ok) {
-      input.value = '';
+    messagesDiv.innerHTML = html;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  // 发送消息
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const content = input.value.trim();
+    
+    if (!content || !currentChatUser) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+      // 处理表情标记
+      let processedContent = content;
+      let message_type = 'text';
       
-      // 添加到界面
-      const messagesDiv = document.getElementById('chat-messages');
-      let messageHTML = '';
-      
-      if (message_type === 'emoji') {
-        const emojiData = JSON.parse(processedContent);
-        messageHTML = `
-          <div class="chat-message sent">
-            <div class="message-bubble">
-              <img src="${API_BASE_URL}${emojiData.emoji_path}" style="max-width: 120px; max-height: 120px;">
-              <div class="message-meta">刚刚</div>
-            </div>
-          </div>
-        `;
-      } else {
-        messageHTML = `
-          <div class="chat-message sent">
-            <div class="message-bubble">
-              ${escapeHtml(content)}
-              <div class="message-meta">刚刚</div>
-            </div>
-          </div>
-        `;
+      // 检查是否是表情消息
+      if (content.startsWith('[emoji:') && content.endsWith(']')) {
+        message_type = 'emoji';
+        // 提取表情信息
+        const emojiMatch = content.match(/\[emoji:(\d+):(.*?)\]/);
+        if (emojiMatch) {
+          processedContent = JSON.stringify({
+            emoji_id: emojiMatch[1],
+            emoji_path: emojiMatch[2]
+          });
+        }
       }
       
-      messagesDiv.insertAdjacentHTML('beforeend', messageHTML);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-  } catch (error) {
-    console.error('发送消息失败:', error);
-    if (typeof showErrorMessage === 'function') {
-      showErrorMessage('发送失败');
+      const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          recipient_id: currentChatUser.id,
+          content: processedContent,
+          message_type: message_type
+        })
+      });
+      
+      if (response.ok) {
+        input.value = '';
+        
+        // 添加到界面
+        const messagesDiv = document.getElementById('chat-messages');
+        let messageHTML = '';
+        
+        if (message_type === 'emoji') {
+          const emojiData = JSON.parse(processedContent);
+          messageHTML = `
+            <div class="chat-message sent">
+              <div class="message-bubble">
+                <img src="${API_BASE_URL}${emojiData.emoji_path}" style="max-width: 120px; max-height: 120px;">
+                <div class="message-meta">刚刚</div>
+              </div>
+            </div>
+          `;
+        } else {
+          messageHTML = `
+            <div class="chat-message sent">
+              <div class="message-bubble">
+                ${escapeHtml(content)}
+                <div class="message-meta">刚刚</div>
+              </div>
+            </div>
+          `;
+        }
+        
+        messagesDiv.insertAdjacentHTML('beforeend', messageHTML);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+    } catch (error) {
+      console.error('发送消息失败:', error);
+      if (typeof showErrorMessage === 'function') {
+        showErrorMessage('发送失败');
+      }
     }
   }
-}
 
   // 处理聊天输入框回车
   function handleChatKeypress(event) {
@@ -905,16 +1057,27 @@ async function sendMessage() {
     }
   }
 
-  // 关闭聊天模态框
+  // 关闭聊天模态框 - 改进PC端持久化
   function closeChatModal() {
+    const isMobile = window.innerWidth <= 768;
     const modal = document.getElementById('chat-modal');
+    
     if (modal) {
       modal.classList.remove('show');
       currentChatUser = null;
+      
+      // 移动端清理状态
+      if (isMobile) {
+        const chatContainer = modal.querySelector('.chat-container');
+        if (chatContainer) {
+          // 重置位置
+          chatContainer.style.transform = 'translate(-50%, -50%)';
+        }
+      }
     }
   }
 
-  // 显示系统消息（修复按钮无效问题）
+  // 显示系统消息
   function showSystemMessage(message) {
     // 先关闭已存在的模态框
     const existingModal = document.getElementById('system-message-modal');
@@ -1095,6 +1258,68 @@ async function sendMessage() {
     document.getElementById('select-all-checkbox').checked = true;
   }
 
+  // 切换表情选择器 - 修复定位问题
+  function toggleChatEmojiPicker(btn) {
+    // 设置当前输入框
+    window.selectedChatInput = document.getElementById('chat-input');
+    
+    // 调用表情系统的切换功能
+    if (typeof window.toggleEmojiPicker === 'function') {
+      // 先获取或创建表情选择器
+      let picker = document.querySelector('.emoji-picker');
+      
+      if (picker && picker.classList.contains('show')) {
+        picker.classList.remove('show');
+        btn.classList.remove('active');
+        return;
+      }
+      
+      if (!picker) {
+        // 如果没有选择器，调用创建
+        window.toggleEmojiPicker(btn);
+        picker = document.querySelector('.emoji-picker');
+      }
+      
+      if (picker) {
+        // 计算按钮的绝对位置
+        const btnRect = btn.getBoundingClientRect();
+        const pickerHeight = 400;
+        const pickerWidth = 340;
+        
+        // 计算位置 - 显示在按钮上方
+        let top = btnRect.top - pickerHeight - 10;
+        let left = btnRect.left;
+        
+        // 检查是否超出视口
+        if (top < 10) {
+          top = btnRect.bottom + 10;
+        }
+        if (left < 10) {
+          left = 10;
+        }
+        if (left + pickerWidth > window.innerWidth - 10) {
+          left = window.innerWidth - pickerWidth - 10;
+        }
+        
+        // 使用fixed定位确保在聊天窗口上方
+        picker.style.position = 'fixed';
+        picker.style.top = top + 'px';
+        picker.style.left = left + 'px';
+        picker.style.zIndex = '1300'; // 确保在聊天窗口上方
+        
+        picker.classList.add('show');
+        btn.classList.add('active');
+        
+        // 加载表情包内容
+        if (typeof window.loadEmojiPackContent === 'function' && window.emojiPacks && window.emojiPacks.length > 0) {
+          window.loadEmojiPackContent(window.emojiPacks[0].id);
+        }
+      }
+    } else {
+      console.error('表情系统未初始化');
+    }
+  }
+
   // 工具函数
   function getMessageTypeIcon(type) {
     const icons = {
@@ -1136,6 +1361,22 @@ async function sendMessage() {
     return div.innerHTML;
   }
 
+  function showErrorMessage(message) {
+    if (typeof window.showErrorMessage === 'function') {
+      window.showErrorMessage(message);
+    } else {
+      alert(message);
+    }
+  }
+
+  // 监听窗口大小变化
+  window.addEventListener('resize', function() {
+    const modal = document.getElementById('chat-modal');
+    if (modal && modal.classList.contains('show')) {
+      updateChatModalMode(modal);
+    }
+  });
+
   // 暴露给全局
   global.initMessageSystem = initMessageSystem;
   global.renderMessageCenter = renderMessageCenter;
@@ -1154,10 +1395,11 @@ async function sendMessage() {
   global.toggleSelectAll = toggleSelectAll;
   global.selectAllMessages = selectAllMessages;
   global.cleanupMessageSystem = cleanupMessageSystem;
-  global.initMessageSystem = initMessageSystem;
   global.openChatModal = openChatModal;
+  global.loadChatHistory = loadChatHistory;
+  global.toggleChatEmojiPicker = toggleChatEmojiPicker;
   
-  // 在DOM加载完成后初始化
+  // 在DOMContentLoaded后初始化
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initMessageSystem);
   } else {

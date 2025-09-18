@@ -10,12 +10,12 @@
   }
   const API_BASE_URL = window.API_BASE_URL;
 
-  // 表情包管理相关变量
-  let currentEmojiPack = null;
-  let emojiPacks = [];
-  let uploadedFiles = [];
-  let folderCreated = false;
-  let currentFolderName = '';
+  // 表情包管理相关全局变量 - 确保在全局作用域
+  window.currentEmojiPack = null;
+  window.uploadedFiles = [];
+  window.folderCreated = false;
+  window.currentFolderName = '';
+  window.coverImageUrl = null;
 
   // ---- 公共：管理员访问校验 ----
   function ensureAdmin(pageId) {
@@ -80,7 +80,7 @@
               <div class="admin-actions"><button class="admin-btn admin-btn-ghost" type="button">进入</button></div>
             </a>
             <a class="admin-card admin-entry" id="entry-redemption-codes">
-              <div class="admin-entry-title">发行代码管理</div>
+              <div class="admin-entry-title">兑换代码管理</div>
               <div class="admin-entry-desc">手动生成和管理兑换码。</div>
               <div class="admin-actions"><button class="admin-btn admin-btn-ghost" type="button">进入</button></div>
             </a>
@@ -396,7 +396,7 @@
     }
   }
 
-  // ========== 表情管理 ==========
+  // ========== 表情管理修复开始 ==========
   
   // 工具函数
   function escapeHtml(text) {
@@ -507,171 +507,97 @@
     container.appendChild(grid);
   }
 
-// 创建表情包弹窗
+  // 创建表情包弹窗（修复版）
 function createEmojiPackModal() {
-  const modal = document.createElement('div');
-  modal.id = 'emoji-pack-modal';
-  modal.className = 'emoji-pack-modal';
-  modal.innerHTML = `
-    <div class="emoji-pack-modal-content">
-      <div class="emoji-pack-modal-header">
-        <h3 class="emoji-pack-modal-title">添加表情包</h3>
-        <button class="emoji-pack-modal-close" onclick="closeEmojiPackModal()">&times;</button>
+    const modal = document.createElement('div');
+    modal.id = 'emoji-pack-modal';
+    modal.className = 'emoji-pack-modal';
+    modal.innerHTML = `
+        <div class="emoji-pack-modal-content">
+        <div class="emoji-pack-modal-header">
+          <h3 class="emoji-pack-modal-title">添加表情包</h3>
+          <button class="emoji-pack-modal-close" onclick="closeEmojiPackModal()">&times;</button>
+        </div>
+        <div class="emoji-pack-modal-body">
+          <div class="emoji-form-group">
+            <label class="emoji-form-label">表情包名称</label>
+            <input type="text" id="emoji-pack-name" class="emoji-form-input" placeholder="输入表情包名称">
+          </div>
+          
+            <div class="emoji-form-group">
+                <label class="emoji-form-label">文件夹名称（英文或数字）</label>
+                <div class="emoji-folder-input-group">
+                    <input type="text" id="emoji-folder-name" class="emoji-form-input" placeholder="例如: emoji_01">
+                    <button type="button" id="create-folder-btn" class="emoji-form-btn">创建文件夹</button>
+                </div>
+                <small class="emoji-form-hint">请先创建文件夹后再上传图片</small>
+                <div id="folder-status" style="margin-top: 5px; display: none;"></div>
+            </div>
+          
+          <div class="emoji-form-group">
+            <label class="emoji-form-label">表情包封面</label>
+            <div class="emoji-upload-area disabled" id="cover-upload-area">
+              <div class="emoji-upload-icon"><i class="fas fa-image"></i></div>
+              <div class="emoji-upload-text">请先创建文件夹</div>
+              <div class="emoji-upload-hint">创建文件夹后才能上传</div>
+            </div>
+            <input type="file" id="emoji-pack-cover" accept="image/*" style="display: none;">
+          </div>
+          
+          <div class="emoji-form-group">
+            <label class="emoji-form-label">上传表情图片</label>
+            <div class="emoji-upload-area disabled" id="images-upload-area">
+              <div class="emoji-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+              <div class="emoji-upload-text">请先创建文件夹</div>
+              <div class="emoji-upload-hint">创建文件夹后才能上传</div>
+            </div>
+            <input type="file" id="emoji-pack-images" accept="image/*" multiple style="display: none;">
+          </div>
+          
+          <div id="emoji-upload-progress" class="emoji-upload-progress" style="display: none;">
+            <div class="emoji-progress-bar">
+              <div id="emoji-progress-fill" class="emoji-progress-fill" style="width: 0;"></div>
+            </div>
+            <div id="emoji-progress-text" class="emoji-progress-text">上传中 0%</div>
+          </div>
+          
+          <div id="emoji-preview-grid" class="emoji-preview-grid"></div>
+        </div>
+        <div class="emoji-pack-modal-footer">
+          <button class="emoji-modal-btn cancel" onclick="closeEmojiPackModal()">取消</button>
+          <button class="emoji-modal-btn save" onclick="saveEmojiPack()">保存</button>
+        </div>
       </div>
-      <div class="emoji-pack-modal-body">
-        <div class="emoji-form-group">
-          <label class="emoji-form-label">表情包名称</label>
-          <input type="text" id="emoji-pack-name" class="emoji-form-input" placeholder="输入表情包名称">
-        </div>
-        
-        <div class="emoji-form-group">
-          <label class="emoji-form-label">文件夹名称（英文或数字）</label>
-          <div class="emoji-folder-input-group">
-            <input type="text" id="emoji-folder-name" class="emoji-form-input" placeholder="例如: 01-test">
-            <button type="button" id="create-folder-btn" class="emoji-form-btn" onclick="createEmojiFolder()">创建文件夹</button>
-          </div>
-          <small class="emoji-form-hint">请先创建文件夹后再上传图片</small>
-          <div id="folder-status" style="margin-top: 5px; color: #28a745; display: none;"></div>
-        </div>
-        
-        <div class="emoji-form-group">
-          <label class="emoji-form-label">表情包封面</label>
-          <div class="emoji-upload-area cover-upload disabled" id="cover-upload-area">
-            <div class="emoji-upload-icon"><i class="fas fa-image"></i></div>
-            <div class="emoji-upload-text">请先创建文件夹</div>
-            <div class="emoji-upload-hint">创建文件夹后才能上传</div>
-          </div>
-          <input type="file" id="emoji-pack-cover" accept="image/*" style="display: none;" onchange="handleCoverUpload(this)">
-        </div>
-        
-        <div class="emoji-form-group">
-          <label class="emoji-form-label">上传表情图片</label>
-          <div class="emoji-upload-area images-upload disabled" id="images-upload-area">
-            <div class="emoji-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-            <div class="emoji-upload-text">请先创建文件夹</div>
-            <div class="emoji-upload-hint">创建文件夹后才能上传</div>
-          </div>
-          <input type="file" id="emoji-pack-images" accept="image/*" multiple style="display: none;" onchange="handleImagesUpload(this)">
-        </div>
-        
-        <div id="emoji-upload-progress" class="emoji-upload-progress">
-          <div class="emoji-progress-bar">
-            <div id="emoji-progress-fill" class="emoji-progress-fill" style="width: 0;"></div>
-          </div>
-          <div id="emoji-progress-text" class="emoji-progress-text">上传中 0%</div>
-        </div>
-        
-        <div id="emoji-preview-grid" class="emoji-preview-grid"></div>
-      </div>
-      <div class="emoji-pack-modal-footer">
-        <button class="emoji-modal-btn cancel" onclick="closeEmojiPackModal()">取消</button>
-        <button class="emoji-modal-btn save" onclick="saveEmojiPack()">保存</button>
-      </div>
-    </div>
-  `;
-  
-  return modal;
-}
-
-// 创建文件夹函数
-window.createEmojiFolder = function() {
-  const folderNameInput = document.getElementById('emoji-folder-name');
-  const folderName = folderNameInput.value.trim();
-  
-  if (!folderName) {
-    showErrorMessage('请输入文件夹名称');
-    return;
-  }
-  
-  if (!/^[a-zA-Z0-9_-]+$/.test(folderName)) {
-    showErrorMessage('文件夹名称只能包含英文、数字、下划线和横线');
-    return;
-  }
-  
-  const token = localStorage.getItem('token');
-  if (!token) {
-    showErrorMessage('请先登录');
-    return;
-  }
-  
-  const createBtn = document.getElementById('create-folder-btn');
-  createBtn.disabled = true;
-  createBtn.textContent = '创建中...';
-  
-  fetch(`${API_BASE_URL}/api/admin/emoji/create-folder`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ folder_name: folderName })
-  })
-  .then(response => {
-    if (!response.ok) {
-      return response.json().then(err => Promise.reject(err));
-    }
-    return response.json();
-  })
-  .then(result => {
-    // 设置状态
-    folderCreated = true;
-    currentFolderName = folderName;
-    
-    // 更新UI
-    folderNameInput.disabled = true;
-    createBtn.disabled = true;
-    createBtn.textContent = '已创建';
-    
-    // 显示状态
-    const statusDiv = document.getElementById('folder-status');
-    statusDiv.textContent = `✔ 文件夹 "${folderName}" 已创建`;
-    statusDiv.style.display = 'block';
-    
-    // 启用上传区域
-    const coverArea = document.getElementById('cover-upload-area');
-    const imagesArea = document.getElementById('images-upload-area');
-    
-    coverArea.classList.remove('disabled');
-    coverArea.innerHTML = `
-      <div class="emoji-upload-icon"><i class="fas fa-image"></i></div>
-      <div class="emoji-upload-text">点击上传封面图片</div>
-      <div class="emoji-upload-hint">将上传到: ${folderName}/jacket/</div>
     `;
-    coverArea.onclick = () => document.getElementById('emoji-pack-cover').click();
     
-    imagesArea.classList.remove('disabled');
-    imagesArea.innerHTML = `
-      <div class="emoji-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-      <div class="emoji-upload-text">点击或拖拽上传表情图片</div>
-      <div class="emoji-upload-hint">将上传到: ${folderName}/</div>
-    `;
-    imagesArea.onclick = () => document.getElementById('emoji-pack-images').click();
-    imagesArea.ondragover = (e) => handleDragOver(e);
-    imagesArea.ondrop = (e) => handleDrop(e);
-    
-    showSuccessMessage('文件夹创建成功');
-  })
-  .catch(error => {
-    console.error('创建文件夹失败:', error);
-    createBtn.disabled = false;
-    createBtn.textContent = '创建文件夹';
-    showErrorMessage(error.error || '创建文件夹失败');
-  });
-}
+    return modal;
+  }
 
-  // 打开添加表情包弹窗
-  function openAddEmojiPackModal() {
-    // 重置状态
-    currentEmojiPack = null;
-    uploadedFiles = [];
-    folderCreated = false;
-    currentFolderName = '';
+  // 打开添加表情包弹窗（修复版）
+window.openAddEmojiPackModal = function() {
+    // 重置所有状态
+    window.currentEmojiPack = null;
+    window.uploadedFiles = [];
+    window.folderCreated = false;
+    window.currentFolderName = '';
+    window.coverImageUrl = null;
     
     let modal = document.getElementById('emoji-pack-modal');
     if (!modal) {
-      modal = createEmojiPackModal();
-      document.body.appendChild(modal);
+        modal = createEmojiPackModal();
+        document.body.appendChild(modal);
     }
+    
+    // 确保创建文件夹按钮存在并绑定事件
+    setTimeout(() => {
+        const createBtn = document.getElementById('create-folder-btn');
+        if (createBtn) {
+            createBtn.onclick = createEmojiFolder;
+            console.log('创建文件夹按钮已绑定');
+        } else {
+            console.error('找不到创建文件夹按钮');
+        }
+    }, 100);
     
     // 重置表单
     document.getElementById('emoji-pack-name').value = '';
@@ -681,161 +607,290 @@ window.createEmojiFolder = function() {
     const createBtn = document.getElementById('create-folder-btn');
     createBtn.disabled = false;
     createBtn.textContent = '创建文件夹';
+    createBtn.onclick = createEmojiFolder; // 确保绑定事件
     
     document.getElementById('folder-status').style.display = 'none';
+    document.getElementById('folder-status').innerHTML = '';
+    document.getElementById('emoji-preview-grid').innerHTML = '';
     
-    // 禁用上传区域
+    // 确保上传区域是禁用状态
     const coverArea = document.getElementById('cover-upload-area');
     const imagesArea = document.getElementById('images-upload-area');
     
-    coverArea.classList.add('disabled');
-    coverArea.innerHTML = `
-      <div class="emoji-upload-icon"><i class="fas fa-image"></i></div>
-      <div class="emoji-upload-text">请先创建文件夹</div>
-      <div class="emoji-upload-hint">创建文件夹后才能上传</div>
-    `;
-    coverArea.onclick = null;
-    
-    imagesArea.classList.add('disabled');
-    imagesArea.innerHTML = `
-      <div class="emoji-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-      <div class="emoji-upload-text">请先创建文件夹</div>
-      <div class="emoji-upload-hint">创建文件夹后才能上传</div>
-    `;
-    imagesArea.onclick = null;
-    imagesArea.ondragover = null;
-    imagesArea.ondrop = null;
-    
-    document.getElementById('emoji-preview-grid').innerHTML = '';
-    document.getElementById('emoji-upload-progress').classList.remove('show');
+    coverArea.className = 'emoji-upload-area disabled';
+    imagesArea.className = 'emoji-upload-area disabled';
     
     modal.classList.add('show');
   }
 
-  // 处理封面上传
-function handleCoverUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
-  
-  if (!folderCreated || !currentFolderName) {
-    showErrorMessage('请先创建文件夹');
-    input.value = '';
-    return;
-  }
-  
-  const token = localStorage.getItem('token');
-  if (!token) return;
-  
-  const formData = new FormData();
-  formData.append('cover', file);
-  
-  // 确保folder_name参数正确传递
-  const url = `${API_BASE_URL}/api/admin/emoji/upload-cover?folder_name=${encodeURIComponent(currentFolderName)}&type=cover`;
-  
-  const coverArea = document.getElementById('cover-upload-area');
-  coverArea.innerHTML = '<div class="emoji-loading"><i class="fas fa-spinner fa-spin"></i> 上传中...</div>';
-  
-  fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    },
-    body: formData
-  })
-  .then(response => {
-    if (!response.ok) {
-      return response.json().then(err => Promise.reject(err));
+  // 创建文件夹函数（修复版）
+  window.createEmojiFolder = async function() {
+    const folderNameInput = document.getElementById('emoji-folder-name');
+    const folderName = folderNameInput.value.trim();
+    
+    if (!folderName) {
+      showErrorMessage('请输入文件夹名称');
+      return;
     }
-    return response.json();
-  })
-  .then(result => {
-    if (result.success) {
-      coverArea.innerHTML = `<img src="${API_BASE_URL}${result.url}" style="max-width: 100%; max-height: 200px;">`;
-      coverArea.dataset.coverUrl = result.url;
-      showSuccessMessage('封面上传成功');
+    
+    if (!/^[a-zA-Z0-9_-]+$/.test(folderName)) {
+      showErrorMessage('文件夹名称只能包含英文、数字、下划线和横线');
+      return;
     }
-  })
-  .catch(error => {
-    console.error('上传封面失败:', error);
-    coverArea.innerHTML = `
-      <div class="emoji-upload-icon"><i class="fas fa-image"></i></div>
-      <div class="emoji-upload-text">上传失败，点击重试</div>
-      <div class="emoji-upload-hint">将上传到: ${currentFolderName}/jacket/</div>
-    `;
-    coverArea.onclick = () => document.getElementById('emoji-pack-cover').click();
-    showErrorMessage(error.error || '上传封面失败');
-  });
-}
-
-  // 处理表情图片上传
-async function handleImagesUpload(input) {
-  const files = Array.from(input.files);
-  if (files.length === 0) return;
-  
-  if (!folderCreated || !currentFolderName) {
-    showErrorMessage('请先创建文件夹');
-    input.value = '';
-    return;
-  }
-  
-  const token = localStorage.getItem('token');
-  if (!token) return;
-  
-  const progressDiv = document.getElementById('emoji-upload-progress');
-  const progressFill = document.getElementById('emoji-progress-fill');
-  const progressText = document.getElementById('emoji-progress-text');
-  progressDiv.classList.add('show');
-  
-  let uploaded = 0;
-  const total = files.length;
-  
-  for (const file of files) {
-    const formData = new FormData();
-    formData.append('image', file);
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showErrorMessage('请先登录');
+      return;
+    }
+    
+    const createBtn = document.getElementById('create-folder-btn');
+    createBtn.disabled = true;
+    createBtn.textContent = '创建中...';
     
     try {
-      // 确保folder_name参数正确传递
-      const url = `${API_BASE_URL}/api/admin/emoji/upload-image?folder_name=${encodeURIComponent(currentFolderName)}`;
-      
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/emoji/create-folder`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        body: formData
+        body: JSON.stringify({ folder_name: folderName })
       });
       
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('上传失败:', error);
-        continue;
-      }
-      
       const result = await response.json();
-      if (result.success) {
-        uploadedFiles.push({
-          file_name: result.file_name || file.name,
-          file_path: result.url,
-          emoji_name: file.name.replace(/\.[^/.]+$/, '')
-        });
+      
+      if (response.ok && result.success) {
+        // 更新状态
+        window.folderCreated = true;
+        window.currentFolderName = folderName;
+        
+        // 更新UI
+        folderNameInput.disabled = true;
+        createBtn.disabled = true;
+        createBtn.textContent = '已创建';
+        
+        const statusDiv = document.getElementById('folder-status');
+        statusDiv.innerHTML = `✔ 文件夹 "${folderName}" 已创建`;
+        statusDiv.style.display = 'block';
+        statusDiv.style.color = '#28a745';
+        
+        // 启用上传区域
+        enableUploadAreas();
+        
+        showSuccessMessage('文件夹创建成功，现在可以上传图片了');
+      } else {
+        throw new Error(result.error || '创建文件夹失败');
       }
     } catch (error) {
-      console.error('上传表情失败:', error);
+      createBtn.disabled = false;
+      createBtn.textContent = '创建文件夹';
+      showErrorMessage(error.message || '创建文件夹失败');
+    }
+  }
+
+  // 启用上传区域（修复版）
+  function enableUploadAreas() {
+    const coverArea = document.getElementById('cover-upload-area');
+    const imagesArea = document.getElementById('images-upload-area');
+    const coverInput = document.getElementById('emoji-pack-cover');
+    const imagesInput = document.getElementById('emoji-pack-images');
+    
+    if (!window.currentFolderName || !window.folderCreated) {
+      return;
     }
     
-    uploaded++;
-    const progress = Math.round((uploaded / total) * 100);
-    progressFill.style.width = progress + '%';
-    progressText.textContent = `上传中 ${progress}%`;
+    // 启用封面上传
+    coverArea.classList.remove('disabled');
+    coverArea.innerHTML = `
+      <div class="emoji-upload-icon"><i class="fas fa-image"></i></div>
+      <div class="emoji-upload-text">点击上传封面图片</div>
+      <div class="emoji-upload-hint" style="color: #28a745;">将上传到: ${window.currentFolderName}/jacket/</div>
+    `;
+    coverArea.onclick = () => coverInput.click();
+    
+    // 绑定封面上传事件
+    coverInput.onchange = function() {
+      handleCoverUpload(this);
+    };
+    
+    // 启用表情上传
+    imagesArea.classList.remove('disabled');
+    imagesArea.innerHTML = `
+      <div class="emoji-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+      <div class="emoji-upload-text">点击或拖拽上传表情图片</div>
+      <div class="emoji-upload-hint" style="color: #28a745;">将上传到: ${window.currentFolderName}/</div>
+    `;
+    imagesArea.onclick = () => imagesInput.click();
+    
+    // 绑定表情上传事件
+    imagesInput.onchange = function() {
+      handleImagesUpload(this);
+    };
+    
+    // 设置拖拽事件
+    imagesArea.ondragover = (e) => {
+      e.preventDefault();
+      imagesArea.classList.add('dragover');
+    };
+    
+    imagesArea.ondrop = (e) => {
+      e.preventDefault();
+      imagesArea.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        imagesInput.files = files;
+        handleImagesUpload(imagesInput);
+      }
+    };
+    
+    imagesArea.ondragleave = () => {
+      imagesArea.classList.remove('dragover');
+    };
   }
-  
-  renderUploadedEmojis();
-  
-  setTimeout(() => {
-    progressDiv.classList.remove('show');
-    progressFill.style.width = '0%';
-    progressText.textContent = '上传中 0%';
-  }, 1000);
+
+  // 处理封面上传（修复版）
+window.handleCoverUpload = async function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    if (!window.folderCreated || !window.currentFolderName) {
+        showErrorMessage('请先创建文件夹');
+        input.value = '';
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showErrorMessage('请先登录');
+        input.value = '';
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('cover', file);
+    
+    // 修复：确保folder_name参数正确传递
+    const url = `${API_BASE_URL}/api/admin/emoji/upload-cover?folder_name=${encodeURIComponent(window.currentFolderName)}&type=cover`;
+    
+    console.log('上传封面URL:', url); // 添加调试日志
+    
+    const coverArea = document.getElementById('cover-upload-area');
+    coverArea.innerHTML = '<div class="emoji-loading"><i class="fas fa-spinner fa-spin"></i> 上传中...</div>';
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        
+        const result = await response.json();
+        console.log('封面上传结果:', result); // 添加调试日志
+        
+        if (response.ok && result.success) {
+            window.coverImageUrl = result.url;
+            coverArea.innerHTML = `
+                <img src="${API_BASE_URL}${result.url}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                <div style="margin-top: 5px; color: #28a745; font-size: 12px;">封面已上传</div>
+            `;
+            showSuccessMessage('封面上传成功');
+        } else {
+            throw new Error(result.error || '上传失败');
+        }
+    } catch (error) {
+        console.error('封面上传错误:', error);
+        coverArea.innerHTML = `
+            <div class="emoji-upload-icon"><i class="fas fa-image"></i></div>
+            <div class="emoji-upload-text" style="color: #dc3545;">上传失败，点击重试</div>
+        `;
+        coverArea.onclick = () => document.getElementById('emoji-pack-cover').click();
+        showErrorMessage(error.message || '上传封面失败');
+    }
+    
+    input.value = '';
+}
+
+  // 处理表情上传（修复版）
+window.handleImagesUpload = async function(input) {
+    const files = Array.from(input.files);
+    if (files.length === 0) return;
+    
+    if (!window.folderCreated || !window.currentFolderName) {
+        showErrorMessage('请先创建文件夹');
+        input.value = '';
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showErrorMessage('请先登录');
+        input.value = '';
+        return;
+    }
+    
+    const progressDiv = document.getElementById('emoji-upload-progress');
+    const progressFill = document.getElementById('emoji-progress-fill');
+    const progressText = document.getElementById('emoji-progress-text');
+    progressDiv.style.display = 'block';
+    
+    let uploaded = 0;
+    const total = files.length;
+    
+    for (const file of files) {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        try {
+            // 修复：确保folder_name参数正确传递
+            const url = `${API_BASE_URL}/api/admin/emoji/upload-image?folder_name=${encodeURIComponent(window.currentFolderName)}`;
+            
+            console.log('上传表情URL:', url); // 添加调试日志
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+            
+            const result = await response.json();
+            console.log('表情上传结果:', result); // 添加调试日志
+            
+            if (response.ok && result.success) {
+                window.uploadedFiles.push({
+                    file_name: result.file_name || file.name,
+                    file_path: result.url,
+                    emoji_name: file.name.replace(/\.[^/.]+$/, ''),
+                    sort_order: window.uploadedFiles.length
+                });
+            } else {
+                showErrorMessage(`上传 ${file.name} 失败: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('上传错误:', error);
+            showErrorMessage(`上传 ${file.name} 失败`);
+        }
+        
+        uploaded++;
+        const progress = Math.round((uploaded / total) * 100);
+        progressFill.style.width = progress + '%';
+        progressText.textContent = `上传中 ${progress}% (${uploaded}/${total})`;
+    }
+    
+    renderUploadedEmojis();
+    showSuccessMessage(`成功上传 ${window.uploadedFiles.length} 个表情`);
+    
+    setTimeout(() => {
+        progressDiv.style.display = 'none';
+        progressFill.style.width = '0%';
+        progressText.textContent = '上传中 0%';
+    }, 2000);
+    
+    input.value = '';
 }
 
   // 渲染已上传的表情
@@ -843,7 +898,7 @@ async function handleImagesUpload(input) {
     const grid = document.getElementById('emoji-preview-grid');
     grid.innerHTML = '';
     
-    uploadedFiles.forEach((file, index) => {
+    window.uploadedFiles.forEach((file, index) => {
       const item = document.createElement('div');
       item.className = 'emoji-preview-item';
       item.innerHTML = `
@@ -858,52 +913,60 @@ async function handleImagesUpload(input) {
   }
 
   // 更新表情名称
-  function updateEmojiName(index, name) {
-    if (uploadedFiles[index]) {
-      uploadedFiles[index].emoji_name = name;
+  window.updateEmojiName = function(index, name) {
+    if (window.uploadedFiles[index]) {
+      window.uploadedFiles[index].emoji_name = name;
     }
   }
 
   // 删除已上传的表情
-  function removeUploadedEmoji(index) {
-    uploadedFiles.splice(index, 1);
+  window.removeUploadedEmoji = function(index) {
+    window.uploadedFiles.splice(index, 1);
     renderUploadedEmojis();
   }
 
-  // 保存表情包
-  async function saveEmojiPack() {
-    const packName = document.getElementById('emoji-pack-name').value;
-    const folderName = document.getElementById('emoji-folder-name').value;
-    const coverArea = document.getElementById('cover-upload-area');
-    const coverUrl = coverArea.dataset.coverUrl;
+  // 保存表情包（修复版）
+  window.saveEmojiPack = async function() {
+    const packName = document.getElementById('emoji-pack-name').value.trim();
     
-    if (!packName || !folderName) {
-      showErrorMessage('请填写表情包名称和文件夹名称');
+    if (!packName) {
+      showErrorMessage('请填写表情包名称');
       return;
     }
     
-    if (uploadedFiles.length === 0) {
+    if (!window.folderCreated || !window.currentFolderName) {
+      showErrorMessage('请先创建文件夹');
+      return;
+    }
+    
+    if (window.uploadedFiles.length === 0) {
       showErrorMessage('请上传至少一个表情图片');
       return;
     }
     
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+      showErrorMessage('请先登录');
+      return;
+    }
     
     const data = {
       pack_name: packName,
-      folder_name: folderName,
-      cover_image: coverUrl,
-      emojis: uploadedFiles
+      folder_name: window.currentFolderName,
+      cover_image: window.coverImageUrl,
+      emojis: window.uploadedFiles.map((file, index) => ({
+        ...file,
+        sort_order: index
+      }))
     };
     
     try {
-      const url = currentEmojiPack 
-        ? `${API_BASE_URL}/api/admin/emoji/packs/${currentEmojiPack.id}`
+      const url = window.currentEmojiPack 
+        ? `${API_BASE_URL}/api/admin/emoji/packs/${window.currentEmojiPack.id}`
         : `${API_BASE_URL}/api/admin/emoji/packs`;
       
       const response = await fetch(url, {
-        method: currentEmojiPack ? 'PUT' : 'POST',
+        method: window.currentEmojiPack ? 'PUT' : 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -911,22 +974,37 @@ async function handleImagesUpload(input) {
         body: JSON.stringify(data)
       });
       
-      if (response.ok) {
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
         closeEmojiPackModal();
-        loadEmojiPacksList();
-        showSuccessMessage(currentEmojiPack ? '表情包更新成功' : '表情包添加成功');
+        await loadEmojiPacksList();
+        showSuccessMessage(window.currentEmojiPack ? '表情包更新成功' : '表情包添加成功');
       } else {
-        const error = await response.json();
-        showErrorMessage(error.error || '操作失败');
+        showErrorMessage(result.error || '操作失败');
       }
     } catch (error) {
-      console.error('保存表情包失败:', error);
-      showErrorMessage('保存失败');
+      showErrorMessage('保存失败: ' + error.message);
     }
   }
 
+  // 关闭表情包弹窗
+  window.closeEmojiPackModal = function() {
+    const modal = document.getElementById('emoji-pack-modal');
+    if (modal) {
+      modal.classList.remove('show');
+    }
+    
+    // 重置所有状态
+    window.currentEmojiPack = null;
+    window.uploadedFiles = [];
+    window.folderCreated = false;
+    window.currentFolderName = '';
+    window.coverImageUrl = null;
+  }
+
   // 编辑表情包
-  async function editEmojiPack(packId) {
+  window.editEmojiPack = async function(packId) {
     const token = localStorage.getItem('token');
     if (!token) return;
     
@@ -938,7 +1016,7 @@ async function handleImagesUpload(input) {
       });
       
       if (response.ok) {
-        currentEmojiPack = await response.json();
+        window.currentEmojiPack = await response.json();
         openEditEmojiPackModal();
       }
     } catch (error) {
@@ -948,7 +1026,7 @@ async function handleImagesUpload(input) {
 
   // 打开编辑表情包弹窗
   function openEditEmojiPackModal() {
-    if (!currentEmojiPack) return;
+    if (!window.currentEmojiPack) return;
     
     let modal = document.getElementById('emoji-pack-modal');
     if (!modal) {
@@ -957,8 +1035,8 @@ async function handleImagesUpload(input) {
     }
     
     // 填充数据
-    document.getElementById('emoji-pack-name').value = currentEmojiPack.pack_name;
-    document.getElementById('emoji-folder-name').value = currentEmojiPack.folder_name;
+    document.getElementById('emoji-pack-name').value = window.currentEmojiPack.pack_name;
+    document.getElementById('emoji-folder-name').value = window.currentEmojiPack.folder_name;
     document.getElementById('emoji-folder-name').disabled = true;
     
     const createBtn = document.getElementById('create-folder-btn');
@@ -966,35 +1044,24 @@ async function handleImagesUpload(input) {
     createBtn.textContent = '文件夹已存在';
     
     // 设置已创建文件夹状态
-    folderCreated = true;
-    currentFolderName = currentEmojiPack.folder_name;
+    window.folderCreated = true;
+    window.currentFolderName = window.currentEmojiPack.folder_name;
     
     const statusDiv = document.getElementById('folder-status');
-    statusDiv.textContent = `文件夹: ${currentFolderName}`;
+    statusDiv.textContent = `文件夹: ${window.currentFolderName}`;
     statusDiv.style.display = 'block';
     
     // 启用上传区域
+    enableUploadAreas();
+    
+    // 显示封面
     const coverArea = document.getElementById('cover-upload-area');
-    const imagesArea = document.getElementById('images-upload-area');
-    
-    coverArea.classList.remove('disabled');
-    if (currentEmojiPack.cover_image) {
-      coverArea.innerHTML = `<img src="${API_BASE_URL}${currentEmojiPack.cover_image}" style="max-width: 100%; max-height: 200px;">`;
-      coverArea.dataset.coverUrl = currentEmojiPack.cover_image;
+    if (window.currentEmojiPack.cover_image) {
+      coverArea.innerHTML = `<img src="${API_BASE_URL}${window.currentEmojiPack.cover_image}" style="max-width: 100%; max-height: 200px;">`;
+      window.coverImageUrl = window.currentEmojiPack.cover_image;
     }
-    coverArea.onclick = () => document.getElementById('emoji-pack-cover').click();
     
-    imagesArea.classList.remove('disabled');
-    imagesArea.innerHTML = `
-      <div class="emoji-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-      <div class="emoji-upload-text">点击或拖拽上传更多表情图片</div>
-      <div class="emoji-upload-hint">将上传到: ${currentFolderName}/</div>
-    `;
-    imagesArea.onclick = () => document.getElementById('emoji-pack-images').click();
-    imagesArea.ondragover = (e) => handleDragOver(e);
-    imagesArea.ondrop = (e) => handleDrop(e);
-    
-    uploadedFiles = currentEmojiPack.emojis || [];
+    window.uploadedFiles = window.currentEmojiPack.emojis || [];
     renderUploadedEmojis();
     
     modal.querySelector('.emoji-pack-modal-title').textContent = '编辑表情包';
@@ -1002,7 +1069,7 @@ async function handleImagesUpload(input) {
   }
 
   // 删除表情包
-  async function deleteEmojiPack(packId) {
+  window.deleteEmojiPack = async function(packId) {
     if (!confirm('确定要删除这个表情包吗？将删除所有相关文件。')) return;
     
     const token = localStorage.getItem('token');
@@ -1026,144 +1093,12 @@ async function handleImagesUpload(input) {
     }
   }
 
-  // 关闭表情包弹窗
-  function closeEmojiPackModal() {
-    const modal = document.getElementById('emoji-pack-modal');
-    if (modal) {
-      modal.classList.remove('show');
-    }
-    // 重置状态
-    currentEmojiPack = null;
-    uploadedFiles = [];
-    folderCreated = false;
-    currentFolderName = '';
-  }
-
-  // 拖拽处理
-  function handleDragOver(event) {
-    event.preventDefault();
-    event.currentTarget.classList.add('dragover');
-  }
-
-  function handleDrop(event) {
-    event.preventDefault();
-    event.currentTarget.classList.remove('dragover');
-    
-    const files = event.dataTransfer.files;
-    if (files.length > 0) {
-      const input = document.getElementById('emoji-pack-images');
-      input.files = files;
-      handleImagesUpload(input);
-    }
-  }
-
-  // 添加表情管理样式
-  const emojiStyle = document.createElement('style');
-  emojiStyle.textContent = `
-    .emoji-folder-input-group {
-      display: flex;
-      gap: 10px;
-    }
-    
-    .emoji-folder-input-group .emoji-form-input {
-      flex: 1;
-    }
-    
-    .emoji-form-btn {
-      padding: 8px 20px;
-      background: #1877f2;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.3s;
-      white-space: nowrap;
-    }
-    
-    .emoji-form-btn:hover:not(:disabled) {
-      background: #166fe5;
-    }
-    
-    .emoji-form-btn:disabled {
-      background: #e4e6eb;
-      color: #65676b;
-      cursor: not-allowed;
-    }
-    
-    .emoji-form-hint {
-      display: block;
-      margin-top: 5px;
-      color: #65676b;
-      font-size: 12px;
-    }
-    
-    .emoji-upload-area.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      background: #f0f2f5;
-    }
-    
-    .emoji-upload-area.disabled:hover {
-      background: #f0f2f5;
-      border-color: #e4e6eb;
-    }
-    
-    .emoji-management-actions {
-      display: flex;
-      gap: 10px;
-    }
-    
-    .btn-back {
-      padding: 10px 20px;
-      background: #6c757d;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.3s;
-    }
-    
-    .btn-back:hover {
-      background: #5a6268;
-    }
-    
-    .emoji-loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 40px;
-      color: #65676b;
-    }
-    
-    #folder-status {
-      padding: 8px;
-      background: #d4edda;
-      border: 1px solid #c3e6cb;
-      border-radius: 4px;
-      color: #155724;
-      font-size: 14px;
-    }
-  `;
-  document.head.appendChild(emojiStyle);
+  // ========== 表情管理修复结束 ==========
 
   // 导出给路由/跳转用
   global.renderSiteAdminHome = renderSiteAdminHome;
   global.renderCCBServersPage = renderCCBServersPage;
   global.renderCCBGamesPage = renderCCBGamesPage;
   global.renderEmojiManagement = renderEmojiManagement;
-  global.openAddEmojiPackModal = openAddEmojiPackModal;
-  global.createEmojiFolder = createEmojiFolder;
-  global.editEmojiPack = editEmojiPack;
-  global.deleteEmojiPack = deleteEmojiPack;
-  global.closeEmojiPackModal = closeEmojiPackModal;
-  global.handleCoverUpload = handleCoverUpload;
-  global.handleImagesUpload = handleImagesUpload;
-  global.handleDragOver = handleDragOver;
-  global.handleDrop = handleDrop;
-  global.updateEmojiName = updateEmojiName;
-  global.removeUploadedEmoji = removeUploadedEmoji;
-  global.saveEmojiPack = saveEmojiPack;
   
 })(window);
