@@ -1,4 +1,4 @@
-// 表情功能JavaScript
+// 表情功能JavaScript - 添加缓存功能版
 (function(global) {
   'use strict';
 
@@ -7,6 +7,201 @@
   let recentEmojis = [];
   let selectedChatInput = null;
   let uploadedFiles = [];
+  
+  // 缓存管理
+  const emojiCache = {
+    db: null,
+    dbName: 'EmojiCache',
+    storeName: 'emojis',
+    version: 1,
+    
+    // 初始化IndexedDB
+    async init() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(this.dbName, this.version);
+        
+        request.onerror = () => {
+          console.error('IndexedDB打开失败');
+          reject(request.error);
+        };
+        
+        request.onsuccess = () => {
+          this.db = request.result;
+          console.log('IndexedDB初始化成功');
+          resolve();
+        };
+        
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          
+          // 创建表情存储
+          if (!db.objectStoreNames.contains(this.storeName)) {
+            const objectStore = db.createObjectStore(this.storeName, { keyPath: 'url' });
+            objectStore.createIndex('packId', 'packId', { unique: false });
+            objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+          }
+          
+          // 创建封面存储
+          if (!db.objectStoreNames.contains('covers')) {
+            db.createObjectStore('covers', { keyPath: 'packId' });
+          }
+        };
+      });
+    },
+    
+    // 获取缓存的图片
+    async get(url) {
+      return new Promise((resolve, reject) => {
+        if (!this.db) {
+          resolve(null);
+          return;
+        }
+        
+        const transaction = this.db.transaction([this.storeName], 'readonly');
+        const objectStore = transaction.objectStore(this.storeName);
+        const request = objectStore.get(url);
+        
+        request.onsuccess = () => {
+          const result = request.result;
+          if (result && result.data) {
+            // 检查缓存是否过期（7天）
+            const now = Date.now();
+            const cacheTime = 7 * 24 * 60 * 60 * 1000; // 7天
+            if (now - result.timestamp < cacheTime) {
+              resolve(result.data);
+            } else {
+              // 缓存过期，删除旧数据
+              this.delete(url);
+              resolve(null);
+            }
+          } else {
+            resolve(null);
+          }
+        };
+        
+        request.onerror = () => {
+          reject(request.error);
+        };
+      });
+    },
+    
+    // 保存图片到缓存
+    async set(url, data, packId) {
+      return new Promise((resolve, reject) => {
+        if (!this.db) {
+          resolve();
+          return;
+        }
+        
+        const transaction = this.db.transaction([this.storeName], 'readwrite');
+        const objectStore = transaction.objectStore(this.storeName);
+        const request = objectStore.put({
+          url: url,
+          data: data,
+          packId: packId,
+          timestamp: Date.now()
+        });
+        
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    },
+    
+    // 删除缓存
+    async delete(url) {
+      return new Promise((resolve, reject) => {
+        if (!this.db) {
+          resolve();
+          return;
+        }
+        
+        const transaction = this.db.transaction([this.storeName], 'readwrite');
+        const objectStore = transaction.objectStore(this.storeName);
+        const request = objectStore.delete(url);
+        
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    },
+    
+    // 清理过期缓存
+    async cleanExpired() {
+      return new Promise((resolve, reject) => {
+        if (!this.db) {
+          resolve();
+          return;
+        }
+        
+        const transaction = this.db.transaction([this.storeName], 'readwrite');
+        const objectStore = transaction.objectStore(this.storeName);
+        const index = objectStore.index('timestamp');
+        const now = Date.now();
+        const cacheTime = 7 * 24 * 60 * 60 * 1000; // 7天
+        const expireTime = now - cacheTime;
+        
+        const range = IDBKeyRange.upperBound(expireTime);
+        const request = index.openCursor(range);
+        
+        request.onsuccess = (event) => {
+          const cursor = event.target.result;
+          if (cursor) {
+            objectStore.delete(cursor.primaryKey);
+            cursor.continue();
+          } else {
+            resolve();
+          }
+        };
+        
+        request.onerror = () => reject(request.error);
+      });
+    },
+    
+    // 获取缓存大小
+    async getSize() {
+      return new Promise((resolve, reject) => {
+        if (!this.db) {
+          resolve(0);
+          return;
+        }
+        
+        let totalSize = 0;
+        const transaction = this.db.transaction([this.storeName], 'readonly');
+        const objectStore = transaction.objectStore(this.storeName);
+        const request = objectStore.openCursor();
+        
+        request.onsuccess = (event) => {
+          const cursor = event.target.result;
+          if (cursor) {
+            if (cursor.value.data) {
+              totalSize += cursor.value.data.length;
+            }
+            cursor.continue();
+          } else {
+            resolve(totalSize);
+          }
+        };
+        
+        request.onerror = () => reject(request.error);
+      });
+    },
+    
+    // 清空所有缓存
+    async clear() {
+      return new Promise((resolve, reject) => {
+        if (!this.db) {
+          resolve();
+          return;
+        }
+        
+        const transaction = this.db.transaction([this.storeName], 'readwrite');
+        const objectStore = transaction.objectStore(this.storeName);
+        const request = objectStore.clear();
+        
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+  };
 
   // 添加全局变量
   window.folderCreated = false;
@@ -14,7 +209,16 @@
   window.coverImageUrl = null;
 
   // 初始化表情系统
-  function initEmojiSystem() {
+  async function initEmojiSystem() {
+    // 初始化缓存
+    try {
+      await emojiCache.init();
+      // 清理过期缓存
+      await emojiCache.cleanExpired();
+    } catch (error) {
+      console.error('缓存系统初始化失败:', error);
+    }
+    
     // 加载表情包数据
     loadEmojiPacks();
     
@@ -121,6 +325,11 @@
     picker.classList.add('show');
     btn.classList.add('active');
     
+    // 记录当前表情选择器引用（用于PC端拖动时更新位置）
+    if (window.currentEmojiPicker !== undefined) {
+      window.currentEmojiPicker = picker;
+    }
+    
     // 加载第一个表情包
     if (emojiPacks.length > 0) {
       loadEmojiPackContent(emojiPacks[0].id);
@@ -154,9 +363,21 @@
       if (response.ok) {
         emojiPacks = await response.json();
         updateEmojiTabs();
+        // 预加载封面图片
+        preloadCovers();
       }
     } catch (error) {
       console.error('加载表情包失败:', error);
+    }
+  }
+
+  // 预加载封面图片
+  async function preloadCovers() {
+    for (const pack of emojiPacks) {
+      if (pack.cover_image) {
+        const url = `${API_BASE_URL}${pack.cover_image}`;
+        await loadImageWithCache(url, pack.id);
+      }
     }
   }
 
@@ -180,7 +401,14 @@
       tab.title = pack.pack_name;
       
       if (pack.cover_image) {
-        tab.innerHTML = `<img src="${API_BASE_URL}${pack.cover_image}" alt="${pack.pack_name}">`;
+        const img = document.createElement('img');
+        img.alt = pack.pack_name;
+        tab.appendChild(img);
+        
+        // 使用缓存加载封面
+        loadImageWithCache(`${API_BASE_URL}${pack.cover_image}`, pack.id).then(dataUrl => {
+          img.src = dataUrl;
+        });
       } else {
         tab.innerHTML = '<i class="far fa-smile"></i>';
       }
@@ -220,7 +448,7 @@
       const response = await fetch(`${API_BASE_URL}/api/emoji/pack/${packId}/items`);
       if (response.ok) {
         const emojis = await response.json();
-        renderEmojiGrid(emojis);
+        await renderEmojiGrid(emojis, packId);
         
         // 激活对应的标签
         document.querySelectorAll('.emoji-tab').forEach(t => {
@@ -237,7 +465,7 @@
   }
 
   // 渲染表情网格
-  function renderEmojiGrid(emojis) {
+  async function renderEmojiGrid(emojis, packId) {
     const gridContainer = document.querySelector('.emoji-grid-container');
     if (!gridContainer) return;
     
@@ -254,23 +482,70 @@
     const grid = document.createElement('div');
     grid.className = 'emoji-grid';
     
-    emojis.forEach(emoji => {
+    // 批量加载表情图片
+    for (const emoji of emojis) {
       const item = document.createElement('div');
       item.className = 'emoji-item';
-      item.innerHTML = `
-        <img src="${API_BASE_URL}${emoji.file_path}" alt="${emoji.emoji_name || emoji.file_name}">
-        <span class="emoji-item-name">${emoji.emoji_name || emoji.file_name}</span>
-      `;
+      
+      const img = document.createElement('img');
+      img.alt = emoji.emoji_name || emoji.file_name;
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'emoji-item-name';
+      nameSpan.textContent = emoji.emoji_name || emoji.file_name;
+      
+      item.appendChild(img);
+      item.appendChild(nameSpan);
+      
+      // 使用缓存加载图片
+      const imageUrl = `${API_BASE_URL}${emoji.file_path}`;
+      loadImageWithCache(imageUrl, packId).then(dataUrl => {
+        img.src = dataUrl;
+      });
       
       item.addEventListener('click', () => {
         sendEmoji(emoji);
       });
       
       grid.appendChild(item);
-    });
+    }
     
     gridContainer.innerHTML = '';
     gridContainer.appendChild(grid);
+  }
+
+  // 使用缓存加载图片
+  async function loadImageWithCache(url, packId) {
+    try {
+      // 先尝试从缓存获取
+      const cachedData = await emojiCache.get(url);
+      if (cachedData) {
+        return cachedData;
+      }
+      
+      // 如果缓存中没有，从网络加载
+      const response = await fetch(url);
+      const blob = await response.blob();
+      
+      // 转换为DataURL
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      
+      // 保存到缓存
+      await emojiCache.set(url, dataUrl, packId).catch(error => {
+        console.error('保存缓存失败:', error);
+      });
+      
+      return dataUrl;
+    } catch (error) {
+      console.error('加载图片失败:', error);
+      // 返回原始URL作为后备
+      return url;
+    }
   }
 
   // 发送表情
@@ -342,7 +617,7 @@
       
       if (response.ok) {
         const emojis = await response.json();
-        renderEmojiGrid(emojis);
+        await renderEmojiGrid(emojis, 'recent');
       }
     } catch (error) {
       console.error('加载最近使用表情失败:', error);
@@ -363,6 +638,11 @@
       document.querySelectorAll('.emoji-btn').forEach(btn => {
         btn.classList.remove('active');
       });
+      
+      // 清除全局引用
+      if (window.currentEmojiPicker !== undefined) {
+        window.currentEmojiPicker = null;
+      }
     }
   }
 
@@ -371,15 +651,27 @@
     const container = document.getElementById('content-container');
     if (!container) return;
     
+    // 显示缓存信息
+    const cacheSize = await emojiCache.getSize();
+    const cacheSizeMB = (cacheSize / (1024 * 1024)).toFixed(2);
+    
     container.innerHTML = `
       <div class="emoji-management">
         <div class="emoji-management-header">
           <h1 class="emoji-management-title">
             <i class="far fa-smile"></i> 表情管理
           </h1>
-          <button class="btn-add-emoji-pack" onclick="openAddEmojiPackModal()">
-            <i class="fas fa-plus"></i> 添加表情包
-          </button>
+          <div class="emoji-header-actions">
+            <div class="cache-info">
+              <i class="fas fa-database"></i> 缓存: ${cacheSizeMB}MB
+              <button class="btn-clear-cache" onclick="clearEmojiCache()">
+                <i class="fas fa-trash"></i> 清空缓存
+              </button>
+            </div>
+            <button class="btn-add-emoji-pack" onclick="openAddEmojiPackModal()">
+              <i class="fas fa-plus"></i> 添加表情包
+            </button>
+          </div>
         </div>
         <div id="emoji-packs-container">
           <div class="emoji-loading">
@@ -390,6 +682,21 @@
     `;
     
     loadEmojiPacksList();
+  }
+
+  // 清空表情缓存
+  async function clearEmojiCache() {
+    if (confirm('确定要清空所有表情缓存吗？')) {
+      try {
+        await emojiCache.clear();
+        showSuccessMessage('缓存已清空');
+        // 刷新页面以重新加载
+        location.reload();
+      } catch (error) {
+        console.error('清空缓存失败:', error);
+        showErrorMessage('清空缓存失败');
+      }
+    }
   }
 
   // 加载表情包列表
@@ -407,9 +714,25 @@
       if (response.ok) {
         const packs = await response.json();
         renderEmojiPacksGrid(packs);
+        // 预加载管理页面的封面
+        preloadManagementCovers(packs);
       }
     } catch (error) {
       console.error('加载表情包列表失败:', error);
+    }
+  }
+
+  // 预加载管理页面封面
+  async function preloadManagementCovers(packs) {
+    for (const pack of packs) {
+      if (pack.cover_image) {
+        const url = `${API_BASE_URL}${pack.cover_image}`;
+        const img = document.querySelector(`[data-pack-id="${pack.id}"] .emoji-pack-cover img`);
+        if (img) {
+          const dataUrl = await loadImageWithCache(url, pack.id);
+          img.src = dataUrl;
+        }
+      }
     }
   }
 
@@ -434,6 +757,7 @@
     packs.forEach(pack => {
       const card = document.createElement('div');
       card.className = 'emoji-pack-card';
+      card.dataset.packId = pack.id;
       card.innerHTML = `
         <div class="emoji-pack-cover">
           ${pack.cover_image ? 
@@ -712,7 +1036,6 @@
     const formData = new FormData();
     formData.append('cover', file);
     
-    // 关键修复：正确传递folder_name参数
     const url = `${API_BASE_URL}/api/admin/emoji/upload-cover?folder_name=${encodeURIComponent(window.currentFolderName)}&type=cover`;
     
     try {
@@ -771,7 +1094,6 @@
       formData.append('image', file);
       
       try {
-        // 关键修复：正确传递folder_name参数
         const url = `${API_BASE_URL}/api/admin/emoji/upload-image?folder_name=${encodeURIComponent(window.currentFolderName)}`;
         
         const response = await fetch(url, {
@@ -1042,6 +1364,14 @@
     }
   }
 
+  function showErrorMessage(message) {
+    if (typeof window.showErrorMessage === 'function') {
+      window.showErrorMessage(message);
+    } else {
+      alert(message);
+    }
+  }
+
   // 暴露给全局
   global.initEmojiSystem = initEmojiSystem;
   global.renderEmojiManagement = renderEmojiManagement;
@@ -1057,6 +1387,7 @@
   global.removeUploadedEmoji = removeUploadedEmoji;
   global.saveEmojiPack = saveEmojiPack;
   global.createEmojiFolder = window.createEmojiFolder;
+  global.clearEmojiCache = clearEmojiCache;
 
   // 在DOM加载完成后初始化
   if (document.readyState === 'loading') {
