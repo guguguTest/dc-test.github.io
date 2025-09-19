@@ -1,4 +1,4 @@
-// 好友功能JavaScript
+// 好友功能JavaScript - 性能优化版
 (function(global) {
   'use strict';
 
@@ -13,7 +13,12 @@
   let friendRequests = [];
   let currentSearchResults = [];
   let friendsCheckInterval = null;
-  let isInitialized = false; // 防止重复初始化
+  let isInitialized = false;
+  let isLoadingData = false; // 防止重复加载
+  let lastDataLoadTime = 0; // 记录上次加载数据的时间
+
+  // 缓存数据的有效期（毫秒）
+  const DATA_CACHE_DURATION = 60000; // 1分钟
 
   // 初始化好友系统
   function initFriendsSystem() {
@@ -22,26 +27,46 @@
     
     // 先检查登录状态
     const token = localStorage.getItem('token');
-    if (!token) {
-      return;
-    }
+    if (!token) return;
     
     isInitialized = true;
     
     // 添加好友图标到导航栏
     addFriendsIconToNavbar();
     
-    // 加载好友数据
-    loadFriendsData();
+    // 预加载好友数据（后台加载，不阻塞UI）
+    preloadFriendsData();
     
-    // 设置定时检查
+    // 设置定时检查 - 缩短到10秒
     if (friendsCheckInterval) {
       clearInterval(friendsCheckInterval);
     }
-    friendsCheckInterval = setInterval(checkFriendRequests, 30000);
+    friendsCheckInterval = setInterval(checkFriendRequests, 10000);
     
     // 绑定事件
     bindFriendsEvents();
+    
+    // 请求通知权限
+    requestNotificationPermission();
+  }
+
+  // 预加载好友数据（后台加载）
+  async function preloadFriendsData() {
+    const now = Date.now();
+    if (now - lastDataLoadTime < DATA_CACHE_DURATION) {
+      // 数据还在缓存有效期内，不需要重新加载
+      return;
+    }
+    
+    if (!isLoadingData) {
+      isLoadingData = true;
+      try {
+        await loadFriendsData();
+        lastDataLoadTime = now;
+      } finally {
+        isLoadingData = false;
+      }
+    }
   }
 
   // 添加好友图标到导航栏
@@ -76,63 +101,53 @@
     }
   }
 
-  // 加载好友数据
-  async function loadFriendsData() {
+  // 加载好友数据 - 优化版
+  async function loadFriendsData(forceUpdate = false) {
     const token = localStorage.getItem('token');
     if (!token) return;
     
+    // 如果不是强制更新且数据还在缓存期内，直接返回
+    if (!forceUpdate && Date.now() - lastDataLoadTime < DATA_CACHE_DURATION) {
+      return;
+    }
+    
     try {
-      // 加载好友列表
-      const friendsRes = await fetch(`${API_BASE_URL}/api/friends`, {
-        method: 'GET',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
+      // 并行加载所有数据
+      const [friendsRes, blacklistRes, requestsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/friends`, {
+          method: 'GET',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        }),
+        fetch(`${API_BASE_URL}/api/friends/blacklist`, {
+          method: 'GET',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        }),
+        fetch(`${API_BASE_URL}/api/friends/requests`, {
+          method: 'GET',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        })
+      ]);
       
+      // 处理响应
       if (friendsRes.ok) {
         const rawFriendsList = await friendsRes.json();
-        // 处理好友数据，添加必要的字段
-        friendsList = rawFriendsList.map(friend => {
-          // 获取用户组背景
-          const rankBackgrounds = {
-            0: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_normal.png',
-            1: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_bronze.png',
-            2: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_silver.png',
-            3: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_gold.png',
-            4: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_platinum.png',
-            5: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_rainbow.png'
-          };
-          
-          // 确保rankSp字段正确（检查多种可能的字段名）
-          const hasRainbowEffect = friend.rank_sp === 1 || friend.rankSp === 1 || friend.user_rank === 5;
-          
-          return {
-            ...friend,
-            userRank: friend.user_rank || 0,
-            rankBackground: rankBackgrounds[friend.user_rank || 0],
-            rankSp: hasRainbowEffect ? 1 : 0,  // 确保七彩光环标识正确
-            banState: friend.ban_state || 0,
-            avatar: friend.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png',
-            online: friend.online || false
-          };
-        });
+        friendsList = processFriendsList(rawFriendsList);
       } else {
         console.warn('加载好友列表失败:', friendsRes.status);
         friendsList = [];
       }
-      
-      // 加载黑名单
-      const blacklistRes = await fetch(`${API_BASE_URL}/api/friends/blacklist`, {
-        method: 'GET',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
       
       if (blacklistRes.ok) {
         blacklist = await blacklistRes.json();
@@ -140,16 +155,6 @@
         console.warn('加载黑名单失败:', blacklistRes.status);
         blacklist = [];
       }
-      
-      // 加载好友请求
-      const requestsRes = await fetch(`${API_BASE_URL}/api/friends/requests`, {
-        method: 'GET',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
       
       if (requestsRes.ok) {
         friendRequests = await requestsRes.json();
@@ -159,6 +164,8 @@
       }
       
       updateFriendsBadge();
+      lastDataLoadTime = Date.now();
+      
     } catch (error) {
       console.error('加载好友数据失败:', error);
       friendsList = [];
@@ -168,7 +175,33 @@
     }
   }
 
-  // 检查好友请求
+  // 处理好友列表数据
+  function processFriendsList(rawFriendsList) {
+    const rankBackgrounds = {
+      0: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_normal.png',
+      1: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_bronze.png',
+      2: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_silver.png',
+      3: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_gold.png',
+      4: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_platinum.png',
+      5: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_rainbow.png'
+    };
+    
+    return rawFriendsList.map(friend => {
+      const hasRainbowEffect = friend.rank_sp === 1 || friend.rankSp === 1 || friend.user_rank === 5;
+      
+      return {
+        ...friend,
+        userRank: friend.user_rank || 0,
+        rankBackground: rankBackgrounds[friend.user_rank || 0],
+        rankSp: hasRainbowEffect ? 1 : 0,
+        banState: friend.ban_state || 0,
+        avatar: friend.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png',
+        online: friend.online || false
+      };
+    });
+  }
+
+  // 检查好友请求 - 优化版
   async function checkFriendRequests() {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -184,7 +217,18 @@
       });
       
       if (response.ok) {
-        friendRequests = await response.json();
+        const newRequests = await response.json();
+        
+        // 检查是否有新的请求
+        const oldPendingCount = friendRequests.filter(r => r.status === 'pending').length;
+        const newPendingCount = newRequests.filter(r => r.status === 'pending').length;
+        
+        if (newPendingCount > oldPendingCount) {
+          // 有新的好友请求，显示通知
+          showNotification('新的好友请求', '您有新的好友请求待处理');
+        }
+        
+        friendRequests = newRequests;
         updateFriendsBadge();
       }
     } catch (error) {
@@ -291,16 +335,41 @@
     }
   }
 
-  // 打开好友下拉菜单
+  // 打开好友下拉菜单 - 优化版
   async function openFriendsDropdown(type = 'desktop') {
     const dropdownId = type === 'mobile' ? 'friends-dropdown-mobile' : 'friends-dropdown';
     const dropdown = document.getElementById(dropdownId);
     
     if (!dropdown) return;
     
-    await loadFriendsData();
-    renderFriendsDropdown(type);
+    // 立即显示下拉菜单和加载中状态
     dropdown.classList.add('show');
+    renderLoadingState(dropdown);
+    
+    // 如果数据需要更新，异步加载
+    const now = Date.now();
+    if (now - lastDataLoadTime > DATA_CACHE_DURATION) {
+      await loadFriendsData();
+    }
+    
+    // 渲染实际内容
+    renderFriendsDropdown(type);
+  }
+
+  // 渲染加载中状态
+  function renderLoadingState(dropdown) {
+    dropdown.innerHTML = `
+      <div class="friends-dropdown-header">
+        <div class="friends-dropdown-title">
+          <i class="fas fa-user-friends"></i>
+          <span>好友</span>
+        </div>
+      </div>
+      <div class="friends-loading" style="padding: 60px 20px; text-align: center;">
+        <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #667eea;"></i>
+        <p style="margin-top: 10px; color: #6c757d;">加载中...</p>
+      </div>
+    `;
   }
 
   // 关闭好友下拉菜单
@@ -566,7 +635,7 @@
       
       if (response.ok) {
         showSuccessMessage('已删除好友');
-        await loadFriendsData();
+        await loadFriendsData(true);
         renderFriendsDropdown();
       }
     } catch (error) {
@@ -835,7 +904,7 @@
       
       if (response.ok) {
         showSuccessMessage('已添加好友');
-        await loadFriendsData();
+        await loadFriendsData(true);
         renderFriendsDropdown();
       }
     } catch (error) {
@@ -861,7 +930,7 @@
       
       if (response.ok) {
         showSuccessMessage('已拒绝请求');
-        await loadFriendsData();
+        await loadFriendsData(true);
         renderFriendsDropdown();
       }
     } catch (error) {
@@ -890,7 +959,7 @@
       
       if (response.ok) {
         showSuccessMessage('已加入黑名单');
-        await loadFriendsData();
+        await loadFriendsData(true);
         renderFriendsDropdown();
       }
     } catch (error) {
@@ -917,7 +986,7 @@
       
       if (response.ok) {
         showSuccessMessage('已解除黑名单');
-        await loadFriendsData();
+        await loadFriendsData(true);
         renderFriendsDropdown();
       }
     } catch (error) {
@@ -926,7 +995,7 @@
     }
   }
 
-  // 打开与好友的聊天窗口 - 修复函数定义
+  // 打开与好友的聊天窗口
   function openChatWithFriend(friendId) {
     // 调用消息系统的聊天函数
     if (typeof window.openChatModal === 'function') {
@@ -934,6 +1003,29 @@
     } else {
       console.error('聊天功能未初始化');
       showErrorMessage('聊天功能暂时不可用');
+    }
+  }
+
+  // 显示通知
+  function showNotification(title, message) {
+    // 如果浏览器支持通知API
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, {
+        body: message,
+        icon: '/favicon.ico'
+      });
+    }
+    
+    // 同时显示页面内通知
+    if (typeof window.showSuccessMessage === 'function') {
+      window.showSuccessMessage(message);
+    }
+  }
+
+  // 请求通知权限
+  function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
     }
   }
 
@@ -956,6 +1048,8 @@
     blacklist = [];
     friendRequests = [];
     isInitialized = false;
+    isLoadingData = false;
+    lastDataLoadTime = 0;
   }
 
   // 工具函数
@@ -1012,6 +1106,7 @@
   global.cleanupFriendsSystem = cleanupFriendsSystem;
   global.loadFriendsData = loadFriendsData;
   global.openChatWithFriend = openChatWithFriend;
+  global.requestNotificationPermission = requestNotificationPermission;
   
   // 确保在登录后立即初始化
   if (!window.friendsSystemInitialized) {
@@ -1027,6 +1122,8 @@
     
     // DOMContentLoaded时检查
     document.addEventListener('DOMContentLoaded', function() {
+      requestNotificationPermission();
+      
       setTimeout(function() {
         const token = localStorage.getItem('token');
         if (token && !window.friendsSystemInitialized) {
