@@ -10,8 +10,12 @@
 
   // 打开消息中心
   function openMessageCenter() {
-    // 关闭下拉菜单
-    closeMessageDropdown();
+    // 立即关闭所有消息下拉菜单
+    const dropdowns = document.querySelectorAll('.message-dropdown, .message-dropdown-mobile');
+    dropdowns.forEach(dropdown => {
+      dropdown.classList.remove('show');
+      dropdown.style.display = 'none';
+    });
     
     // 使用全局的loadPage函数
     if (typeof window.loadPage === 'function') {
@@ -236,8 +240,15 @@
     });
   }
 
-  // 查看消息详情
+  // 查看消息详情 - 修复版：确保关闭下拉窗口
   async function viewMessage(messageId) {
+    // 立即关闭所有消息下拉菜单
+    const dropdowns = document.querySelectorAll('.message-dropdown, .message-dropdown-mobile');
+    dropdowns.forEach(dropdown => {
+      dropdown.classList.remove('show');
+      dropdown.style.display = 'none';
+    });
+    
     // 调用主消息系统的openMessage函数
     if (typeof window.openMessage === 'function') {
       await window.openMessage(messageId);
@@ -352,6 +363,7 @@
     const dropdowns = document.querySelectorAll('.message-dropdown, .message-dropdown-mobile');
     dropdowns.forEach(dropdown => {
       dropdown.classList.remove('show');
+      dropdown.style.display = 'none';
     });
   }
 
@@ -452,7 +464,8 @@
     deleteMessage,
     deleteSelectedMessages,
     toggleSelectAll,
-    selectAllMessages
+    selectAllMessages,
+    closeMessageDropdown
   };
 
   // 为了兼容性，也暴露主要函数到全局

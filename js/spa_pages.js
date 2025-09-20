@@ -1212,8 +1212,8 @@ download: `
     
     // 其他页面
     'data-center': `<div class="section"><h1>数据中心</h1><p>数据中心内容...</p></div>`,
-	
-	// 设置页面
+
+// 设置页面
 settings: `
   <div class="settings-container">
     <h1 class="page-title" id="option-title">设置</h1>
@@ -1250,6 +1250,130 @@ settings: `
       </div>
     </div>
     
+    <!-- 表情缓存管理卡片 -->
+    <div class="setting-card" id="emoji-cache-card">
+      <div class="setting-header">
+        <i class="fas fa-database me-2"></i>
+        <span>表情缓存管理</span>
+      </div>
+      <div class="setting-body">
+        <div class="setting-description" style="margin-bottom: 20px;">
+          使用IndexedDB技术本地缓存表情图片，减少服务器带宽消耗，提升加载速度
+        </div>
+        
+        <!-- 缓存状态提示 -->
+        <div id="cache-status" style="padding: 10px; margin-bottom: 15px; border-radius: 8px; display: none;">
+          <i class="fas fa-info-circle me-2"></i>
+          <span id="cache-status-text"></span>
+        </div>
+        
+        <!-- 调试信息面板 -->
+        <div id="debug-info" style="display: none; background: #f0f0f0; padding: 10px; margin-bottom: 15px; border-radius: 5px; font-size: 12px;">
+          <div id="debug-content"></div>
+        </div>
+        
+        <!-- 缓存统计信息 -->
+        <div class="cache-stats-grid">
+          <div class="cache-stat-item">
+            <div class="stat-icon-small">
+              <i class="far fa-smile"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value" id="cache-emoji-count">0</div>
+              <div class="stat-label">缓存的表情</div>
+            </div>
+          </div>
+          
+          <div class="cache-stat-item">
+            <div class="stat-icon-small">
+              <i class="far fa-comment"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value" id="cache-message-count">0</div>
+              <div class="stat-label">消息图片</div>
+            </div>
+          </div>
+          
+          <div class="cache-stat-item">
+            <div class="stat-icon-small">
+              <i class="fas fa-hdd"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value" id="cache-size">0 MB</div>
+              <div class="stat-label">缓存大小</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 存储空间进度条 -->
+        <div class="cache-progress-container">
+          <div class="cache-progress-header">
+            <span>存储空间使用情况</span>
+            <span id="cache-usage-text">0 MB / 100 MB</span>
+          </div>
+          <div class="cache-progress-track">
+            <div class="cache-progress-fill" id="cache-progress-fill" style="width: 5%">
+              <span class="progress-text">0%</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 缓存操作按钮 -->
+        <div class="cache-actions">
+          <button class="cache-btn cache-btn-refresh" id="refresh-cache-stats" onclick="window.handleRefreshCacheStats()">
+            <i class="fas fa-sync-alt me-2"></i>
+            刷新统计
+          </button>
+          <button class="cache-btn cache-btn-clean" id="clean-old-cache" onclick="window.handleCleanOldCache()">
+            <i class="fas fa-broom me-2"></i>
+            清理旧缓存
+          </button>
+          <button class="cache-btn cache-btn-clear" id="clear-all-cache" onclick="window.handleClearAllCache()">
+            <i class="fas fa-trash me-2"></i>
+            清空所有缓存
+          </button>
+        </div>
+        
+        <!-- 测试按钮（调试用）-->
+        <div style="margin-top: 15px;">
+          <button class="cache-btn" style="background: #6b7280;" onclick="window.testEmojiCache()">
+            <i class="fas fa-bug me-2"></i>
+            测试缓存系统
+          </button>
+        </div>
+        
+        <!-- 缓存设置选项 -->
+        <div class="cache-settings-group">
+          <div class="setting-item">
+            <div>
+              <span>自动清理过期缓存</span>
+              <div class="setting-description">超过30天的缓存将自动清理</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="auto-clean-cache" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div class="setting-item">
+            <div>
+              <span>预加载表情包</span>
+              <div class="setting-description">提前缓存常用表情，改善使用体验</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="preload-emoji" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="setting-description" style="margin-top: 20px; font-size: 0.85rem; color: #94a3b8;">
+          <i class="fas fa-info-circle me-1"></i>
+          提示：缓存数据仅存储在您的浏览器中，清除浏览器数据会导致缓存丢失
+        </div>
+      </div>
+    </div>
+    
     <!-- 鼠标样式设置卡片 -->
     <div class="setting-card" id="cursor-settings-card">
       <div class="setting-header">
@@ -1267,9 +1391,8 @@ settings: `
           选择您喜欢的鼠标指针样式，让浏览体验更加个性化
         </div>
         
-        <!-- 鼠标样式预览容器 - 这里是关键 -->
+        <!-- 鼠标样式预览容器 -->
         <div id="cursor-preview-container">
-          <!-- JavaScript将在这里生成选项 -->
           <div class="text-center" style="padding: 20px; color: #999;">
             <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
             <p style="margin-top: 10px;">加载中...</p>
@@ -1291,21 +1414,221 @@ settings: `
     </div>
   </div>
   
-  <!-- 在页面底部添加初始化脚本 -->
-  <script>
-    // 页面加载后立即初始化鼠标设置
-    setTimeout(function() {
-      console.log('初始化鼠标设置界面...');
-      
-      const container = document.getElementById('cursor-preview-container');
-      if (!container) {
-        console.error('找不到鼠标预览容器');
-        return;
+  <!-- 添加缓存管理相关样式 -->
+  <style>
+    /* 缓存统计网格 */
+    .cache-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    
+    .cache-stat-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px;
+      background: #f8fafc;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .cache-stat-item:hover {
+      background: #e2e8f0;
+      transform: translateY(-2px);
+    }
+    
+    .stat-icon-small {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      color: white;
+      font-size: 1.1rem;
+    }
+    
+    .stat-content {
+      flex: 1;
+    }
+    
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 2px;
+    }
+    
+    .stat-label {
+      font-size: 0.85rem;
+      color: #718096;
+    }
+    
+    /* 进度条样式 */
+    .cache-progress-container {
+      margin: 25px 0;
+    }
+    
+    .cache-progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      color: #718096;
+    }
+    
+    .cache-progress-track {
+      height: 24px;
+      background: #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .cache-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      transition: width 0.5s ease;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      position: relative;
+      min-width: 40px;
+    }
+    
+    .progress-text {
+      color: white;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    /* 缓存操作按钮 */
+    .cache-actions {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    
+    .cache-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: white;
+    }
+    
+    .cache-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .cache-btn-refresh {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .cache-btn-refresh:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .cache-btn-clean {
+      background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+    }
+    
+    .cache-btn-clean:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
+    }
+    
+    .cache-btn-clear {
+      background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+    }
+    
+    .cache-btn-clear:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
+    }
+    
+    .cache-settings-group {
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    #cache-status {
+      background: #f0f9ff;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+    }
+    
+    #cache-status.success {
+      background: #f0fdf4;
+      color: #14532d;
+      border: 1px solid #86efac;
+    }
+    
+    #cache-status.error {
+      background: #fef2f2;
+      color: #7f1d1d;
+      border: 1px solid #fecaca;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      .cache-stats-grid {
+        grid-template-columns: 1fr;
       }
+      
+      .cache-actions {
+        flex-direction: column;
+      }
+      
+      .cache-btn {
+        width: 100%;
+      }
+    }
+  </style>
+  
+  <!-- 页面初始化脚本（仅初始化鼠标设置和调用缓存初始化）-->
+  <script>
+    // 页面加载后初始化
+    setTimeout(function() {
+      console.log('初始化设置页面...');
+      
+      // 初始化鼠标设置
+      initCursorSettings();
+      
+      // 初始化缓存设置（如果函数存在）
+      if (typeof window.initCacheSettings === 'function') {
+        console.log('调用缓存设置初始化...');
+        window.initCacheSettings();
+      } else {
+        console.warn('缓存管理函数未加载，请确保已引入 cache-manager.js');
+      }
+    }, 100);
+    
+    // 初始化鼠标设置的函数
+    function initCursorSettings() {
+      const container = document.getElementById('cursor-preview-container');
+      if (!container) return;
       
       const currentStyle = localStorage.getItem('cursorStyle') || 'default';
       
-      // 鼠标样式配置
       const cursorStyles = {
         default: {
           name: '默认',
@@ -1327,7 +1650,6 @@ settings: `
         }
       };
       
-      // 创建预览卡片
       let html = '<div class="cursor-preview">';
       
       Object.entries(cursorStyles).forEach(([key, style]) => {
@@ -1351,28 +1673,21 @@ settings: `
         option.addEventListener('click', function(e) {
           const cursorType = this.dataset.cursor;
           
-          // 更新UI
           document.querySelectorAll('.cursor-option').forEach(opt => {
             opt.classList.remove('active');
           });
           this.classList.add('active');
           
-          // 保存设置
           localStorage.setItem('cursorStyle', cursorType);
-          
-          // 应用样式
           document.body.classList.remove('cursor-default', 'cursor-custom1', 'cursor-custom2');
           document.body.classList.add('cursor-' + cursorType);
           
-          // 显示成功消息
           if (typeof showSuccessMessage === 'function') {
             showSuccessMessage('鼠标样式已切换为: ' + cursorStyles[cursorType].name);
           }
         });
       });
-      
-      console.log('鼠标设置界面初始化完成');
-    }, 100);
+    }
   </script>
 `,
 	

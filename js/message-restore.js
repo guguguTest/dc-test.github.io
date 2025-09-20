@@ -19,7 +19,8 @@
     refreshInterval: null,
     isSending: false,
     lastSendTime: 0,
-    currentEmojiPicker: null
+    currentEmojiPicker: null,
+    emojiPacksLoaded: false
   };
 
   // ==================== 初始化系统 ====================
@@ -41,6 +42,24 @@
     
     bindEvents();
     requestNotificationPermission();
+    
+    // 预加载表情包数据
+    preloadEmojiPacks();
+  }
+
+  // 预加载表情包
+  async function preloadEmojiPacks() {
+    if (MessageState.emojiPacksLoaded) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/emoji/packs`);
+      if (response.ok) {
+        window.emojiPacks = await response.json();
+        MessageState.emojiPacksLoaded = true;
+      }
+    } catch (error) {
+      console.error('预加载表情包失败:', error);
+    }
   }
 
   // ==================== 添加消息图标 ====================
@@ -329,51 +348,342 @@
     }
   }
 
-  // ==================== 表情选择器（修复版） ====================
+  // ==================== 表情选择器（修复版）====================
   function toggleEmojiPicker(btn) {
     const chatContainer = document.getElementById('chat-container');
     if (!chatContainer) return;
     
+    // 设置全局选中的输入框
+    window.selectedChatInput = document.getElementById('chat-input');
+    
     // 检查是否有表情选择器
     let picker = MessageState.currentEmojiPicker;
     
+    // 如果没有选择器，创建一个
     if (!picker) {
-      // 创建表情选择器
-      if (typeof window.toggleEmojiPicker === 'function') {
-        window.selectedChatInput = document.getElementById('chat-input');
-        window.toggleEmojiPicker(btn);
-        picker = document.querySelector('.emoji-picker');
-        MessageState.currentEmojiPicker = picker;
-      }
-    }
-    
-    if (picker) {
-      // 将表情选择器添加到聊天容器内
-      if (!chatContainer.contains(picker)) {
-        chatContainer.appendChild(picker);
-      }
+      picker = createEmojiPicker();
+      chatContainer.appendChild(picker);
+      MessageState.currentEmojiPicker = picker;
       
       // 设置位置（相对于聊天容器）
       picker.style.position = 'absolute';
-      picker.style.bottom = '70px';
+      picker.style.bottom = '70px'; // 在输入区域上方
       picker.style.left = '10px';
       picker.style.right = '10px';
       picker.style.maxWidth = 'calc(100% - 20px)';
       picker.style.height = '300px';
       picker.style.zIndex = '100';
+      picker.style.background = 'white';
+      picker.style.borderRadius = '12px';
+      picker.style.boxShadow = '0 -4px 12px rgba(0,0,0,0.1)';
+      picker.style.border = '1px solid #e4e6eb';
+      picker.style.display = 'none';
+      picker.style.flexDirection = 'column';
       
-      // 切换显示状态
-      if (picker.classList.contains('show')) {
-        picker.classList.remove('show');
-        btn.classList.remove('active');
+      // 确保预加载的表情包数据
+      if (!MessageState.emojiPacksLoaded) {
+        loadEmojiPacksForPicker();
       } else {
-        picker.classList.add('show');
-        btn.classList.add('active');
+        updatePickerTabs();
+        // 加载第一个表情包
+        if (window.emojiPacks && window.emojiPacks.length > 0) {
+          loadEmojiPackContent(window.emojiPacks[0].id);
+        }
+      }
+    }
+    
+    // 切换显示状态
+    if (picker.style.display === 'flex') {
+      picker.style.display = 'none';
+      btn.classList.remove('active');
+    } else {
+      picker.style.display = 'flex';
+      btn.classList.add('active');
+      // 如果有表情包，检查是否需要加载
+      if (window.emojiPacks && window.emojiPacks.length > 0) {
+        const emojiGrid = picker.querySelector('.emoji-grid');
+        // 只有当网格不存在或为空时才加载
+        if (!emojiGrid || !emojiGrid.children.length) {
+          loadEmojiPackContent(window.emojiPacks[0].id);
+        }
       }
     }
   }
 
-  // ==================== 发送消息（支持表情） ====================
+  // 创建表情选择器
+  function createEmojiPicker() {
+    const picker = document.createElement('div');
+    picker.className = 'emoji-picker chat-emoji-picker';
+    picker.innerHTML = `
+      <div class="emoji-grid-container">
+        <div class="emoji-loading">
+          <i class="fas fa-spinner fa-spin"></i>
+        </div>
+      </div>
+      <div class="emoji-tabs">
+        <button class="emoji-tab recent-tab" data-tab="recent" title="最近使用">
+          <i class="far fa-clock"></i>
+        </button>
+      </div>
+    `;
+    
+    // 绑定标签点击事件
+    picker.addEventListener('click', function(e) {
+      const tab = e.target.closest('.emoji-tab');
+      if (tab) {
+        e.stopPropagation();
+        const packId = tab.dataset.packId || tab.dataset.tab;
+        selectEmojiTab(tab, packId);
+      }
+    });
+    
+    return picker;
+  }
+
+  // 加载表情包数据
+  async function loadEmojiPacksForPicker() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/emoji/packs`);
+      if (response.ok) {
+        window.emojiPacks = await response.json();
+        MessageState.emojiPacksLoaded = true;
+        updatePickerTabs();
+        
+        // 加载第一个表情包
+        if (window.emojiPacks.length > 0) {
+          loadEmojiPackContent(window.emojiPacks[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('加载表情包失败:', error);
+    }
+  }
+
+  // 更新表情选择器标签
+  function updatePickerTabs() {
+    const picker = MessageState.currentEmojiPicker;
+    if (!picker) return;
+    
+    const tabsContainer = picker.querySelector('.emoji-tabs');
+    if (!tabsContainer) return;
+    
+    // 保留最近使用标签
+    const recentTab = tabsContainer.querySelector('.recent-tab');
+    tabsContainer.innerHTML = '';
+    if (recentTab) {
+      tabsContainer.appendChild(recentTab);
+    }
+    
+    // 添加表情包标签
+    if (window.emojiPacks) {
+      window.emojiPacks.forEach(pack => {
+        const tab = document.createElement('button');
+        tab.className = 'emoji-tab';
+        tab.dataset.packId = pack.id;
+        tab.title = pack.pack_name;
+        
+        if (pack.cover_image) {
+          tab.innerHTML = `<img src="${API_BASE_URL}${pack.cover_image}" alt="${pack.pack_name}" style="width: 24px; height: 24px; object-fit: contain;">`;
+        } else {
+          tab.innerHTML = '<i class="far fa-smile"></i>';
+        }
+        
+        tabsContainer.appendChild(tab);
+      });
+    }
+  }
+
+  // 选择表情标签
+  function selectEmojiTab(tab, packId) {
+    const picker = MessageState.currentEmojiPicker;
+    if (!picker) return;
+    
+    // 移除所有激活状态
+    picker.querySelectorAll('.emoji-tab').forEach(t => {
+      t.classList.remove('active');
+    });
+    
+    tab.classList.add('active');
+    
+    if (packId === 'recent') {
+      loadRecentEmojis();
+    } else {
+      loadEmojiPackContent(packId);
+    }
+  }
+
+  // 加载表情包内容
+  async function loadEmojiPackContent(packId) {
+    const picker = MessageState.currentEmojiPicker;
+    if (!picker) return;
+    
+    const gridContainer = picker.querySelector('.emoji-grid-container');
+    if (!gridContainer) return;
+    
+    gridContainer.innerHTML = '<div class="emoji-loading"><i class="fas fa-spinner fa-spin"></i></div>';
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/emoji/pack/${packId}/items`);
+      if (response.ok) {
+        const emojis = await response.json();
+        renderEmojiGrid(emojis);
+        
+        // 激活对应的标签
+        picker.querySelectorAll('.emoji-tab').forEach(t => {
+          t.classList.remove('active');
+          if (t.dataset.packId == packId) {
+            t.classList.add('active');
+          }
+        });
+      }
+    } catch (error) {
+      console.error('加载表情失败:', error);
+      gridContainer.innerHTML = '<div class="emoji-empty">加载失败</div>';
+    }
+  }
+
+  // 渲染表情网格（使用缓存系统）
+  async function renderEmojiGrid(emojis) {
+    const picker = MessageState.currentEmojiPicker;
+    if (!picker) return;
+    
+    const gridContainer = picker.querySelector('.emoji-grid-container');
+    if (!gridContainer) return;
+    
+    if (emojis.length === 0) {
+      gridContainer.innerHTML = `
+        <div class="emoji-empty">
+          <div class="emoji-empty-icon"><i class="far fa-meh"></i></div>
+          <div class="emoji-empty-text">暂无表情</div>
+        </div>
+      `;
+      return;
+    }
+    
+    const grid = document.createElement('div');
+    grid.className = 'emoji-grid';
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(6, 1fr)';
+    grid.style.gap = '8px';
+    grid.style.padding = '12px';
+    
+    // 如果缓存系统可用，预加载所有表情
+    if (window.EmojiCache) {
+      const urls = emojis.map(emoji => `${API_BASE_URL}${emoji.file_path}`);
+      window.EmojiCache.preloadEmojis(urls); // 异步预加载
+    }
+    
+    emojis.forEach(emoji => {
+      const item = document.createElement('div');
+      item.className = 'emoji-item';
+      item.style.cursor = 'pointer';
+      item.style.padding = '4px';
+      item.style.borderRadius = '8px';
+      item.style.transition = 'all 0.2s';
+      
+      const img = document.createElement('img');
+      img.alt = emoji.emoji_name || emoji.file_name;
+      img.style.width = '32px';
+      img.style.height = '32px';
+      img.style.objectFit = 'contain';
+      
+      // 使用缓存系统加载图片
+      const fullUrl = `${API_BASE_URL}${emoji.file_path}`;
+      if (window.EmojiCache && window.EmojiCache.loadImageWithCache) {
+        window.EmojiCache.loadImageWithCache(fullUrl, img);
+      } else {
+        // 降级到直接加载
+        img.src = fullUrl;
+      }
+      
+      item.appendChild(img);
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'emoji-item-name';
+      nameSpan.style.display = 'none';
+      nameSpan.textContent = emoji.emoji_name || emoji.file_name;
+      item.appendChild(nameSpan);
+      
+      item.addEventListener('mouseenter', () => {
+        item.style.background = '#f0f2f5';
+        item.style.transform = 'scale(1.1)';
+      });
+      
+      item.addEventListener('mouseleave', () => {
+        item.style.background = 'transparent';
+        item.style.transform = 'scale(1)';
+      });
+      
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sendEmoji(emoji);
+      });
+      
+      grid.appendChild(item);
+    });
+    
+    gridContainer.innerHTML = '';
+    gridContainer.appendChild(grid);
+  }
+
+  // 发送表情
+  function sendEmoji(emoji) {
+    if (!window.selectedChatInput) return;
+    
+    // 创建表情消息
+    const emojiMessage = `[emoji:${emoji.id}:${emoji.file_path}]`;
+    
+    // 插入到输入框
+    window.selectedChatInput.value = emojiMessage;
+    
+    // 触发发送
+    const sendBtn = window.selectedChatInput.parentElement.querySelector('.chat-send-btn');
+    if (sendBtn) {
+      sendBtn.click();
+    }
+    
+    // 关闭选择器
+    if (MessageState.currentEmojiPicker) {
+      MessageState.currentEmojiPicker.style.display = 'none';
+    }
+    
+    // 移除激活状态
+    document.querySelectorAll('.emoji-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+  }
+
+  // 加载最近使用的表情
+  async function loadRecentEmojis() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    const picker = MessageState.currentEmojiPicker;
+    if (!picker) return;
+    
+    const gridContainer = picker.querySelector('.emoji-grid-container');
+    if (!gridContainer) return;
+    
+    gridContainer.innerHTML = '<div class="emoji-loading"><i class="fas fa-spinner fa-spin"></i></div>';
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/emoji/recent`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const emojis = await response.json();
+        renderEmojiGrid(emojis);
+      }
+    } catch (error) {
+      console.error('加载最近使用表情失败:', error);
+      gridContainer.innerHTML = '<div class="emoji-empty">暂无最近使用</div>';
+    }
+  }
+
+  // ==================== 发送消息（支持表情）====================
   async function sendMessage() {
     const now = Date.now();
     if (MessageState.isSending || (now - MessageState.lastSendTime) < 1000) {
@@ -513,7 +823,7 @@
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  // ==================== 解析消息内容（重要：处理表情） ====================
+  // ==================== 解析消息内容（支持缓存）====================
   function parseMessageContent(content, messageType) {
     // 处理表情消息
     if (messageType === 'emoji' || 
@@ -547,7 +857,21 @@
             }
             emojiPath = API_BASE_URL + emojiPath;
           }
-          return `<img src="${emojiPath}" style="max-width: 120px; max-height: 120px; vertical-align: middle; border-radius: 8px;" alt="表情">`;
+          
+          // 创建图片元素
+          const imgId = 'emoji_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+          
+          // 异步加载缓存图片
+          if (window.EmojiCache && window.EmojiCache.loadImageWithCache) {
+            setTimeout(() => {
+              const imgElement = document.getElementById(imgId);
+              if (imgElement) {
+                window.EmojiCache.loadImageWithCache(emojiPath, imgElement);
+              }
+            }, 0);
+          }
+          
+          return `<img id="${imgId}" src="${emojiPath}" style="max-width: 120px; max-height: 120px; vertical-align: middle; border-radius: 8px;" alt="表情">`;
         }
       } catch (e) {
         console.error('解析表情消息失败:', e);
@@ -558,7 +882,19 @@
     if (typeof content === 'string' && content.includes('[emoji:')) {
       content = content.replace(/\[emoji:(\d+):(.*?)\]/g, function(match, id, path) {
         const fullPath = API_BASE_URL + path;
-        return `<img src="${fullPath}" style="max-width: 120px; max-height: 120px; vertical-align: middle; border-radius: 8px;" alt="表情">`;
+        const imgId = 'emoji_msg_' + id + '_' + Date.now();
+        
+        // 异步加载缓存图片
+        if (window.EmojiCache && window.EmojiCache.loadImageWithCache) {
+          setTimeout(() => {
+            const imgElement = document.getElementById(imgId);
+            if (imgElement) {
+              window.EmojiCache.loadImageWithCache(fullPath, imgElement);
+            }
+          }, 0);
+        }
+        
+        return `<img id="${imgId}" src="${fullPath}" style="max-width: 120px; max-height: 120px; vertical-align: middle; border-radius: 8px;" alt="表情">`;
       });
       return content;
     }
@@ -569,6 +905,9 @@
 
   // ==================== 系统消息模态框 ====================
   function showSystemMessage(message) {
+    // 先关闭消息下拉窗口
+    closeMessageDropdown();
+    
     const oldModal = document.getElementById('system-message-modal');
     if (oldModal) oldModal.remove();
     
@@ -640,6 +979,7 @@
       if (response.ok) {
         const message = await response.json();
         
+        // 关闭消息下拉窗口
         closeMessageDropdown();
         
         if (message.message_type === 'user') {
@@ -788,7 +1128,9 @@
   }
 
   function openMessageCenter() {
+    // 关闭消息下拉窗口
     closeMessageDropdown();
+    
     if (typeof window.loadPage === 'function') {
       window.loadPage('message-center');
     }
@@ -901,6 +1243,7 @@
   global.markAllAsRead = markAllAsRead;
   global.showSystemMessage = showSystemMessage;
   global.closeSystemMessage = closeSystemMessage;
+  global.loadEmojiPackContent = loadEmojiPackContent;
   
   // 兼容好友系统
   global.openChatWithFriend = function(friendId) {
@@ -928,6 +1271,21 @@
       }
     }
   }, 2000);
+
+  // 点击外部关闭表情选择器
+  document.addEventListener('click', function(e) {
+    if (MessageState.currentEmojiPicker && MessageState.currentEmojiPicker.style.display === 'flex') {
+      const isEmojiBtn = e.target.closest('.emoji-btn');
+      const isPicker = e.target.closest('.chat-emoji-picker');
+      
+      if (!isEmojiBtn && !isPicker) {
+        MessageState.currentEmojiPicker.style.display = 'none';
+        document.querySelectorAll('.emoji-btn').forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+    }
+  });
 
   console.log('Complete message system loaded');
 
