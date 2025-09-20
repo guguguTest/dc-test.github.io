@@ -284,34 +284,47 @@
     </div>
   </div>
 
-  <script src="https://cdn.bootcdn.net/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
-  <script defer src="js/language.js"></script>
-  <script defer src="js/shims.js"></script>
-  <script defer src="js/spa.js"></script>
-  <script defer src="js/announcement.js"></script>
-  <script defer src="js/dl.js"></script>
-  <script defer src="js/ccb.js"></script>
-  <script defer src="js/dladmin.js"></script>
-  <script defer src="js/userManager.js"></script>
-  <script defer src="js/siteAdmin.js"></script>
-  <script defer src="js/datacenter.js"></script>
-  <script defer src="js/spa_pages.js"></script>
-  <script defer src="js/toolsManage.js"></script>
-  <script defer src="js/toolsDisplay.js"></script>
-  <script defer src="js/cursor.js"></script>
-  <script defer src="js/pointShop.js"></script>
-  <script defer src="js/mobileOptimize.js"></script>
-  <script defer src="js/creditShop.js"></script>
-  <script defer src="js/redemptionCode.js"></script>
-  <script defer src="js/exchange.js"></script>
-  <script defer src="js/friends.js"></script>
-  <script defer src="js/fix-friends.js"></script>
-  <script defer src="js/emoji.js"></script>
-  <script defer src="js/emoji_patch.js"></script>
-  <script defer src="js/messages.js"></script>
-  <script defer src="js/messageAdmin.js"></script>
-  <script defer src="js/message-center.js"></script>
-  <script defer src="js/messages-patch.js"></script>
-  <script defer src="js/integrated-fixes.js"></script>
+	<!-- JavaScript 文件引入 -->
+	<script src="https://cdn.bootcdn.net/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+	<!-- 基础框架 -->
+	<script defer src="js/language.js"></script>
+	<script defer src="js/shims.js"></script>
+	<script defer src="js/spa.js"></script>
+	<script defer src="js/spa_pages.js"></script>
+	<script defer src="js/announcement.js"></script>
+
+	<!-- 消息系统恢复文件（替代原有的message.js） -->
+	<script defer src="js/message-restore.js"></script>
+
+	<!-- 消息中心和管理 -->
+	<script defer src="js/message-center.js"></script>
+	<script defer src="js/messageAdmin.js"></script>
+
+	<!-- 好友系统 -->
+	<script defer src="js/friends.js"></script>
+
+	<!-- 表情系统 -->
+	<script defer src="js/emoji.js"></script>
+	<script defer src="js/emoji_patch.js"></script>
+
+	<!-- 其他功能模块 -->
+	<script defer src="js/dl.js"></script>
+	<script defer src="js/ccb.js"></script>
+	<script defer src="js/dladmin.js"></script>
+	<script defer src="js/userManager.js"></script>
+	<script defer src="js/siteAdmin.js"></script>
+	<script defer src="js/datacenter.js"></script>
+	<script defer src="js/toolsManage.js"></script>
+	<script defer src="js/toolsDisplay.js"></script>
+	<script defer src="js/cursor.js"></script>
+	<script defer src="js/pointShop.js"></script>
+	<script defer src="js/mobileOptimize.js"></script>
+	<script defer src="js/creditShop.js"></script>
+	<script defer src="js/redemptionCode.js"></script>
+	<script defer src="js/exchange.js"></script>
+
+	<!-- 最后的集成修复 -->
+	<script defer src="js/integrated-fixes.js"></script>
 </body>
 </html>

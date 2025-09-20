@@ -1,4 +1,4 @@
-// 消息中心模块 - Message Center Module (完整版)
+// 简化的消息中心模块 - 调用统一的消息系统
 (function(global) {
   'use strict';
 
@@ -8,11 +8,7 @@
   }
   const API_BASE_URL = window.API_BASE_URL;
 
-  // 当前聊天用户
-  let currentChatUser = null;
-  let currentConversation = [];
-
-  // 打开消息中心 - 修复跳转问题
+  // 打开消息中心
   function openMessageCenter() {
     // 关闭下拉菜单
     closeMessageDropdown();
@@ -21,9 +17,8 @@
     if (typeof window.loadPage === 'function') {
       window.loadPage('message-center');
     } else {
-      // 备用方案 - 直接修改hash
+      // 备用方案
       window.location.hash = '#/message-center';
-      // 手动触发渲染
       setTimeout(() => {
         renderMessageCenter();
       }, 100);
@@ -58,13 +53,13 @@
         <div class="message-center-header">
           <h1 class="message-center-title">消息中心</h1>
           <div class="message-actions">
-            <button class="message-btn message-btn-primary" onclick="MessageCenter.openComposeModal()">
+            <button class="message-btn message-btn-primary" id="compose-btn">
               <i class="fas fa-paper-plane"></i> 发送消息
             </button>
-            <button class="message-btn message-btn-secondary" onclick="MessageCenter.selectAllMessages()">
+            <button class="message-btn message-btn-secondary" id="select-all-btn">
               <i class="fas fa-check-square"></i> 全选
             </button>
-            <button class="message-btn message-btn-danger" onclick="MessageCenter.deleteSelectedMessages()">
+            <button class="message-btn message-btn-danger" id="delete-selected-btn">
               <i class="fas fa-trash"></i> 删除
             </button>
           </div>
@@ -74,7 +69,7 @@
             <thead>
               <tr>
                 <th width="40">
-                  <input type="checkbox" id="select-all-checkbox" onchange="MessageCenter.toggleSelectAll()">
+                  <input type="checkbox" id="select-all-checkbox">
                 </th>
                 <th width="100">类型</th>
                 <th>标题</th>
@@ -95,7 +90,45 @@
       </div>
     `;
     
+    // 绑定事件
+    bindMessageCenterEvents();
+    
+    // 加载消息
     await loadMessages();
+  }
+
+  // 绑定消息中心事件
+  function bindMessageCenterEvents() {
+    // 发送消息按钮
+    const composeBtn = document.getElementById('compose-btn');
+    if (composeBtn) {
+      composeBtn.addEventListener('click', () => {
+        // 调用统一的聊天窗口
+        if (typeof window.openChatModal === 'function') {
+          window.openChatModal();
+        } else if (window.MessageSystem && window.MessageSystem.openChat) {
+          window.MessageSystem.openChat();
+        }
+      });
+    }
+    
+    // 全选按钮
+    const selectAllBtn = document.getElementById('select-all-btn');
+    if (selectAllBtn) {
+      selectAllBtn.addEventListener('click', selectAllMessages);
+    }
+    
+    // 删除选中按钮
+    const deleteBtn = document.getElementById('delete-selected-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', deleteSelectedMessages);
+    }
+    
+    // 全选复选框
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener('change', toggleSelectAll);
+    }
   }
 
   // 加载消息列表
@@ -168,14 +201,14 @@
             <span class="message-type-badge ${msg.message_type}">${typeLabel}</span>
           </td>
           <td>
-            <a href="#" onclick="MessageCenter.viewMessage(${msg.id}); return false;" style="text-decoration: none; color: inherit;">
+            <a href="#" class="message-title-link" data-id="${msg.id}">
               ${escapeHtml(msg.title || '无标题')}
             </a>
           </td>
           <td>${escapeHtml(msg.sender_name || '系统')}</td>
           <td>${formatTime(msg.created_at)}</td>
           <td>
-            <button class="message-btn message-btn-danger" onclick="MessageCenter.deleteMessage(${msg.id})" title="删除">
+            <button class="message-btn message-btn-danger message-delete-btn" data-id="${msg.id}" title="删除">
               <i class="fas fa-trash"></i>
             </button>
           </td>
@@ -184,361 +217,41 @@
     });
     
     tbody.innerHTML = html;
+    
+    // 绑定消息标题点击事件
+    tbody.querySelectorAll('.message-title-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const messageId = this.dataset.id;
+        viewMessage(messageId);
+      });
+    });
+    
+    // 绑定删除按钮事件
+    tbody.querySelectorAll('.message-delete-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const messageId = this.dataset.id;
+        deleteMessage(messageId);
+      });
+    });
   }
 
   // 查看消息详情
   async function viewMessage(messageId) {
-    // 调用主消息模块的openMessage函数
+    // 调用主消息系统的openMessage函数
     if (typeof window.openMessage === 'function') {
       await window.openMessage(messageId);
       // 刷新列表以更新已读状态
       setTimeout(() => {
         loadMessages();
       }, 500);
+    } else if (window.MessageSystem && window.MessageSystem.openMessage) {
+      await window.MessageSystem.openMessage(messageId);
+      setTimeout(() => {
+        loadMessages();
+      }, 500);
     } else {
       console.error('openMessage function not found');
-    }
-  }
-
-  // 打开撰写消息弹窗
-  function openComposeModal() {
-    // 先清理之前的状态
-    currentChatUser = null;
-    
-    const modal = createChatModal();
-    modal.classList.add('show');
-    
-    // 重置标题和头像
-    document.getElementById('chat-username').textContent = '发送消息';
-    const avatarEl = document.getElementById('chat-avatar');
-    if (avatarEl) {
-      avatarEl.style.display = 'none';
-    }
-    
-    // 显示用户搜索
-    const searchArea = modal.querySelector('.user-search-area');
-    searchArea.style.display = 'block';
-    
-    // 清空搜索框和结果
-    const searchInput = modal.querySelector('.user-search-input');
-    if (searchInput) {
-      searchInput.value = '';
-    }
-    
-    const searchResults = document.getElementById('user-search-results');
-    if (searchResults) {
-      searchResults.innerHTML = '';
-      searchResults.classList.remove('show');
-    }
-    
-    // 隐藏聊天区域
-    const messagesArea = modal.querySelector('.chat-messages');
-    const inputArea = modal.querySelector('.chat-input-area');
-    messagesArea.style.display = 'none';
-    inputArea.style.display = 'none';
-    
-    // 清空聊天记录
-    if (messagesArea) {
-      messagesArea.innerHTML = '';
-    }
-    
-    // 清空输入框
-    const chatInput = document.getElementById('chat-input');
-    if (chatInput) {
-      chatInput.value = '';
-    }
-  }
-
-  // 创建聊天模态框
-  function createChatModal() {
-    let modal = document.getElementById('chat-modal');
-    if (!modal) {
-      const modalHTML = `
-        <div id="chat-modal" class="chat-modal">
-          <div class="chat-container">
-            <div class="chat-header">
-              <div class="chat-user-info">
-                <img src="" alt="" class="chat-avatar" id="chat-avatar" style="display: none;">
-                <div>
-                  <div class="chat-username" id="chat-username">发送消息</div>
-                </div>
-              </div>
-              <button class="chat-close" onclick="MessageCenter.closeChatModal()">&times;</button>
-            </div>
-            <div class="user-search-area">
-              <input type="text" class="user-search-input" placeholder="输入用户名、昵称或UID搜索用户..." onkeyup="MessageCenter.searchUsers(this.value)">
-              <div class="user-search-results" id="user-search-results"></div>
-            </div>
-            <div class="chat-messages" id="chat-messages"></div>
-            <div class="chat-input-area">
-              <input type="text" class="chat-input" id="chat-input" placeholder="输入消息..." onkeypress="MessageCenter.handleChatKeypress(event)">
-              <button class="chat-send-btn" onclick="MessageCenter.sendMessage()">发送</button>
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.insertAdjacentHTML('beforeend', modalHTML);
-      modal = document.getElementById('chat-modal');
-    }
-    return modal;
-  }
-
-  // 搜索用户
-  async function searchUsers(query) {
-    if (query.length < 2) {
-      const results = document.getElementById('user-search-results');
-      if (results) {
-        results.classList.remove('show');
-      }
-      return;
-    }
-    
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/users/search?q=${encodeURIComponent(query)}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const users = await response.json();
-        renderUserSearchResults(users);
-      }
-    } catch (error) {
-      console.error('搜索用户失败:', error);
-    }
-  }
-
-  // 渲染用户搜索结果
-  function renderUserSearchResults(users) {
-    const resultsDiv = document.getElementById('user-search-results');
-    if (!resultsDiv) return;
-    
-    if (users.length === 0) {
-      resultsDiv.innerHTML = '<div style="padding: 10px; color: #6c757d;">未找到用户</div>';
-    } else {
-      let html = '';
-      users.forEach(user => {
-        const avatar = user.avatar || '/avatars/default_avatar.png';
-        const nickname = escapeHtml(user.nickname || user.username);
-        html += `
-          <div class="user-result-item" onclick="MessageCenter.selectChatUser(${user.id}, '${nickname}', '${avatar}')">
-            <img src="${avatar}" alt="" class="user-result-avatar">
-            <div class="user-result-info">
-              <div class="user-result-name">${nickname}</div>
-              <div class="user-result-uid">UID: ${user.uid}</div>
-            </div>
-          </div>
-        `;
-      });
-      resultsDiv.innerHTML = html;
-    }
-    
-    resultsDiv.classList.add('show');
-  }
-
-  // 选择聊天用户
-  async function selectChatUser(userId, username, avatar) {
-    currentChatUser = { id: userId, username, avatar };
-    
-    // 更新界面
-    const modal = document.getElementById('chat-modal');
-    if (!modal) return;
-    
-    modal.querySelector('.user-search-area').style.display = 'none';
-    modal.querySelector('.chat-messages').style.display = 'block';
-    modal.querySelector('.chat-input-area').style.display = 'flex';
-    
-    document.getElementById('chat-username').textContent = username;
-    const avatarEl = document.getElementById('chat-avatar');
-    avatarEl.src = avatar;
-    avatarEl.style.display = 'block';
-    
-    // 加载聊天记录
-    await loadChatHistory(userId);
-  }
-
-  // 加载聊天记录
-  async function loadChatHistory(userId) {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/messages/conversation/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const messages = await response.json();
-        renderChatMessages(messages);
-      }
-    } catch (error) {
-      console.error('加载聊天记录失败:', error);
-    }
-  }
-
-  // 渲染聊天消息
-  function renderChatMessages(messages) {
-    const messagesDiv = document.getElementById('chat-messages');
-    if (!messagesDiv) return;
-    
-    let html = '';
-    
-    messages.forEach(msg => {
-      const isSent = msg.is_sent;
-      let messageContent = '';
-      
-      // 检查消息类型
-      if (msg.message_type === 'emoji') {
-        try {
-          const emojiData = JSON.parse(msg.content);
-          messageContent = `<img src="${API_BASE_URL}${emojiData.emoji_path}" style="max-width: 120px; max-height: 120px;">`;
-        } catch (e) {
-          messageContent = escapeHtml(msg.content);
-        }
-      } else {
-        messageContent = escapeHtml(msg.content);
-      }
-      
-      html += `
-        <div class="chat-message ${isSent ? 'sent' : 'received'}">
-          <div class="message-bubble">
-            ${messageContent}
-            <div class="message-meta">${formatTime(msg.created_at)}</div>
-          </div>
-        </div>
-      `;
-    });
-    
-    messagesDiv.innerHTML = html;
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }
-
-  // 发送消息
-  async function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const content = input.value.trim();
-    
-    if (!content || !currentChatUser) return;
-    
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    try {
-      // 处理表情标记
-      let processedContent = content;
-      let message_type = 'text';
-      
-      // 检查是否是表情消息
-      if (content.startsWith('[emoji:') && content.endsWith(']')) {
-        message_type = 'emoji';
-        // 提取表情信息
-        const emojiMatch = content.match(/\[emoji:(\d+):(.*?)\]/);
-        if (emojiMatch) {
-          processedContent = JSON.stringify({
-            emoji_id: emojiMatch[1],
-            emoji_path: emojiMatch[2]
-          });
-        }
-      }
-      
-      const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          recipient_id: currentChatUser.id,
-          content: processedContent,
-          message_type: message_type
-        })
-      });
-      
-      if (response.ok) {
-        input.value = '';
-        
-        // 添加到界面
-        const messagesDiv = document.getElementById('chat-messages');
-        let messageHTML = '';
-        
-        if (message_type === 'emoji') {
-          const emojiData = JSON.parse(processedContent);
-          messageHTML = `
-            <div class="chat-message sent">
-              <div class="message-bubble">
-                <img src="${API_BASE_URL}${emojiData.emoji_path}" style="max-width: 120px; max-height: 120px;">
-                <div class="message-meta">刚刚</div>
-              </div>
-            </div>
-          `;
-        } else {
-          messageHTML = `
-            <div class="chat-message sent">
-              <div class="message-bubble">
-                ${escapeHtml(content)}
-                <div class="message-meta">刚刚</div>
-              </div>
-            </div>
-          `;
-        }
-        
-        messagesDiv.insertAdjacentHTML('beforeend', messageHTML);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        
-        showSuccessToast('消息已发送');
-      } else {
-        showErrorToast('发送失败');
-      }
-    } catch (error) {
-      console.error('发送消息失败:', error);
-      showErrorToast('发送失败');
-    }
-  }
-
-  // 处理聊天输入框回车
-  function handleChatKeypress(event) {
-    if (event.key === 'Enter') {
-      sendMessage();
-    }
-  }
-
-  // 关闭聊天模态框
-  function closeChatModal() {
-    const modal = document.getElementById('chat-modal');
-    if (modal) {
-      modal.classList.remove('show');
-      currentChatUser = null;
-    }
-  }
-
-  // 打开聊天窗口（从消息列表）
-  async function openChatModal(userId) {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    try {
-      // 获取用户信息
-      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const user = await response.json();
-        const modal = createChatModal();
-        modal.classList.add('show');
-        
-        await selectChatUser(user.id, user.nickname || user.username, user.avatar || '/avatars/default_avatar.png');
-      }
-    } catch (error) {
-      console.error('打开聊天窗口失败:', error);
     }
   }
 
@@ -563,6 +276,8 @@
         // 更新未读计数
         if (typeof window.checkUnreadMessages === 'function') {
           window.checkUnreadMessages();
+        } else if (window.MessageSystem && window.MessageSystem.checkUnread) {
+          window.MessageSystem.checkUnread();
         }
       } else {
         showErrorToast('删除失败');
@@ -603,6 +318,8 @@
         // 更新未读计数
         if (typeof window.checkUnreadMessages === 'function') {
           window.checkUnreadMessages();
+        } else if (window.MessageSystem && window.MessageSystem.checkUnread) {
+          window.MessageSystem.checkUnread();
         }
       } else {
         showErrorToast('删除失败');
@@ -690,6 +407,11 @@
 
   // 简单的Toast实现
   function showToast(message, type = 'info') {
+    const existingToast = document.querySelector('.message-toast');
+    if (existingToast) {
+      existingToast.remove();
+    }
+    
     const toastHTML = `
       <div class="message-toast ${type}" style="
         position: fixed;
@@ -702,6 +424,7 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         z-index: 9999;
         animation: slideInRight 0.3s;
+        max-width: 300px;
       ">
         ${message}
       </div>
@@ -711,10 +434,12 @@
     const toast = document.querySelector('.message-toast:last-child');
     
     setTimeout(() => {
-      toast.style.animation = 'slideOutRight 0.3s';
-      setTimeout(() => {
-        toast.remove();
-      }, 300);
+      if (toast) {
+        toast.style.animation = 'slideOutRight 0.3s';
+        setTimeout(() => {
+          if (toast) toast.remove();
+        }, 300);
+      }
     }, 3000);
   }
 
@@ -727,23 +452,11 @@
     deleteMessage,
     deleteSelectedMessages,
     toggleSelectAll,
-    selectAllMessages,
-    openComposeModal,
-    closeChatModal,
-    searchUsers,
-    selectChatUser,
-    sendMessage,
-    handleChatKeypress,
-    openChatModal
+    selectAllMessages
   };
 
   // 为了兼容性，也暴露主要函数到全局
   global.openMessageCenter = openMessageCenter;
   global.renderMessageCenter = renderMessageCenter;
-  global.searchUsers = searchUsers;
-  global.selectChatUser = selectChatUser;
-  global.sendMessage = sendMessage;
-  global.handleChatKeypress = handleChatKeypress;
-  global.closeChatModal = closeChatModal;
 
 })(window);
