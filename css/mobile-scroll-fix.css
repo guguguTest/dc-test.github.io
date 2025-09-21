@@ -1,0 +1,102 @@
+/* 移动端滚动优化 - 支持浏览器地址栏自动隐藏 */
+
+/* 1. 修复html和body的滚动设置 */
+@media (max-width: 992px) {
+  html {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: 100% !important;
+  }
+  
+  body {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    position: relative !important;
+  }
+  
+  /* 2. 修复主内容区域，确保内容可以滚动 */
+  .main-content {
+    min-height: calc(100vh + 100px) !important; /* 确保内容高度超过视窗 */
+    padding-bottom: 100px !important; /* 增加底部内边距 */
+    overflow-y: visible !important;
+  }
+  
+  #content-container {
+    min-height: 100vh !important;
+    overflow: visible !important;
+  }
+  
+  /* 3. 移除侧边栏打开时的滚动限制 */
+  .mobile-sidebar-open {
+    overflow: auto !important; /* 改为auto而不是hidden */
+    position: relative !important; /* 改为relative而不是fixed */
+    height: auto !important;
+    width: 100% !important;
+  }
+  
+  /* 4. 侧边栏遮罩层改用其他方式实现 */
+  .mobile-sidebar-open::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 899;
+    pointer-events: auto;
+  }
+  
+  /* 5. 确保侧边栏在遮罩层之上 */
+  .sidebar.show {
+    z-index: 901 !important;
+  }
+  
+  /* 6. 顶部导航栏优化 */
+  .top-navbar {
+    position: fixed !important;
+    will-change: transform;
+    transition: transform 0.3s ease;
+  }
+  
+  /* 7. 添加滚动时的导航栏隐藏类（通过JS控制） */
+  .navbar-hidden {
+    transform: translateY(-100%);
+  }
+  
+  /* 8. 确保页面内容有足够的高度触发滚动 */
+  .section {
+    min-height: auto !important;
+    padding-bottom: 30px !important;
+  }
+  
+  /* 9. 修复iOS的橡皮筋效果 */
+  .main-content {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: auto;
+  }
+}
+
+/* 10. 优化触摸滚动性能 */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 11. 移动端视窗高度适配 */
+@supports (-webkit-touch-callout: none) {
+  /* iOS特定修复 */
+  .main-content {
+    min-height: -webkit-fill-available !important;
+    padding-bottom: env(safe-area-inset-bottom, 20px) !important;
+  }
+}
+
+/* 12. Android Chrome特定优化 */
+@media (max-width: 992px) {
+  .main-content {
+    /* 使用视窗单位确保内容高度 */
+    min-height: calc(100vh + 1px) !important;
+  }
+}
