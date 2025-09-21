@@ -283,50 +283,55 @@
       <span class="visually-hidden">Loading...</span>
     </div>
   </div>
-
-	<!-- JavaScript 文件引入 -->
+  
+	<!-- 外部库 -->
 	<script src="https://cdn.bootcdn.net/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
-	<!-- 基础框架 -->
+	<!-- 1. 基础框架和核心功能 -->
 	<script defer src="js/language.js"></script>
 	<script defer src="js/shims.js"></script>
 	<script defer src="js/spa.js"></script>
-	<script defer src="js/cache-manager.js"></script>
 	<script defer src="js/spa_pages.js"></script>
+
+	<!-- 2. 基础UI组件 -->
+	<script defer src="js/cursor.js"></script>
 	<script defer src="js/announcement.js"></script>
 
-	<!-- 消息系统恢复文件（替代原有的message.js） -->
-	<script defer src="js/message-restore.js"></script>
+	<!-- 3. 缓存管理（独立模块，其他系统可能依赖） -->
+	<script defer src="js/cache-manager.js"></script>
+	<script defer src="js/emoji-cache.js"></script>
 
-	<!-- 消息中心和管理 -->
+	<!-- 4. 消息系统 -->
+	<script defer src="js/message.js"></script>
 	<script defer src="js/message-center.js"></script>
 	<script defer src="js/messageAdmin.js"></script>
 
-	<!-- 好友系统 -->
+	<!-- 5. 社交功能 -->
 	<script defer src="js/friends.js"></script>
-
-	<!-- 表情系统 -->
 	<script defer src="js/emoji.js"></script>
-	<script defer src="js/emoji-cache.js"></script>
 	<script defer src="js/emoji_patch.js"></script>
 
-	<!-- 其他功能模块 -->
+	<!-- 6. 业务功能模块 -->
 	<script defer src="js/dl.js"></script>
 	<script defer src="js/ccb.js"></script>
-	<script defer src="js/dladmin.js"></script>
-	<script defer src="js/userManager.js"></script>
-	<script defer src="js/siteAdmin.js"></script>
+	<script defer src="js/exchange.js"></script>
 	<script defer src="js/datacenter.js"></script>
 	<script defer src="js/toolsManage.js"></script>
 	<script defer src="js/toolsDisplay.js"></script>
-	<script defer src="js/cursor.js"></script>
+
+	<!-- 7. 商店系统 -->
 	<script defer src="js/pointShop.js"></script>
-	<script defer src="js/mobileOptimize.js"></script>
 	<script defer src="js/creditShop.js"></script>
 	<script defer src="js/redemptionCode.js"></script>
-	<script defer src="js/exchange.js"></script>
 
-	<!-- 最后的集成修复 -->
+	<!-- 8. 管理后台 -->
+	<script defer src="js/dladmin.js"></script>
+	<script defer src="js/userManager.js"></script>
+	<script defer src="js/siteAdmin.js"></script>
+
+	<!-- 9. 优化和修复补丁（最后加载） -->
+	<script defer src="js/mobileOptimize.js"></script>
+	<script defer src="js/message-fix.js"></script>
 	<script defer src="js/integrated-fixes.js"></script>
 </body>
 </html>
