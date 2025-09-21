@@ -227,8 +227,7 @@ function handleLoginWithAnimation() {
   });
 }
 
-// ====== 修改注册成功处理 ======
-// 找到 handleRegister 函数中的成功处理部分，替换为：
+// ====== 注册成功处理 ======
 function handleRegisterWithAnimation() {
   const username = document.getElementById('register-username').value;
   const nickname = document.getElementById('register-nickname').value;
@@ -1646,7 +1645,7 @@ function handleLogin() {
   });
 }
 
-// 注册功能
+// 注册功能（带用户协议）
 function handleRegister() {
   const username = document.getElementById('register-username').value;
   const nickname = document.getElementById('register-nickname').value;
@@ -1692,6 +1691,134 @@ function handleRegister() {
     return;
   }
 
+  // 显示用户协议弹窗
+  showUserAgreementModal(username, nickname, email, password, verificationCode, errorElement);
+}
+
+// 显示用户协议弹窗
+function showUserAgreementModal(username, nickname, email, password, verificationCode, errorElement) {
+  // 如果已存在协议弹窗，先移除
+  const existingModal = document.getElementById('user-agreement-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'user-agreement-modal';
+  modal.className = 'modal show';
+  modal.style.zIndex = '10000';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <h3>用户服务协议</h3>
+        <button class="modal-close" onclick="document.getElementById('user-agreement-modal').remove()">&times;</button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 20px;">
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+          <h4 style="margin-bottom: 15px;">用户服务协议</h4>
+          <div style="font-size: 14px; line-height: 1.6; color: #333;">
+            <p><strong>1. 服务条款的接受</strong></p>
+            <p>欢迎使用本网站提供的服务。通过注册并使用本网站，您同意接受以下服务条款。</p>
+            
+            <p><strong>2. 账号注册</strong></p>
+            <p>• 您必须提供真实、准确、完整的注册信息</p>
+            <p>• 您需要妥善保管账号和密码，对账号下的所有行为负责</p>
+            <p>• 禁止出售、转让或共享账号</p>
+            
+            <p><strong>3. 用户行为规范</strong></p>
+            <p>• 遵守所有适用的法律法规</p>
+            <p>• 不得发布违法、虚假、侵权的内容</p>
+            <p>• 不得进行恶意攻击、破坏网站正常运行</p>
+            <p>• 不得使用自动化工具或脚本访问网站</p>
+            
+            <p><strong>4. 积分和虚拟物品</strong></p>
+            <p>• 积分和虚拟物品仅限在本网站内使用</p>
+            <p>• 不支持提现或转让给其他用户</p>
+            <p>• 网站有权调整积分规则和兑换比例</p>
+            
+            <p><strong>5. 隐私保护</strong></p>
+            <p>• 我们重视您的隐私，将按照隐私政策保护您的个人信息</p>
+            <p>• 不会向第三方出售或分享您的个人信息</p>
+            
+            <p><strong>6. 服务变更和终止</strong></p>
+            <p>• 网站有权随时修改或终止服务</p>
+            <p>• 违反服务条款可能导致账号被限制或封禁</p>
+            
+            <p><strong>7. 免责声明</strong></p>
+            <p>• 网站不对服务中断或数据丢失承担责任</p>
+            <p>• 用户应对自己的行为承担全部责任</p>
+            
+            <p><strong>8. 争议解决</strong></p>
+            <p>• 本协议受中华人民共和国法律管辖</p>
+            <p>• 如有争议，应首先协商解决</p>
+          </div>
+        </div>
+        
+        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffc107;">
+          <p style="margin: 0; color: #856404; font-size: 14px;">
+            <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+            请仔细阅读以上协议内容，勾选下方复选框表示您已阅读并同意本协议的所有条款。
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; flex-direction: column; gap: 15px; padding: 20px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <input type="checkbox" id="agreement-checkbox" style="width: 18px; height: 18px;">
+          <label for="agreement-checkbox" style="margin: 0; font-size: 14px; cursor: pointer;">
+            我已仔细阅读并同意《用户服务协议》
+          </label>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button class="btn btn-secondary" onclick="document.getElementById('user-agreement-modal').remove()">
+            <i class="fas fa-times"></i> 不同意
+          </button>
+          <button id="agree-btn" class="btn btn-primary" disabled onclick="proceedWithRegistration('${encodeURIComponent(username)}', '${encodeURIComponent(nickname)}', '${encodeURIComponent(email)}', '${encodeURIComponent(password)}', '${encodeURIComponent(verificationCode)}')">
+            <i class="fas fa-check"></i> 同意并注册
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // 添加复选框事件监听
+  const checkbox = document.getElementById('agreement-checkbox');
+  const agreeBtn = document.getElementById('agree-btn');
+  
+  checkbox.addEventListener('change', function() {
+    agreeBtn.disabled = !this.checked;
+    if (this.checked) {
+      agreeBtn.style.opacity = '1';
+      agreeBtn.style.cursor = 'pointer';
+    } else {
+      agreeBtn.style.opacity = '0.5';
+      agreeBtn.style.cursor = 'not-allowed';
+    }
+  });
+  
+  // 初始状态下同意按钮不可用
+  agreeBtn.style.opacity = '0.5';
+  agreeBtn.style.cursor = 'not-allowed';
+}
+
+// 继续注册流程
+window.proceedWithRegistration = function(encodedUsername, encodedNickname, encodedEmail, encodedPassword, encodedVerificationCode) {
+  // 关闭协议弹窗
+  const modal = document.getElementById('user-agreement-modal');
+  if (modal) {
+    modal.remove();
+  }
+  
+  // 解码参数
+  const username = decodeURIComponent(encodedUsername);
+  const nickname = decodeURIComponent(encodedNickname);
+  const email = decodeURIComponent(encodedEmail);
+  const password = decodeURIComponent(encodedPassword);
+  const verificationCode = decodeURIComponent(encodedVerificationCode);
+  const errorElement = document.getElementById('register-error');
+  
+  // 执行注册
   fetch('https://api.am-all.com.cn/api/register', {
     method: 'POST',
     headers: {
@@ -1743,7 +1870,7 @@ function handleRegister() {
   .catch(error => {
     showTempErrorMessage(errorElement, error.error || '注册失败');
   });
-}
+};
 
 // 退出登录
 function handleLogout() {

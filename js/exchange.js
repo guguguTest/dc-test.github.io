@@ -56,79 +56,109 @@
     `;
   };
   
-  // 兑换码兑换功能（修复API路径和添加防重复点击）
-  window.redeemCode = async function() {
-    const redeemBtn = document.getElementById('redeem-code-btn');
-    const codeInput = document.getElementById('exchange-code');
-    const resultDiv = document.getElementById('code-exchange-result');
+// 兑换码兑换功能（修复API路径和添加防重复点击）
+window.redeemCode = async function() {
+  const redeemBtn = document.getElementById('redeem-code-btn');
+  const codeInput = document.getElementById('exchange-code');
+  const resultDiv = document.getElementById('code-exchange-result');
+  
+  // 防止元素不存在的错误
+  if (!codeInput || !redeemBtn || !resultDiv) {
+    console.error('Required elements not found');
+    return;
+  }
+  
+  // 防止重复点击
+  if (redeemBtn.disabled) return;
+  
+  const code = codeInput.value.trim();
+  
+  // 清空之前的结果
+  resultDiv.className = 'exchange-result';
+  resultDiv.style.display = 'none';
+  resultDiv.innerHTML = '';
+  
+  if (!code) {
+    showExchangeResult('code-exchange-result', '请输入兑换码', 'error');
+    return;
+  }
+  
+  // 禁用按钮，显示加载状态
+  redeemBtn.disabled = true;
+  const originalBtnContent = redeemBtn.innerHTML;
+  redeemBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>兑换中...';
+  
+  try {
+    // 先检查兑换码信息（如果有此API）
+    const checkRes = await secureFetch(`https://api.am-all.com.cn/api/check-redemption-code?code=${encodeURIComponent(code)}`);
     
-    // 防止元素不存在的错误
-    if (!codeInput || !redeemBtn || !resultDiv) {
-      console.error('Required elements not found');
-      return;
-    }
-    
-    // 防止重复点击
-    if (redeemBtn.disabled) return;
-    
-    const code = codeInput.value.trim();
-    
-    // 清空之前的结果
-    resultDiv.className = 'exchange-result';
-    resultDiv.style.display = 'none';
-    resultDiv.innerHTML = '';
-    
-    if (!code) {
-      showExchangeResult('code-exchange-result', '请输入兑换码', 'error');
-      return;
-    }
-    
-    // 禁用按钮，显示加载状态
-    redeemBtn.disabled = true;
-    const originalBtnContent = redeemBtn.innerHTML;
-    redeemBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>兑换中...';
-    
-    try {
-      // 修正API路径：使用正确的端点
-      const res = await secureFetch('https://api.am-all.com.cn/api/redeem-code', {
-        method: 'POST',
-        body: JSON.stringify({ code: code })
-      });
+    if (checkRes && checkRes.redemption_type === 'user_group' && checkRes.redemption_value) {
+      const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
+      const currentRank = currentUser.user_rank || 0;
+      const targetRank = checkRes.redemption_value;
       
-      if (res.success) {
-        // 处理不同类型的兑换结果
-        let message = res.message || '兑换成功！';
-        
-        // 如果有优惠券码，显示它
-        if (res.coupon_code) {
-          message += `\n优惠券码：${res.coupon_code}`;
-        }
-        
-        showExchangeResult('code-exchange-result', message, 'success');
-        codeInput.value = '';
-        
-        // 如果返回了更新后的用户信息，直接更新
-        if (res.user) {
-          localStorage.setItem('userInfo', JSON.stringify(res.user));
-          if (typeof window.updateNavUserInfo === 'function') {
-            window.updateNavUserInfo();
-          }
-        } else {
-          // 否则主动获取更新
-          await updateUserInfo();
+      if (currentRank >= targetRank) {
+        showExchangeResult('code-exchange-result', 
+          `此兑换码是用户组升级码，但您当前的用户组等级已经高于或等于目标等级！\n当前等级：${getUserRankName(currentRank)}\n目标等级：${getUserRankName(targetRank)}`, 
+          'error'
+        );
+        return;
+      }
+    }
+    
+    // 执行兑换
+    const res = await secureFetch('https://api.am-all.com.cn/api/redeem-code', {
+      method: 'POST',
+      body: JSON.stringify({ code: code })
+    });
+    
+    if (res.success) {
+      // 处理不同类型的兑换结果
+      let message = res.message || '兑换成功！';
+      
+      // 如果有优惠券码，显示它
+      if (res.coupon_code) {
+        message += `\n优惠券码：${res.coupon_code}`;
+      }
+      
+      showExchangeResult('code-exchange-result', message, 'success');
+      codeInput.value = '';
+      
+      // 如果返回了更新后的用户信息，直接更新
+      if (res.user) {
+        localStorage.setItem('userInfo', JSON.stringify(res.user));
+        if (typeof window.updateNavUserInfo === 'function') {
+          window.updateNavUserInfo();
         }
       } else {
-        showExchangeResult('code-exchange-result', res.error || res.message || '兑换失败', 'error');
+        // 否则主动获取更新
+        await updateUserInfo();
       }
-    } catch (error) {
-      console.error('兑换码兑换错误:', error);
-      showExchangeResult('code-exchange-result', error.message || '网络错误，请稍后重试', 'error');
-    } finally {
-      // 恢复按钮状态
-      redeemBtn.disabled = false;
-      redeemBtn.innerHTML = originalBtnContent;
+    } else {
+      showExchangeResult('code-exchange-result', res.error || res.message || '兑换失败', 'error');
     }
+  } catch (error) {
+    console.error('兑换码兑换错误:', error);
+    showExchangeResult('code-exchange-result', error.message || '网络错误，请稍后重试', 'error');
+  } finally {
+    // 恢复按钮状态
+    redeemBtn.disabled = false;
+    redeemBtn.innerHTML = originalBtnContent;
+  }
+};
+
+// 辅助函数：获取用户组名称
+function getUserRankName(rank) {
+  const rankNames = {
+    0: '普通用户',
+    1: '初级用户',
+    2: '中级用户',
+    3: '高级用户',
+    4: '贵宾用户',
+    5: '管理员'
   };
+  return rankNames[rank] || '未知等级';
+}
   
   // 订单号兑换功能（添加防重复点击）
   window.redeemOrder = async function() {

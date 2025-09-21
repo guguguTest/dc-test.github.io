@@ -236,51 +236,85 @@
     }
   };
   
-  // 兑换商品
-  window.redeemCreditItem = async function(itemId) {
+// 兑换商品
+window.redeemCreditItem = async function(itemId) {
+  try {
+    // 先获取商品信息
+    const params = new URLSearchParams({ shop_type: 'credit' });
+    const res = await secureFetch(`https://api.am-all.com.cn/api/shop/items?${params}`);
+    const item = res.items.find(i => i.id === itemId);
+    
+    if (!item) {
+      showErrorMessage('商品不存在');
+      return;
+    }
+    
+    // 检测虚拟物品的用户组变更
+    if (item.item_type === 'virtual' && item.virtual_type === 'user_group' && item.virtual_value) {
+      const currentRank = currentUser.user_rank || 0;
+      const targetRank = item.virtual_value;
+      
+      if (currentRank >= targetRank) {
+        showErrorMessage(`您当前的用户组等级已经高于或等于目标等级，无法兑换此升级商品！\n当前等级：${getUserRankName(currentRank)}\n目标等级：${getUserRankName(targetRank)}`);
+        return;
+      }
+    }
+    
     if (!confirm('确定要兑换此商品吗？')) return;
     
-    try {
-      const res = await secureFetch('https://api.am-all.com.cn/api/shop/redeem', {
-        method: 'POST',
-        body: JSON.stringify({ item_id: itemId })
-      });
-      
-      // 关闭模态框
-      const modal = document.querySelector('.modal.show');
-      if (modal) modal.remove();
-      
-      // 更新用户积分显示
-      const userRes = await secureFetch('https://api.am-all.com.cn/api/user');
-      if (userRes) {
-        currentUser = userRes;
-        localStorage.setItem('userInfo', JSON.stringify(userRes));
-        const creditElement = document.getElementById('current-credit');
-        if (creditElement) {
-          creditElement.textContent = userRes.credit;
-        }
+    const redeemRes = await secureFetch('https://api.am-all.com.cn/api/shop/redeem', {
+      method: 'POST',
+      body: JSON.stringify({ item_id: itemId })
+    });
+    
+    // 关闭模态框
+    const modal = document.querySelector('.modal.show');
+    if (modal) modal.remove();
+    
+    // 更新用户积分显示
+    const userRes = await secureFetch('https://api.am-all.com.cn/api/user');
+    if (userRes) {
+      currentUser = userRes;
+      localStorage.setItem('userInfo', JSON.stringify(userRes));
+      const creditElement = document.getElementById('current-credit');
+      if (creditElement) {
+        creditElement.textContent = userRes.credit;
       }
-      
-      // 刷新商品列表
-      loadCreditItems();
-      
-      showSuccessMessage('兑换成功！');
-      
-      if (res.redemption_code) {
-        setTimeout(() => {
-          alert(`兑换码：${res.redemption_code}\n请妥善保管！`);
-        }, 500);
-      }
-      
-      if (res.coupon_code) {
-        setTimeout(() => {
-          alert(`优惠券码：${res.coupon_code}\n请妥善保管！`);
-        }, 1000);
-      }
-    } catch (error) {
-      showErrorMessage('兑换失败：' + error.message);
     }
+    
+    // 刷新商品列表
+    loadCreditItems();
+    
+    showSuccessMessage('兑换成功！');
+    
+    if (redeemRes.redemption_code) {
+      setTimeout(() => {
+        alert(`兑换码：${redeemRes.redemption_code}\n请妥善保管！`);
+      }, 500);
+    }
+    
+    if (redeemRes.coupon_code) {
+      setTimeout(() => {
+        alert(`优惠券码：${redeemRes.coupon_code}\n请妥善保管！`);
+      }, 1000);
+    }
+  } catch (error) {
+    showErrorMessage('兑换失败：' + error.message);
+  }
+};
+
+// 辅助函数：获取用户组名称
+function getUserRankName(rank) {
+  const rankNames = {
+    0: '普通用户',
+    1: '初级用户',
+    2: '中级用户',
+    3: '高级用户',
+    4: '贵宾用户',
+    5: '管理员'
   };
+  return rankNames[rank] || '未知等级';
+}
   
   // 显示用户兑换记录
   window.showCreditOrders = async function() {

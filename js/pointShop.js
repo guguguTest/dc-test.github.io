@@ -596,76 +596,110 @@
     }
   };
   
-  // 兑换商品（修复后的版本）
-  window.redeemItem = async function(itemId) {
+// 兑换商品（修复后的版本）
+window.redeemItem = async function(itemId) {
+  try {
+    // 先获取商品信息
+    const params = new URLSearchParams({ shop_type: currentShopType });
+    const res = await secureFetch(`https://api.am-all.com.cn/api/shop/items?${params}`);
+    const item = res.items.find(i => i.id === itemId);
+    
+    if (!item) {
+      showErrorMessage('商品不存在');
+      return;
+    }
+    
+    // 检测用户组升级商品
+    if (item.item_type === 'upgrade' && item.upgrade_rank) {
+      const currentRank = currentUser.user_rank || 0;
+      const targetRank = item.upgrade_rank;
+      
+      if (currentRank >= targetRank) {
+        showErrorMessage(`您当前的用户组等级已经高于或等于目标等级，无法兑换此升级商品！\n当前等级：${getUserRankName(currentRank)}\n目标等级：${getUserRankName(targetRank)}`);
+        return;
+      }
+    }
+    
     if (!confirm('确定要兑换此商品吗？')) return;
     
-    try {
-      console.log('开始兑换商品:', itemId);
-      
-      const res = await secureFetch('https://api.am-all.com.cn/api/shop/redeem', {
-        method: 'POST',
-        body: JSON.stringify({ item_id: itemId })
-      });
-      
-      console.log('兑换响应:', res);
-      
-      // 修复：先获取并关闭特定的商品详情模态框
-      const detailModal = document.querySelector('.modal.show .shop-detail-modal');
-      const modalParent = detailModal ? detailModal.closest('.modal') : null;
-      
-      if (modalParent) {
-        modalParent.remove();
-      }
-      
-      // 更新用户积分显示
-      if (res.user) {
-        currentUser = res.user;
-        localStorage.setItem('userInfo', JSON.stringify(res.user));
-        const pointsElement = document.getElementById('current-points');
-        if (pointsElement) {
-          pointsElement.textContent = 
-            currentShopType === 'points' ? res.user.points : res.user.point2;
-        }
-      } else {
-        // 如果响应中没有用户信息，重新获取
-        try {
-          const userRes = await secureFetch('https://api.am-all.com.cn/api/user');
-          
-          if (userRes) {
-            currentUser = userRes;
-            localStorage.setItem('userInfo', JSON.stringify(userRes));
-            const pointsElement = document.getElementById('current-points');
-            if (pointsElement) {
-              pointsElement.textContent = 
-                currentShopType === 'points' ? userRes.points : userRes.point2;
-            }
-          }
-        } catch (e) {
-          console.error('更新用户信息失败:', e);
-        }
-      }
-      
-      // 刷新商品列表
-      loadShopItems(currentShopType);
-      
-      // 延迟显示成功消息和兑换码
-      setTimeout(() => {
-        showSuccessMessage('兑换成功！');
-        
-        // 显示兑换码（如果有）
-        if (res.redemption_code) {
-          setTimeout(() => {
-            alert(`兑换码：${res.redemption_code}\n请妥善保管！`);
-          }, 500);
-        }
-      }, 100);
-      
-    } catch (error) {
-      console.error('兑换失败:', error);
-      showErrorMessage('兑换失败：' + (error.message || '未知错误'));
+    console.log('开始兑换商品:', itemId);
+    
+    const redeemRes = await secureFetch('https://api.am-all.com.cn/api/shop/redeem', {
+      method: 'POST',
+      body: JSON.stringify({ item_id: itemId })
+    });
+    
+    console.log('兑换响应:', redeemRes);
+    
+    // 修复：先获取并关闭特定的商品详情模态框
+    const detailModal = document.querySelector('.modal.show .shop-detail-modal');
+    const modalParent = detailModal ? detailModal.closest('.modal') : null;
+    
+    if (modalParent) {
+      modalParent.remove();
     }
+    
+    // 更新用户积分显示
+    if (redeemRes.user) {
+      currentUser = redeemRes.user;
+      localStorage.setItem('userInfo', JSON.stringify(redeemRes.user));
+      const pointsElement = document.getElementById('current-points');
+      if (pointsElement) {
+        pointsElement.textContent = 
+          currentShopType === 'points' ? redeemRes.user.points : redeemRes.user.point2;
+      }
+    } else {
+      // 如果响应中没有用户信息，重新获取
+      try {
+        const userRes = await secureFetch('https://api.am-all.com.cn/api/user');
+        
+        if (userRes) {
+          currentUser = userRes;
+          localStorage.setItem('userInfo', JSON.stringify(userRes));
+          const pointsElement = document.getElementById('current-points');
+          if (pointsElement) {
+            pointsElement.textContent = 
+              currentShopType === 'points' ? userRes.points : userRes.point2;
+          }
+        }
+      } catch (e) {
+        console.error('更新用户信息失败:', e);
+      }
+    }
+    
+    // 刷新商品列表
+    loadShopItems(currentShopType);
+    
+    // 延迟显示成功消息和兑换码
+    setTimeout(() => {
+      showSuccessMessage('兑换成功！');
+      
+      // 显示兑换码（如果有）
+      if (redeemRes.redemption_code) {
+        setTimeout(() => {
+          alert(`兑换码：${redeemRes.redemption_code}\n请妥善保管！`);
+        }, 500);
+      }
+    }, 100);
+    
+  } catch (error) {
+    console.error('兑换失败:', error);
+    showErrorMessage('兑换失败：' + (error.message || '未知错误'));
+  }
+};
+
+// 辅助函数：获取用户组名称
+function getUserRankName(rank) {
+  const rankNames = {
+    0: '普通用户',
+    1: '初级用户',
+    2: '中级用户',
+    3: '高级用户',
+    4: '贵宾用户',
+    5: '管理员'
   };
+  return rankNames[rank] || '未知等级';
+}
   
   // 商品管理页面
   window.initShopAdmin = async function(shopType) {
