@@ -630,8 +630,19 @@
   function sendEmoji(emoji) {
     if (!window.selectedChatInput) return;
     
-    // 创建表情消息
-    const emojiMessage = `[emoji:${emoji.id}:${emoji.file_path}]`;
+    // 创建表情消息 - 包含音频信息
+    let emojiMessage;
+    if (emoji.audio_path) {
+      // 如果有音频，将音频路径也包含在消息中
+      emojiMessage = `[emoji:${emoji.id}:${emoji.file_path}:${emoji.audio_path}]`;
+      
+      // 播放音频
+      if (window.EmojiAudioManager) {
+        window.EmojiAudioManager.playAudio(`${API_BASE_URL}${emoji.audio_path}`);
+      }
+    } else {
+      emojiMessage = `[emoji:${emoji.id}:${emoji.file_path}]`;
+    }
     
     // 插入到输入框
     window.selectedChatInput.value = emojiMessage;
