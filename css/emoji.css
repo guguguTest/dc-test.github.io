@@ -1,4 +1,4 @@
-/* 表情功能样式 */
+/* 表情功能样式 - 增强版（含音频功能） */
 
 /* 表情按钮 */
 .emoji-btn {
@@ -25,6 +25,53 @@
 .emoji-btn.active {
   background: #007bff;
   color: white;
+}
+
+/* 音频表情标记 */
+.emoji-audio-badge,
+.emoji-audio-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: white;
+  color: #007bff;
+  border-radius: 50%;
+  padding: 2px;
+  font-size: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.emoji-item.has-audio {
+  position: relative;
+}
+
+.emoji-item.has-audio::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.emoji-item.has-audio:hover::before {
+  opacity: 0.3;
+}
+
+/* 音频播放动画 */
+@keyframes audioWave {
+  0% { transform: scaleY(0.5); }
+  50% { transform: scaleY(1); }
+  100% { transform: scaleY(0.5); }
+}
+
+.playing-audio .emoji-audio-badge {
+  animation: pulse 1s infinite;
 }
 
 /* 表情选择器 */
@@ -149,6 +196,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .emoji-tab:hover {
@@ -157,6 +205,21 @@
 
 .emoji-tab.active {
   background: #007bff;
+}
+
+.emoji-tab.audio-pack {
+  position: relative;
+}
+
+.emoji-tab.audio-pack .emoji-audio-indicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #28a745;
+  color: white;
+  font-size: 8px;
+  padding: 1px;
+  border-radius: 50%;
 }
 
 .emoji-tab img {
@@ -244,6 +307,22 @@
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   transition: all 0.3s;
+  position: relative;
+}
+
+.emoji-pack-card.audio-pack .audio-pack-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #28a745;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 1;
 }
 
 .emoji-pack-card:hover {
@@ -259,6 +338,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  position: relative;
 }
 
 .emoji-pack-cover img {
@@ -396,6 +476,10 @@
   font-size: 14px;
 }
 
+.emoji-form-label input[type="checkbox"] {
+  margin-right: 8px;
+}
+
 .emoji-form-input {
   width: 100%;
   padding: 10px 12px;
@@ -411,6 +495,40 @@
   box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
 }
 
+.emoji-folder-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.emoji-form-btn {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.emoji-form-btn:hover {
+  background: #0056b3;
+}
+
+.emoji-form-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.emoji-form-hint {
+  font-size: 12px;
+  color: #8e9298;
+  margin-top: 5px;
+}
+
 /* 文件上传区域 */
 .emoji-upload-area {
   border: 2px dashed #dddfe2;
@@ -422,9 +540,14 @@
   background: #f7f8fa;
 }
 
-.emoji-upload-area:hover {
+.emoji-upload-area:hover:not(.disabled) {
   border-color: #007bff;
   background: #e7f3ff;
+}
+
+.emoji-upload-area.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .emoji-upload-area.dragover {
@@ -448,6 +571,28 @@
   color: #8e9298;
   font-size: 12px;
   margin-top: 5px;
+}
+
+/* 音频上传特殊样式 */
+#audio-upload-area {
+  background: #f0f8ff;
+  border-color: #007bff;
+}
+
+#audio-upload-area .emoji-upload-icon {
+  color: #007bff;
+}
+
+.audio-mapping-hint {
+  background: #e7f3ff;
+  color: #0056b3;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* 上传进度 */
@@ -497,6 +642,20 @@
   border-radius: 8px;
   padding: 10px;
   border: 1px solid #e4e6eb;
+  position: relative;
+}
+
+.emoji-preview-item.has-audio {
+  border-color: #007bff;
+  background: #f0f8ff;
+}
+
+.emoji-preview-item .audio-indicator {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  color: #007bff;
+  font-size: 14px;
 }
 
 .emoji-preview-image {
@@ -532,6 +691,27 @@
 
 .emoji-preview-remove:hover {
   background: #ffc8c3;
+}
+
+.emoji-preview-play {
+  width: 100%;
+  padding: 4px;
+  margin-top: 4px;
+  background: #e7f3ff;
+  color: #007bff;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.emoji-preview-play:hover {
+  background: #cce5ff;
 }
 
 /* 弹窗底部按钮 */
@@ -571,6 +751,39 @@
 .emoji-modal-btn.save:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+}
+
+/* 聊天消息中的音频表情样式 */
+.emoji-message-img {
+  cursor: pointer;
+  transition: transform 0.2s;
+  position: relative;
+}
+
+.emoji-message-img[data-audio-path] {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.emoji-message-img[data-audio-path]:hover {
+  border-color: #007bff;
+  transform: scale(1.05);
+}
+
+.emoji-message-img[data-audio-path]::after {
+  content: '\f028';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: white;
+  color: #007bff;
+  border-radius: 50%;
+  padding: 2px;
+  font-size: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 /* 移动端适配 */
@@ -647,4 +860,20 @@
 
 .emoji-empty-text {
   font-size: 14px;
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
 }
