@@ -8,15 +8,194 @@
 	<script type="text/javascript" src="./js/crypto.js"></script>
 	<script type="text/javascript" src="./js/FileSaver.min.js"></script>
 	<style type="text/css">
-		html, body, #filedrop {
-			margin: 0px;
-			padding: 0px;
+		* {
+			box-sizing: border-box;
 		}
+		
+		html, body {
+			margin: 0;
+			padding: 0;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			min-height: 100vh;
+		}
+		
 		body {
 			font-size: 12px;
 		}
+		
+		/* 主容器 */
+		.container {
+			max-width: 1400px;
+			margin: 0 auto;
+			padding: 20px;
+		}
+		
+		/* 标题 */
+		.header {
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 12px;
+			padding: 20px;
+			margin-bottom: 20px;
+			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+		}
+		
+		.header h1 {
+			margin: 0;
+			font-size: 28px;
+			background: linear-gradient(135deg, #667eea, #764ba2);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
+		
+		/* 控制面板 - 保持原始结构 */
+		#controls {
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 12px;
+			padding: 20px;
+			margin-bottom: 20px;
+			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+		}
+		
+		#controls label {
+			display: inline-block;
+			margin-right: 20px;
+			cursor: pointer;
+			user-select: none;
+		}
+		
+		#controls input[type="checkbox"] {
+			margin-right: 5px;
+			vertical-align: middle;
+		}
+		
+		#controls button {
+			padding: 8px 16px;
+			margin: 0 10px;
+			border: none;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 14px;
+			font-weight: 500;
+			transition: transform 0.2s, box-shadow 0.2s;
+		}
+		
+		#ctrl_reset {
+			background: #e5e7eb;
+			color: #374151;
+		}
+		
+		#ctrl_reset:hover {
+			background: #d1d5db;
+			transform: translateY(-1px);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		}
+		
+		#ctrl_export {
+			background: linear-gradient(135deg, #667eea, #764ba2);
+			color: white;
+		}
+		
+		#ctrl_export:hover:not(:disabled) {
+			transform: translateY(-1px);
+			box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+		}
+		
+		#ctrl_export:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+		
+		.error {
+			color: #ef4444;
+			font-weight: 500;
+			margin-top: 10px;
+			margin-bottom: 0;
+		}
+		
+		/* 主编辑区域 */
+		#main {
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 12px;
+			padding: 20px;
+			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+			display: flex;
+			gap: 20px;
+			min-height: 500px;
+			position: relative;
+		}
+		
+		/* 左侧编辑器 */
+		.editor-wrapper {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+		}
+		
+		.section-label {
+			font-size: 12px;
+			font-weight: 600;
+			color: #6b7280;
+			text-transform: uppercase;
+			margin-bottom: 8px;
+			letter-spacing: 0.5px;
+		}
+		
+		#editor {
+			flex: 1;
+			margin: 0;
+			padding: 10px;
+			font-family: 'Courier New', monospace;
+			background: #f9fafb;
+			border: 2px solid #e5e7eb;
+			border-radius: 8px;
+			overflow-y: auto;
+		}
+		
+		#editor li {
+			list-style-position: inside;
+			font-size: 1.3em;
+			margin: 0;
+			padding: 10px 5px;
+			border-bottom: 1px solid #e5e7eb;
+			min-height: 2em;
+			line-height: 1.5;
+		}
+		
+		#editor li.error {
+			background: #fef2f2;
+			color: #dc2626;
+		}
+		
+		/* 右侧Hex显示 */
+		.dump-wrapper {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+		}
+		
+		#dump {
+			flex: 1;
+			margin: 0;
+			padding: 10px;
+			display: inline-block;
+			line-height: 1.5em;
+			white-space: pre;
+			font-family: 'Courier New', monospace;
+			background: #1e293b;
+			color: #10b981;
+			border-radius: 8px;
+			overflow: auto;
+			font-size: 0.9em;
+		}
+		
+		#dump .error {
+			color: #f87171;
+		}
+		
+		/* 文件拖放 */
 		#filedrop {
-			box-sizing: border-box;
 			display: none;
 			position: fixed;
 			width: 100%;
@@ -24,11 +203,12 @@
 			left: 0;
 			top: 0;
 			z-index: 99999;
-			background: #7fb8e3;
-			border: 1em dashed #60a7dc;
+			background: rgba(102, 126, 234, 0.95);
+			border: 1em dashed rgba(255, 255, 255, 0.5);
 			transition: opacity 0.3s ease-out;
 			opacity: 0;
 		}
+		
 		#filedrop::before {
 			content: "Drop ICF Here";
 			position: absolute;
@@ -38,55 +218,94 @@
 			display: block;
 			font-family: sans-serif;
 			text-align: center;
-			color: #004D81;
+			color: white;
 		}
-		#main, #controls {
-			margin: 1em;
+		
+		/* 移动端适配 */
+		@media (max-width: 768px) {
+			.container {
+				padding: 10px;
+			}
+			
+			.header h1 {
+				font-size: 20px;
+			}
+			
+			#controls button {
+				display: block;
+				width: 100%;
+				margin: 10px 0;
+			}
+			
+			#main {
+				flex-direction: column;
+			}
+			
+			.editor-wrapper, .dump-wrapper {
+				width: 100%;
+			}
+			
+			#editor, #dump {
+				min-height: 300px;
+				max-height: 400px;
+			}
+			
+			#filedrop::before {
+				font-size: 2em;
+			}
 		}
-		#dump, #editor {
-			margin: 0px;
-			padding: 0px;
-			font-family: monospace;
+		
+		/* 滚动条美化 */
+		::-webkit-scrollbar {
+			width: 8px;
+			height: 8px;
 		}
-		#editor {
-			border-top: 1px solid #ccc;
+		
+		::-webkit-scrollbar-track {
+			background: #f1f1f1;
+			border-radius: 4px;
 		}
-		#editor li {
-			list-style-position: inside;
-			font-size: 1.5em;
-			margin: 0px;
-			border-bottom: 1px solid #ccc;
-			height: calc(2.5em - 1px);
-			padding-top: 1.5em;
+		
+		::-webkit-scrollbar-thumb {
+			background: #9ca3af;
+			border-radius: 4px;
 		}
-		#dump {
-			position: absolute;
-			right: 1.5em;
-			display: inline-block;
-			line-height: 1.5em;
-			white-space: pre;
-		}
-		.error {
-			color: red;
+		
+		::-webkit-scrollbar-thumb:hover {
+			background: #6b7280;
 		}
 	</style>
 	<script type="text/javascript" src="./js/icfedit.js"></script>
 </head>
 <body>
-	<br>
 	<div id="filedrop"></div>
-	<div id="controls">
-		<label><input type="checkbox" id="ctrl_decrypt" checked/> Show Decrypted Dumps</label>
-		<button id="ctrl_reset">Clear Editor</button>
-		<button id="ctrl_export" disabled>Save ICF</button>
-		<p class="error" id="errmsg"></p>
+	
+	<div class="container">
+		<div class="header">
+			<h1>ICF Editor</h1>
+		</div>
+		
+		<div id="controls">
+			<label><input type="checkbox" id="ctrl_decrypt" checked/> Show Decrypted Dumps</label>
+			<button id="ctrl_reset">Clear Editor</button>
+			<button id="ctrl_export" disabled>Save ICF</button>
+			<p class="error" id="errmsg"></p>
+		</div>
+		
+		<div id="main">
+			<div class="editor-wrapper">
+				<div class="section-label">Editor</div>
+				<ol id="editor" contenteditable>
+					<li>SXXXACA0</li>
+				</ol>
+			</div>
+			
+			<div class="dump-wrapper">
+				<div class="section-label">Hex Dump</div>
+				<code id="dump" contenteditable>or paste xxd here...</code>
+			</div>
+		</div>
 	</div>
-	<div id="main">
-		<code id="dump" contenteditable>or paste xxd here...</code>
-		<ol id="editor" contenteditable>
-			<li>SXXXACA0</li>
-		</ol>
-	</table>
 
 	<script type="text/javascript">
 		// Controls
