@@ -9,33 +9,36 @@
   <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://cdn.bootcdn.net/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+  <!-- 核心样式 -->
   <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/mainFix.css">
   <link rel="stylesheet" href="css/spa.css">
+
+  <!-- 功能模块样式 -->
   <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/cursor.css">
+  <link rel="stylesheet" href="css/message.css">
+  <link rel="stylesheet" href="css/emoji.css">
+  <link rel="stylesheet" href="css/announcement.css">
+
+  <!-- 业务功能样式 -->
   <link rel="stylesheet" href="css/fortune.css">
   <link rel="stylesheet" href="css/order.css">
-  <link rel="stylesheet" href="css/dladmin.css">
-  <link rel="stylesheet" href="css/modal.css">
-  <link rel="stylesheet" href="css/ccb.css">
-  <link rel="stylesheet" href="css/siteAdmin.css">
-  <link rel="stylesheet" href="css/exchange.css">
   <link rel="stylesheet" href="css/dl.css">
-  <link rel="stylesheet" href="css/userManager.css">
-  <link rel="stylesheet" href="css/announcement.css">
+  <link rel="stylesheet" href="css/ccb.css">
+  <link rel="stylesheet" href="css/exchange.css">
   <link rel="stylesheet" href="css/tools.css">
-  <link rel="stylesheet" href="css/message.css">
-  <link rel="stylesheet" href="css/cursor.css">
-  <link rel="stylesheet" href="css/navibarFix.css">
+  <link rel="stylesheet" href="css/friends.css">
+
+  <!-- 商店系统样式 -->
   <link rel="stylesheet" href="css/pointShop.css">
-  <link rel="stylesheet" href="css/mobileFix.css">
   <link rel="stylesheet" href="css/creditShop.css">
   <link rel="stylesheet" href="css/redemptionCode.css">
-  <link rel="stylesheet" href="css/friends.css">
-  <link rel="stylesheet" href="css/emoji.css">
-  <link rel="stylesheet" href="css/integrated-fixes.css">
-  <link rel="stylesheet" href="css/mobile-scroll-fix.css">
-  <link rel="stylesheet" href="css/mobile-input-fix.css">
+
+  <!-- 管理后台样式 -->
+  <link rel="stylesheet" href="css/dladmin.css">
+  <link rel="stylesheet" href="css/siteAdmin.css">
+  <link rel="stylesheet" href="css/userManager.css">
 </head>
 <body>
   <!-- 移动端侧边栏遮罩层 -->
@@ -290,64 +293,60 @@
     </div>
   </div>
   
-	<!-- 外部库 -->
-	<script src="https://cdn.bootcdn.net/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+  <!-- 外部库 -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
-	<!-- 1. 基础框架和核心功能 -->
-	<script defer src="js/language.js"></script>
-	<script defer src="js/shims.js"></script>
-	<script defer src="js/spa.js"></script>
-	<script defer src="js/spa_pages.js"></script>
+  <!-- 1. 基础框架和核心功能 -->
+  <script defer src="js/language.js"></script>
+  <script defer src="js/shims.js"></script>
+  <script defer src="js/spa.js"></script>
+  <script defer src="js/spa_pages.js"></script>
 
-	<!-- 2. 基础UI组件 -->
-	<script defer src="js/cursor.js"></script>
-	<script defer src="js/announcement.js"></script>
+  <!-- 2. 基础UI组件 -->
+  <script defer src="js/cursor.js"></script>
+  <script defer src="js/announcement.js"></script>
 
-	<!-- 3. 缓存管理（独立模块，其他系统可能依赖）-->
-	<script defer src="js/cache-manager.js"></script>
-	<script defer src="js/emoji-cache.js"></script>
-	<script defer src="js/audio-cache-integration.js"></script>
-	<script defer src="js/emoji-blob-fix.js"></script>
+  <!-- 3. 缓存管理 -->
+  <script defer src="js/cache-manager.js"></script>
+  <script defer src="js/emoji-cache.js"></script>
+  <script defer src="js/audio-cache-integration.js"></script>
+  <script defer src="js/emoji-blob-fix.js"></script>
 
-	<!-- 4. 表情系统（基础版本）-->
-	<script defer src="js/emoji.js"></script>
-	<script defer src="js/emoji_patch.js"></script>
+  <!-- 4. 表情系统 -->
+  <script defer src="js/emoji.js"></script>
+  <script defer src="js/emoji_patch.js"></script>
 
-	<!-- 5. 消息系统（包含表情功能）-->
-	<script defer src="js/message.js"></script>
-	<script defer src="js/message-center.js"></script>
-	<script defer src="js/messageAdmin.js"></script>
+  <!-- 5. 消息系统 -->
+  <script defer src="js/message.js"></script>
+  <script defer src="js/message-center.js"></script>
+  <script defer src="js/messageAdmin.js"></script>
+  <script defer src="js/message-fix.js"></script>
 
-	<!-- 6. 修复和增强（必须在基础系统之后）-->
-	<script defer src="js/message-fix.js"></script>
+  <!-- 6. 社交功能 -->
+  <script defer src="js/friends.js"></script>
 
-	<!-- 7. 社交功能 -->
-	<script defer src="js/friends.js"></script>
+  <!-- 7. 业务功能模块 -->
+  <script defer src="js/dl.js"></script>
+  <script defer src="js/ccb.js"></script>
+  <script defer src="js/exchange.js"></script>
+  <script defer src="js/datacenter.js"></script>
+  <script defer src="js/toolsManage.js"></script>
+  <script defer src="js/toolsDisplay.js"></script>
 
-	<!-- 8. 业务功能模块 -->
-	<script defer src="js/dl.js"></script>
-	<script defer src="js/ccb.js"></script>
-	<script defer src="js/exchange.js"></script>
-	<script defer src="js/datacenter.js"></script>
-	<script defer src="js/toolsManage.js"></script>
-	<script defer src="js/toolsDisplay.js"></script>
+  <!-- 8. 商店系统 -->
+  <script defer src="js/pointShop.js"></script>
+  <script defer src="js/creditShop.js"></script>
+  <script defer src="js/redemptionCode.js"></script>
 
-	<!-- 9. 商店系统 -->
-	<script defer src="js/pointShop.js"></script>
-	<script defer src="js/creditShop.js"></script>
-	<script defer src="js/redemptionCode.js"></script>
+  <!-- 9. 管理后台 -->
+  <script defer src="js/dladmin.js"></script>
+  <script defer src="js/userManager.js"></script>
+  <script defer src="js/siteAdmin.js"></script>
 
-	<!-- 10. 管理后台 -->
-	<script defer src="js/dladmin.js"></script>
-	<script defer src="js/userManager.js"></script>
-	<script defer src="js/siteAdmin.js"></script>
+  <!-- 10. 移动端优化（新的整合文件） -->
+  <script defer src="js/mobile-sidebar.js"></script>
 
-	<!-- 11. 优化和修复补丁（最后加载）-->
-	<script defer src="js/mobileOptimize.js"></script>
-	<script defer src="js/integrated-fixes.js"></script>
-	<script defer src="js/mobile-scroll-enhance.js"></script>
-	
-	<!-- 12. 终极修复（必须最后加载）-->
-	<script defer src="js/emoji-audio-fix.js"></script>
-</body>
+  <!-- 11. 终极修复 -->
+  <script defer src="js/emoji-audio-fix.js"></script>
+ </body>
 </html>

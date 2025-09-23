@@ -1,16 +1,13 @@
-// mobileOptimizeFix.js - 修复移动端侧边栏问题的脚本
-// 解决手机真机上侧边栏无法关闭和重复打开的问题
-// 修复遮罩层不显示的问题
-
+// 移动端侧边栏完整修复 - 合并优化版
 (function() {
     'use strict';
     
     // 防止重复初始化
-    if (window.__mobileSidebarFixed) {
-        console.log('[MobileFix] 已经初始化，跳过重复执行');
+    if (window.__mobileSidebarInitialized) {
+        console.log('[MobileSidebar] 已经初始化，跳过重复执行');
         return;
     }
-    window.__mobileSidebarFixed = true;
+    window.__mobileSidebarInitialized = true;
     
     // 全局状态管理器
     const SidebarManager = {
@@ -38,18 +35,17 @@
             this.elements.mobileToggle = document.querySelector('.mobile-toggle');
             
             if (!this.elements.sidebar || !this.elements.mobileToggle) {
-                console.error('[SidebarManager] 必要元素未找到');
+                console.error('[SidebarManager] 必要元素未找到，稍后重试');
+                // 稍后重试
+                setTimeout(() => this.init(), 500);
                 return;
             }
             
             // 清理旧的元素和事件
             this.cleanup();
             
-            // 创建遮罩层
-            this.createOverlay();
-            
-            // 设置汉堡菜单
-            this.setupHamburger();
+            // 创建或获取遮罩层
+            this.setupOverlay();
             
             // 绑定事件
             this.bindEvents();
@@ -57,70 +53,52 @@
             // 设置初始状态
             this.resetState();
             
+            // 修复动态视口高度（针对移动浏览器地址栏）
+            this.setupViewportHeight();
+            
             this.initialized = true;
             console.log('[SidebarManager] 初始化完成');
         },
         
         // 清理旧元素
         cleanup: function() {
-            // 移除PC端侧边栏折叠按钮
+            // 移除PC端侧边栏折叠按钮（移动端不需要）
             const pcToggle = document.querySelector('.sidebar-toggle');
-            if (pcToggle) {
-                pcToggle.remove();
+            if (pcToggle && window.innerWidth <= 992) {
+                pcToggle.style.display = 'none';
             }
             
             // 移除旧的遮罩层
-            const oldOverlays = document.querySelectorAll('.sidebar-overlay');
+            const oldOverlays = document.querySelectorAll('.sidebar-overlay:not(#sidebar-overlay)');
             oldOverlays.forEach(overlay => overlay.remove());
-            
-            // 移除旧的事件监听器
-            const oldMobileToggle = this.elements.mobileToggle;
-            if (oldMobileToggle) {
-                const newToggle = oldMobileToggle.cloneNode(true);
-                oldMobileToggle.parentNode.replaceChild(newToggle, oldMobileToggle);
-                this.elements.mobileToggle = newToggle;
-            }
         },
         
-        // 创建遮罩层
-        createOverlay: function() {
-            const overlay = document.createElement('div');
-            overlay.className = 'sidebar-overlay';
-            // 移除内联样式，完全使用CSS类控制
-            document.body.appendChild(overlay);
+        // 设置遮罩层
+        setupOverlay: function() {
+            let overlay = document.getElementById('sidebar-overlay');
+            
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'sidebar-overlay';
+                overlay.className = 'sidebar-overlay';
+                document.body.appendChild(overlay);
+            }
+            
             this.elements.overlay = overlay;
-            console.log('[SidebarManager] 遮罩层已创建');
+            console.log('[SidebarManager] 遮罩层已设置');
         },
         
-        // 设置汉堡菜单
-        setupHamburger: function() {
-            const toggle = this.elements.mobileToggle;
-            if (!toggle) return;
+        // 设置动态视口高度
+        setupViewportHeight: function() {
+            // 计算真实的视口高度（100vh在移动端可能包含地址栏）
+            const setVH = () => {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            };
             
-            if (!toggle.querySelector('.hamburger')) {
-                toggle.innerHTML = `
-                    <div class="hamburger">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                `;
-            }
-            
-            // 根据屏幕大小设置显示状态
-            this.updateToggleVisibility();
-        },
-        
-        // 更新汉堡菜单可见性
-        updateToggleVisibility: function() {
-            const toggle = this.elements.mobileToggle;
-            if (!toggle) return;
-            
-            if (window.innerWidth > 992) {
-                toggle.style.display = 'none';
-            } else {
-                toggle.style.display = 'flex';
-            }
+            setVH();
+            window.addEventListener('resize', setVH);
+            window.addEventListener('orientationchange', setVH);
         },
         
         // 打开侧边栏
@@ -131,27 +109,27 @@
             console.log('[SidebarManager] 打开侧边栏');
             
             this.isAnimating = true;
-            this.scrollPosition = window.pageYOffset || 0;
+            this.scrollPosition = window.pageYOffset || document.documentElement.scrollTop || 0;
             
             const { sidebar, overlay, mobileToggle, body } = this.elements;
             
-            // 使用类名控制遮罩层显示
-            overlay.classList.add('show');
-            
             // 添加显示类
+            overlay.classList.add('show');
             sidebar.classList.add('show');
-            mobileToggle.classList.add('active');
+            if (mobileToggle) mobileToggle.classList.add('active');
             body.classList.add('mobile-sidebar-open');
             
-            // 锁定背景
+            // 锁定背景滚动（改进的方式）
             body.style.cssText = `
                 position: fixed;
                 top: -${this.scrollPosition}px;
+                left: 0;
+                right: 0;
                 width: 100%;
                 overflow: hidden;
             `;
             
-            // 重置侧边栏滚动
+            // 重置侧边栏滚动位置
             sidebar.scrollTop = 0;
             
             // 更新状态
@@ -172,12 +150,10 @@
             
             const { sidebar, overlay, mobileToggle, body } = this.elements;
             
-            // 使用类名控制遮罩层隐藏
-            overlay.classList.remove('show');
-            
             // 移除显示类
+            overlay.classList.remove('show');
             sidebar.classList.remove('show');
-            mobileToggle.classList.remove('active');
+            if (mobileToggle) mobileToggle.classList.remove('active');
             body.classList.remove('mobile-sidebar-open');
             
             // 恢复背景滚动
@@ -210,7 +186,12 @@
             
             // 汉堡菜单点击事件
             if (mobileToggle) {
-                mobileToggle.addEventListener('click', function(e) {
+                // 移除旧的监听器
+                const newToggle = mobileToggle.cloneNode(true);
+                mobileToggle.parentNode.replaceChild(newToggle, mobileToggle);
+                this.elements.mobileToggle = newToggle;
+                
+                newToggle.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     
@@ -231,14 +212,22 @@
                 console.log('[SidebarManager] 遮罩层点击事件已绑定');
             }
             
-            // 侧边栏链接点击关闭
+            // 侧边栏链接点击后自动关闭（仅移动端）
             if (sidebar) {
+                // 使用事件委托
                 sidebar.addEventListener('click', function(e) {
-                    const link = e.target.closest('a[data-page]');
+                    const link = e.target.closest('a[data-page], a[href]');
                     if (link && window.innerWidth <= 992 && self.isOpen) {
+                        // 延迟关闭以确保链接点击生效
                         setTimeout(() => self.close(), 150);
                     }
                 }, false);
+                
+                // 防止侧边栏滚动传递到背景
+                sidebar.addEventListener('touchmove', function(e) {
+                    if (!self.isOpen) return;
+                    e.stopPropagation();
+                }, { passive: true });
             }
             
             // 窗口大小改变事件
@@ -246,54 +235,35 @@
             window.addEventListener('resize', function() {
                 clearTimeout(resizeTimer);
                 resizeTimer = setTimeout(function() {
-                    self.updateToggleVisibility();
-                    
+                    // PC端自动关闭侧边栏
                     if (window.innerWidth > 992 && self.isOpen) {
                         self.close();
                     }
+                    
+                    // 更新视口高度
+                    const vh = window.innerHeight * 0.01;
+                    document.documentElement.style.setProperty('--vh', `${vh}px`);
                 }, 250);
             });
             
-            // 防止滚动穿透
-            if (sidebar) {
-                sidebar.addEventListener('touchmove', function(e) {
-                    if (!self.isOpen) return;
-                    
-                    const scrollTop = this.scrollTop;
-                    const scrollHeight = this.scrollHeight;
-                    const height = this.clientHeight;
-                    const isScrollingUp = e.touches[0].clientY > (this._lastY || 0);
-                    const isScrollingDown = !isScrollingUp;
-                    
-                    this._lastY = e.touches[0].clientY;
-                    
-                    if ((scrollTop <= 0 && isScrollingUp) || 
-                        (scrollTop + height >= scrollHeight && isScrollingDown)) {
-                        e.preventDefault();
-                    }
-                }, { passive: false });
-                
-                sidebar.addEventListener('touchstart', function(e) {
-                    this._lastY = e.touches[0].clientY;
-                }, { passive: true });
-            }
+            // ESC键关闭侧边栏
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && self.isOpen) {
+                    self.close();
+                }
+            });
             
-            // 防止遮罩层下的内容被点击
-            document.body.addEventListener('click', function(e) {
-                if (self.isOpen && window.innerWidth <= 992) {
-                    const isClickInSidebar = sidebar && sidebar.contains(e.target);
-                    const isClickOnToggle = mobileToggle && mobileToggle.contains(e.target);
-                    const isClickOnOverlay = overlay && overlay.contains(e.target);
-                    
-                    // 如果点击不在侧边栏、汉堡菜单或遮罩层上，阻止事件
-                    if (!isClickInSidebar && !isClickOnToggle && !isClickOnOverlay) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        // 关闭侧边栏
+            // 页面切换时关闭侧边栏（针对SPA）
+            if (typeof window.loadPage === 'function') {
+                const originalLoadPage = window.loadPage;
+                window.loadPage = function(...args) {
+                    // 关闭侧边栏
+                    if (self.isOpen && window.innerWidth <= 992) {
                         self.close();
                     }
-                }
-            }, true); // 使用捕获阶段
+                    return originalLoadPage.apply(this, args);
+                };
+            }
         },
         
         // 重置状态
@@ -304,15 +274,19 @@
                 // 移动端：确保侧边栏关闭
                 sidebar.classList.remove('show');
                 overlay.classList.remove('show');
-                mobileToggle.classList.remove('active');
+                if (mobileToggle) mobileToggle.classList.remove('active');
                 body.classList.remove('mobile-sidebar-open');
                 body.style.cssText = '';
                 
                 this.isOpen = false;
             } else {
                 // PC端：隐藏移动端控件
-                mobileToggle.style.display = 'none';
+                if (mobileToggle) mobileToggle.style.display = 'none';
                 overlay.classList.remove('show');
+                
+                // 确保侧边栏显示
+                sidebar.classList.remove('show');
+                sidebar.style.transform = '';
             }
         }
     };
@@ -322,23 +296,34 @@
         // 确保DOM加载完成
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
-                SidebarManager.init();
+                setTimeout(() => SidebarManager.init(), 100);
             });
         } else {
-            // DOM已加载，直接初始化
+            // DOM已加载，稍后初始化
             setTimeout(() => SidebarManager.init(), 100);
         }
     }
     
-    // 导出全局函数
+    // 导出全局API
     window.MobileSidebar = {
         open: () => SidebarManager.open(),
         close: () => SidebarManager.close(),
         toggle: () => SidebarManager.toggle(),
-        isOpen: () => SidebarManager.isOpen
+        isOpen: () => SidebarManager.isOpen,
+        reinit: () => {
+            SidebarManager.initialized = false;
+            SidebarManager.init();
+        }
     };
     
     // 启动初始化
     initialize();
+    
+    // 监听页面可见性变化（处理浏览器后退等情况）
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && SidebarManager.initialized) {
+            SidebarManager.resetState();
+        }
+    });
     
 })();
