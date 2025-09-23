@@ -1292,3 +1292,530 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* 缓存管理按钮样式修复 */
+
+/* 缓存管理卡片整体样式 */
+#emoji-cache-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+}
+
+/* 缓存统计样式 */
+.cache-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.cache-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 15px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: 10px;
+  transition: all 0.3s;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.cache-stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.15);
+}
+
+.cache-stat-item i {
+  font-size: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cache-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.cache-stat-label {
+  font-size: 12px;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 缓存进度条 */
+.cache-progress {
+  margin: 25px 0;
+}
+
+.cache-progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.cache-progress-bar {
+  height: 24px;
+  background: #e9ecef;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.cache-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 进度条动画效果 */
+.cache-progress-fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.progress-text {
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* 缓存操作按钮容器 */
+.cache-actions {
+  display: flex;
+  gap: 12px;
+  margin: 25px 0;
+  flex-wrap: wrap;
+}
+
+/* 缓存管理按钮通用样式 */
+.cache-actions button,
+.cache-actions .btn,
+#refresh-cache-stats,
+#clean-old-cache,
+#clear-all-cache,
+#clear-audio-cache {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  min-width: 120px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* 刷新统计按钮 - 绿色渐变 */
+#refresh-cache-stats {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  color: white;
+}
+
+#refresh-cache-stats:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5eddd4 0%, #54b19d 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+}
+
+#refresh-cache-stats:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(78, 205, 196, 0.3);
+}
+
+/* 清理旧缓存按钮 - 橙色渐变 */
+#clean-old-cache {
+  background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+  color: white;
+}
+
+#clean-old-cache:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ffb74d 0%, #ff9800 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+}
+
+#clean-old-cache:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(255, 152, 0, 0.3);
+}
+
+/* 清空所有缓存按钮 - 红色渐变 */
+#clear-all-cache {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+}
+
+#clear-all-cache:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff7b7b 0%, #fe6a34 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(238, 90, 36, 0.4);
+}
+
+#clear-all-cache:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(238, 90, 36, 0.3);
+}
+
+/* 清空音频缓存按钮 - 紫色渐变 */
+#clear-audio-cache {
+  background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+  color: white;
+}
+
+#clear-audio-cache:hover:not(:disabled) {
+  background: linear-gradient(135deg, #af8afa 0%, #906ae5 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(128, 90, 213, 0.4);
+}
+
+#clear-audio-cache:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(128, 90, 213, 0.3);
+}
+
+/* 禁用状态 */
+.cache-actions button:disabled,
+.cache-actions .btn:disabled,
+#refresh-cache-stats:disabled,
+#clean-old-cache:disabled,
+#clear-all-cache:disabled,
+#clear-audio-cache:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  background: #cbd5e0 !important;
+  color: #718096 !important;
+}
+
+/* 加载中状态 */
+.cache-actions button:disabled .fa-spinner,
+.cache-actions .btn:disabled .fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 按钮内图标样式 */
+.cache-actions button i,
+.cache-actions .btn i {
+  font-size: 14px;
+  transition: transform 0.3s;
+}
+
+/* 悬停时图标动画 */
+#refresh-cache-stats:hover:not(:disabled) i {
+  transform: rotate(360deg);
+}
+
+#clean-old-cache:hover:not(:disabled) i {
+  transform: scale(1.2);
+}
+
+#clear-all-cache:hover:not(:disabled) i {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* 按钮文字 */
+.cache-actions button span,
+.cache-actions .btn span {
+  position: relative;
+  z-index: 1;
+}
+
+/* 波纹效果 */
+.cache-actions button::before,
+.cache-actions .btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.cache-actions button:active::before,
+.cache-actions .btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* 缓存设置区域 */
+.cache-settings {
+  margin-top: 30px;
+  padding-top: 25px;
+  border-top: 2px solid #e9ecef;
+}
+
+.cache-settings h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cache-settings h4 i {
+  color: #667eea;
+}
+
+/* 设置项 */
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background: #f7fafc;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  transition: all 0.3s;
+}
+
+.setting-item:hover {
+  background: #edf2f7;
+  transform: translateX(5px);
+}
+
+.settings-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex: 1;
+  gap: 10px;
+}
+
+.settings-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+/* 开关切换样式 */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e0;
+  transition: 0.4s;
+  border-radius: 26px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input:checked + .slider {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* 状态提示信息 */
+#cache-status {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  display: none;
+  z-index: 2000;
+  animation: slideInRight 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+#cache-status.success {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  color: white;
+}
+
+#cache-status.error {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+}
+
+#cache-status.info {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+#cache-status-text {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* 移动端响应式 */
+@media (max-width: 768px) {
+  .cache-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .cache-actions {
+    flex-direction: column;
+  }
+  
+  .cache-actions button,
+  .cache-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .switch {
+    align-self: flex-end;
+  }
+  
+  #cache-status {
+    right: 10px;
+    left: 10px;
+    top: 70px;
+  }
+}
+
+/* 小屏幕优化 */
+@media (max-width: 480px) {
+  .cache-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .cache-stat-item {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  
+  .cache-actions button,
+  .cache-actions .btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    min-width: 100px;
+  }
+}
+
+/* 深色模式支持（如果需要） */
+@media (prefers-color-scheme: dark) {
+  #emoji-cache-card {
+    background: #1a202c;
+    border-color: #2d3748;
+  }
+  
+  .cache-stat-item {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+    border-color: rgba(102, 126, 234, 0.3);
+  }
+  
+  .cache-stat-value {
+    color: #e2e8f0;
+  }
+  
+  .cache-stat-label {
+    color: #a0aec0;
+  }
+  
+  .cache-progress-bar {
+    background: #2d3748;
+  }
+  
+  .setting-item {
+    background: #2d3748;
+  }
+  
+  .setting-item:hover {
+    background: #4a5568;
+  }
+}

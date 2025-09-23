@@ -405,17 +405,47 @@
   animation: slideUp 0.3s;
 }
 
-/* PC端容器样式 */
+/* PC端容器样式 - 修复高度和可调整大小 */
 .pc-draggable .chat-container {
   position: fixed !important;
   margin: 0;
   resize: both;
+  overflow: auto;
   width: 450px;
-  height: 550px;
+  height: min(550px, calc(100vh - 150px)); /* 初始高度限制 */
   min-width: 380px;
-  min-height: 450px;
-  max-width: 800px;
-  max-height: 80vh;
+  min-height: 400px;
+  max-width: min(800px, 90vw);
+  max-height: min(80vh, calc(100vh - 100px)); /* 限制最大高度，预留顶部和底部空间 */
+  /* 默认位置：居中偏上 */
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 添加调整大小手柄样式 */
+.pc-draggable .chat-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 0%, transparent 50%, rgba(150, 150, 150, 0.5) 50%, rgba(150, 150, 150, 0.5) 100%);
+  border-radius: 0 0 12px 0;
+  z-index: 10;
+}
+
+/* 拖动时的样式 */
+.pc-draggable .chat-container.dragging {
+  transform: none !important;
+  opacity: 0.9;
+}
+
+/* 防止内部元素干扰resize */
+.pc-draggable .chat-container > * {
+  pointer-events: auto;
 }
 
 /* 移动端容器样式 - 优化高度计算 */
@@ -430,6 +460,7 @@
   /* 限制最大高度 */
   max-height: min(600px, calc(100vh - 80px));
   margin: 10px;
+  resize: none; /* 移动端禁用调整大小 */
 }
 
 /* iOS Safari 特殊处理 */
@@ -463,12 +494,19 @@
   flex-shrink: 0;
   height: 50px;
   min-height: 50px;
+  cursor: move; /* PC端可拖动 */
+}
+
+.pc-draggable .chat-header {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .chat-user-info {
   display: flex;
   align-items: center;
   gap: 12px;
+  pointer-events: none; /* 防止干扰拖动 */
 }
 
 .chat-avatar {
@@ -496,6 +534,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: all; /* 确保关闭按钮可点击 */
 }
 
 .chat-close:hover {
@@ -796,6 +835,14 @@
   to { transform: rotate(360deg); }
 }
 
+/* 小屏幕设备自动调整最大尺寸 */
+@media (max-width: 1200px) {
+  .pc-draggable .chat-container {
+    max-width: min(600px, 80vw);
+    max-height: min(70vh, calc(100vh - 120px));
+  }
+}
+
 /* 针对小屏幕设备的特殊优化 */
 @media (max-width: 375px) {
   .mobile-centered .chat-container {
@@ -829,6 +876,10 @@
   .mobile-centered .chat-container {
     height: calc(100vh - 20px);
     max-height: calc(100vh - 20px);
+  }
+  
+  .pc-draggable .chat-container {
+    max-height: min(90vh, calc(100vh - 60px));
   }
   
   .chat-header {
@@ -1312,5 +1363,332 @@
   .message-table .message-type-badge {
     font-size: 9px;
     padding: 2px 6px;
+  }
+}
+
+/* 聊天窗口和缓存设置修复 - 保留拖动和调整功能 */
+
+/* ========== 聊天窗口高度修复（保留拖动功能） ========== */
+
+/* PC端聊天容器 - 初始状态 */
+.chat-modal.pc-draggable .chat-container,
+.pc-draggable .chat-container {
+  position: fixed !important;
+  margin: 0 !important;
+  resize: both !important; /* 保留调整大小功能 */
+  overflow: auto !important;
+  /* 初始尺寸 */
+  width: 450px !important;
+  height: 500px !important;
+  /* 最小最大限制 */
+  min-width: 380px !important;
+  min-height: 400px !important;
+  max-width: min(800px, 90vw) !important;
+  max-height: min(600px, 75vh) !important;
+  /* 初始位置 - 不使用!important以允许拖动 */
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 拖动时不覆盖transform - 重要：移除!important */
+.pc-draggable .chat-container.dragging {
+  /* 不设置任何transform相关样式，让JS控制 */
+}
+
+/* 调整大小手柄样式 */
+.pc-draggable .chat-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 0%, transparent 50%, rgba(150, 150, 150, 0.5) 50%, rgba(150, 150, 150, 0.5) 100%);
+  border-radius: 0 0 12px 0;
+  z-index: 10;
+  pointer-events: auto; /* 确保可点击 */
+}
+
+/* 聊天头部 - 保持可拖动 */
+.pc-draggable .chat-header {
+  cursor: move !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+/* 移动端聊天容器 - 固定不可拖动 */
+.chat-modal.mobile-centered .chat-container,
+.mobile-centered .chat-container {
+  position: fixed !important;
+  width: calc(100% - 20px) !important;
+  max-width: 100% !important;
+  height: 420px !important;
+  max-height: min(420px, calc(100vh - 120px)) !important;
+  min-height: 420px !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  resize: none !important; /* 移动端禁用调整大小 */
+}
+
+/* 容器内部布局 */
+.chat-container {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* 聊天头部固定高度 */
+.chat-container .chat-header {
+  flex-shrink: 0 !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+  padding: 12px 15px !important;
+}
+
+/* 用户搜索区域 */
+.chat-container .user-search-area {
+  flex-shrink: 0 !important;
+  max-height: 100px !important;
+  overflow-y: auto !important;
+  padding: 12px !important;
+}
+
+/* 聊天消息区域 - 自适应 */
+.chat-container .chat-messages {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 12px !important;
+}
+
+/* 输入区域 */
+.chat-container .chat-input-area {
+  flex-shrink: 0 !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  padding: 10px !important;
+}
+
+/* 表情选择器 */
+.chat-container .chat-emoji-picker {
+  position: absolute !important;
+  bottom: 70px !important;
+  left: 10px !important;
+  right: 10px !important;
+  height: 250px !important;
+  max-height: 250px !important;
+  z-index: 1000 !important;
+}
+
+/* 确保拖动时样式不被覆盖 */
+.pc-draggable .chat-container[style*="transform"] {
+  /* 允许内联样式覆盖 */
+  top: auto;
+  left: auto;
+}
+
+/* 修复调整大小时的问题 */
+.pc-draggable .chat-container[style*="width"],
+.pc-draggable .chat-container[style*="height"] {
+  /* 允许内联样式覆盖初始值 */
+}
+
+/* 防止内容区域干扰拖动 */
+.pc-draggable .chat-header * {
+  pointer-events: none;
+}
+
+.pc-draggable .chat-header button,
+.pc-draggable .chat-header .chat-close {
+  pointer-events: auto;
+  cursor: pointer !important;
+}
+
+/* ========== 响应式调整 ========== */
+
+@media (max-width: 768px) {
+  .chat-modal.mobile-centered .chat-container,
+  .mobile-centered .chat-container {
+    height: 400px !important;
+    max-height: min(400px, calc(100vh - 100px)) !important;
+  }
+}
+
+@media (max-width: 375px) {
+  .chat-modal.mobile-centered .chat-container,
+  .mobile-centered .chat-container {
+    height: 380px !important;
+    max-height: calc(100vh - 80px) !important;
+  }
+  
+  .chat-container .chat-header {
+    height: 45px !important;
+    min-height: 45px !important;
+  }
+  
+  .chat-container .chat-input-area {
+    height: 55px !important;
+    min-height: 55px !important;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .mobile-centered .chat-container {
+    height: calc(100vh - 40px) !important;
+    max-height: calc(100vh - 40px) !important;
+  }
+  
+  .pc-draggable .chat-container {
+    height: min(400px, calc(100vh - 60px)) !important;
+    max-height: min(400px, calc(100vh - 60px)) !important;
+  }
+}
+
+/* ========== 缓存设置卡片样式修复 ========== */
+
+#emoji-cache-card {
+  background: white !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.08) !important;
+  border: 1px solid #eaeaea !important;
+  margin-bottom: 25px !important;
+  overflow: visible !important;
+}
+
+/* 缓存卡片标题 */
+#emoji-cache-card > h3:first-child,
+#emoji-cache-card > h4:first-child,
+#emoji-cache-card > div:first-child:not(.cache-stats) {
+  margin: 0 !important;
+  padding: 20px !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #eee !important;
+  border-radius: 12px 12px 0 0 !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  color: #2c3e50 !important;
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  display: block !important;
+  width: auto !important;
+}
+
+/* 缓存统计区域 */
+#emoji-cache-card .cache-stats {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+  gap: 15px !important;
+  padding: 25px !important;
+  margin: 0 !important;
+}
+
+#emoji-cache-card .cache-stat-item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 15px !important;
+  background: #f8f9fa !important;
+  border-radius: 8px !important;
+  border: 1px solid #e9ecef !important;
+  transition: all 0.3s !important;
+}
+
+#emoji-cache-card .cache-stat-item:hover {
+  background: #e9ecef !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+/* 缓存进度条 */
+#emoji-cache-card .cache-progress {
+  margin: 0 25px 25px 25px !important;
+  padding: 0 !important;
+}
+
+.cache-progress-bar {
+  height: 20px !important;
+  background: #e9ecef !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+/* 缓存操作按钮 */
+#emoji-cache-card .cache-actions {
+  display: flex !important;
+  gap: 12px !important;
+  padding: 0 25px 25px 25px !important;
+  margin: 0 !important;
+  flex-wrap: wrap !important;
+}
+
+/* 缓存设置区域 */
+#emoji-cache-card .cache-settings {
+  margin: 0 !important;
+  padding: 25px !important;
+  border-top: 2px solid #e9ecef !important;
+}
+
+#emoji-cache-card .cache-settings h4 {
+  margin: 0 0 20px 0 !important;
+  padding: 0 !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: #2c3e50 !important;
+  position: static !important;
+  transform: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+/* 设置项 */
+#emoji-cache-card .setting-item {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 12px !important;
+  padding: 12px 15px !important;
+  background: #f8f9fa !important;
+  border-radius: 8px !important;
+  border: 1px solid #e9ecef !important;
+}
+
+/* 移动端响应式 */
+@media (max-width: 768px) {
+  #emoji-cache-card .cache-stats {
+    grid-template-columns: 1fr 1fr !important;
+    padding: 20px 15px !important;
+  }
+  
+  #emoji-cache-card .cache-actions {
+    flex-direction: column !important;
+    padding: 0 15px 20px 15px !important;
+  }
+  
+  #emoji-cache-card .cache-actions button {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #emoji-cache-card .cache-stats {
+    grid-template-columns: 1fr !important;
+  }
+  
+  #emoji-cache-card .cache-stat-item {
+    flex-direction: row !important;
+    justify-content: space-between !important;
   }
 }
