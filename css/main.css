@@ -1002,3 +1002,266 @@ i {
 .mt-3 {
   margin-top: 1rem !important;
 }
+
+/* 缓存管理样式 */
+.cache-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.cache-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.cache-stat-item:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+}
+
+.cache-stat-item i {
+  font-size: 24px;
+  color: #667eea;
+}
+
+.cache-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.cache-stat-label {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.cache-progress {
+  margin: 20px 0;
+}
+
+.cache-progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.cache-progress-bar {
+  height: 20px;
+  background: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cache-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cache-actions {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.cache-settings {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.settings-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.settings-label input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .cache-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .cache-actions {
+    flex-direction: column;
+  }
+}
+
+/* 设置页面卡片样式 */
+.setting-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.setting-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.setting-header {
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #475569;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.setting-header i {
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+.setting-body {
+  padding: 20px;
+}
+
+/* 设置按钮样式 */
+.settings-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: white;
+  flex: 1;
+  min-width: 120px;
+}
+
+.settings-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.settings-btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.settings-btn-warning {
+  background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+}
+
+.settings-btn-warning:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
+}
+
+.settings-btn-danger {
+  background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+}
+
+.settings-btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
+}
+
+/* 设置项样式 */
+.setting-item {
+  padding: 12px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-item + .setting-item {
+  border-top: 1px solid #e9ecef;
+}
+
+/* 如果还有其他设置卡片也用了audio-pack类 */
+.setting-card.audio-pack .setting-header {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* 缓存设置项样式 */
+.cache-settings {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.cache-settings .setting-item {
+  padding: 15px;
+  margin-bottom: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.cache-settings .setting-item:hover {
+  background: white;
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.cache-settings .settings-label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  gap: 12px;
+}
+
+.cache-settings input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.cache-settings .setting-info {
+  flex: 1;
+}
+
+.cache-settings .setting-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 4px;
+}
+
+.cache-settings .setting-description {
+  font-size: 13px;
+  color: #6c757d;
+  line-height: 1.5;
+}

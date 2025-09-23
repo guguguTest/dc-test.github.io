@@ -1250,83 +1250,84 @@ settings: `
       </div>
     </div>
     
-<!-- 表情缓存管理卡片 -->
-<div class="settings-card" id="emoji-cache-card">
-  <h3 class="settings-card-title">
-    <i class="fas fa-database me-2"></i>表情缓存管理
-  </h3>
-  <div class="settings-card-content">
-    <div class="cache-stats">
-      <div class="cache-stat-item">
-        <i class="far fa-smile"></i>
-        <div>
-          <div class="cache-stat-value" id="cache-emoji-count">0</div>
-          <div class="cache-stat-label">已缓存表情</div>
-        </div>
-      </div>
-      <div class="cache-stat-item">
-        <i class="fas fa-music"></i>
-        <div>
-          <div class="cache-stat-value" id="cache-audio-count">0</div>
-          <div class="cache-stat-label">已缓存音频</div>
-        </div>
-      </div>
-      <div class="cache-stat-item">
-        <i class="far fa-image"></i>
-        <div>
-          <div class="cache-stat-value" id="cache-message-count">0</div>
-          <div class="cache-stat-label">消息图片</div>
-        </div>
-      </div>
-      <div class="cache-stat-item">
-        <i class="fas fa-hdd"></i>
-        <div>
-          <div class="cache-stat-value" id="cache-size">0.00 MB</div>
-          <div class="cache-stat-label">缓存大小</div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="cache-progress">
-      <div class="cache-progress-info">
-        <span>缓存使用情况</span>
-        <span id="cache-usage-text">0.00 MB / 500 MB</span>
-      </div>
-      <div class="cache-progress-bar">
-        <div class="cache-progress-fill" id="cache-progress-fill" style="width: 0%;">
-          <span class="progress-text">0.0%</span>
-        </div>
-      </div>
-    </div>
-    
-    <div class="cache-actions">
-      <button class="settings-btn settings-btn-primary" id="refresh-cache-stats" onclick="handleRefreshCacheStats()">
-        <i class="fas fa-sync-alt me-2"></i>刷新统计
-      </button>
-      <button class="settings-btn settings-btn-warning" id="clean-old-cache" onclick="handleCleanOldCache()">
-        <i class="fas fa-broom me-2"></i>清理旧缓存
-      </button>
-      <button class="settings-btn settings-btn-danger" id="clear-all-cache" onclick="handleClearAllCache()">
-        <i class="fas fa-trash-alt me-2"></i>清空所有缓存
-      </button>
-    </div>
-    
-    <div class="cache-settings">
-      <div class="settings-item">
-        <label class="settings-label">
-          <input type="checkbox" id="auto-clean-cache" checked>
-          <span>自动清理过期缓存</span>
-        </label>
-      </div>
-      <div class="settings-item">
-        <label class="settings-label">
-          <input type="checkbox" id="preload-emoji" checked>
-          <span>预加载常用表情和音频</span>
-        </label>
-      </div>
-    </div>
-  </div>
-</div>
+	<!-- 表情缓存管理卡片 -->
+	<div class="setting-card" id="emoji-cache-card">
+	  <div class="setting-header">
+		<i class="fas fa-database me-2"></i>
+		<span>表情缓存管理</span>
+	  </div>
+	  <div class="setting-body">
+		<div class="cache-stats">
+		  <div class="cache-stat-item">
+			<i class="far fa-smile"></i>
+			<div>
+			  <div class="cache-stat-value" id="cache-emoji-count">0</div>
+			  <div class="cache-stat-label">已缓存表情</div>
+			</div>
+		  </div>
+		  <div class="cache-stat-item">
+			<i class="fas fa-music"></i>
+			<div>
+			  <div class="cache-stat-value" id="cache-audio-count">0</div>
+			  <div class="cache-stat-label">已缓存音频</div>
+			</div>
+		  </div>
+		  <div class="cache-stat-item">
+			<i class="far fa-image"></i>
+			<div>
+			  <div class="cache-stat-value" id="cache-message-count">0</div>
+			  <div class="cache-stat-label">消息图片</div>
+			</div>
+		  </div>
+		  <div class="cache-stat-item">
+			<i class="fas fa-hdd"></i>
+			<div>
+			  <div class="cache-stat-value" id="cache-size">0.00 MB</div>
+			  <div class="cache-stat-label">缓存大小</div>
+			</div>
+		  </div>
+		</div>
+		
+		<div class="cache-progress">
+		  <div class="cache-progress-info">
+			<span>缓存使用情况</span>
+			<span id="cache-usage-text">0.00 MB / 500 MB</span>
+		  </div>
+		  <div class="cache-progress-bar">
+			<div class="cache-progress-fill" id="cache-progress-fill" style="width: 0%;">
+			  <span class="progress-text">0.0%</span>
+			</div>
+		  </div>
+		</div>
+		
+		<div class="cache-actions">
+		  <button class="settings-btn settings-btn-primary" id="refresh-cache-stats" onclick="handleRefreshCacheStats()">
+			<i class="fas fa-sync-alt me-2"></i>刷新统计
+		  </button>
+		  <button class="settings-btn settings-btn-warning" id="clean-old-cache" onclick="handleCleanOldCache()">
+			<i class="fas fa-broom me-2"></i>清理旧缓存
+		  </button>
+		  <button class="settings-btn settings-btn-danger" id="clear-all-cache" onclick="handleClearAllCache()">
+			<i class="fas fa-trash-alt me-2"></i>清空所有缓存
+		  </button>
+		</div>
+		
+		<div class="cache-settings">
+		  <div class="setting-item">
+			<label class="settings-label">
+			  <input type="checkbox" id="auto-clean-cache" checked>
+			  <span>自动清理过期缓存</span>
+			</label>
+		  </div>
+		  <div class="setting-item">
+			<label class="settings-label">
+			  <input type="checkbox" id="preload-emoji" checked>
+			  <span>预加载常用表情和音频</span>
+			</label>
+		  </div>
+		</div>
+	  </div>
+	</div>
     
     <!-- 鼠标样式设置卡片 -->
     <div class="setting-card" id="cursor-settings-card">
@@ -1367,196 +1368,6 @@ settings: `
       </button>
     </div>
   </div>
-  
-  <!-- 添加缓存管理相关样式 -->
-  <style>
-    /* 缓存统计网格 */
-    .cache-stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-    
-    .cache-stat-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 15px;
-      background: #f8fafc;
-      border-radius: 10px;
-      transition: all 0.3s ease;
-    }
-    
-    .cache-stat-item:hover {
-      background: #e2e8f0;
-      transform: translateY(-2px);
-    }
-    
-    .stat-icon-small {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 50%;
-      color: white;
-      font-size: 1.1rem;
-    }
-    
-    .stat-content {
-      flex: 1;
-    }
-    
-    .stat-value {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: #2d3748;
-      margin-bottom: 2px;
-    }
-    
-    .stat-label {
-      font-size: 0.85rem;
-      color: #718096;
-    }
-    
-    /* 进度条样式 */
-    .cache-progress-container {
-      margin: 25px 0;
-    }
-    
-    .cache-progress-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      font-size: 0.9rem;
-      color: #718096;
-    }
-    
-    .cache-progress-track {
-      height: 24px;
-      background: #e2e8f0;
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-    }
-    
-    .cache-progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-      border-radius: 12px;
-      transition: width 0.5s ease;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding-right: 10px;
-      position: relative;
-      min-width: 40px;
-    }
-    
-    .progress-text {
-      color: white;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-    
-    /* 缓存操作按钮 */
-    .cache-actions {
-      display: flex;
-      gap: 10px;
-      margin: 20px 0;
-      flex-wrap: wrap;
-    }
-    
-    .cache-btn {
-      flex: 1;
-      min-width: 120px;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      color: white;
-    }
-    
-    .cache-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .cache-btn-refresh {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .cache-btn-refresh:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-    
-    .cache-btn-clean {
-      background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
-    }
-    
-    .cache-btn-clean:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
-    }
-    
-    .cache-btn-clear {
-      background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
-    }
-    
-    .cache-btn-clear:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
-    }
-    
-    .cache-settings-group {
-      margin-top: 25px;
-      padding-top: 20px;
-      border-top: 1px solid #e2e8f0;
-    }
-    
-    #cache-status {
-      background: #f0f9ff;
-      color: #0369a1;
-      border: 1px solid #bae6fd;
-    }
-    
-    #cache-status.success {
-      background: #f0fdf4;
-      color: #14532d;
-      border: 1px solid #86efac;
-    }
-    
-    #cache-status.error {
-      background: #fef2f2;
-      color: #7f1d1d;
-      border: 1px solid #fecaca;
-    }
-    
-    /* 响应式设计 */
-    @media (max-width: 768px) {
-      .cache-stats-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .cache-actions {
-        flex-direction: column;
-      }
-      
-      .cache-btn {
-        width: 100%;
-      }
-    }
-  </style>
   
   <!-- 页面初始化脚本（仅初始化鼠标设置和调用缓存初始化）-->
   <script>

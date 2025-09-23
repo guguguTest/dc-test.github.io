@@ -298,21 +298,28 @@
 	<script defer src="js/cursor.js"></script>
 	<script defer src="js/announcement.js"></script>
 
-	<!-- 3. 缓存管理（独立模块，其他系统可能依赖） -->
+	<!-- 3. 缓存管理（独立模块，其他系统可能依赖）-->
 	<script defer src="js/cache-manager.js"></script>
 	<script defer src="js/emoji-cache.js"></script>
+	<script defer src="js/audio-cache-integration.js"></script>
+	<script defer src="js/emoji-blob-fix.js"></script>
 
-	<!-- 4. 消息系统 -->
+	<!-- 4. 表情系统（基础版本）-->
+	<script defer src="js/emoji.js"></script>
+	<script defer src="js/emoji_patch.js"></script>
+
+	<!-- 5. 消息系统（包含表情功能）-->
 	<script defer src="js/message.js"></script>
 	<script defer src="js/message-center.js"></script>
 	<script defer src="js/messageAdmin.js"></script>
 
-	<!-- 5. 社交功能 -->
-	<script defer src="js/friends.js"></script>
-	<script defer src="js/emoji.js"></script>
-	<script defer src="js/emoji_patch.js"></script>
+	<!-- 6. 修复和增强（必须在基础系统之后）-->
+	<script defer src="js/message-fix.js"></script>
 
-	<!-- 6. 业务功能模块 -->
+	<!-- 7. 社交功能 -->
+	<script defer src="js/friends.js"></script>
+
+	<!-- 8. 业务功能模块 -->
 	<script defer src="js/dl.js"></script>
 	<script defer src="js/ccb.js"></script>
 	<script defer src="js/exchange.js"></script>
@@ -320,20 +327,22 @@
 	<script defer src="js/toolsManage.js"></script>
 	<script defer src="js/toolsDisplay.js"></script>
 
-	<!-- 7. 商店系统 -->
+	<!-- 9. 商店系统 -->
 	<script defer src="js/pointShop.js"></script>
 	<script defer src="js/creditShop.js"></script>
 	<script defer src="js/redemptionCode.js"></script>
 
-	<!-- 8. 管理后台 -->
+	<!-- 10. 管理后台 -->
 	<script defer src="js/dladmin.js"></script>
 	<script defer src="js/userManager.js"></script>
 	<script defer src="js/siteAdmin.js"></script>
 
-	<!-- 9. 优化和修复补丁（最后加载） -->
+	<!-- 11. 优化和修复补丁（最后加载）-->
 	<script defer src="js/mobileOptimize.js"></script>
-	<script defer src="js/message-fix.js"></script>
 	<script defer src="js/integrated-fixes.js"></script>
 	<script defer src="js/mobile-scroll-enhance.js"></script>
+	
+	<!-- 12. 终极修复（必须最后加载）-->
+	<script defer src="js/emoji-audio-fix.js"></script>
 </body>
 </html>
