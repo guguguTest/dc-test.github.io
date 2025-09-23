@@ -1,26 +1,33 @@
-// 表情功能JavaScript - 增强版（含音频功能）
+// emoji.js - 表情功能JavaScript - 增强版（含音频功能）- 修复版
 (function(global) {
   'use strict';
+
+  // 确保API_BASE_URL存在
+  if (typeof window.API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = 'https://api.am-all.com.cn';
+  }
+  const API_BASE_URL = window.API_BASE_URL;
 
   let currentEmojiPack = null;
   let emojiPacks = [];
   let recentEmojis = [];
   let selectedChatInput = null;
   let uploadedFiles = [];
-  let uploadedAudios = []; // 新增：音频文件数组
+  let uploadedAudios = [];
 
   // 添加全局变量
   window.folderCreated = false;
   window.currentFolderName = '';
   window.coverImageUrl = null;
-  window.isAudioPack = false; // 新增：是否为音频表情包
+  window.isAudioPack = false;
+  window.uploadedFiles = [];
+  window.uploadedAudios = [];
 
   // 音频管理器
   const AudioManager = {
     currentAudio: null,
     preloadedAudios: new Map(),
     
-    // 预加载音频
     preloadAudio(url) {
       if (!this.preloadedAudios.has(url)) {
         const audio = new Audio(url);
@@ -30,16 +37,13 @@
       }
     },
     
-    // 播放音频
     playAudio(url) {
       try {
-        // 停止当前播放的音频
         if (this.currentAudio) {
           this.currentAudio.pause();
           this.currentAudio.currentTime = 0;
         }
         
-        // 获取或创建音频对象
         let audio = this.preloadedAudios.get(url);
         if (!audio) {
           audio = new Audio(url);
@@ -47,12 +51,10 @@
           this.preloadedAudios.set(url, audio);
         }
         
-        // 克隆音频以支持多次播放
         const audioClone = audio.cloneNode();
         audioClone.volume = 0.7;
         this.currentAudio = audioClone;
         
-        // 播放音频
         const playPromise = audioClone.play();
         if (playPromise !== undefined) {
           playPromise.catch(error => {
@@ -64,7 +66,6 @@
       }
     },
     
-    // 停止所有音频
     stopAll() {
       if (this.currentAudio) {
         this.currentAudio.pause();
@@ -78,13 +79,8 @@
 
   // 初始化表情系统
   function initEmojiSystem() {
-    // 加载表情包数据
     loadEmojiPacks();
-    
-    // 监听所有聊天窗口
     observeChatWindows();
-    
-    // 绑定全局点击事件
     document.addEventListener('click', handleGlobalClick);
   }
 
@@ -95,7 +91,6 @@
         if (mutation.addedNodes.length > 0) {
           mutation.addedNodes.forEach((node) => {
             if (node.nodeType === 1) {
-              // 查找聊天输入区域
               const inputArea = node.querySelector('.chat-input-area');
               if (inputArea && !inputArea.querySelector('.emoji-btn')) {
                 addEmojiButton(inputArea);
@@ -111,7 +106,6 @@
       subtree: true
     });
 
-    // 初始化现有的聊天窗口
     document.querySelectorAll('.chat-input-area').forEach(inputArea => {
       if (!inputArea.querySelector('.emoji-btn')) {
         addEmojiButton(inputArea);
@@ -131,10 +125,8 @@
     emojiBtn.innerHTML = '<i class="far fa-smile"></i>';
     emojiBtn.title = '选择表情';
     
-    // 插入到发送按钮前面
     inputArea.insertBefore(emojiBtn, sendBtn);
     
-    // 绑定点击事件
     emojiBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       selectedChatInput = chatInput;
@@ -157,16 +149,13 @@
       document.body.appendChild(picker);
     }
     
-    // 定位到按钮附近
     const btnRect = btn.getBoundingClientRect();
     const pickerHeight = 400;
     const pickerWidth = 340;
     
-    // 计算位置
     let top = btnRect.top - pickerHeight - 10;
     let left = btnRect.left - pickerWidth + btnRect.width;
     
-    // 检查是否超出视口
     if (top < 10) {
       top = btnRect.bottom + 10;
     }
@@ -184,7 +173,6 @@
     picker.classList.add('show');
     btn.classList.add('active');
     
-    // 加载第一个表情包
     if (emojiPacks.length > 0) {
       loadEmojiPackContent(emojiPacks[0].id);
     }
@@ -228,21 +216,18 @@
     const tabsContainer = document.querySelector('.emoji-tabs');
     if (!tabsContainer) return;
     
-    // 清空现有标签（保留最近使用）
     const recentTab = tabsContainer.querySelector('.recent-tab');
     tabsContainer.innerHTML = '';
     if (recentTab) {
       tabsContainer.appendChild(recentTab);
     }
     
-    // 添加表情包标签
     emojiPacks.forEach(pack => {
       const tab = document.createElement('button');
       tab.className = 'emoji-tab';
       tab.dataset.packId = pack.id;
       tab.title = pack.pack_name;
       
-      // 如果是音频表情包，添加音频图标
       if (pack.is_audio_pack) {
         tab.classList.add('audio-pack');
       }
@@ -266,7 +251,6 @@
 
   // 选择表情标签
   function selectEmojiTab(tab, packId) {
-    // 移除所有激活状态
     document.querySelectorAll('.emoji-tab').forEach(t => {
       t.classList.remove('active');
     });
@@ -300,7 +284,6 @@
           }
         });
         
-        // 激活对应的标签
         document.querySelectorAll('.emoji-tab').forEach(t => {
           t.classList.remove('active');
           if (t.dataset.packId == packId) {
@@ -315,93 +298,94 @@
   }
 
   // 渲染表情网格
-  function renderEmojiGrid(emojis) {
-    const gridContainer = document.querySelector('.emoji-grid-container');
-    if (!gridContainer) return;
-    
-    if (emojis.length === 0) {
-      gridContainer.innerHTML = `
-        <div class="emoji-empty">
-          <div class="emoji-empty-icon"><i class="far fa-meh"></i></div>
-          <div class="emoji-empty-text">暂无表情</div>
-        </div>
-      `;
-      return;
+function renderEmojiGrid(emojis) {
+  const gridContainer = document.querySelector('.emoji-grid-container');
+  if (!gridContainer) return;
+  
+  if (emojis.length === 0) {
+    gridContainer.innerHTML = `
+      <div class="emoji-empty">
+        <div class="emoji-empty-icon"><i class="far fa-meh"></i></div>
+        <div class="emoji-empty-text">暂无表情</div>
+      </div>
+    `;
+    return;
+  }
+  
+  const grid = document.createElement('div');
+  grid.className = 'emoji-grid';
+  
+  emojis.forEach(emoji => {
+    const item = document.createElement('div');
+    item.className = 'emoji-item';
+    // 兼容 sound_path 和 audio_path
+    const audioPath = emoji.sound_path || emoji.audio_path;
+    if (audioPath) {
+      item.classList.add('has-audio');
     }
     
-    const grid = document.createElement('div');
-    grid.className = 'emoji-grid';
+    item.innerHTML = `
+      <img src="${API_BASE_URL}${emoji.file_path}" alt="${emoji.emoji_name || emoji.file_name}">
+      ${audioPath ? '<i class="fas fa-volume-up emoji-audio-badge"></i>' : ''}
+      <span class="emoji-item-name">${emoji.emoji_name || emoji.file_name}</span>
+    `;
     
-    emojis.forEach(emoji => {
-      const item = document.createElement('div');
-      item.className = 'emoji-item';
-      if (emoji.audio_path) {
-        item.classList.add('has-audio');
-      }
-      
-      item.innerHTML = `
-        <img src="${API_BASE_URL}${emoji.file_path}" alt="${emoji.emoji_name || emoji.file_name}">
-        ${emoji.audio_path ? '<i class="fas fa-volume-up emoji-audio-badge"></i>' : ''}
-        <span class="emoji-item-name">${emoji.emoji_name || emoji.file_name}</span>
-      `;
-      
-      item.addEventListener('click', () => {
-        sendEmoji(emoji);
-      });
-      
-      grid.appendChild(item);
+    item.addEventListener('click', () => {
+      // 确保传递正确的音频路径
+      const emojiToSend = {
+        ...emoji,
+        audio_path: audioPath  // 确保有 audio_path 字段用于兼容
+      };
+      sendEmoji(emojiToSend);
     });
     
-    gridContainer.innerHTML = '';
-    gridContainer.appendChild(grid);
-  }
+    grid.appendChild(item);
+  });
+  
+  gridContainer.innerHTML = '';
+  gridContainer.appendChild(grid);
+}
 
-  // 发送表情
-  function sendEmoji(emoji) {
-    if (!selectedChatInput) return;
-    
-    // 记录使用
-    recordEmojiUsage(emoji.id);
-    
-    // 创建表情消息 - 改进格式，使用JSON字符串
-    let emojiData = {
-      id: emoji.id,
-      path: emoji.file_path,
-      name: emoji.emoji_name || emoji.file_name
-    };
-    
-    if (emoji.audio_path) {
-      emojiData.audio = emoji.audio_path;
-    }
-    
-    // 使用JSON格式传递数据
-    const emojiMessage = `[emoji:${JSON.stringify(emojiData)}]`;
-    
-    // 插入到输入框（实际发送时需要处理）
-    selectedChatInput.value = emojiMessage;
-    
-    // 触发发送
-    const sendBtn = selectedChatInput.parentElement.querySelector('.chat-send-btn');
-    if (sendBtn) {
-      sendBtn.click();
-    }
-    
-    // 播放音效（如果有）
-    if (emoji.audio_path) {
-      AudioManager.playAudio(`${API_BASE_URL}${emoji.audio_path}`);
-    }
-    
-    // 关闭选择器
-    const picker = document.querySelector('.emoji-picker');
-    if (picker) {
-      picker.classList.remove('show');
-    }
-    
-    // 移除激活状态
-    document.querySelectorAll('.emoji-btn').forEach(btn => {
-      btn.classList.remove('active');
-    });
+  // 发送表情（修复音频路径）
+function sendEmoji(emoji) {
+  if (!selectedChatInput) return;
+  
+  recordEmojiUsage(emoji.id);
+  
+  // 创建表情消息数据
+  let emojiData = {
+    id: emoji.id,
+    path: emoji.file_path,
+    name: emoji.emoji_name || emoji.file_name
+  };
+  
+  // 兼容 sound_path 和 audio_path
+  const audioPath = emoji.sound_path || emoji.audio_path;
+  if (audioPath) {
+    emojiData.audio = audioPath;
+    // 播放音频
+    AudioManager.playAudio(`${API_BASE_URL}${audioPath}`);
   }
+  
+  // 使用JSON格式传递数据
+  const emojiMessage = `[emoji:${JSON.stringify(emojiData)}]`;
+  
+  selectedChatInput.value = emojiMessage;
+  
+  const sendBtn = selectedChatInput.parentElement.querySelector('.chat-send-btn');
+  if (sendBtn) {
+    sendBtn.click();
+  }
+  
+  const picker = document.querySelector('.emoji-picker');
+  if (picker) {
+    picker.classList.remove('show');
+  }
+  
+  document.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+}
 
   // 记录表情使用
   async function recordEmojiUsage(emojiId) {
@@ -449,24 +433,8 @@
     }
   }
 
-  // 全局点击处理
-  function handleGlobalClick(e) {
-    const picker = document.querySelector('.emoji-picker');
-    if (!picker) return;
-    
-    const isEmojiBtn = e.target.closest('.emoji-btn');
-    const isPicker = e.target.closest('.emoji-picker');
-    
-    if (!isEmojiBtn && !isPicker && picker.classList.contains('show')) {
-      picker.classList.remove('show');
-      document.querySelectorAll('.emoji-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-    }
-  }
-
   // 渲染表情管理页面
-  async function renderEmojiManagement() {
+  window.renderEmojiManagement = async function() {
     const container = document.getElementById('content-container');
     if (!container) return;
     
@@ -476,9 +444,14 @@
           <h1 class="emoji-management-title">
             <i class="far fa-smile"></i> 表情管理
           </h1>
-          <button class="btn-add-emoji-pack" onclick="openAddEmojiPackModal()">
-            <i class="fas fa-plus"></i> 添加表情包
-          </button>
+          <div class="emoji-management-actions">
+            <button class="btn-add-emoji-pack" onclick="openAddEmojiPackModal()">
+              <i class="fas fa-plus"></i> 添加表情包
+            </button>
+            <button class="btn-back" onclick="renderSiteAdminHome()">
+              <i class="fas fa-arrow-left"></i> 返回
+            </button>
+          </div>
         </div>
         <div id="emoji-packs-container">
           <div class="emoji-loading">
@@ -567,93 +540,7 @@
     container.appendChild(grid);
   }
 
-  // 打开添加表情包弹窗 - 改进版
-  function openAddEmojiPackModal() {
-    console.log('Opening emoji pack modal - Version 3.0 with Enhanced Audio Support');
-    
-    // 重置所有状态
-    currentEmojiPack = null;
-    uploadedFiles = [];
-    uploadedAudios = [];
-    window.folderCreated = false;
-    window.currentFolderName = '';
-    window.coverImageUrl = null;
-    window.isAudioPack = false;
-    
-    // 移除旧的弹窗（如果存在）
-    let oldModal = document.getElementById('emoji-pack-modal');
-    if (oldModal) {
-      oldModal.remove();
-    }
-    
-    // 创建新的弹窗
-    let modal = createEmojiPackModal();
-    document.body.appendChild(modal);
-    
-    // 确保所有元素都已加载
-    setTimeout(() => {
-      // 重置表单
-      const packNameInput = document.getElementById('emoji-pack-name');
-      const folderNameInput = document.getElementById('emoji-folder-name');
-      const audioCheckbox = document.getElementById('is-audio-pack');
-      
-      if (packNameInput) packNameInput.value = '';
-      if (folderNameInput) {
-        folderNameInput.value = '';
-        folderNameInput.disabled = false;
-      }
-      if (audioCheckbox) {
-        audioCheckbox.checked = false;
-      }
-      
-      const createBtn = document.getElementById('create-folder-btn');
-      if (createBtn) {
-        createBtn.disabled = false;
-        createBtn.textContent = '创建文件夹';
-      }
-      
-      const folderStatus = document.getElementById('folder-status');
-      if (folderStatus) folderStatus.style.display = 'none';
-      
-      const previewGrid = document.getElementById('emoji-preview-grid');
-      if (previewGrid) previewGrid.innerHTML = '';
-      
-      // 音频上传区域始终显示（但状态根据复选框控制）
-      const audioUploadSection = document.getElementById('audio-upload-section');
-      if (audioUploadSection) {
-        audioUploadSection.style.display = 'none'; // 默认隐藏，勾选后显示
-      }
-      
-      // 禁用上传区域
-      const coverArea = document.getElementById('cover-upload-area');
-      const imagesArea = document.getElementById('images-upload-area');
-      
-      if (coverArea) {
-        coverArea.className = 'emoji-upload-area disabled';
-        coverArea.innerHTML = `
-          <div class="emoji-upload-icon"><i class="fas fa-image"></i></div>
-          <div class="emoji-upload-text">请先创建文件夹</div>
-          <div class="emoji-upload-hint">创建文件夹后才能上传</div>
-        `;
-      }
-      
-      if (imagesArea) {
-        imagesArea.className = 'emoji-upload-area disabled';
-        imagesArea.innerHTML = `
-          <div class="emoji-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-          <div class="emoji-upload-text">请先创建文件夹</div>
-          <div class="emoji-upload-hint">创建文件夹后才能上传</div>
-        `;
-      }
-      
-      modal.querySelector('.emoji-pack-modal-title').textContent = '添加表情包';
-      modal.classList.add('show');
-      
-      console.log('Emoji pack modal opened successfully with audio support');
-    }, 100);
-  }
-
-  // 创建表情包编辑弹窗 - 增强版
+  // 创建表情包编辑弹窗（增强版）
   function createEmojiPackModal() {
     const modal = document.createElement('div');
     modal.id = 'emoji-pack-modal';
@@ -670,7 +557,7 @@
             <input type="text" id="emoji-pack-name" class="emoji-form-input" placeholder="输入表情包名称">
           </div>
           
-          <!-- 音频表情包选项 - 更醒目的设计 -->
+          <!-- 音频表情包选项 -->
           <div class="emoji-form-group" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
             <label class="emoji-form-label" style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;">
               <input type="checkbox" id="is-audio-pack" onchange="toggleAudioPackOption()" style="margin-right: 10px; width: 20px; height: 20px;">
@@ -697,7 +584,7 @@
           
           <div class="emoji-form-group">
             <label class="emoji-form-label">表情包封面</label>
-            <div class="emoji-upload-area disabled" id="cover-upload-area">
+            <div class="emoji-upload-area disabled" id="cover-upload-area" onclick="handleCoverClick()">
               <div class="emoji-upload-icon"><i class="fas fa-image"></i></div>
               <div class="emoji-upload-text">请先创建文件夹</div>
               <div class="emoji-upload-hint">创建文件夹后才能上传</div>
@@ -707,7 +594,7 @@
           
           <div class="emoji-form-group">
             <label class="emoji-form-label">上传表情图片</label>
-            <div class="emoji-upload-area disabled" id="images-upload-area">
+            <div class="emoji-upload-area disabled" id="images-upload-area" onclick="handleImagesClick()">
               <div class="emoji-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
               <div class="emoji-upload-text">请先创建文件夹</div>
               <div class="emoji-upload-hint">创建文件夹后才能上传</div>
@@ -715,7 +602,7 @@
             <input type="file" id="emoji-pack-images" accept="image/*" multiple style="display: none;">
           </div>
           
-          <!-- 音频上传区域 - 改进的设计 -->
+          <!-- 音频上传区域 -->
           <div class="emoji-form-group" id="audio-upload-section" style="display: none;">
             <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
               <label class="emoji-form-label" style="color: white; font-size: 16px; font-weight: bold;">
@@ -732,7 +619,7 @@
                 </div>
               </div>
             </div>
-            <div class="emoji-upload-area disabled" id="audio-upload-area" style="background: #fff5f5; border: 2px dashed #f5576c;">
+            <div class="emoji-upload-area disabled" id="audio-upload-area" style="background: #fff5f5; border: 2px dashed #f5576c;" onclick="handleAudiosClick()">
               <div class="emoji-upload-icon" style="color: #f5576c;"><i class="fas fa-file-audio"></i></div>
               <div class="emoji-upload-text" style="color: #f5576c;">请先创建文件夹并上传图片</div>
               <div class="emoji-upload-hint" style="color: #f093fb;">支持批量上传音频文件</div>
@@ -759,27 +646,24 @@
     return modal;
   }
 
-  // 切换音频表情包选项 - 增强版
+  // 切换音频表情包选项
   window.toggleAudioPackOption = function() {
     const checkbox = document.getElementById('is-audio-pack');
     if (!checkbox) return;
     
-    const isAudioPack = checkbox.checked;
-    window.isAudioPack = isAudioPack;
+    window.isAudioPack = checkbox.checked;
     
     const audioUploadSection = document.getElementById('audio-upload-section');
     if (audioUploadSection) {
-      if (isAudioPack) {
+      if (window.isAudioPack) {
         audioUploadSection.style.display = 'block';
-        // 添加渐入动画
         audioUploadSection.style.opacity = '0';
         setTimeout(() => {
           audioUploadSection.style.opacity = '1';
           audioUploadSection.style.transition = 'opacity 0.3s';
         }, 10);
         
-        // 如果文件夹已创建且有图片，启用音频上传
-        if (window.folderCreated && uploadedFiles.length > 0) {
+        if (window.folderCreated && window.uploadedFiles.length > 0) {
           enableAudioUploadArea();
         }
       } else {
@@ -789,11 +673,72 @@
         }, 300);
       }
     }
-    
-    console.log('音频表情包选项已切换:', isAudioPack);
   };
 
-  // 创建文件夹函数
+  // 打开添加表情包弹窗
+  window.openAddEmojiPackModal = function() {
+    // 重置所有状态
+    window.currentEmojiPack = null;
+    window.uploadedFiles = [];
+    window.uploadedAudios = [];
+    window.folderCreated = false;
+    window.currentFolderName = '';
+    window.coverImageUrl = null;
+    window.isAudioPack = false;
+    
+    let oldModal = document.getElementById('emoji-pack-modal');
+    if (oldModal) {
+      oldModal.remove();
+    }
+    
+    let modal = createEmojiPackModal();
+    document.body.appendChild(modal);
+    
+    setTimeout(() => {
+      const packNameInput = document.getElementById('emoji-pack-name');
+      const folderNameInput = document.getElementById('emoji-folder-name');
+      const audioCheckbox = document.getElementById('is-audio-pack');
+      
+      if (packNameInput) packNameInput.value = '';
+      if (folderNameInput) {
+        folderNameInput.value = '';
+        folderNameInput.disabled = false;
+      }
+      if (audioCheckbox) {
+        audioCheckbox.checked = false;
+      }
+      
+      const createBtn = document.getElementById('create-folder-btn');
+      if (createBtn) {
+        createBtn.disabled = false;
+        createBtn.textContent = '创建文件夹';
+      }
+      
+      modal.querySelector('.emoji-pack-modal-title').textContent = '添加表情包';
+      modal.classList.add('show');
+    }, 100);
+  }
+
+  // 处理点击事件
+  window.handleCoverClick = function() {
+    if (window.folderCreated) {
+      document.getElementById('emoji-pack-cover').click();
+    }
+  }
+
+  window.handleImagesClick = function() {
+    if (window.folderCreated) {
+      document.getElementById('emoji-pack-images').click();
+    }
+  }
+
+  window.handleAudiosClick = function() {
+    if (window.folderCreated && window.uploadedFiles.length > 0) {
+      document.getElementById('emoji-pack-audios').click();
+    }
+  }
+
+  // 创建文件夹
   window.createEmojiFolder = async function() {
     const folderNameInput = document.getElementById('emoji-folder-name');
     const folderName = folderNameInput.value.trim();
@@ -846,10 +791,19 @@
         statusDiv.style.display = 'block';
         statusDiv.style.color = '#28a745';
         
-        // 启用上传区域
         enableUploadAreas();
-        
         alert('文件夹创建成功，现在可以上传图片了');
+        
+        // 绑定文件输入事件
+        document.getElementById('emoji-pack-cover').onchange = function() { 
+          handleCoverUpload(this); 
+        };
+        document.getElementById('emoji-pack-images').onchange = function() { 
+          handleImagesUpload(this); 
+        };
+        document.getElementById('emoji-pack-audios').onchange = function() { 
+          handleAudiosUpload(this); 
+        };
       } else {
         throw new Error(result.error || '创建文件夹失败');
       }
@@ -860,12 +814,10 @@
     }
   }
 
-  // 启用上传区域函数
+  // 启用上传区域
   function enableUploadAreas() {
     const coverArea = document.getElementById('cover-upload-area');
     const imagesArea = document.getElementById('images-upload-area');
-    const coverInput = document.getElementById('emoji-pack-cover');
-    const imagesInput = document.getElementById('emoji-pack-images');
     
     if (!window.currentFolderName || !window.folderCreated) {
       return;
@@ -878,8 +830,6 @@
       <div class="emoji-upload-text">点击上传封面图片</div>
       <div class="emoji-upload-hint" style="color: #28a745;">将上传到: ${window.currentFolderName}/jacket/</div>
     `;
-    coverArea.onclick = () => coverInput.click();
-    coverInput.onchange = function() { handleCoverUpload(this); };
     
     // 启用表情上传
     imagesArea.classList.remove('disabled');
@@ -888,8 +838,6 @@
       <div class="emoji-upload-text">点击或拖拽上传表情图片</div>
       <div class="emoji-upload-hint" style="color: #28a745;">将上传到: ${window.currentFolderName}/</div>
     `;
-    imagesArea.onclick = () => imagesInput.click();
-    imagesInput.onchange = function() { handleImagesUpload(this); };
     
     // 设置拖拽
     imagesArea.ondragover = (e) => {
@@ -901,6 +849,7 @@
       imagesArea.classList.remove('dragover');
       const files = e.dataTransfer.files;
       if (files.length > 0) {
+        const imagesInput = document.getElementById('emoji-pack-images');
         imagesInput.files = files;
         handleImagesUpload(imagesInput);
       }
@@ -915,19 +864,16 @@
     if (!window.isAudioPack) return;
     
     const audioArea = document.getElementById('audio-upload-area');
-    const audioInput = document.getElementById('emoji-pack-audios');
     
-    if (!audioArea || !audioInput) return;
+    if (!audioArea) return;
     
     audioArea.classList.remove('disabled');
     audioArea.innerHTML = `
       <div class="emoji-upload-icon"><i class="fas fa-music"></i></div>
       <div class="emoji-upload-text">点击上传音频文件</div>
       <div class="emoji-upload-hint" style="color: #28a745;">将上传到: ${window.currentFolderName}/sounds/</div>
-      <div style="margin-top: 5px; font-size: 12px; color: #666;">已上传 ${uploadedFiles.length} 个表情，请上传对应数量的音频</div>
+      <div style="margin-top: 5px; font-size: 12px; color: #666;">已上传 ${window.uploadedFiles.length} 个表情，请上传对应数量的音频</div>
     `;
-    audioArea.onclick = () => audioInput.click();
-    audioInput.onchange = function() { handleAudiosUpload(this); };
   }
 
   // 处理封面上传
@@ -1019,12 +965,12 @@
         const result = await response.json();
         
         if (response.ok && result.success) {
-          uploadedFiles.push({
-            index: i, // 保存索引
+          window.uploadedFiles.push({
+            index: i,
             file_name: result.file_name || file.name,
             file_path: result.url,
             emoji_name: file.name.replace(/\.[^/.]+$/, ''),
-            sort_order: uploadedFiles.length
+            sort_order: window.uploadedFiles.length
           });
         } else {
           alert(`上传 ${file.name} 失败: ${result.error}`);
@@ -1040,9 +986,8 @@
     }
     
     renderUploadedEmojis();
-    alert(`成功上传 ${uploadedFiles.length} 个表情`);
+    alert(`成功上传 ${window.uploadedFiles.length} 个表情`);
     
-    // 如果是音频表情包，启用音频上传
     if (window.isAudioPack) {
       enableAudioUploadArea();
     }
@@ -1056,195 +1001,212 @@
   }
 
   // 处理音频文件上传
-  async function handleAudiosUpload(input) {
-    const files = Array.from(input.files);
-    if (files.length === 0) return;
-    
-    if (!window.folderCreated || !window.currentFolderName) {
-      alert('请先创建文件夹');
+async function handleAudiosUpload(input) {
+  const files = Array.from(input.files);
+  if (files.length === 0) return;
+  
+  if (!window.folderCreated || !window.currentFolderName) {
+    alert('请先创建文件夹');
+    input.value = '';
+    return;
+  }
+  
+  if (files.length !== window.uploadedFiles.length) {
+    if (!confirm(`音频文件数量(${files.length})与图片数量(${window.uploadedFiles.length})不一致。是否继续？`)) {
       input.value = '';
       return;
     }
+  }
+  
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  
+  const progressDiv = document.getElementById('emoji-upload-progress');
+  const progressFill = document.getElementById('emoji-progress-fill');
+  const progressText = document.getElementById('emoji-progress-text');
+  progressDiv.style.display = 'block';
+  
+  let uploaded = 0;
+  const total = files.length;
+  
+  window.uploadedAudios = [];
+  
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const formData = new FormData();
+    formData.append('audio', file);
     
-    if (files.length !== uploadedFiles.length) {
-      if (!confirm(`音频文件数量(${files.length})与图片数量(${uploadedFiles.length})不一致。是否继续？`)) {
-        input.value = '';
-        return;
-      }
-    }
-    
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    const progressDiv = document.getElementById('emoji-upload-progress');
-    const progressFill = document.getElementById('emoji-progress-fill');
-    const progressText = document.getElementById('emoji-progress-text');
-    progressDiv.style.display = 'block';
-    
-    let uploaded = 0;
-    const total = files.length;
-    
-    uploadedAudios = []; // 清空音频数组
-    
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const formData = new FormData();
-      formData.append('audio', file);
+    try {
+      const url = `${API_BASE_URL}/api/admin/emoji/upload-audio?folder_name=${encodeURIComponent(window.currentFolderName)}`;
       
-      try {
-        const url = `${API_BASE_URL}/api/admin/emoji/upload-audio?folder_name=${encodeURIComponent(window.currentFolderName)}`;
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        window.uploadedAudios.push({
+          index: i,
+          file_name: result.file_name || file.name,
+          file_path: result.url
         });
         
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
-          uploadedAudios.push({
-            index: i, // 保存索引
-            file_name: result.file_name || file.name,
-            file_path: result.url
-          });
-          
-          // 更新对应的表情数据
-          if (uploadedFiles[i]) {
-            uploadedFiles[i].audio_path = result.url;
-          }
-        } else {
-          alert(`上传音频 ${file.name} 失败: ${result.error}`);
+        // 更新对应的表情数据 - 使用 sound_path 而不是 audio_path
+        if (window.uploadedFiles[i]) {
+          window.uploadedFiles[i].sound_path = result.url;  // 改为 sound_path
+          // 为了兼容性，也保留 audio_path
+          window.uploadedFiles[i].audio_path = result.url;
         }
-      } catch (error) {
-        alert(`上传音频 ${file.name} 失败`);
+      } else {
+        alert(`上传音频 ${file.name} 失败: ${result.error}`);
       }
-      
-      uploaded++;
-      const progress = Math.round((uploaded / total) * 100);
-      progressFill.style.width = progress + '%';
-      progressText.textContent = `上传音频中 ${progress}% (${uploaded}/${total})`;
+    } catch (error) {
+      alert(`上传音频 ${file.name} 失败`);
     }
     
-    renderUploadedEmojis(); // 重新渲染以显示音频标记
-    alert(`成功上传 ${uploadedAudios.length} 个音频文件`);
-    
-    setTimeout(() => {
-      progressDiv.style.display = 'none';
-      progressFill.style.width = '0%';
-    }, 2000);
-    
-    input.value = '';
+    uploaded++;
+    const progress = Math.round((uploaded / total) * 100);
+    progressFill.style.width = progress + '%';
+    progressText.textContent = `上传音频中 ${progress}% (${uploaded}/${total})`;
   }
-
-  // 渲染已上传的表情
-  function renderUploadedEmojis() {
-    const grid = document.getElementById('emoji-preview-grid');
-    grid.innerHTML = '';
-    
-    uploadedFiles.forEach((file, index) => {
-      const item = document.createElement('div');
-      item.className = 'emoji-preview-item';
-      if (file.audio_path) {
-        item.classList.add('has-audio');
-      }
-      
-      item.innerHTML = `
-        <img src="${API_BASE_URL}${file.file_path}" class="emoji-preview-image">
-        ${file.audio_path ? '<i class="fas fa-volume-up audio-indicator"></i>' : ''}
-        <input type="text" class="emoji-name-input" placeholder="表情名称" 
-               value="${file.emoji_name}" 
-               onchange="updateEmojiName(${index}, this.value)">
-        <button class="emoji-preview-remove" onclick="removeUploadedEmoji(${index})">删除</button>
-        ${file.audio_path ? `
-          <button class="emoji-preview-play" onclick="playEmojiAudio('${file.audio_path}')">
-            <i class="fas fa-play"></i> 试听
-          </button>
-        ` : ''}
-      `;
-      grid.appendChild(item);
-    });
-  }
+  
+  renderUploadedEmojis();
+  alert(`成功上传 ${window.uploadedAudios.length} 个音频文件`);
+  
+  setTimeout(() => {
+    progressDiv.style.display = 'none';
+    progressFill.style.width = '0%';
+  }, 2000);
+  
+  input.value = '';
+}
 
   // 播放表情音频预览
   window.playEmojiAudio = function(audioPath) {
     AudioManager.playAudio(`${API_BASE_URL}${audioPath}`);
   };
 
+  // 渲染已上传的表情
+	function renderUploadedEmojis() {
+	  const grid = document.getElementById('emoji-preview-grid');
+	  grid.innerHTML = '';
+	  
+	  window.uploadedFiles.forEach((file, index) => {
+		const item = document.createElement('div');
+		item.className = 'emoji-preview-item';
+		// 检查 sound_path 或 audio_path
+		const audioPath = file.sound_path || file.audio_path;
+		if (audioPath) {
+		  item.classList.add('has-audio');
+		}
+		
+		item.innerHTML = `
+		  <img src="${API_BASE_URL}${file.file_path}" class="emoji-preview-image">
+		  ${audioPath ? '<i class="fas fa-volume-up audio-indicator"></i>' : ''}
+		  <input type="text" class="emoji-name-input" placeholder="表情名称" 
+				 value="${file.emoji_name}" 
+				 onchange="updateEmojiName(${index}, this.value)">
+		  <button class="emoji-preview-remove" onclick="removeUploadedEmoji(${index})">删除</button>
+		  ${audioPath ? `
+			<button class="emoji-preview-play" onclick="playEmojiAudio('${audioPath}')">
+			  <i class="fas fa-play"></i> 试听
+			</button>
+		  ` : ''}
+		`;
+		grid.appendChild(item);
+	  });
+	}
+
   // 更新表情名称
   window.updateEmojiName = function(index, name) {
-    if (uploadedFiles[index]) {
-      uploadedFiles[index].emoji_name = name;
+    if (window.uploadedFiles[index]) {
+      window.uploadedFiles[index].emoji_name = name;
     }
   }
 
   // 删除已上传的表情
   window.removeUploadedEmoji = function(index) {
-    uploadedFiles.splice(index, 1);
-    // 同时移除对应的音频
-    if (uploadedAudios[index]) {
-      uploadedAudios.splice(index, 1);
+    window.uploadedFiles.splice(index, 1);
+    if (window.uploadedAudios[index]) {
+      window.uploadedAudios.splice(index, 1);
     }
     renderUploadedEmojis();
   }
 
   // 保存表情包
-  window.saveEmojiPack = async function() {
-    const packName = document.getElementById('emoji-pack-name').value;
-    const folderName = window.currentFolderName || document.getElementById('emoji-folder-name').value;
-    const coverUrl = window.coverImageUrl;
-    const isAudioPack = document.getElementById('is-audio-pack').checked;
-    
-    if (!packName || !folderName) {
-      alert('请填写表情包名称和文件夹名称');
-      return;
-    }
-    
-    if (uploadedFiles.length === 0) {
-      alert('请上传至少一个表情图片');
-      return;
-    }
-    
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    const data = {
-      pack_name: packName,
-      folder_name: folderName,
-      cover_image: coverUrl,
-      is_audio_pack: isAudioPack,
-      emojis: uploadedFiles
-    };
-    
-    try {
-      const url = currentEmojiPack 
-        ? `${API_BASE_URL}/api/admin/emoji/packs/${currentEmojiPack.id}`
-        : `${API_BASE_URL}/api/admin/emoji/packs`;
-      
-      const response = await fetch(url, {
-        method: currentEmojiPack ? 'PUT' : 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-      
-      if (response.ok) {
-        closeEmojiPackModal();
-        loadEmojiPacksList();
-        showSuccessMessage(currentEmojiPack ? '表情包更新成功' : '表情包添加成功');
-      } else {
-        const error = await response.json();
-        alert(error.error || '操作失败');
-      }
-    } catch (error) {
-      console.error('保存表情包失败:', error);
-      alert('保存失败');
-    }
+window.saveEmojiPack = async function() {
+  const packName = document.getElementById('emoji-pack-name').value;
+  const folderName = window.currentFolderName || document.getElementById('emoji-folder-name').value;
+  const coverUrl = window.coverImageUrl;
+  const isAudioPack = document.getElementById('is-audio-pack').checked;
+  
+  if (!packName || !folderName) {
+    alert('请填写表情包名称和文件夹名称');
+    return;
   }
+  
+  if (window.uploadedFiles.length === 0) {
+    alert('请上传至少一个表情图片');
+    return;
+  }
+  
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  
+  // 确保所有表情数据都有正确的字段
+  const processedEmojis = window.uploadedFiles.map(emoji => {
+    // 统一使用 sound_path
+    const soundPath = emoji.sound_path || emoji.audio_path || null;
+    return {
+      emoji_name: emoji.emoji_name || '',
+      file_name: emoji.file_name || '',
+      file_path: emoji.file_path || '',
+      sound_path: soundPath,  // 使用 sound_path 作为主要字段
+      sort_order: emoji.sort_order || 0
+    };
+  });
+  
+  const data = {
+    pack_name: packName,
+    folder_name: folderName,
+    cover_image: coverUrl,
+    is_audio_pack: isAudioPack,
+    emojis: processedEmojis
+  };
+  
+  try {
+    const url = window.currentEmojiPack 
+      ? `${API_BASE_URL}/api/admin/emoji/packs/${window.currentEmojiPack.id}`
+      : `${API_BASE_URL}/api/admin/emoji/packs`;
+    
+    const response = await fetch(url, {
+      method: window.currentEmojiPack ? 'PUT' : 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    
+    if (response.ok) {
+      closeEmojiPackModal();
+      loadEmojiPacksList();
+      alert(window.currentEmojiPack ? '表情包更新成功' : '表情包添加成功');
+    } else {
+      const error = await response.json();
+      console.error('保存失败详情:', error);
+      alert(error.error || '操作失败');
+    }
+  } catch (error) {
+    console.error('保存表情包失败:', error);
+    alert('保存失败: ' + error.message);
+  }
+}
 
   // 编辑表情包
   window.editEmojiPack = async function(packId) {
@@ -1259,7 +1221,7 @@
       });
       
       if (response.ok) {
-        currentEmojiPack = await response.json();
+        window.currentEmojiPack = await response.json();
         openEditEmojiPackModal();
       }
     } catch (error) {
@@ -1269,7 +1231,7 @@
 
   // 打开编辑表情包弹窗
   function openEditEmojiPackModal() {
-    if (!currentEmojiPack) return;
+    if (!window.currentEmojiPack) return;
     
     let modal = document.getElementById('emoji-pack-modal');
     if (!modal) {
@@ -1278,15 +1240,15 @@
     }
     
     // 填充数据
-    document.getElementById('emoji-pack-name').value = currentEmojiPack.pack_name;
-    document.getElementById('emoji-folder-name').value = currentEmojiPack.folder_name;
+    document.getElementById('emoji-pack-name').value = window.currentEmojiPack.pack_name;
+    document.getElementById('emoji-folder-name').value = window.currentEmojiPack.folder_name;
     document.getElementById('emoji-folder-name').disabled = true;
-    document.getElementById('is-audio-pack').checked = currentEmojiPack.is_audio_pack || false;
+    document.getElementById('is-audio-pack').checked = window.currentEmojiPack.is_audio_pack || false;
     
     // 设置文件夹状态
     window.folderCreated = true;
-    window.currentFolderName = currentEmojiPack.folder_name;
-    window.isAudioPack = currentEmojiPack.is_audio_pack || false;
+    window.currentFolderName = window.currentEmojiPack.folder_name;
+    window.isAudioPack = window.currentEmojiPack.is_audio_pack || false;
     
     const createBtn = document.getElementById('create-folder-btn');
     if (createBtn) {
@@ -1295,7 +1257,7 @@
     }
     
     const statusDiv = document.getElementById('folder-status');
-    statusDiv.innerHTML = `文件夹 "${currentEmojiPack.folder_name}" 已存在`;
+    statusDiv.innerHTML = `文件夹 "${window.currentEmojiPack.folder_name}" 已存在`;
     statusDiv.style.display = 'block';
     statusDiv.style.color = '#28a745';
     
@@ -1311,16 +1273,27 @@
     // 启用上传区域
     enableUploadAreas();
     
-    if (currentEmojiPack.cover_image) {
-      window.coverImageUrl = currentEmojiPack.cover_image;
+    if (window.currentEmojiPack.cover_image) {
+      window.coverImageUrl = window.currentEmojiPack.cover_image;
       const coverArea = document.getElementById('cover-upload-area');
       coverArea.innerHTML = `
-        <img src="${API_BASE_URL}${currentEmojiPack.cover_image}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+        <img src="${API_BASE_URL}${window.currentEmojiPack.cover_image}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
         <div style="margin-top: 5px; color: #28a745; font-size: 12px;">当前封面</div>
       `;
     }
     
-    uploadedFiles = currentEmojiPack.emojis || [];
+    // 绑定文件输入事件
+    document.getElementById('emoji-pack-cover').onchange = function() { 
+      handleCoverUpload(this); 
+    };
+    document.getElementById('emoji-pack-images').onchange = function() { 
+      handleImagesUpload(this); 
+    };
+    document.getElementById('emoji-pack-audios').onchange = function() { 
+      handleAudiosUpload(this); 
+    };
+    
+    window.uploadedFiles = window.currentEmojiPack.emojis || [];
     renderUploadedEmojis();
     
     modal.querySelector('.emoji-pack-modal-title').textContent = '编辑表情包';
@@ -1344,7 +1317,7 @@
       
       if (response.ok) {
         loadEmojiPacksList();
-        showSuccessMessage('表情包已删除');
+        alert('表情包已删除');
       }
     } catch (error) {
       console.error('删除表情包失败:', error);
@@ -1358,13 +1331,29 @@
     if (modal) {
       modal.classList.remove('show');
     }
-    currentEmojiPack = null;
-    uploadedFiles = [];
-    uploadedAudios = [];
+    window.currentEmojiPack = null;
+    window.uploadedFiles = [];
+    window.uploadedAudios = [];
     window.folderCreated = false;
     window.currentFolderName = '';
     window.coverImageUrl = null;
     window.isAudioPack = false;
+  }
+
+  // 全局点击处理
+  function handleGlobalClick(e) {
+    const picker = document.querySelector('.emoji-picker');
+    if (!picker) return;
+    
+    const isEmojiBtn = e.target.closest('.emoji-btn');
+    const isPicker = e.target.closest('.emoji-picker');
+    
+    if (!isEmojiBtn && !isPicker && picker.classList.contains('show')) {
+      picker.classList.remove('show');
+      document.querySelectorAll('.emoji-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+    }
   }
 
   // 工具函数
@@ -1374,26 +1363,10 @@
     return div.innerHTML;
   }
 
-  function showSuccessMessage(message) {
-    if (typeof window.showSuccessMessage === 'function') {
-      window.showSuccessMessage(message);
-    } else {
-      alert(message);
-    }
-  }
-
-  // 暴露给全局
-  global.initEmojiSystem = initEmojiSystem;
-  global.renderEmojiManagement = renderEmojiManagement;
-  global.openAddEmojiPackModal = openAddEmojiPackModal;
-  global.handleCoverUpload = handleCoverUpload;
-  global.handleImagesUpload = handleImagesUpload;
-  global.handleAudiosUpload = handleAudiosUpload;
-
   // 解析表情消息（用于聊天窗口）
   global.parseEmojiMessage = function(content) {
     if (typeof content === 'string' && content.startsWith('[emoji:') && content.endsWith(']')) {
-      const jsonStr = content.slice(7, -1); // 移除 [emoji: 和 ]
+      const jsonStr = content.slice(7, -1);
       try {
         return JSON.parse(jsonStr);
       } catch (e) {
@@ -1416,12 +1389,10 @@
     }
   };
 
-  // 在DOM加载完成后初始化
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initEmojiSystem);
-  } else {
-    setTimeout(initEmojiSystem, 100);
-  }
+  // 暴露给全局
+  global.initEmojiSystem = initEmojiSystem;
+  global.sendEmoji = sendEmoji;
+  global.loadEmojiPackContent = loadEmojiPackContent;
 
   // 监听消息中的表情点击事件
   document.addEventListener('click', function(e) {
@@ -1433,5 +1404,12 @@
       }
     }
   });
+
+  // 在DOM加载完成后初始化
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initEmojiSystem);
+  } else {
+    setTimeout(initEmojiSystem, 100);
+  }
 
 })(window);

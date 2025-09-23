@@ -492,7 +492,7 @@
     }
   }
 
-  // ==================== 获取缓存统计 ====================
+  // ==================== 获取缓存统计（修改：增加音频统计）====================
   async function getCacheStats() {
     try {
       if (!db) await initDB();
@@ -537,112 +537,6 @@
       return null;
     }
   }
-
-  // ==================== 修改后的渲染表情网格函数 ====================
-  window.renderEmojiGridWithCache = async function(emojis, gridContainer) {
-    if (!gridContainer) return;
-    
-    if (emojis.length === 0) {
-      gridContainer.innerHTML = `
-        <div class="emoji-empty">
-          <div class="emoji-empty-icon"><i class="far fa-meh"></i></div>
-          <div class="emoji-empty-text">暂无表情</div>
-        </div>
-      `;
-      return;
-    }
-    
-    const grid = document.createElement('div');
-    grid.className = 'emoji-grid';
-    grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = 'repeat(6, 1fr)';
-    grid.style.gap = '8px';
-    grid.style.padding = '12px';
-    
-    // 预加载所有表情和音频URL
-    const imageUrls = emojis.map(emoji => `${window.API_BASE_URL}${emoji.file_path}`);
-    const audioData = emojis
-      .filter(emoji => emoji.audio_path)
-      .map(emoji => ({
-        url: `${window.API_BASE_URL}${emoji.audio_path}`,
-        emojiId: emoji.id
-      }));
-    
-    // 异步预加载
-    preloadEmojis(imageUrls);
-    if (audioData.length > 0) {
-      preloadAudios(audioData);
-    }
-    
-    emojis.forEach(emoji => {
-      const item = document.createElement('div');
-      item.className = 'emoji-item';
-      if (emoji.audio_path) {
-        item.classList.add('has-audio');
-      }
-      
-      item.style.cursor = 'pointer';
-      item.style.padding = '4px';
-      item.style.borderRadius = '8px';
-      item.style.transition = 'all 0.2s';
-      item.style.position = 'relative';
-      
-      const img = document.createElement('img');
-      img.alt = emoji.emoji_name || emoji.file_name;
-      img.style.width = '32px';
-      img.style.height = '32px';
-      img.style.objectFit = 'contain';
-      
-      // 使用缓存加载器
-      const fullUrl = `${window.API_BASE_URL}${emoji.file_path}`;
-      loadImageWithCache(fullUrl, img);
-      
-      item.appendChild(img);
-      
-      // 如果有音频，添加音频标记
-      if (emoji.audio_path) {
-        const audioIndicator = document.createElement('i');
-        audioIndicator.className = 'fas fa-volume-up emoji-audio-badge';
-        audioIndicator.style.position = 'absolute';
-        audioIndicator.style.bottom = '2px';
-        audioIndicator.style.right = '2px';
-        audioIndicator.style.fontSize = '10px';
-        audioIndicator.style.color = '#007bff';
-        audioIndicator.style.background = 'white';
-        audioIndicator.style.borderRadius = '50%';
-        audioIndicator.style.padding = '2px';
-        item.appendChild(audioIndicator);
-      }
-      
-      const nameSpan = document.createElement('span');
-      nameSpan.className = 'emoji-item-name';
-      nameSpan.style.display = 'none';
-      nameSpan.textContent = emoji.emoji_name || emoji.file_name;
-      item.appendChild(nameSpan);
-      
-      item.addEventListener('mouseenter', () => {
-        item.style.background = '#f0f2f5';
-        item.style.transform = 'scale(1.1)';
-      });
-      
-      item.addEventListener('mouseleave', () => {
-        item.style.background = 'transparent';
-        item.style.transform = 'scale(1)';
-      });
-      
-      item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (window.sendEmoji) {
-          window.sendEmoji(emoji);
-        }
-      });
-      
-      grid.appendChild(item);
-    });
-    
-    gridContainer.innerHTML = '';
-    gridContainer.appendChild(grid);
-  };
 
   // ==================== 暴露API ====================
   global.EmojiCache = {

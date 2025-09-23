@@ -1250,129 +1250,83 @@ settings: `
       </div>
     </div>
     
-    <!-- 表情缓存管理卡片 -->
-    <div class="setting-card" id="emoji-cache-card">
-      <div class="setting-header">
-        <i class="fas fa-database me-2"></i>
-        <span>表情缓存管理</span>
+<!-- 表情缓存管理卡片 -->
+<div class="settings-card" id="emoji-cache-card">
+  <h3 class="settings-card-title">
+    <i class="fas fa-database me-2"></i>表情缓存管理
+  </h3>
+  <div class="settings-card-content">
+    <div class="cache-stats">
+      <div class="cache-stat-item">
+        <i class="far fa-smile"></i>
+        <div>
+          <div class="cache-stat-value" id="cache-emoji-count">0</div>
+          <div class="cache-stat-label">已缓存表情</div>
+        </div>
       </div>
-      <div class="setting-body">
-        <div class="setting-description" style="margin-bottom: 20px;">
-          使用IndexedDB技术本地缓存表情图片，减少服务器带宽消耗，提升加载速度
+      <div class="cache-stat-item">
+        <i class="fas fa-music"></i>
+        <div>
+          <div class="cache-stat-value" id="cache-audio-count">0</div>
+          <div class="cache-stat-label">已缓存音频</div>
         </div>
-        
-        <!-- 缓存状态提示 -->
-        <div id="cache-status" style="padding: 10px; margin-bottom: 15px; border-radius: 8px; display: none;">
-          <i class="fas fa-info-circle me-2"></i>
-          <span id="cache-status-text"></span>
+      </div>
+      <div class="cache-stat-item">
+        <i class="far fa-image"></i>
+        <div>
+          <div class="cache-stat-value" id="cache-message-count">0</div>
+          <div class="cache-stat-label">消息图片</div>
         </div>
-        
-        <!-- 调试信息面板 -->
-        <div id="debug-info" style="display: none; background: #f0f0f0; padding: 10px; margin-bottom: 15px; border-radius: 5px; font-size: 12px;">
-          <div id="debug-content"></div>
-        </div>
-        
-        <!-- 缓存统计信息 -->
-        <div class="cache-stats-grid">
-          <div class="cache-stat-item">
-            <div class="stat-icon-small">
-              <i class="far fa-smile"></i>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value" id="cache-emoji-count">0</div>
-              <div class="stat-label">缓存的表情</div>
-            </div>
-          </div>
-          
-          <div class="cache-stat-item">
-            <div class="stat-icon-small">
-              <i class="far fa-comment"></i>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value" id="cache-message-count">0</div>
-              <div class="stat-label">消息图片</div>
-            </div>
-          </div>
-          
-          <div class="cache-stat-item">
-            <div class="stat-icon-small">
-              <i class="fas fa-hdd"></i>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value" id="cache-size">0 MB</div>
-              <div class="stat-label">缓存大小</div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 存储空间进度条 -->
-        <div class="cache-progress-container">
-          <div class="cache-progress-header">
-            <span>存储空间使用情况</span>
-            <span id="cache-usage-text">0 MB / 100 MB</span>
-          </div>
-          <div class="cache-progress-track">
-            <div class="cache-progress-fill" id="cache-progress-fill" style="width: 5%">
-              <span class="progress-text">0%</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 缓存操作按钮 -->
-        <div class="cache-actions">
-          <button class="cache-btn cache-btn-refresh" id="refresh-cache-stats" onclick="window.handleRefreshCacheStats()">
-            <i class="fas fa-sync-alt me-2"></i>
-            刷新统计
-          </button>
-          <button class="cache-btn cache-btn-clean" id="clean-old-cache" onclick="window.handleCleanOldCache()">
-            <i class="fas fa-broom me-2"></i>
-            清理旧缓存
-          </button>
-          <button class="cache-btn cache-btn-clear" id="clear-all-cache" onclick="window.handleClearAllCache()">
-            <i class="fas fa-trash me-2"></i>
-            清空所有缓存
-          </button>
-        </div>
-        
-        <!-- 测试按钮（调试用）-->
-        <div style="margin-top: 15px;">
-          <button class="cache-btn" style="background: #6b7280;" onclick="window.testEmojiCache()">
-            <i class="fas fa-bug me-2"></i>
-            测试缓存系统
-          </button>
-        </div>
-        
-        <!-- 缓存设置选项 -->
-        <div class="cache-settings-group">
-          <div class="setting-item">
-            <div>
-              <span>自动清理过期缓存</span>
-              <div class="setting-description">超过30天的缓存将自动清理</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="auto-clean-cache" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-          
-          <div class="setting-item">
-            <div>
-              <span>预加载表情包</span>
-              <div class="setting-description">提前缓存常用表情，改善使用体验</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="preload-emoji" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-        
-        <div class="setting-description" style="margin-top: 20px; font-size: 0.85rem; color: #94a3b8;">
-          <i class="fas fa-info-circle me-1"></i>
-          提示：缓存数据仅存储在您的浏览器中，清除浏览器数据会导致缓存丢失
+      </div>
+      <div class="cache-stat-item">
+        <i class="fas fa-hdd"></i>
+        <div>
+          <div class="cache-stat-value" id="cache-size">0.00 MB</div>
+          <div class="cache-stat-label">缓存大小</div>
         </div>
       </div>
     </div>
+    
+    <div class="cache-progress">
+      <div class="cache-progress-info">
+        <span>缓存使用情况</span>
+        <span id="cache-usage-text">0.00 MB / 500 MB</span>
+      </div>
+      <div class="cache-progress-bar">
+        <div class="cache-progress-fill" id="cache-progress-fill" style="width: 0%;">
+          <span class="progress-text">0.0%</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="cache-actions">
+      <button class="settings-btn settings-btn-primary" id="refresh-cache-stats" onclick="handleRefreshCacheStats()">
+        <i class="fas fa-sync-alt me-2"></i>刷新统计
+      </button>
+      <button class="settings-btn settings-btn-warning" id="clean-old-cache" onclick="handleCleanOldCache()">
+        <i class="fas fa-broom me-2"></i>清理旧缓存
+      </button>
+      <button class="settings-btn settings-btn-danger" id="clear-all-cache" onclick="handleClearAllCache()">
+        <i class="fas fa-trash-alt me-2"></i>清空所有缓存
+      </button>
+    </div>
+    
+    <div class="cache-settings">
+      <div class="settings-item">
+        <label class="settings-label">
+          <input type="checkbox" id="auto-clean-cache" checked>
+          <span>自动清理过期缓存</span>
+        </label>
+      </div>
+      <div class="settings-item">
+        <label class="settings-label">
+          <input type="checkbox" id="preload-emoji" checked>
+          <span>预加载常用表情和音频</span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
     
     <!-- 鼠标样式设置卡片 -->
     <div class="setting-card" id="cursor-settings-card">
