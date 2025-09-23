@@ -972,31 +972,6 @@ footer {
   }
 }
 
-/* 汉堡菜单动画样式 */
-.mobile-toggle {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--primary-color);
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.mobile-toggle i {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.mobile-toggle i.fa-times {
-  transform: rotate(90deg);
-}
-
-.mobile-toggle:hover {
-  color: var(--secondary-color);
-  transform: scale(1.1);
-}
-
 @media (max-width: 992px) {
   .mobile-toggle {
     display: block;
@@ -1835,4 +1810,112 @@ input:checked + .slider:before {
   .setting-item:hover {
     background: #4a5568;
   }
+}
+
+/* 汉堡菜单动画样式 - 修正X形状 */
+
+/* 移除原有的图标样式 */
+.mobile-toggle i,
+.mobile-toggle .fa-bars,
+.mobile-toggle .fa-times {
+    display: none !important;
+}
+
+/* 汉堡菜单按钮基础样式 */
+.mobile-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 1001 !important;
+    position: relative !important;
+    transition: transform 0.3s ease;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 汉堡图标容器 */
+.mobile-toggle .hamburger-icon {
+    width: 24px;
+    height: 20px;
+    position: relative;
+    display: inline-block;
+    transform: rotate(0deg);
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+/* 三条横线 */
+.mobile-toggle .hamburger-icon span {
+    display: block !important;
+    position: absolute !important;
+    height: 3px !important;
+    width: 100% !important;
+    background: #1e293b !important;
+    background: var(--primary-color) !important;
+    border-radius: 3px !important;
+    opacity: 1 !important;
+    left: 0 !important;
+    transform: rotate(0deg) !important;
+    transition: all 0.25s ease-in-out !important;
+}
+
+/* 三条线的初始位置 */
+.mobile-toggle .hamburger-icon span:nth-child(1) {
+    top: 0px !important;
+}
+
+.mobile-toggle .hamburger-icon span:nth-child(2) {
+    top: 8px !important;
+}
+
+.mobile-toggle .hamburger-icon span:nth-child(3) {
+    top: 16px !important;
+}
+
+/* 打开状态 - 变成X（修正版） */
+.mobile-toggle .hamburger-icon.open span:nth-child(1) {
+    top: 8px !important;  /* 移动到中心位置 */
+    transform: rotate(45deg) !important;
+}
+
+.mobile-toggle .hamburger-icon.open span:nth-child(2) {
+    opacity: 0 !important;
+    left: -60px !important;  /* 向左滑出视野 */
+}
+
+.mobile-toggle .hamburger-icon.open span:nth-child(3) {
+    top: 8px !important;  /* 移动到中心位置 */
+    transform: rotate(-45deg) !important;
+}
+
+/* 悬停效果 */
+.mobile-toggle:hover .hamburger-icon span {
+    background: #3b82f6 !important;
+    background: var(--secondary-color) !important;
+}
+
+.mobile-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* 移动端显示 */
+@media (max-width: 992px) {
+    .mobile-toggle {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* 确保在触摸设备上有足够的点击区域 */
+@media (hover: none) and (pointer: coarse) {
+    .mobile-toggle {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }

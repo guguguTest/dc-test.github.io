@@ -1,4 +1,4 @@
-// 移动端侧边栏完整修复 - 合并优化版
+// 移动端侧边栏完整修复 - 合并优化版（支持汉堡图标动画）
 (function() {
     'use strict';
     
@@ -119,6 +119,13 @@
             if (mobileToggle) mobileToggle.classList.add('active');
             body.classList.add('mobile-sidebar-open');
             
+            // 汉堡图标动画 - 变成X
+            const hamburgerIcon = mobileToggle ? mobileToggle.querySelector('.hamburger-icon') : null;
+            if (hamburgerIcon) {
+                hamburgerIcon.classList.add('open');
+                console.log('[SidebarManager] 汉堡图标添加open类 - 变成X');
+            }
+            
             // 锁定背景滚动（改进的方式）
             body.style.cssText = `
                 position: fixed;
@@ -155,6 +162,13 @@
             sidebar.classList.remove('show');
             if (mobileToggle) mobileToggle.classList.remove('active');
             body.classList.remove('mobile-sidebar-open');
+            
+            // 汉堡图标动画 - 变回三条线
+            const hamburgerIcon = mobileToggle ? mobileToggle.querySelector('.hamburger-icon') : null;
+            if (hamburgerIcon) {
+                hamburgerIcon.classList.remove('open');
+                console.log('[SidebarManager] 汉堡图标移除open类 - 变回汉堡');
+            }
             
             // 恢复背景滚动
             body.style.cssText = '';
@@ -240,6 +254,11 @@
                         self.close();
                     }
                     
+                    // 移动端时确保汉堡图标可见
+                    if (window.innerWidth <= 992 && self.elements.mobileToggle) {
+                        self.elements.mobileToggle.style.display = 'flex';
+                    }
+                    
                     // 更新视口高度
                     const vh = window.innerHeight * 0.01;
                     document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -274,7 +293,17 @@
                 // 移动端：确保侧边栏关闭
                 sidebar.classList.remove('show');
                 overlay.classList.remove('show');
-                if (mobileToggle) mobileToggle.classList.remove('active');
+                if (mobileToggle) {
+                    mobileToggle.classList.remove('active');
+                    mobileToggle.style.display = 'flex'; // 确保显示
+                    
+                    // 重置汉堡图标
+                    const hamburgerIcon = mobileToggle.querySelector('.hamburger-icon');
+                    if (hamburgerIcon) {
+                        hamburgerIcon.classList.remove('open');
+                        console.log('[SidebarManager] 重置汉堡图标状态');
+                    }
+                }
                 body.classList.remove('mobile-sidebar-open');
                 body.style.cssText = '';
                 
