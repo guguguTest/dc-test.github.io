@@ -60,6 +60,18 @@ document.addEventListener("DOMContentLoaded", function() {
             // 切换侧边栏显示状态
             sidebar.classList.toggle('show');
             
+            // 切换汉堡菜单图标
+            const icon = mobileToggle.querySelector('i');
+            if (icon) {
+                if (sidebar.classList.contains('show')) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                } else {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            }
+            
             // 移动端展开时添加特殊标记
             if (window.innerWidth <= 992) {
                 if (sidebar.classList.contains('show')) {
@@ -72,15 +84,18 @@ document.addEventListener("DOMContentLoaded", function() {
                     // 创建新的遮罩层
                     const overlay = document.createElement('div');
                     overlay.id = 'sidebar-overlay';
+                    overlay.className = 'sidebar-overlay show';
                     overlay.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        bottom: 0;
-                        background: rgba(0, 0, 0, 0.5);
-                        z-index: 940;
-                        pointer-events: auto;
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        right: 0 !important;
+                        bottom: 0 !important;
+                        background: rgba(0, 0, 0, 0.5) !important;
+                        z-index: 899 !important;
+                        display: block !important;
+                        opacity: 1 !important;
+                        pointer-events: auto !important;
                     `;
                     document.body.appendChild(overlay);
                     
@@ -89,6 +104,12 @@ document.addEventListener("DOMContentLoaded", function() {
                         sidebar.classList.remove('show');
                         document.body.classList.remove('mobile-sidebar-open');
                         document.body.classList.add('mobile-sidebar-closed');
+                        // 恢复汉堡菜单图标
+                        const icon = mobileToggle.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('fa-times');
+                            icon.classList.add('fa-bars');
+                        }
                         cleanupSidebarOverlays();
                     });
                     
@@ -177,6 +198,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 sidebar.classList.remove('show');
                 document.body.classList.remove('mobile-sidebar-open');
                 document.body.classList.add('mobile-sidebar-closed');
+                // 恢复汉堡菜单图标
+                const icon = mobileToggle?.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
                 cleanupSidebarOverlays();
             }
             return originalLoadPage.apply(this, args);

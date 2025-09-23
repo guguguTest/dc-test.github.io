@@ -492,7 +492,7 @@ html, body {
 }
 
 .page-title {
-  font-size: 3rem; /* 增大标题字体从 2.5rem 到 3rem */
+  font-size: 3.5rem; /* 增大标题字体到 3.5rem */
   font-weight: 700;
   margin-bottom: 40px; /* 增加底部间距，给返回按钮留出空间 */
   color: var(--primary-color);
@@ -785,7 +785,7 @@ footer {
   }
   
   .page-title {
-    font-size: 2.2rem; /* 移动端稍小但仍然增大了 */
+    font-size: 2.5rem; /* 移动端增大到2.5rem */
     margin-bottom: 30px;
     padding-bottom: 15px;
   }
@@ -972,6 +972,7 @@ footer {
   }
 }
 
+/* 汉堡菜单动画样式 */
 .mobile-toggle {
   display: none;
   background: none;
@@ -980,6 +981,15 @@ footer {
   font-size: 1.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+}
+
+.mobile-toggle i {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-toggle i.fa-times {
+  transform: rotate(90deg);
 }
 
 .mobile-toggle:hover {
@@ -1226,8 +1236,6 @@ body {
   margin: 10px 0 20px;
 }
 
-/* 其他样式... (省略了部分重复的样式，这些可以保留在相应的页面CSS中) */
-
 /* 表情聊天功能整合样式 */
 
 /* 聊天窗口中的表情选择器 */
@@ -1293,16 +1301,30 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* 缓存管理按钮样式修复 */
-
-/* 缓存管理卡片整体样式 */
+/* 缓存管理卡片整体样式 - 修复版 */
 #emoji-cache-card {
   background: white;
   border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eaeaea;
+  margin-bottom: 25px;
+  max-width: 100%;
+  width: 100%;
+}
+
+#emoji-cache-card .setting-header {
+  padding: 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid #eee;
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+#emoji-cache-card .setting-body {
   padding: 25px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.07);
-  border: 1px solid #e2e8f0;
-  margin-bottom: 20px;
 }
 
 /* 缓存统计样式 */
@@ -1530,11 +1552,6 @@ body {
 .cache-actions button:disabled .fa-spinner,
 .cache-actions .btn:disabled .fa-spinner {
   animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 /* 按钮内图标样式 */
