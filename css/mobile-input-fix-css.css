@@ -1,0 +1,174 @@
+/* 移动端输入框自动缩放修复 */
+
+/* ========== 核心修复：设置所有输入框最小字体为16px ========== */
+@media (max-width: 992px) {
+  /* 所有输入类型 */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"],
+  input[type="week"],
+  input[type="color"],
+  textarea,
+  select,
+  .form-control,
+  .form-select,
+  .form-control-sm,
+  .form-control-lg,
+  .input-group input,
+  .input-group select,
+  .input-group textarea {
+    font-size: 16px !important; /* 防止iOS自动缩放的关键 */
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+  }
+  
+  /* 焦点状态确保字体大小 */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    font-size: 16px !important;
+  }
+  
+  /* 占位符可以小一点 */
+  input::placeholder,
+  textarea::placeholder {
+    font-size: 14px;
+    opacity: 0.7;
+  }
+  
+  /* 如果需要视觉上看起来更小，可以调整其他属性 */
+  .form-control-sm {
+    padding: 6px 10px; /* 通过减少内边距来减小视觉大小 */
+    height: calc(1.5em + 12px + 2px);
+  }
+  
+  /* 验证码输入框特殊处理 */
+  .verification-input {
+    font-size: 24px !important; /* 验证码保持大字体 */
+    letter-spacing: 8px;
+    text-align: center;
+  }
+}
+
+/* ========== 禁止双击缩放但保留双指缩放 ========== */
+body {
+  /* manipulation 值可以启用平移和双指缩放，但禁用双击缩放 */
+  touch-action: manipulation;
+}
+
+/* 输入框容器不要限制触摸操作 */
+.form-group,
+.input-group,
+.input-wrapper {
+  touch-action: auto;
+}
+
+/* ========== iOS特定样式 ========== */
+@supports (-webkit-touch-callout: none) {
+  /* iOS设备 */
+  input,
+  textarea,
+  select {
+    /* 移除iOS默认样式 */
+    -webkit-appearance: none;
+    appearance: none;
+    /* 圆角 */
+    border-radius: 0;
+  }
+  
+  /* 恢复某些输入框的原生样式 */
+  input[type="checkbox"],
+  input[type="radio"] {
+    -webkit-appearance: checkbox;
+    appearance: checkbox;
+  }
+  
+  input[type="radio"] {
+    -webkit-appearance: radio;
+    appearance: radio;
+  }
+}
+
+/* ========== 修复Bootstrap和其他框架的输入框 ========== */
+@media (max-width: 992px) {
+  /* Bootstrap输入框 */
+  .btn,
+  .btn-sm,
+  .btn-lg {
+    font-size: 16px !important; /* 按钮也需要16px避免缩放 */
+  }
+  
+  /* 下拉菜单 */
+  .dropdown-item {
+    font-size: 16px !important;
+  }
+  
+  /* 模态框中的输入框 */
+  .modal input,
+  .modal textarea,
+  .modal select {
+    font-size: 16px !important;
+  }
+  
+  /* 搜索框 */
+  .search-box input,
+  .search-input,
+  input[type="search"] {
+    font-size: 16px !important;
+  }
+}
+
+/* ========== 登录/注册表单特殊处理 ========== */
+@media (max-width: 992px) {
+  /* 登录表单 */
+  #login-form input,
+  #register-form input,
+  #reset-form input,
+  .auth-form input {
+    font-size: 16px !important;
+    padding: 12px 15px;
+  }
+  
+  /* 验证码输入 */
+  input[name="captcha"],
+  input[name="code"],
+  .captcha-input,
+  .code-input {
+    font-size: 20px !important; /* 验证码稍大便于输入 */
+    letter-spacing: 5px;
+    text-align: center;
+  }
+  
+  /* 记住我复选框 */
+  input[type="checkbox"] + label {
+    font-size: 14px; /* 标签可以小一点 */
+  }
+}
+
+/* ========== 性能优化 ========== */
+@media (max-width: 992px) {
+  /* 输入时禁用动画避免卡顿 */
+  input:focus,
+  textarea:focus {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  /* 硬件加速 */
+  input,
+  textarea,
+  select {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}
