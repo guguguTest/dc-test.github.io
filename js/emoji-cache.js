@@ -1,5 +1,5 @@
-// emoji-cache.js - 完整表情缓存系统（合并版）
-// 包含：图片缓存、音频缓存、缓存管理UI
+// emoji-cache.js - 完整表情缓存系统（支持圆环进度条）
+// 包含：图片缓存、音频缓存、缓存管理UI、圆环进度条
 (function(global) {
   'use strict';
 
@@ -710,14 +710,14 @@
     }
   }
   
-  // 更新缓存显示
+  // 更新缓存显示（支持圆环进度条）
   function updateCacheDisplay(stats) {
+    // 更新统计数字
     const emojiCountEl = document.getElementById('cache-emoji-count');
     const audioCountEl = document.getElementById('cache-audio-count');
     const messageCountEl = document.getElementById('cache-message-count');
     const cacheSizeEl = document.getElementById('cache-size');
     const usageTextEl = document.getElementById('cache-usage-text');
-    const progressFillEl = document.getElementById('cache-progress-fill');
     
     if (emojiCountEl) emojiCountEl.textContent = stats.emojiCount || 0;
     if (audioCountEl) audioCountEl.textContent = stats.audioCount || 0;
@@ -732,7 +732,23 @@
       usageTextEl.textContent = `${totalMB.toFixed(2)} MB / ${maxMB} MB`;
     }
     
-    if (progressFillEl) {
+    // 更新圆环进度条
+    const ringProgressFill = document.getElementById('ring-progress-fill');
+    const ringProgressPercent = document.getElementById('ring-progress-percent');
+    
+    if (ringProgressFill) {
+      const circumference = 2 * Math.PI * 65; // 408.4
+      const offset = circumference - (circumference * percent / 100);
+      ringProgressFill.style.strokeDashoffset = offset;
+    }
+    
+    if (ringProgressPercent) {
+      ringProgressPercent.textContent = percent + '%';
+    }
+    
+    // 兼容旧的条形进度条（如果存在）
+    const progressFillEl = document.getElementById('cache-progress-fill');
+    if (progressFillEl && progressFillEl.style.width !== undefined) {
       progressFillEl.style.width = Math.max(percent, 5) + '%';
       const progressText = progressFillEl.querySelector('.progress-text');
       if (progressText) {
@@ -748,6 +764,8 @@
     const messageCountEl = document.getElementById('cache-message-count');
     const cacheSizeEl = document.getElementById('cache-size');
     const usageTextEl = document.getElementById('cache-usage-text');
+    const ringProgressFill = document.getElementById('ring-progress-fill');
+    const ringProgressPercent = document.getElementById('ring-progress-percent');
     const progressFillEl = document.getElementById('cache-progress-fill');
     
     if (emojiCountEl) emojiCountEl.textContent = '0';
@@ -756,6 +774,17 @@
     if (cacheSizeEl) cacheSizeEl.textContent = '0.00 MB';
     if (usageTextEl) usageTextEl.textContent = '0.00 MB / 500 MB';
     
+    // 更新圆环进度条
+    if (ringProgressFill) {
+      const circumference = 2 * Math.PI * 65;
+      ringProgressFill.style.strokeDashoffset = circumference; // 0%
+    }
+    
+    if (ringProgressPercent) {
+      ringProgressPercent.textContent = '0%';
+    }
+    
+    // 兼容旧进度条
     if (progressFillEl) {
       progressFillEl.style.width = '5%';
       const progressText = progressFillEl.querySelector('.progress-text');
@@ -792,6 +821,9 @@
   global.initCacheSettings = async function() {
     console.log('初始化缓存设置...');
     
+    // 首先替换进度条为圆环形
+    replaceProgressBarWithRing();
+    
     try {
       await initDB();
       console.log('EmojiCache 已初始化');
@@ -827,6 +859,40 @@
       preloadSwitch.checked = preload;
     }
   };
+  
+  // 替换进度条为圆环形
+  function replaceProgressBarWithRing() {
+    const progressDiv = document.querySelector('.cache-progress');
+    if (!progressDiv) return;
+    
+    // 检查是否已经是圆环进度条
+    if (progressDiv.querySelector('.ring-progress-container')) return;
+    
+    // 创建圆环进度条HTML
+    const ringHTML = `
+      <div class="ring-progress-container">
+        <svg class="ring-progress-svg" viewBox="0 0 140 140">
+          <defs>
+            <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <circle class="ring-progress-bg" cx="70" cy="70" r="65"></circle>
+          <circle class="ring-progress-fill" id="ring-progress-fill" cx="70" cy="70" r="65"></circle>
+        </svg>
+        <div class="ring-progress-text">
+          <span class="ring-progress-percent" id="ring-progress-percent">0%</span>
+          <span class="ring-progress-label">已使用</span>
+        </div>
+      </div>
+      <div class="cache-progress-info">
+        <span id="cache-usage-text">0.00 MB / 500 MB</span>
+      </div>
+    `;
+    
+    progressDiv.innerHTML = ringHTML;
+  }
   
   // 静默刷新统计
   global.refreshCacheStatsSilently = async function() {
@@ -881,7 +947,6 @@
     clearCache: clearAllCache,
     getStats: getCacheStats,
     cleanOldCache: cleanOldCache,
-    getStats: getCacheStats,
     // 添加兼容性方法
     clearAudioCache: clearAudioCache
   };
@@ -901,7 +966,7 @@
 
   // 自动初始化数据库
   initDB().then(() => {
-    console.log('Emoji cache system initialized successfully (merged version)');
+    console.log('Emoji cache system initialized successfully (with ring progress)');
     console.log('Commands available:');
     console.log('- testAudioCache(): Test audio cache functionality');
     console.log('- EmojiCache.clearCache(): Clear all cached data');

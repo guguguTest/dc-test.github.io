@@ -1289,14 +1289,24 @@ settings: `
 		</div>
 		
 		<div class="cache-progress">
-		  <div class="cache-progress-info">
-			<span>缓存使用情况</span>
-			<span id="cache-usage-text">0.00 MB / 500 MB</span>
-		  </div>
-		  <div class="cache-progress-bar">
-			<div class="cache-progress-fill" id="cache-progress-fill" style="width: 0%;">
-			  <span class="progress-text">0.0%</span>
+		  <div class="ring-progress-container">
+			<svg class="ring-progress-svg" viewBox="0 0 140 140">
+			  <defs>
+				<linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+				  <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+				  <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+				</linearGradient>
+			  </defs>
+			  <circle class="ring-progress-bg" cx="70" cy="70" r="65"></circle>
+			  <circle class="ring-progress-fill" id="ring-progress-fill" cx="70" cy="70" r="65"></circle>
+			</svg>
+			<div class="ring-progress-text">
+			  <span class="ring-progress-percent" id="ring-progress-percent">0%</span>
+			  <span class="ring-progress-label">已使用</span>
 			</div>
+		  </div>
+		  <div class="cache-progress-info">
+			<span id="cache-usage-text">0.00 MB / 500 MB</span>
 		  </div>
 		</div>
 		
