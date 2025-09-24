@@ -7,47 +7,57 @@
     const content = document.getElementById('content-container');
     content.innerHTML = `
       <div class="section">
-        <h1 class="page-title">发行代码管理</h1>
-        <div class="admin-toolbar">
-          <button class="btn btn-primary" onclick="showIssueCodeModal()">
-            <i class="fas fa-plus"></i> 发行代码
-          </button>
-          <button class="btn btn-secondary" onclick="selectAllCodes()">
-            <i class="fas fa-check-square"></i> 全选
-          </button>
-          <button class="btn btn-secondary" onclick="unselectAllCodes()">
-            <i class="fas fa-square"></i> 取消全选
-          </button>
-          <button class="btn btn-danger" onclick="deleteSelectedCodes()">
-            <i class="fas fa-trash"></i> 删除选中
-          </button>
-        </div>
-        
-        <div class="admin-table-container">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th width="40"><input type="checkbox" id="select-all-codes"></th>
-                <th>兑换码</th>
-                <th>项目名称</th>
-                <th>兑换类型</th>
-                <th>兑换值</th>
-                <th>状态</th>
-                <th>有效期</th>
-                <th>使用者</th>
-                <th>使用时间</th>
-                <th width="100">操作</th>
-              </tr>
-            </thead>
-            <tbody id="codes-tbody">
-              <tr>
-                <td colspan="10" class="loading-cell">
-                  <i class="fas fa-spinner fa-spin"></i> 加载中...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div id="codes-pagination"></div>
+        <div class="redemption-admin-container">
+          <div class="message-center-header">
+            <h1 class="message-center-title">发行代码管理</h1>
+            <div class="message-actions">
+              <button class="message-btn message-btn-primary" onclick="showIssueCodeModal()">
+                <i class="fas fa-plus"></i> 发行代码
+              </button>
+              <button class="message-btn message-btn-ghost" data-page="site-admin">
+                <i class="fas fa-arrow-left"></i> 返回管理
+              </button>
+            </div>
+          </div>
+          
+          <div class="redemption-toolbar">
+            <button class="toolbar-btn" onclick="selectAllCodes()">
+              <i class="fas fa-check-square"></i> 全选
+            </button>
+            <button class="toolbar-btn" onclick="unselectAllCodes()">
+              <i class="fas fa-square"></i> 取消全选
+            </button>
+            <button class="toolbar-btn toolbar-btn-danger" onclick="deleteSelectedCodes()">
+              <i class="fas fa-trash"></i> 删除选中
+            </button>
+          </div>
+          
+          <div class="redemption-admin-table">
+            <table>
+              <thead>
+                <tr>
+                  <th width="40"><input type="checkbox" id="select-all-codes"></th>
+                  <th>兑换码</th>
+                  <th>项目名称</th>
+                  <th>兑换类型</th>
+                  <th>兑换值</th>
+                  <th>状态</th>
+                  <th>有效期</th>
+                  <th>使用者</th>
+                  <th>使用时间</th>
+                  <th width="100">操作</th>
+                </tr>
+              </thead>
+              <tbody id="codes-tbody">
+                <tr>
+                  <td colspan="10" class="loading-cell">
+                    <i class="fas fa-spinner fa-spin"></i> 加载中...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="codes-pagination" class="codes-pagination"></div>
         </div>
       </div>
     `;
@@ -95,7 +105,7 @@
       }[code.redemption_type] || '未知';
       
       const statusText = code.is_used ? '已使用' : '未使用';
-      const statusClass = code.is_used ? 'used' : 'unused';
+      const statusClass = code.is_used ? 'status-used' : 'status-unused';
       
       let expiresText = '永久';
       if (code.expires_at) {
@@ -116,15 +126,15 @@
           <td>${code.project_name}</td>
           <td>${typeText}</td>
           <td>${code.redemption_value || '-'}</td>
-          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td><span class="code-status ${statusClass}">${statusText}</span></td>
           <td>${expiresText}</td>
           <td>${code.username || '-'}</td>
           <td>${code.used_at ? new Date(code.used_at).toLocaleString() : '-'}</td>
-          <td>
-            <button class="btn-small btn-copy" onclick="copyCode('${code.code}')">
+          <td class="code-admin-actions">
+            <button class="btn-code-copy" onclick="copyCode('${code.code}')" title="复制">
               <i class="fas fa-copy"></i>
             </button>
-            <button class="btn-small btn-delete" onclick="deleteCode(${code.id})">
+            <button class="btn-code-delete" onclick="deleteCode(${code.id})" title="删除">
               <i class="fas fa-trash"></i>
             </button>
           </td>
@@ -177,70 +187,68 @@
   // 显示发行代码弹窗
   window.showIssueCodeModal = function() {
     const modal = document.createElement('div');
-    modal.className = 'modal show';
+    modal.className = 'code-modal show';
     modal.innerHTML = `
-      <div class="modal-content code-modal">
-        <div class="modal-header">
-          <h3>发行代码</h3>
-          <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+      <div class="code-modal-content">
+        <div class="code-modal-header">
+          <h3 class="code-modal-title">发行代码</h3>
+          <button class="code-modal-close" onclick="this.closest('.code-modal').remove()">&times;</button>
         </div>
-        <form id="issue-code-form" class="modal-body">
-          <div class="form-group">
-            <label>项目名称 <span class="required">*</span></label>
-            <input type="text" name="project_name" required>
-          </div>
-          
-          <div class="form-group">
-            <label>兑换种类 <span class="required">*</span></label>
-            <select name="redemption_type" onchange="onRedemptionTypeChange(this.value)">
-              <option value="points">增加积分</option>
-              <option value="credit">增加CREDIT</option>
-              <option value="user_group">变更用户组</option>
-              <option value="coupon">优惠券</option>
-            </select>
-          </div>
-          
-          <div class="form-group" id="redemption-value-group">
-            <label id="redemption-value-label">增加数量</label>
-            <input type="number" name="redemption_value" id="redemption-value-input" min="1">
-            <select name="user_group_value" id="redemption-user-group" style="display: none">
-              <option value="1">初级用户</option>
-              <option value="2">中级用户</option>
-              <option value="3">高级用户</option>
-              <option value="4">贵宾用户</option>
-              <option value="5">管理员</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label>
-              <input type="checkbox" id="batch-issue" onchange="onBatchIssueChange(this.checked)">
-              批量发行
-            </label>
-            <input type="number" name="batch_count" id="batch-count" min="1" max="100" 
-                   style="display: none;" placeholder="批量数量">
-          </div>
-          
-          <div class="form-group">
-            <label>有效期</label>
-            <select name="validity_period" onchange="onValidityChange(this.value)">
-              <option value="permanent">永久有效</option>
-              <option value="7">7天</option>
-              <option value="30">30天</option>
-              <option value="90">90天</option>
-              <option value="custom">自定义</option>
-            </select>
-            <input type="number" name="custom_days" id="custom-days" min="1" 
-                   style="display: none;" placeholder="天数">
-          </div>
-        </form>
-        <div class="modal-footer">
-          <button class="btn btn-primary" onclick="issueRedemptionCodes()">
-            <i class="fas fa-check"></i> 发行
-          </button>
-          <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
-            <i class="fas fa-times"></i> 取消
-          </button>
+        <div class="code-modal-body">
+          <form id="issue-code-form">
+            <div class="code-form-group">
+              <label>项目名称 <span class="required">*</span></label>
+              <input type="text" name="project_name" required>
+            </div>
+            
+            <div class="code-form-group">
+              <label>兑换种类 <span class="required">*</span></label>
+              <select name="redemption_type" onchange="onRedemptionTypeChange(this.value)">
+                <option value="points">增加积分</option>
+                <option value="credit">增加CREDIT</option>
+                <option value="user_group">变更用户组</option>
+                <option value="coupon">优惠券</option>
+              </select>
+            </div>
+            
+            <div class="code-form-group" id="redemption-value-group">
+              <label id="redemption-value-label">增加数量</label>
+              <input type="number" name="redemption_value" id="redemption-value-input" min="1">
+              <select name="user_group_value" id="redemption-user-group" style="display: none">
+                <option value="1">初级用户</option>
+                <option value="2">中级用户</option>
+                <option value="3">高级用户</option>
+                <option value="4">贵宾用户</option>
+                <option value="5">管理员</option>
+              </select>
+            </div>
+            
+            <div class="code-form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="batch-issue" onchange="onBatchIssueChange(this.checked)">
+                批量发行
+              </label>
+              <input type="number" name="batch_count" id="batch-count" min="1" max="100" 
+                     style="display: none; margin-top: 10px;" placeholder="批量数量">
+            </div>
+            
+            <div class="code-form-group">
+              <label>有效期</label>
+              <select name="validity_period" onchange="onValidityChange(this.value)">
+                <option value="permanent">永久有效</option>
+                <option value="7">7天</option>
+                <option value="30">30天</option>
+                <option value="90">90天</option>
+                <option value="custom">自定义</option>
+              </select>
+              <input type="number" name="custom_days" id="custom-days" min="1" 
+                     style="display: none; margin-top: 10px;" placeholder="天数">
+            </div>
+          </form>
+        </div>
+        <div class="code-modal-footer">
+          <button class="btn-modal-cancel" onclick="this.closest('.code-modal').remove()">取消</button>
+          <button class="btn-modal-save" onclick="issueRedemptionCodes()">发行</button>
         </div>
       </div>
     `;
@@ -326,7 +334,7 @@
       });
       
       if (res.success) {
-        const modal = document.querySelector('.modal.show');
+        const modal = document.querySelector('.code-modal.show');
         if (modal) modal.remove();
         
         showSuccessMessage(`成功发行 ${res.count} 个兑换码`);
@@ -346,25 +354,25 @@
   // 显示生成的兑换码
   function showGeneratedCodes(codes) {
     const modal = document.createElement('div');
-    modal.className = 'modal show';
+    modal.className = 'code-modal show';
     modal.innerHTML = `
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>生成的兑换码</h3>
-          <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+      <div class="code-modal-content">
+        <div class="code-modal-header">
+          <h3 class="code-modal-title">生成的兑换码</h3>
+          <button class="code-modal-close" onclick="this.closest('.code-modal').remove()">&times;</button>
         </div>
-        <div class="modal-body">
+        <div class="code-modal-body">
           <div class="generated-codes">
             ${codes.map(code => `
               <div class="code-item">
                 <span class="code-text">${code}</span>
-                <button class="btn-small btn-copy" onclick="copyCode('${code}')">
-                  <i class="fas fa-copy"></i>
+                <button class="btn-code-copy-small" onclick="copyCode('${code}')">
+                  <i class="fas fa-copy"></i> 复制
                 </button>
               </div>
             `).join('')}
           </div>
-          <button class="btn btn-primary btn-block" onclick="copyAllCodes('${codes.join('\\n')}')">
+          <button class="btn-copy-all" onclick="copyAllCodes('${codes.join('\\n')}')">
             <i class="fas fa-copy"></i> 复制所有
           </button>
         </div>
@@ -460,14 +468,14 @@
   // 兑换历史记录弹窗
   window.showRedemptionHistory = async function(type) {
     const modal = document.createElement('div');
-    modal.className = 'modal show';
+    modal.className = 'code-modal show';
     modal.innerHTML = `
-      <div class="modal-content large-modal">
-        <div class="modal-header">
-          <h3>兑换历史记录</h3>
-          <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+      <div class="code-modal-content large-modal">
+        <div class="code-modal-header">
+          <h3 class="code-modal-title">兑换历史记录</h3>
+          <button class="code-modal-close" onclick="this.closest('.code-modal').remove()">&times;</button>
         </div>
-        <div class="modal-body">
+        <div class="code-modal-body">
           <table class="history-table">
             <thead>
               <tr>

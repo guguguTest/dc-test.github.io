@@ -1,10 +1,424 @@
-/* 兑换码样式 */
-.redemption-container {
+/* 兑换码管理页面样式 - 与实用工具管理页面统一风格 */
+
+/* =================== 管理页面主容器 =================== */
+.redemption-admin-container {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
 }
 
+/* 使用系统消息管理相同的header样式 */
+.redemption-admin-container .message-center-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e4e6eb;
+}
+
+.redemption-admin-container .message-center-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1c1e21;
+  margin: 0;
+}
+
+.redemption-admin-container .message-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* 使用系统消息管理的按钮样式 */
+.redemption-admin-container .message-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.redemption-admin-container .message-btn-primary {
+  background: #1877f2;
+  color: white;
+}
+
+.redemption-admin-container .message-btn-primary:hover:not(:disabled) {
+  background: #166fe5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.redemption-admin-container .message-btn-ghost {
+  background: #6c757d;
+  color: white;
+}
+
+.redemption-admin-container .message-btn-ghost:hover:not(:disabled) {
+  background: #5a6268;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 工具栏样式 */
+.redemption-toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.toolbar-btn {
+  padding: 8px 16px;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.toolbar-btn:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.toolbar-btn-danger {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.toolbar-btn-danger:hover {
+  background: #c82333;
+  border-color: #bd2130;
+}
+
+/* 兑换码列表表格 */
+.redemption-admin-table {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.redemption-admin-table table {
+  width: 100%;
+  min-width: 1000px;
+  border-collapse: collapse;
+}
+
+.redemption-admin-table th {
+  background: #f8f9fa;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #333;
+  border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+.redemption-admin-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.redemption-admin-table tr:hover {
+  background: #fafafa;
+}
+
+/* 兑换码文本样式 */
+.code-text {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #2c3e50;
+  letter-spacing: 1px;
+}
+
+/* 状态样式 */
+.code-status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-used {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.status-unused {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-expired {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+/* 操作按钮 */
+.code-admin-actions {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-code-copy,
+.btn-code-delete {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.btn-code-copy {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-code-copy:hover {
+  background: #138496;
+  transform: translateY(-1px);
+}
+
+.btn-code-delete {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-code-delete:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+/* 分页样式 */
+.codes-pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.codes-pagination .pagination {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.codes-pagination button {
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.codes-pagination button:hover {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.codes-pagination .current-page {
+  padding: 8px 12px;
+  background: #007bff;
+  color: white;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* 模态框样式 - 与工具管理保持一致 */
 .code-modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.3s ease;
+}
+
+.code-modal.show {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.code-modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
   max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.code-modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.code-modal-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.code-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.3s ease;
+}
+
+.code-modal-close:hover {
+  color: #333;
+}
+
+.code-modal-body {
+  padding: 20px;
+}
+
+.code-form-group {
+  margin-bottom: 20px;
+}
+
+.code-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #555;
+}
+
+.code-form-group input,
+.code-form-group select,
+.code-form-group textarea {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.code-form-group input:focus,
+.code-form-group select:focus,
+.code-form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto !important;
+  margin: 0;
+}
+
+.code-modal-footer {
+  padding: 20px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-modal-cancel,
+.btn-modal-save {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-modal-cancel {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.btn-modal-cancel:hover {
+  background: #e0e0e0;
+}
+
+.btn-modal-save {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-modal-save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* 生成的兑换码显示 */
+.generated-codes {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 20px;
 }
 
 .code-item {
@@ -12,65 +426,54 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px;
-  background: #f8f9fa;
+  background: white;
   border-radius: 6px;
   margin-bottom: 10px;
+  border: 1px solid #e0e0e0;
 }
 
-.code-text {
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  font-weight: bold;
-  color: #2c3e50;
-  letter-spacing: 1px;
-}
-
-.generated-codes {
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 10px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.status-badge {
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-.status-badge.used {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.status-badge.unused {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.status-badge.expired {
-  background: #fff3e0;
-  color: #ef6c00;
-}
-
-.btn-copy {
-  padding: 5px 10px;
+.btn-code-copy-small {
+  padding: 5px 12px;
   background: #007bff;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.3s;
+  font-size: 0.85rem;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.btn-copy:hover {
+.btn-code-copy-small:hover {
   background: #0056b3;
+  transform: translateY(-1px);
 }
 
+.btn-copy-all {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-copy-all:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* 历史记录表格 */
 .history-table {
   width: 100%;
   border-collapse: collapse;
@@ -89,215 +492,178 @@
   color: #495057;
 }
 
-.large-modal {
+.large-modal .code-modal-content {
   max-width: 900px;
-  width: 90%;
 }
 
-.redemption-form-section {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  margin-bottom: 30px;
-}
-
-.redemption-input-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.redemption-input {
-  flex: 1;
-  padding: 12px 15px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.3s;
-}
-
-.redemption-input:focus {
-  border-color: #007bff;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.redemption-button {
-  padding: 12px 30px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.redemption-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-.redemption-button:disabled {
-  background: #cccccc;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.history-button {
-  padding: 8px 16px;
-  background: transparent;
-  border: 1px solid #007bff;
-  color: #007bff;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s;
-  margin-left: 10px;
-}
-
-.history-button:hover {
-  background: #007bff;
-  color: white;
-}
-
-/* 批量操作样式 */
-.batch-controls {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.batch-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.batch-input {
-  width: 100px;
-  padding: 6px 10px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-/* 有效期选择样式 */
-.validity-selector {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.validity-selector select {
-  padding: 8px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.custom-days-input {
-  width: 80px;
-  padding: 8px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-/* 兑换码管理表格样式 */
-.code-admin-table {
-  width: 100%;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-}
-
-.code-admin-table thead {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-}
-
-.code-admin-table th {
-  padding: 15px;
-  font-weight: 600;
-  text-align: left;
-}
-
-.code-admin-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.code-admin-table tbody tr:hover {
-  background: #f8f9fa;
-}
-
-.code-checkbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-/* 优惠券码样式 */
-.coupon-code {
-  display: inline-block;
-  padding: 4px 10px;
-  background: linear-gradient(135deg, #ffd700, #ffed4e);
-  color: #333;
-  border-radius: 6px;
-  font-family: monospace;
-  font-size: 13px;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-/* 虚拟物品配置区域 */
-.virtual-config-section {
-  background: #f0f7ff;
-  border: 1px dashed #007bff;
-  border-radius: 8px;
-  padding: 15px;
-  margin-top: 15px;
-}
-
-.virtual-type-selector {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.virtual-type-option {
-  padding: 10px;
-  background: white;
-  border: 2px solid #e0e0e0;
-  border-radius: 6px;
+/* 空状态和加载状态 */
+.empty-cell {
   text-align: center;
-  cursor: pointer;
-  transition: all 0.3s;
+  color: #999;
+  padding: 40px !important;
+  font-size: 0.95rem;
 }
 
-.virtual-type-option:hover {
-  border-color: #007bff;
-  background: #e7f3ff;
+.loading-cell {
+  text-align: center;
+  color: #667eea;
+  padding: 40px !important;
+  font-size: 0.95rem;
 }
 
-.virtual-type-option.selected {
-  border-color: #007bff;
-  background: #007bff;
-  color: white;
+.loading-cell i {
+  margin-right: 8px;
+  animation: spin 1s linear infinite;
 }
 
-.virtual-value-config {
-  margin-top: 15px;
-  padding: 15px;
-  background: white;
-  border-radius: 6px;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 必填项标记 */
+.required {
+  color: #dc3545;
+}
+
+/* 自定义滚动条样式 */
+.redemption-admin-table::-webkit-scrollbar {
+  height: 8px;
+}
+
+.redemption-admin-table::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.redemption-admin-table::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.redemption-admin-table::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 响应式设计 - 平板 */
+@media (max-width: 768px) {
+  .redemption-admin-container {
+    padding: 15px;
+  }
+  
+  .redemption-admin-container .message-center-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .redemption-admin-container .message-actions {
+    width: 100%;
+  }
+  
+  .redemption-admin-container .message-actions button {
+    flex: 1;
+  }
+  
+  .redemption-toolbar {
+    flex-wrap: wrap;
+  }
+  
+  .redemption-admin-table {
+    margin: 0 -15px;
+    border-radius: 0;
+    width: calc(100% + 30px);
+  }
+  
+  .redemption-admin-table table {
+    min-width: 900px;
+  }
+  
+  .redemption-admin-table th,
+  .redemption-admin-table td {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .code-modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+}
+
+/* 响应式设计 - 手机 */
+@media (max-width: 480px) {
+  .redemption-admin-container {
+    padding: 10px;
+  }
+  
+  .redemption-admin-container .message-center-title {
+    font-size: 20px;
+  }
+  
+  .redemption-admin-container .message-btn {
+    font-size: 13px;
+    padding: 8px 15px;
+  }
+  
+  .toolbar-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .redemption-admin-table {
+    margin: 0 -10px;
+    width: calc(100% + 20px);
+  }
+  
+  .redemption-admin-table table {
+    min-width: 800px;
+  }
+  
+  .redemption-admin-table th,
+  .redemption-admin-table td {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+  
+  .code-text {
+    font-size: 0.8rem;
+  }
+  
+  .btn-code-copy,
+  .btn-code-delete {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+  
+  .code-modal-content {
+    width: 98%;
+    margin: 5px;
+  }
+  
+  .code-modal-header,
+  .code-modal-body,
+  .code-modal-footer {
+    padding: 15px;
+  }
+  
+  .code-modal-footer {
+    flex-direction: column;
+  }
+  
+  .btn-modal-cancel,
+  .btn-modal-save {
+    width: 100%;
+    padding: 12px;
+  }
+  
+  .codes-pagination button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .codes-pagination .current-page {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
 }

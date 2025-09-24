@@ -13,14 +13,14 @@
     container.innerHTML = `
       <div class="section">
         <div class="tools-admin-container">
-          <div class="tools-admin-header">
-            <h1 class="page-title">实用工具管理</h1>
-            <div class="tools-admin-actions">
-              <button class="btn-add-tool" onclick="showAddToolModal()">
-                <i class="fas fa-plus me-2"></i>添加工具
+          <div class="message-center-header">
+            <h1 class="message-center-title">实用工具管理</h1>
+            <div class="message-actions">
+              <button class="message-btn message-btn-primary" onclick="showAddToolModal()">
+                <i class="fas fa-plus"></i> 添加工具
               </button>
-              <button class="back-button" data-page="site-admin">
-                <i class="fas fa-arrow-left me-2"></i>返回网站管理
+              <button class="message-btn message-btn-ghost" data-page="site-admin">
+                <i class="fas fa-arrow-left"></i> 返回管理
               </button>
             </div>
           </div>
@@ -41,7 +41,7 @@
 				  </tr>
 				</thead>
               <tbody id="tools-list-body">
-                <tr><td colspan="8" style="text-align:center;padding:40px;">加载中...</td></tr>
+                <tr><td colspan="9" style="text-align:center;padding:40px;">加载中...</td></tr>
               </tbody>
             </table>
           </div>
@@ -171,7 +171,7 @@ function createToolModal() {
     } catch (error) {
       console.error('加载工具列表失败:', error);
       document.getElementById('tools-list-body').innerHTML = 
-        '<tr><td colspan="8" style="text-align:center;color:red;">加载失败</td></tr>';
+        '<tr><td colspan="9" style="text-align:center;color:red;">加载失败</td></tr>';
     }
   }
 
@@ -179,7 +179,7 @@ function createToolModal() {
 function renderToolsList(tools) {
   const tbody = document.getElementById('tools-list-body');
   if (!tools || tools.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无工具</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">暂无工具</td></tr>';
     return;
   }
 
