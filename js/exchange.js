@@ -343,14 +343,21 @@ function getUserRankName(rank) {
       return;
     }
     
-    tbody.innerHTML = history.map(record => `
-      <tr>
-        <td>${new Date(record.created_at).toLocaleString('zh-CN')}</td>
-        <td>${escapeHtml(record.project_name || '-')}</td>
-        <td>${escapeHtml(record.redemption_code || record.order_number || '-')}</td>
-        <td>${escapeHtml(record.coupon_code || (record.points_used ? `+${record.points_used}` : '-'))}</td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = history.map(record => {
+      const dateStr = new Date(record.created_at).toLocaleString('zh-CN');
+      const projectName = record.project_name || '-';
+      const code = record.redemption_code || record.order_number || '-';
+      const result = record.coupon_code || (record.points_used ? `+${record.points_used}` : '-');
+      
+      return `
+        <tr>
+          <td title="${escapeHtml(dateStr)}">${escapeHtml(dateStr)}</td>
+          <td title="${escapeHtml(projectName)}">${escapeHtml(projectName)}</td>
+          <td title="${escapeHtml(code)}">${escapeHtml(code)}</td>
+          <td title="${escapeHtml(result)}">${escapeHtml(result)}</td>
+        </tr>
+      `;
+    }).join('');
   }
   
   // 更新用户信息
