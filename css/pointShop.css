@@ -329,14 +329,34 @@
   color: #999;
 }
 
-/* 商品详情弹窗 */
+/* 商品详情弹窗 - 修复z-index层级问题 */
 .shop-detail-modal {
   max-width: 500px;
+  position: relative;
+  z-index: 11000; /* 设置商品详情弹窗的z-index */
+}
+
+/* 确保商品详情弹窗的父容器有正确的z-index */
+.shop-detail-modal .modal {
+  z-index: 11000 !important; /* 商品详情弹窗层级 */
+}
+
+.shop-detail-modal .modal-content {
+  background: white !important; /* 确保背景为纯白色 */
+  position: relative;
+  z-index: 11001;
+}
+
+.shop-detail-modal .modal-body {
+  background: white !important; /* 移除任何渐变背景 */
+  padding: 0;
 }
 
 .detail-image {
   text-align: center;
   margin-bottom: 20px;
+  padding: 20px;
+  background: white;
 }
 
 .detail-image img {
@@ -347,6 +367,7 @@
 
 .detail-info {
   padding: 20px;
+  background: white;
 }
 
 .detail-desc {
@@ -458,9 +479,25 @@
   color: #999;
 }
 
-/* 商品编辑弹窗 */
+/* 商品编辑弹窗 - 设置正确的层级 */
 .item-modal {
   max-width: 600px;
+  position: relative;
+  z-index: 11000;
+}
+
+.item-modal .modal {
+  z-index: 11000 !important;
+}
+
+.item-modal .modal-content {
+  background: white !important;
+  position: relative;
+  z-index: 11001;
+}
+
+.item-modal .modal-body {
+  background: white !important; /* 确保纯白色背景 */
 }
 
 .form-row {
@@ -572,9 +609,17 @@
     grid-template-columns: 1fr;
   }
   
+  /* 移动端弹窗修复 */
   .modal-content {
     margin: 20px;
     max-width: calc(100% - 40px);
+    max-height: 90vh !important; /* 限制高度 */
+  }
+  
+  .shop-detail-modal .modal-content,
+  .item-modal .modal-content {
+    max-height: 85vh !important;
+    overflow-y: auto;
   }
 }
 
@@ -949,4 +994,29 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* 确保错误提示弹窗在最上层 */
+.error-modal,
+.success-modal,
+.warning-modal {
+  z-index: 25000 !important; /* 错误提示弹窗最高层级 */
+}
+
+/* 修复所有弹窗背景问题 */
+.modal-body {
+  background: white !important; /* 强制所有弹窗body为纯白色 */
+}
+
+/* 修复所有弹窗层级 */
+.modal {
+  z-index: 10000; /* 基础弹窗层级 */
+}
+
+.shop-detail-modal .modal {
+  z-index: 11000; /* 商品详情弹窗 */
+}
+
+#message-modal {
+  z-index: 20000; /* 消息提示弹窗 */
 }

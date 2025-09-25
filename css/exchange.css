@@ -274,7 +274,8 @@
     max-width: 100%;
   }
 }
-/* ==================== 弹窗样式 ==================== */
+
+/* ==================== 弹窗样式 - 修复版 ==================== */
 .modal {
   display: none;
   position: fixed;
@@ -299,11 +300,13 @@
   border-radius: 16px;
   width: 100%;
   max-width: 1000px;
-  max-height: 85vh;
+  max-height: 85vh; /* 限制最大高度 */
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   animation: slideUp 0.3s ease;
+  overflow: hidden; /* 防止内容溢出 */
+  position: relative;
 }
 
 .modal-content.large-modal {
@@ -319,6 +322,7 @@
   border-bottom: 2px solid #f0f0f0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 16px 16px 0 0;
+  flex-shrink: 0; /* 防止头部被压缩 */
 }
 
 .modal-header h3 {
@@ -331,7 +335,7 @@
   gap: 10px;
 }
 
-/* 关闭按钮样式 - 重要修复 */
+/* 关闭按钮样式 */
 .modal-close {
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -360,14 +364,18 @@
   transform: rotate(90deg) scale(0.9);
 }
 
-/* 弹窗主体 */
+/* 弹窗主体 - 修复版 */
 .modal-body {
-  flex: 1;
+  flex: 1; /* 占用剩余空间 */
   overflow: hidden;
   padding: 0;
   display: flex;
   flex-direction: column;
   border-radius: 0 0 16px 16px;
+  min-height: 0; /* 允许缩小 */
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* iOS平滑滚动 */
 }
 
 /* ==================== 历史记录表格样式 ==================== */
@@ -377,13 +385,6 @@
   border-spacing: 0;
   background: white;
   font-size: 0.95rem;
-}
-
-/* 表格容器 - 实现横向滚动 */
-.modal-body {
-  overflow-x: auto;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* iOS平滑滚动 */
 }
 
 /* 自定义滚动条样式 */
@@ -424,12 +425,12 @@
   font-weight: 600;
   color: #2c3e50;
   border-bottom: 2px solid #dee2e6;
-  white-space: nowrap; /* 防止标题换行 */
-  min-width: 120px; /* 设置最小宽度 */
+  white-space: nowrap;
+  min-width: 120px;
 }
 
 .history-table thead th:first-child {
-  min-width: 180px; /* 时间列更宽 */
+  min-width: 180px;
   border-radius: 0;
 }
 
@@ -452,10 +453,10 @@
 .history-table tbody td {
   padding: 14px 20px;
   color: #495057;
-  white-space: nowrap; /* 防止文字换行 */
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 400px; /* 设置最大宽度 */
+  max-width: 400px;
   position: relative;
 }
 
@@ -536,21 +537,22 @@
   }
 }
 
-/* ==================== 移动端弹窗适配 ==================== */
+/* ==================== 移动端弹窗适配 - 修复版 ==================== */
 @media (max-width: 768px) {
   .modal {
-    padding: 0;
+    padding: 10px;
   }
   
   .modal-content {
     max-width: 100%;
-    max-height: 100%;
-    height: 100%;
-    border-radius: 0;
+    max-height: 90vh; /* 移动端限制为90vh而不是100% */
+    /* 删除 height: 100%; 这是导致问题的关键！ */
+    border-radius: 12px; /* 保持圆角 */
+    margin: auto; /* 居中 */
   }
   
   .modal-header {
-    border-radius: 0;
+    border-radius: 12px 12px 0 0;
     padding: 15px 20px;
   }
   
@@ -562,6 +564,12 @@
     width: 32px;
     height: 32px;
     font-size: 24px;
+  }
+  
+  .modal-body {
+    max-height: calc(90vh - 120px); /* 减去头部高度 */
+    overflow-y: auto;
+    overflow-x: auto;
   }
   
   .history-table {
@@ -606,6 +614,17 @@
   }
 }
 
+/* 小屏幕设备进一步优化 */
+@media (max-width: 480px) {
+  .modal-content {
+    max-height: 85vh; /* 小屏幕稍微降低高度 */
+  }
+  
+  .modal-body {
+    max-height: calc(85vh - 100px);
+  }
+}
+
 /* 平板适配 */
 @media (min-width: 769px) and (max-width: 1024px) {
   .modal-content {
@@ -619,5 +638,15 @@
   
   .history-table tbody td {
     max-width: 300px;
+  }
+}
+
+/* iOS安全区域适配 */
+@supports (padding: max(0px)) {
+  @media (max-width: 768px) {
+    .modal-content {
+      margin-bottom: max(10px, env(safe-area-inset-bottom));
+      max-height: calc(90vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
   }
 }
