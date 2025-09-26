@@ -82,7 +82,7 @@ async function loadDownloadContent() {
     
     console.log('下载内容响应状态:', response.status);
     
-    // 调试输出 - 添加在这里
+    // 调试输出
     console.log('API响应详情:', {
       status: response.status,
       statusText: response.statusText,
@@ -203,7 +203,7 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
           const requiredSpecialGroup = SPECIAL_GROUP_MAP[download.special_group] || 0;
           hasAccess = hasAccess && (userSpecialGroup === requiredSpecialGroup);
           
-          // 调试输出 - 添加在这里
+          // 调试输出
           console.log('特殊用户组权限检查:', {
             title: download.title,
             userRank,
@@ -215,7 +215,7 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
           });
         }
         
-        // 调试输出 - 添加在这里（普通权限检查）
+        // 调试输出
         console.log('普通权限检查:', {
           title: download.title,
           userRank,
@@ -429,19 +429,58 @@ function renderDownloadDetail(download, retryCount = 0) {
     detailLastUpdate.textContent = date.toLocaleDateString('zh-CN');
   }
   
-  // 渲染下载信息 - 修复HTML结构
-  container.innerHTML = `
-    <tr>
-      <td data-label="下载方式">
-        <a href="${download.baidu_url}" target="_blank" class="external-link">
-          <i class="fas fa-external-link-alt me-2"></i>百度网盘
-        </a>
-      </td>
-      <td data-label="文件数">${download.file_count || '0'}</td>
-      <td data-label="提取码/访问密码">${download.baidu_code || '无'}</td>
-      <td data-label="资源有效期">无期限</td>
-    </tr>
-  `;
+  // 解析下载链接
+  let downloadLinks = [];
+  try {
+    if (download.download_links) {
+      downloadLinks = typeof download.download_links === 'string' 
+        ? JSON.parse(download.download_links)
+        : download.download_links;
+    } else if (download.baidu_url) {
+      // 兼容旧数据格式
+      downloadLinks = [{
+        name: '百度网盘',
+        url: download.baidu_url,
+        code: download.baidu_code || ''
+      }];
+    }
+  } catch (e) {
+    console.error('解析下载链接失败:', e);
+    // 兼容旧数据格式
+    if (download.baidu_url) {
+      downloadLinks = [{
+        name: '百度网盘',
+        url: download.baidu_url,
+        code: download.baidu_code || ''
+      }];
+    }
+  }
+  
+  // 渲染下载链接表格
+  container.innerHTML = '';
+  
+  if (downloadLinks.length === 0) {
+    container.innerHTML = `
+      <tr>
+        <td colspan="4" class="text-center">暂无下载链接</td>
+      </tr>
+    `;
+  } else {
+    downloadLinks.forEach((link, index) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td data-label="下载方式">
+          <a href="${link.url}" target="_blank" class="external-link">
+            <i class="fas fa-external-link-alt me-2"></i>${link.name || '下载链接' + (index + 1)}
+          </a>
+        </td>
+        <td data-label="文件数">${download.file_count || '-'}</td>
+        <td data-label="提取码/访问密码">${link.code || '无'}</td>
+        <td data-label="资源有效期">无期限</td>
+      `;
+      container.appendChild(tr);
+    });
+  }
   
   // 移除旧的全局函数，不再需要
   delete window.handleExternalLink;

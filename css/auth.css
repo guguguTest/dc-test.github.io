@@ -1410,6 +1410,84 @@
   }
 }
 
+/* ====== 账户认证图标样式 ====== */
+/* PC端认证图标 - 右下角位置 */
+#user-info-pc .user-auth-icon {
+  position: absolute;
+  bottom: 0px;      /* 调整上下位置：减小值向上，增大值向下 */
+  right: 185px;       /* 调整左右位置：减小值向右，增大值向左 */
+  width: 40px;
+  height: 40px;
+  z-index: 3;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  object-fit: contain;
+}
+
+/* 移动端认证图标 - 右下角位置 */
+.sidebar-user-area .user-auth-icon-mobile {
+  position: absolute !important;
+  bottom: 10px !important;      /* 调整到头像底部 */
+  right: 10px !important;       /* 调整到头像右侧 */
+  width: 20px !important;       /* 缩小图标尺寸 */
+  height: 20px !important;
+  z-index: 10 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  object-fit: contain !important;
+}
+
+/* 移动端头像的直接容器需要相对定位 */
+.sidebar-user-area .user-basic {
+  position: relative;
+  z-index: 2;
+}
+
+/* 如果头像有专门的容器，也要设置相对定位 */
+.sidebar-user-area .user-avatar-mobile {
+  position: relative;
+}
+
+/* 响应式调整 */
+@media (max-width: 992px) {
+  #user-info-pc .user-auth-icon {
+    bottom: 0;
+    right: 0;
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar-user-area .user-auth-icon-mobile {
+    width: 35px !important;
+    height: 35px !important;
+    bottom: 1px !important;
+    right: 1px !important;
+  }
+}
+
+/* 小屏幕设备进一步调整 */
+@media (max-width: 480px) {
+  .sidebar-user-area .user-auth-icon-mobile {
+    width: 30px !important;
+    height: 30px !important;
+    bottom: 0 !important;
+    right: 0 !important;
+  }
+}
+
+/* 添加悬停效果（可选） */
+.user-auth-icon:hover,
+.user-auth-icon-mobile:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
 /* ====== 用户组特效样式 ====== */
 /* PC端头像容器 */
 .user-avatar-container-pc {
@@ -1521,7 +1599,7 @@
 
 /* 移动端特定调整 */
 .sidebar-user-area .avatar-effect-rainbow {
-  top: -10px !important;
+  top: -38px !important;
   left: -4px !important;
 }
 

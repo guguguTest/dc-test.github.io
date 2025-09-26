@@ -1,10 +1,11 @@
-// download-admin.js - 下载管理功能
+// download-admin.js - 下载管理功能（增强版）
 if (typeof window.API_BASE_URL === 'undefined') {
     window.API_BASE_URL = 'https://api.am-all.com.cn';
 }
 
 let currentDownloads = [];
 let isSaving = false;
+let downloadLinksCount = 1; // 下载链接计数器
 
 // 初始化下载管理页面
 function initDownloadAdminPage() {
@@ -38,6 +39,96 @@ function initDownloadAdminPage() {
       closeDownloadModal();
     }
   });
+  
+  // 添加下载链接按钮事件
+  const addLinkBtn = document.getElementById('add-download-link');
+  if (addLinkBtn) {
+    addLinkBtn.addEventListener('click', () => {
+      addDownloadLink();
+    });
+  }
+}
+
+// 添加新的下载链接输入组
+function addDownloadLink() {
+  downloadLinksCount++;
+  const container = document.getElementById('download-links-container');
+  const linkGroup = document.createElement('div');
+  linkGroup.className = 'download-link-group';
+  linkGroup.dataset.linkId = downloadLinksCount;
+  
+  linkGroup.innerHTML = `
+    <div class="link-header">
+      <h5>下载链接 #${downloadLinksCount}</h5>
+      <button type="button" class="btn-remove-link" onclick="removeDownloadLink(${downloadLinksCount})">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>链接名称 <span class="text-muted">(如: 百度网盘)</span></label>
+        <input type="text" class="form-control download-link-name" placeholder="输入下载源名称">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group flex-grow">
+        <label>下载地址</label>
+        <input type="url" class="form-control download-link-url" placeholder="https://...">
+      </div>
+      <div class="form-group flex-shrink">
+        <label>提取码/密码 <span class="text-muted">(可选)</span></label>
+        <input type="text" class="form-control download-link-code" placeholder="如: 1234">
+      </div>
+    </div>
+  `;
+  
+  container.appendChild(linkGroup);
+  
+  // 添加动画效果
+  setTimeout(() => linkGroup.classList.add('show'), 10);
+}
+
+// 移除下载链接输入组
+function removeDownloadLink(linkId) {
+  const linkGroup = document.querySelector(`.download-link-group[data-link-id="${linkId}"]`);
+  if (linkGroup) {
+    linkGroup.classList.add('removing');
+    setTimeout(() => linkGroup.remove(), 300);
+  }
+}
+
+// 创建下载链接组
+function createDownloadLinkGroup(link, id, isFirst = false) {
+  const linkGroup = document.createElement('div');
+  linkGroup.className = 'download-link-group show';
+  linkGroup.dataset.linkId = id;
+  
+  linkGroup.innerHTML = `
+    <div class="link-header">
+      <h5>下载链接 #${id}</h5>
+      ${!isFirst ? `<button type="button" class="btn-remove-link" onclick="removeDownloadLink(${id})">
+        <i class="fas fa-trash"></i>
+      </button>` : ''}
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>链接名称 <span class="text-muted">(如: 百度网盘)</span></label>
+        <input type="text" class="form-control download-link-name" value="${link.name || ''}" placeholder="输入下载源名称">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group flex-grow">
+        <label>下载地址</label>
+        <input type="url" class="form-control download-link-url" value="${link.url || ''}" placeholder="https://...">
+      </div>
+      <div class="form-group flex-shrink">
+        <label>提取码/密码 <span class="text-muted">(可选)</span></label>
+        <input type="text" class="form-control download-link-code" value="${link.code || ''}" placeholder="如: 1234">
+      </div>
+    </div>
+  `;
+  
+  return linkGroup;
 }
 
 // 加载下载项目列表
@@ -93,13 +184,27 @@ function renderDownloads(downloads) {
   sortedDownloads.forEach((download, index) => {
     const tr = document.createElement('tr');
     
+    // 解析下载链接数量
+    let linksCount = 0;
+    try {
+      const links = typeof download.download_links === 'string' 
+        ? JSON.parse(download.download_links || '[]')
+        : download.download_links || [];
+      linksCount = links.length;
+    } catch (e) {
+      // 兼容旧数据
+      if (download.baidu_url) {
+        linksCount = 1;
+      }
+    }
+    
     tr.innerHTML = `
-      <td>${index + 1}</td>  <!-- 使用自然序号 -->
+      <td>${index + 1}</td>
       <td>${download.title}</td>
       <td>${categoryNames[download.category] || download.category}</td>
       <td>${download.page_id}</td>
       <td>${download.version || '-'}</td>
-      <td>${download.file_count || '0'}</td>
+      <td>${linksCount} 个链接</td>
       <td>${download.last_update || '-'}</td>
       <td>${download.is_active ? '<span class="badge bg-success">激活</span>' : '<span class="badge bg-secondary">禁用</span>'}</td>
       <td>
@@ -142,6 +247,16 @@ function showDownloadModal(download = null) {
   
   if (!modal || !form || !title) return;
   
+  // 重置下载链接容器
+  const linksContainer = document.getElementById('download-links-container');
+  if (!linksContainer) {
+    console.error('download-links-container not found');
+    return;
+  }
+  
+  linksContainer.innerHTML = '';
+  downloadLinksCount = 0;
+  
   if (download) {
     title.textContent = '编辑下载项目';
     document.getElementById('download-id').value = download.id;
@@ -149,16 +264,51 @@ function showDownloadModal(download = null) {
     document.getElementById('download-version').value = download.version || '';
     document.getElementById('download-file-count').value = download.file_count || '';
     document.getElementById('download-category').value = download.category;
-    document.getElementById('download-baidu-url').value = download.baidu_url || '';
-    document.getElementById('download-baidu-code').value = download.baidu_code || '';
     document.getElementById('download-last-update').value = download.last_update || '';
     document.getElementById('download-page-id').value = download.page_id || '';
     document.getElementById('download-description').value = download.description || '';
     document.getElementById('download-image-url').value = download.image_url || '';
     document.getElementById('download-status').value = download.is_active ? '1' : '0';
     document.getElementById('download-access-level').value = download.access_level || '0';
-	document.getElementById('download-special-group').value = download.special_group || '';
-	document.getElementById('download-required-points').value = download.required_points || 0;
+    document.getElementById('download-special-group').value = download.special_group || '';
+    document.getElementById('download-required-points').value = download.required_points || 0;
+    
+    // 加载现有的下载链接
+    let links = [];
+    try {
+      if (download.download_links) {
+        links = typeof download.download_links === 'string' 
+          ? JSON.parse(download.download_links)
+          : download.download_links;
+      } else if (download.baidu_url) {
+        // 兼容旧数据
+        links = [{
+          name: '百度网盘',
+          url: download.baidu_url,
+          code: download.baidu_code || ''
+        }];
+      }
+    } catch (e) {
+      console.error('解析下载链接失败:', e);
+      // 兼容旧数据
+      if (download.baidu_url) {
+        links = [{
+          name: '百度网盘',
+          url: download.baidu_url,
+          code: download.baidu_code || ''
+        }];
+      }
+    }
+    
+    if (links.length > 0) {
+      links.forEach((link, index) => {
+        downloadLinksCount++;
+        const linkGroup = createDownloadLinkGroup(link, downloadLinksCount, index === 0);
+        linksContainer.appendChild(linkGroup);
+      });
+    } else {
+      addDownloadLink(); // 添加一个空的链接输入组
+    }
   } else {
     title.textContent = '新建下载项目';
     form.reset();
@@ -167,6 +317,9 @@ function showDownloadModal(download = null) {
     document.getElementById('download-access-level').value = '0';
     document.getElementById('download-special-group').value = '';
     document.getElementById('download-required-points').value = 0;
+    
+    // 添加一个默认的链接输入组
+    addDownloadLink();
   }
   
   modal.style.display = 'block';
@@ -205,18 +358,28 @@ async function saveDownload() {
     const version = document.getElementById('download-version').value;
     const file_count = document.getElementById('download-file-count').value;
     const category = document.getElementById('download-category').value;
-    const baidu_url = document.getElementById('download-baidu-url').value;
-    const baidu_code = document.getElementById('download-baidu-code').value;
     const last_update = document.getElementById('download-last-update').value;
     const page_id = document.getElementById('download-page-id').value;
     const description = document.getElementById('download-description').value;
     const image_url = document.getElementById('download-image-url').value;
     const is_active = document.getElementById('download-status').value === '1';
-	const access_level = document.getElementById('download-access-level').value;
-	const special_group = document.getElementById('download-special-group').value;
-	const required_points = document.getElementById('download-required-points').value;
+    const access_level = document.getElementById('download-access-level').value;
+    const special_group = document.getElementById('download-special-group').value;
+    const required_points = document.getElementById('download-required-points').value;
     
-    console.log('保存下载项目:', { id, title, page_id });
+    // 收集下载链接
+    const download_links = [];
+    document.querySelectorAll('.download-link-group').forEach(group => {
+      const name = group.querySelector('.download-link-name').value;
+      const url = group.querySelector('.download-link-url').value;
+      const code = group.querySelector('.download-link-code').value;
+      
+      if (name && url) {
+        download_links.push({ name, url, code });
+      }
+    });
+    
+    console.log('保存下载项目:', { id, title, page_id, download_links });
     
     if (!title || !category || !page_id) {
       showErrorMessage('标题、分类和页面ID不能为空');
@@ -245,8 +408,7 @@ async function saveDownload() {
         version,
         file_count: file_count ? parseInt(file_count) : null,
         category,
-        baidu_url,
-        baidu_code,
+        download_links, // 发送数组格式
         last_update,
         page_id,
         description,
