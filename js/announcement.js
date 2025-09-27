@@ -253,6 +253,11 @@ class AnnouncementSystem {
       content: announcement.content
     };
     
+    // 获取当前网站语言
+    const siteLanguage = typeof languageModule !== 'undefined' ? 
+      languageModule.getCurrentLanguage() : 
+      (localStorage.getItem('language') || 'zh-cn');
+    
     let modal = document.getElementById('announcement-modal');
     if (!modal) {
       modal = document.createElement('div');
@@ -263,7 +268,7 @@ class AnnouncementSystem {
           <div class="announcement-modal-header">
             <h3 class="announcement-modal-title"></h3>
             <div class="announcement-modal-actions">
-              <button class="announcement-translate-btn" title="翻译">
+              <button class="announcement-translate-btn" title="翻译" style="display: none;">
                 <i class="fas fa-language"></i>
                 <span class="translate-text">翻译</span>
               </button>
@@ -283,9 +288,32 @@ class AnnouncementSystem {
     
     const titleElement = modal.querySelector('.announcement-modal-title');
     const contentElement = modal.querySelector('.announcement-modal-content.html-content');
+    const translateBtn = modal.querySelector('.announcement-translate-btn');
+    const translateText = translateBtn ? translateBtn.querySelector('.translate-text') : null;
     
     if (titleElement) titleElement.textContent = announcement.title;
     if (contentElement) contentElement.innerHTML = announcement.content;
+    
+    // 根据网站语言设置翻译按钮
+    if (siteLanguage !== 'zh-cn' && translateBtn) {
+      // 非中文时显示翻译按钮
+      translateBtn.style.display = 'flex';
+      
+      // 设置按钮文本
+      const buttonTexts = {
+        'en-us': { translate: 'Translate', original: 'Original' },
+        'ja-jp': { translate: '翻訳', original: '原文' }
+      };
+      
+      if (buttonTexts[siteLanguage] && translateText) {
+        translateText.textContent = buttonTexts[siteLanguage].translate;
+        translateText.setAttribute('data-translate-text', buttonTexts[siteLanguage].translate);
+        translateText.setAttribute('data-original-text', buttonTexts[siteLanguage].original);
+      }
+    } else if (translateBtn) {
+      // 中文时隐藏翻译按钮
+      translateBtn.style.display = 'none';
+    }
     
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -303,24 +331,31 @@ class AnnouncementSystem {
     
     if (!titleElement || !contentElement) return;
     
+    // 获取网站当前语言
+    const siteLanguage = typeof languageModule !== 'undefined' ? 
+      languageModule.getCurrentLanguage() : 
+      (localStorage.getItem('language') || 'zh-cn');
+    
+    // 根据网站语言设置目标翻译语言
+    let targetLang = 'en'; // 默认英文
+    let loadingText = 'Translating...';
+    let originalBtnText = translateText.getAttribute('data-original-text') || 'Original';
+    let translateBtnText = translateText.getAttribute('data-translate-text') || 'Translate';
+    
+    if (siteLanguage === 'en-us') {
+      targetLang = 'en';
+      loadingText = 'Translating...';
+    } else if (siteLanguage === 'ja-jp') {
+      targetLang = 'ja';
+      loadingText = '翻訳中...';
+    }
+    
     // 显示加载状态
     translateBtn.disabled = true;
-    translateText.textContent = '翻译中...';
+    translateText.textContent = loadingText;
     
     try {
       if (this.currentLanguage === 'zh-CN') {
-        // 获取用户的浏览器语言
-        const userLang = navigator.language || navigator.userLanguage;
-        let targetLang = 'en'; // 默认英语
-        
-        if (userLang.startsWith('ja')) {
-          targetLang = 'ja';
-        } else if (userLang.startsWith('ko')) {
-          targetLang = 'ko';
-        } else if (userLang.startsWith('zh')) {
-          targetLang = 'en'; // 中文用户默认翻译成英文
-        }
-        
         // 翻译标题和内容
         const translatedTitle = await this.translateText(this.originalContent.title, targetLang);
         const translatedContent = await this.translateText(this.stripHtml(this.originalContent.content), targetLang);
@@ -329,19 +364,19 @@ class AnnouncementSystem {
         contentElement.innerHTML = `<div class="translated-content">${this.formatTranslatedContent(translatedContent)}</div>`;
         
         this.currentLanguage = targetLang;
-        translateText.textContent = '原文';
+        translateText.textContent = originalBtnText;
       } else {
         // 恢复原文
         titleElement.textContent = this.originalContent.title;
         contentElement.innerHTML = this.originalContent.content;
         
         this.currentLanguage = 'zh-CN';
-        translateText.textContent = '翻译';
+        translateText.textContent = translateBtnText;
       }
     } catch (error) {
       console.error('翻译失败:', error);
       alert('翻译失败，请稍后重试');
-      translateText.textContent = '翻译';
+      translateText.textContent = translateBtnText;
     } finally {
       translateBtn.disabled = false;
     }
@@ -940,3 +975,48 @@ window.saveAnnouncement = function() {
     console.error('announcementAdminSystem 未初始化');
   }
 };
+
+// 监听语言变化事件
+window.addEventListener('languageChanged', function(e) {
+  const modal = document.getElementById('announcement-modal');
+  if (modal && modal.classList.contains('show')) {
+    const translateBtn = modal.querySelector('.announcement-translate-btn');
+    const translateText = translateBtn ? translateBtn.querySelector('.translate-text') : null;
+    const siteLanguage = e.detail.language;
+    
+    // 根据新语言更新翻译按钮
+    if (siteLanguage !== 'zh-cn' && translateBtn) {
+      translateBtn.style.display = 'flex';
+      
+      const buttonTexts = {
+        'en-us': { translate: 'Translate', original: 'Original' },
+        'ja-jp': { translate: '翻訳', original: '原文' }
+      };
+      
+      if (buttonTexts[siteLanguage] && translateText) {
+        // 如果当前是原文状态，更新按钮文本为对应语言
+        if (window.announcementSystem && window.announcementSystem.currentLanguage === 'zh-CN') {
+          translateText.textContent = buttonTexts[siteLanguage].translate;
+        } else {
+          translateText.textContent = buttonTexts[siteLanguage].original;
+        }
+        translateText.setAttribute('data-translate-text', buttonTexts[siteLanguage].translate);
+        translateText.setAttribute('data-original-text', buttonTexts[siteLanguage].original);
+      }
+    } else if (translateBtn) {
+      translateBtn.style.display = 'none';
+      // 如果切换到中文，恢复原文
+      if (window.announcementSystem && window.announcementSystem.currentLanguage !== 'zh-CN') {
+        const titleElement = modal.querySelector('.announcement-modal-title');
+        const contentElement = modal.querySelector('.announcement-modal-content.html-content');
+        if (titleElement && window.announcementSystem.originalContent.title) {
+          titleElement.textContent = window.announcementSystem.originalContent.title;
+        }
+        if (contentElement && window.announcementSystem.originalContent.content) {
+          contentElement.innerHTML = window.announcementSystem.originalContent.content;
+        }
+        window.announcementSystem.currentLanguage = 'zh-CN';
+      }
+    }
+  }
+});

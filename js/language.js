@@ -17,7 +17,6 @@ const languageModule = (function() {
             'sidebar-tools': '实用工具',
             'sidebar-patcher': '补丁工具',
             'sidebar-fortune': '每日签到',
-			//'sidebar-exchange': '兑换码',
             
             // 主内容-下载
             'download-heading': '下载',
@@ -74,10 +73,9 @@ const languageModule = (function() {
             'announcements-title': '最新公告',
             'click-detail': '查看详情',
             
-            // 公告标签
-            'badge-dgr': '重要',
-            'badge-upd': '更新',
-            'badge-notice': '通知'
+            // 公告翻译按钮
+            'translate-btn-text': '翻译',
+            'translate-btn-original': '原文'
         },
 
         'en-us': {
@@ -95,7 +93,6 @@ const languageModule = (function() {
             'sidebar-tools': 'Tools',
             'sidebar-patcher': 'Patcher',
             'sidebar-fortune': 'Daily Fortune',
-			//'sidebar-exchange': 'Exchange',
 
             // 主内容-下载
             'download-heading': 'Download',
@@ -151,11 +148,10 @@ const languageModule = (function() {
             'top-page': 'Top Page',
             'announcements-title': 'Information',
             'click-detail': 'Details',
-            
-            // 公告标签
-            'badge-dgr': 'IMPORTANT',
-            'badge-upd': 'UPDATE',
-            'badge-notice': 'NOTICE'
+
+            // 公告翻译按钮
+            'translate-btn-text': 'Translate',
+            'translate-btn-original': 'Original'
         },
 
         'ja-jp': {
@@ -173,7 +169,6 @@ const languageModule = (function() {
             'sidebar-tools': 'ツール',
             'sidebar-patcher': 'パッチツール',
             'sidebar-fortune': 'おみくじ',
-			//'sidebar-exchange': '引き換えコード',
             
             // 下载页面
             'download-heading': 'ダウンロード',
@@ -230,10 +225,9 @@ const languageModule = (function() {
             'announcements-title': 'ニュース',
             'click-detail': '詳しく',
             
-            // 公告标签
-            'badge-dgr': '重要なお知らせ',
-            'badge-upd': 'アップデート',
-            'badge-notice': 'お知らせ'
+            // 公告翻译按钮
+            'translate-btn-text': '翻訳',
+            'translate-btn-original': '原文'
         }
     };
 
@@ -315,6 +309,15 @@ const languageModule = (function() {
             batchUpdateDOM(badgeUpdates);
         }
         
+        // 更新翻译按钮文本
+        const translateBtn = document.querySelector('.announcement-translate-btn');
+        if (translateBtn) {
+            const translateText = translateBtn.querySelector('.translate-text');
+            if (translateText && langData['translate-btn-text']) {
+                translateText.textContent = langData['translate-btn-text'];
+            }
+        }
+        
         // 更新URL中的lang参数，不重新加载页面
         const url = new URL(window.location);
         url.searchParams.set('lang', lang);
@@ -353,10 +356,16 @@ const languageModule = (function() {
         }
     }
 
+    // 获取当前语言
+    function getCurrentLanguage() {
+        return localStorage.getItem('language') || 'zh-cn';
+    }
+
     // 公共API
     return {
         setLanguage,
-        initLanguage
+        initLanguage,
+        getCurrentLanguage
     };
 })();
 
