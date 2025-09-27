@@ -7,6 +7,8 @@ class AnnouncementSystem {
     this.totalPages = 1;
     this.announcements = [];
     this.pinnedAnnouncements = [];
+    this.currentLanguage = 'zh-CN'; // 当前语言
+    this.originalContent = {}; // 存储原始内容
   }
 
   // 初始化公告系统
@@ -38,6 +40,13 @@ class AnnouncementSystem {
       // 点击弹窗外部关闭
       if (e.target.classList.contains('announcement-modal')) {
         this.hideAnnouncementModal();
+      }
+
+      // 翻译按钮点击事件
+      if (e.target.closest('.announcement-translate-btn')) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleTranslation();
       }
 
       // 分页点击事件
@@ -235,6 +244,15 @@ class AnnouncementSystem {
 
   // 显示公告弹窗
   showAnnouncementModal(announcement) {
+    // 重置语言状态
+    this.currentLanguage = 'zh-CN';
+    
+    // 存储原始内容
+    this.originalContent = {
+      title: announcement.title,
+      content: announcement.content
+    };
+    
     let modal = document.getElementById('announcement-modal');
     if (!modal) {
       modal = document.createElement('div');
@@ -244,7 +262,13 @@ class AnnouncementSystem {
         <div class="announcement-modal-content">
           <div class="announcement-modal-header">
             <h3 class="announcement-modal-title"></h3>
-            <button class="announcement-modal-close">&times;</button>
+            <div class="announcement-modal-actions">
+              <button class="announcement-translate-btn" title="翻译">
+                <i class="fas fa-language"></i>
+                <span class="translate-text">翻译</span>
+              </button>
+              <button class="announcement-modal-close">&times;</button>
+            </div>
           </div>
           <div class="announcement-modal-body">
             <div class="announcement-modal-content html-content"></div>
@@ -267,12 +291,122 @@ class AnnouncementSystem {
     document.body.style.overflow = 'hidden';
   }
 
+  // 切换翻译
+  async toggleTranslation() {
+    const modal = document.getElementById('announcement-modal');
+    if (!modal) return;
+    
+    const titleElement = modal.querySelector('.announcement-modal-title');
+    const contentElement = modal.querySelector('.announcement-modal-content.html-content');
+    const translateBtn = modal.querySelector('.announcement-translate-btn');
+    const translateText = translateBtn.querySelector('.translate-text');
+    
+    if (!titleElement || !contentElement) return;
+    
+    // 显示加载状态
+    translateBtn.disabled = true;
+    translateText.textContent = '翻译中...';
+    
+    try {
+      if (this.currentLanguage === 'zh-CN') {
+        // 获取用户的浏览器语言
+        const userLang = navigator.language || navigator.userLanguage;
+        let targetLang = 'en'; // 默认英语
+        
+        if (userLang.startsWith('ja')) {
+          targetLang = 'ja';
+        } else if (userLang.startsWith('ko')) {
+          targetLang = 'ko';
+        } else if (userLang.startsWith('zh')) {
+          targetLang = 'en'; // 中文用户默认翻译成英文
+        }
+        
+        // 翻译标题和内容
+        const translatedTitle = await this.translateText(this.originalContent.title, targetLang);
+        const translatedContent = await this.translateText(this.stripHtml(this.originalContent.content), targetLang);
+        
+        titleElement.textContent = translatedTitle;
+        contentElement.innerHTML = `<div class="translated-content">${this.formatTranslatedContent(translatedContent)}</div>`;
+        
+        this.currentLanguage = targetLang;
+        translateText.textContent = '原文';
+      } else {
+        // 恢复原文
+        titleElement.textContent = this.originalContent.title;
+        contentElement.innerHTML = this.originalContent.content;
+        
+        this.currentLanguage = 'zh-CN';
+        translateText.textContent = '翻译';
+      }
+    } catch (error) {
+      console.error('翻译失败:', error);
+      alert('翻译失败，请稍后重试');
+      translateText.textContent = '翻译';
+    } finally {
+      translateBtn.disabled = false;
+    }
+  }
+
+  // 调用翻译API
+  async translateText(text, targetLang) {
+    // 使用Google翻译的Web API（需要注意：这是一个非官方的方法，可能会有限制）
+    // 更可靠的方案是使用官方的Google Translate API或其他翻译服务
+    
+    try {
+      // 这里使用一个简单的翻译API示例
+      // 实际使用时，建议使用正规的翻译服务API
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data && data[0]) {
+        return data[0].map(item => item[0]).join('');
+      }
+      
+      throw new Error('翻译数据格式错误');
+    } catch (error) {
+      // 如果API调用失败，使用备用方案：打开Google翻译网页
+      console.warn('API翻译失败，使用备用方案');
+      window.open(`https://translate.google.com/?sl=zh-CN&tl=${targetLang}&text=${encodeURIComponent(text)}&op=translate`, '_blank');
+      throw error;
+    }
+  }
+
+  // 移除HTML标签
+  stripHtml(html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  }
+
+  // 格式化翻译后的内容
+  formatTranslatedContent(text) {
+    // 将纯文本转换为基本的HTML格式
+    return text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line)
+      .map(line => `<p>${line}</p>`)
+      .join('');
+  }
+
   // 隐藏公告弹窗
   hideAnnouncementModal() {
     const modal = document.getElementById('announcement-modal');
     if (modal) {
       modal.classList.remove('show');
       document.body.style.overflow = '';
+      
+      // 重置翻译状态
+      this.currentLanguage = 'zh-CN';
+      const translateBtn = modal.querySelector('.announcement-translate-btn');
+      if (translateBtn) {
+        const translateText = translateBtn.querySelector('.translate-text');
+        if (translateText) {
+          translateText.textContent = '翻译';
+        }
+      }
     }
   }
 }

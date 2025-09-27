@@ -283,21 +283,61 @@
   padding: 18px 20px;
   position: relative;
   box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .announcement-modal-title {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  padding-right: 30px;
   line-height: 1.4;
+  flex: 1;
+  padding-right: 10px;
+}
+
+/* 新增：弹窗操作按钮组 */
+.announcement-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 新增：翻译按钮样式 */
+.announcement-translate-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.announcement-translate-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.announcement-translate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.announcement-translate-btn i {
+  font-size: 14px;
 }
 
 .announcement-modal-close {
-  position: absolute;
-  top: 50%;
-  right: 20px;
-  transform: translateY(-50%);
   color: white;
   font-size: 24px;
   font-weight: 300;
@@ -318,7 +358,7 @@
 .announcement-modal-close:hover {
   background: rgba(255, 255, 255, 0.2);
   opacity: 1;
-  transform: translateY(-50%) rotate(90deg);
+  transform: rotate(90deg);
 }
 
 .announcement-modal-body {
@@ -374,6 +414,34 @@
 .announcement-modal-content.html-content a:hover {
   color: #764ba2;
   border-bottom-color: #764ba2;
+}
+
+/* 新增：翻译内容样式 */
+.translated-content {
+  position: relative;
+  padding: 12px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-left: 3px solid #3b82f6;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.translated-content::before {
+  content: '翻译内容';
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  background: white;
+  padding: 0 6px;
+  font-size: 11px;
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.translated-content p {
+  margin: 8px 0;
+  line-height: 1.7;
+  color: #334155;
 }
 
 .announcement-modal-footer {
@@ -508,10 +576,28 @@
   
   .announcement-modal-header {
     padding: 14px 16px;
+    flex-direction: column;
+    align-items: flex-start;
   }
   
   .announcement-modal-title {
     font-size: 14px;
+    padding-right: 0;
+    margin-bottom: 8px;
+  }
+  
+  .announcement-modal-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .announcement-translate-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  
+  .announcement-translate-btn i {
+    font-size: 13px;
   }
   
   .announcement-modal-body {
@@ -520,6 +606,15 @@
   
   .announcement-modal-footer {
     padding: 10px 16px;
+  }
+  
+  .translated-content {
+    padding: 10px;
+    margin-top: 8px;
+  }
+  
+  .translated-content::before {
+    font-size: 10px;
   }
 }
 
