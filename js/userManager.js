@@ -149,73 +149,103 @@ class UserManager {
     }
   }
 
-  renderUsers() {
-    const tbody = document.getElementById('users-table-body');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+renderUsers() {
+  const tbody = document.getElementById('users-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
 
-    if (!this.users.length) {
-      tbody.innerHTML = '<tr><td colspan="13" class="text-center">没有找到用户</td></tr>';
-      return;
-    }
-
-    this.users.forEach(user => {
-      const isEditing = this.editingUserId === user.id;
-      const tr = document.createElement('tr');
-      tr.setAttribute('data-user-id', user.id);
-      tr.innerHTML = this.getUserRowHTML(user, isEditing);
-      tbody.appendChild(tr);
-    });
-  }
-
-  getUserRowHTML(user, isEditing) {
-    const rankMap = {0:'普通用户',1:'初级用户',2:'中级用户',3:'高级用户',4:'贵宾用户',5:'系统管理员'};
-    const specialRankMap = {0:'无',1:'MML',
-  2:'协同管理员'
-};
-    const stateMap = {0:'正常',1:'受限',2:'封禁'};
-    const avatarUrl = user.avatar ? `https://api.am-all.com.cn/avatars/${user.avatar}` : 'https://api.am-all.com.cn/avatars/default_avatar.png';
-
-    return `
-      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.avatar || ''}" data-field="avatar">` : `<img src="${avatarUrl}" class="user-avatar" alt="头像">`}</td>
-      <td>${user.uid}</td>
-      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.username}" data-field="username">` : user.username}</td>
-      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.email || ''}" data-field="email">` : (user.email || '未设置')}</td>
-      <td>${isEditing ? `
-          <select class="edit-mode-select" data-field="user_rank">
-            <option value="0" ${user.user_rank==0?'selected':''}>普通用户</option>
-            <option value="1" ${user.user_rank==1?'selected':''}>初级用户</option>
-            <option value="2" ${user.user_rank==2?'selected':''}>中级用户</option>
-            <option value="3" ${user.user_rank==3?'selected':''}>高级用户</option>
-            <option value="4" ${user.user_rank==4?'selected':''}>贵宾用户</option>
-            <option value="5" ${user.user_rank==5?'selected':''}>系统管理员</option>
-          </select>` : (rankMap[user.user_rank] || '未知')}</td>
-      <td>${isEditing ? `
-          <select class="edit-mode-select" data-field="rankSp">
-            <option value="0" ${user.rankSp==0?'selected':''}>无</option>
-            <option value="1" ${user.rankSp==1?'selected':''}>MML</option>
-            <option value="2" ${user.rankSp==2?'selected':''}>协同管理员</option>
-          </select>` : (specialRankMap[user.rankSp] || '未知')}</td>
-      <td>${isEditing ? `<input type="number" class="edit-mode-input" value="${user.points || 0}" data-field="points" min="0">` : (user.points || 0)}</td>
-      <td>${isEditing ? `<input type="number" class="edit-mode-input" value="${user.point2 || 0}" data-field="point2" min="0">` : (user.point2 || 0)}</td>
-      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.game_server || ''}" data-field="game_server">` : (user.game_server || '未绑定')}</td>
-      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.keychip || ''}" data-field="keychip">` : (user.keychip || '未绑定')}</td>
-      <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.guid || ''}" data-field="guid">` : (user.guid || '未绑定')}</td>
-      <td>${isEditing ? `
-          <select class="edit-mode-select" data-field="banState">
-            <option value="0" ${user.banState==0?'selected':''}>正常</option>
-            <option value="1" ${user.banState==1?'selected':''}>受限</option>
-            <option value="2" ${user.banState==2?'selected':''}>封禁</option>
-          </select>` : (stateMap[user.banState] || '未知')}</td>
-      <td class="user-actions">
-        ${isEditing ? `
-          <button class="btn-save" data-user-id="${user.id}">保存</button>
-          <button class="btn-cancel" data-user-id="${user.id}">取消</button>` : `
-          <button class="btn-edit" data-user-id="${user.id}">编辑</button>
-          <button class="btn-auth" data-user-id="${user.id}">授权</button>`}
-      </td>
+  // 确保表头包含新的列
+  const thead = tbody.parentElement.querySelector('thead');
+  if (thead && !thead.innerHTML.includes('昵称')) {
+    thead.innerHTML = `
+      <tr>
+        <th>头像</th>
+        <th>UID</th>
+        <th>用户名</th>
+        <th>昵称</th>
+        <th>邮箱</th>
+        <th>用户组</th>
+        <th>特殊等级</th>
+        <th>账户认证</th>
+        <th>积分</th>
+        <th>鸽屋积分</th>
+        <th>游戏服务器</th>
+        <th>Keychip</th>
+        <th>GUID</th>
+        <th>状态</th>
+        <th>操作</th>
+      </tr>
     `;
   }
+
+  if (!this.users.length) {
+    tbody.innerHTML = '<tr><td colspan="15" class="text-center">没有找到用户</td></tr>';
+    return;
+  }
+
+  this.users.forEach(user => {
+    const isEditing = this.editingUserId === user.id;
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-user-id', user.id);
+    tr.innerHTML = this.getUserRowHTML(user, isEditing);
+    tbody.appendChild(tr);
+  });
+}
+
+getUserRowHTML(user, isEditing) {
+  const rankMap = {0:'普通用户',1:'初级用户',2:'中级用户',3:'高级用户',4:'贵宾用户',5:'系统管理员'};
+  const specialRankMap = {0:'无',1:'MML',2:'协同管理员'};
+  const stateMap = {0:'正常',1:'受限',2:'封禁'};
+  const authMap = {0:'无',1:'个人认证',2:'官方认证'};
+  const avatarUrl = user.avatar ? `https://api.am-all.com.cn/avatars/${user.avatar}` : 'https://api.am-all.com.cn/avatars/default_avatar.png';
+
+  return `
+    <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.avatar || ''}" data-field="avatar">` : `<img src="${avatarUrl}" class="user-avatar" alt="头像">`}</td>
+    <td>${user.uid}</td>
+    <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.username}" data-field="username">` : user.username}</td>
+    <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.nickname || ''}" data-field="nickname" placeholder="未设置昵称">` : (user.nickname || '未设置')}</td>
+    <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.email || ''}" data-field="email">` : (user.email || '未设置')}</td>
+    <td>${isEditing ? `
+        <select class="edit-mode-select" data-field="user_rank">
+          <option value="0" ${user.user_rank==0?'selected':''}>普通用户</option>
+          <option value="1" ${user.user_rank==1?'selected':''}>初级用户</option>
+          <option value="2" ${user.user_rank==2?'selected':''}>中级用户</option>
+          <option value="3" ${user.user_rank==3?'selected':''}>高级用户</option>
+          <option value="4" ${user.user_rank==4?'selected':''}>贵宾用户</option>
+          <option value="5" ${user.user_rank==5?'selected':''}>系统管理员</option>
+        </select>` : (rankMap[user.user_rank] || '未知')}</td>
+    <td>${isEditing ? `
+        <select class="edit-mode-select" data-field="rankSp">
+          <option value="0" ${user.rankSp==0?'selected':''}>无</option>
+          <option value="1" ${user.rankSp==1?'selected':''}>maimoller</option>
+          <option value="2" ${user.rankSp==2?'selected':''}>协同管理员</option>
+        </select>` : (specialRankMap[user.rankSp] || '未知')}</td>
+    <td>${isEditing ? `
+        <select class="edit-mode-select" data-field="account_auth">
+          <option value="0" ${user.account_auth==0?'selected':''}>无</option>
+          <option value="1" ${user.account_auth==1?'selected':''}>个人认证</option>
+          <option value="2" ${user.account_auth==2?'selected':''}>官方认证</option>
+        </select>` : (authMap[user.account_auth] || '无')}</td>
+    <td>${isEditing ? `<input type="number" class="edit-mode-input" value="${user.points || 0}" data-field="points" min="0">` : (user.points || 0)}</td>
+    <td>${isEditing ? `<input type="number" class="edit-mode-input" value="${user.point2 || 0}" data-field="point2" min="0">` : (user.point2 || 0)}</td>
+    <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.game_server || ''}" data-field="game_server">` : (user.game_server || '未绑定')}</td>
+    <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.keychip || ''}" data-field="keychip">` : (user.keychip || '未绑定')}</td>
+    <td>${isEditing ? `<input type="text" class="edit-mode-input" value="${user.guid || ''}" data-field="guid">` : (user.guid || '未绑定')}</td>
+    <td>${isEditing ? `
+        <select class="edit-mode-select" data-field="banState">
+          <option value="0" ${user.banState==0?'selected':''}>正常</option>
+          <option value="1" ${user.banState==1?'selected':''}>受限</option>
+          <option value="2" ${user.banState==2?'selected':''}>封禁</option>
+        </select>` : (stateMap[user.banState] || '未知')}</td>
+    <td class="user-actions">
+      ${isEditing ? `
+        <button class="btn-save" data-user-id="${user.id}">保存</button>
+        <button class="btn-cancel" data-user-id="${user.id}">取消</button>` : `
+        <button class="btn-edit" data-user-id="${user.id}">编辑</button>
+        <button class="btn-auth" data-user-id="${user.id}">授权</button>`}
+    </td>
+  `;
+}
 
   renderPagination() {
     const container = document.getElementById('user-pagination');
@@ -280,9 +310,11 @@ async saveUserChanges(userId) {
 
     const updates = {
       username: row.querySelector('[data-field="username"]')?.value,
+      nickname: row.querySelector('[data-field="nickname"]')?.value,
       email: row.querySelector('[data-field="email"]')?.value,
       user_rank: row.querySelector('[data-field="user_rank"]')?.value,
       rankSp: row.querySelector('[data-field="rankSp"]')?.value,
+      account_auth: row.querySelector('[data-field="account_auth"]')?.value,
       points: row.querySelector('[data-field="points"]')?.value,
       point2: row.querySelector('[data-field="point2"]')?.value,
       game_server: row.querySelector('[data-field="game_server"]')?.value,
