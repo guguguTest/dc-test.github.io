@@ -2,7 +2,6 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <!-- 修复：更新viewport设置，防止输入框导致的缩放问题 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>EVIL LEAKER</title>
   <link rel="shortcut icon" href="https://oss.am-all.com.cn/asset/img/manual/common/site_logo.svg" />
@@ -46,7 +45,7 @@
   <nav class="top-navbar">
     <!-- 左侧区域 -->
     <div class="navbar-left">
-      <!-- 移动端菜单按钮 - 修改为新的汉堡图标结构 -->
+      <!-- 移动端菜单按钮 -->
       <button class="mobile-toggle">
         <span class="hamburger-icon">
           <span></span>
@@ -59,7 +58,7 @@
       <div class="language-selector language-selector-pc">
         <button class="language-btn">
           <i class="fas fa-globe"></i>
-          <span id="language-text">语言</span>
+          <span data-i18n="navbar.language">语言</span>
         </button>
         <div class="language-dropdown">
           <a href="?lang=zh-cn" class="language-item">中文</a>
@@ -73,7 +72,7 @@
     <div class="navbar-center">
       <!-- 品牌标题 -->
       <div class="brand">
-        <span id="navbar-brand">EVIL LEAKER</span>
+        <span data-i18n="navbar.brand">EVIL LEAKER</span>
       </div>
     </div>
     
@@ -106,9 +105,9 @@
         <div class="user-area" id="user-area-pc">
           <!-- 登录前 -->
           <div class="auth-links" id="auth-links-pc">
-            <a href="#" data-page="login" id="login-link-pc">登录</a>
+            <a href="#" data-page="login" data-i18n="user.login">登录</a>
             <span class="divider">/</span>
-            <a href="#" data-page="register" id="register-link-pc">注册</a>
+            <a href="#" data-page="register" data-i18n="user.register">注册</a>
           </div>
           
           <!-- 登录后 -->
@@ -120,20 +119,20 @@
             </div>
             <div class="user-dropdown">
               <div class="dropdown-rank">
-                <span id="dropdown-rank">普通用户</span>
+                <span id="dropdown-rank" data-i18n="user.normalUser">普通用户</span>
               </div>
               <div class="dropdown-uid">
                 <i class="fas fa-id-card me-2"></i>
                 <span id="dropdown-uid"></span>
               </div>
               <div class="dropdown-points" id="dropdown-points">
-                <i class="fas fa-coins me-2"></i>积分: 0
+                <i class="fas fa-coins me-2"></i><span data-i18n="user.points">积分</span>: 0
               </div>
 			  <div class="dropdown-credit" id="dropdown-credit">
-				<i class="fas fa-star me-2"></i>CREDIT: 0
+				<i class="fas fa-star me-2"></i><span data-i18n="user.credit">CREDIT</span>: 0
 			  </div>
-              <a href="#" data-page="user-settings">用户设置</a>
-              <a href="#" id="logout-pc">退出登录</a>
+              <a href="#" data-page="user-settings" data-i18n="user.settings">用户设置</a>
+              <a href="#" id="logout-pc" data-i18n="user.logout">退出登录</a>
             </div>
           </div>
         </div>
@@ -141,7 +140,7 @@
     </div>
   </nav>
   
-  <!-- 侧边栏保持不变 -->
+  <!-- 侧边栏 -->
   <div class="sidebar">
     <div class="sidebar-header">
       <span class="sidebar-title"></span>
@@ -151,11 +150,11 @@
       <div class="auth-links" id="auth-links-mobile">
         <a href="#" data-page="login" class="mobile-auth-btn">
           <i class="fas fa-sign-in-alt me-2"></i>
-          <span>登录</span>
+          <span data-i18n="user.login">登录</span>
         </a>
         <a href="#" data-page="register" class="mobile-auth-btn">
           <i class="fas fa-user-plus me-2"></i>
-          <span>注册</span>
+          <span data-i18n="user.register">注册</span>
         </a>
       </div>
       
@@ -171,10 +170,10 @@
         </div>
         <div class="user-actions">
           <a href="#" data-page="user-settings" class="mobile-user-action-btn">
-            <i class="fas fa-cog me-2"></i>用户设置
+            <i class="fas fa-cog me-2"></i><span data-i18n="user.settings">用户设置</span>
           </a>
           <a href="#" id="logout-mobile" class="mobile-user-action-btn">
-            <i class="fas fa-sign-out-alt me-2"></i>退出登录
+            <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="user.logout">退出登录</span>
           </a>
         </div>
       </div>
@@ -183,27 +182,27 @@
     <ul class="sidebar-nav">
       <li><a href="#" class="active" data-page="home">
         <i class="fas fa-home"></i>
-        <span id="sidebar-home">首页</span>
+        <span data-i18n="sidebar.home">首页</span>
       </a></li>
       <li><a href="#" data-page="download">
         <i class="fas fa-download"></i>
-        <span id="sidebar-data">下载</span>
+        <span data-i18n="sidebar.download">下载</span>
       </a></li>
       <li><a href="#" data-page="tools">
         <i class="fas fa-edit"></i>
-        <span id="sidebar-tools">实用工具</span>
+        <span data-i18n="sidebar.tools">实用工具</span>
       </a></li>
       <li><a href="#" data-page="dllpatcher">
         <i class="fas fa-plug"></i>
-        <span id="sidebar-patcher">补丁工具</span>
+        <span data-i18n="sidebar.patcher">补丁工具</span>
       </a></li>
       <li><a href="#" data-page="settings">
         <i class="fas fa-cog"></i>
-        <span id="sidebar-settings">设置</span>
+        <span data-i18n="sidebar.settings">设置</span>
       </a></li>
       <li><a href="#" data-page="help">
         <i class="fas fa-question-circle"></i>
-        <span id="sidebar-help">帮助</span>
+        <span data-i18n="sidebar.help">帮助</span>
       </a></li>
     </ul>
 
@@ -211,25 +210,25 @@
 
     <div class="sidebar-section-title">
       <i class="fas fa-cogs"></i>
-      <span>功能</span>
+      <span data-i18n="sidebar.functions">功能</span>
     </div>
 
     <ul class="sidebar-nav">
       <li><a href="#" data-page="fortune">
         <i class="fas fa-star me-2"></i>
-        <span id="sidebar-fortune">每日签到</span>
+        <span data-i18n="sidebar.fortune">每日签到</span>
       </a></li>
       <li><a href="#" data-page="ccb" id="sidebar-ccb" style="display: none;">
         <i class="fas fa-search me-2"></i>
-        <span>游戏查分</span>
+        <span data-i18n="sidebar.ccb">游戏查分</span>
       </a></li>
       <li><a href="#" data-page="exchange" id="sidebar-exchange" style="display: none;">
         <i class="fas fa-exchange-alt me-2"></i>
-        <span>兑换码</span>
+        <span data-i18n="sidebar.exchange">兑换码</span>
       </a></li>
 	  <li><a href="#" data-page="point-shop" id="sidebar-point-shop" style="display: none;">
 		<i class="fas fa-store me-2"></i>
-		<span>积分商店</span>
+		<span data-i18n="sidebar.pointShop">积分商店</span>
 	  </a></li>
     </ul>
 
@@ -237,41 +236,41 @@
 
     <div class="sidebar-section-title" id="admin-section-title" style="display: none;">
       <i class="fas fa-shield-alt"></i>
-      <span>管理</span>
+      <span data-i18n="sidebar.admin">管理</span>
     </div>
 
     <ul class="sidebar-nav" id="admin-section-nav" style="display: none;">
       <li><a href="#" data-page="user-manager" id="sidebar-user-manager" style="display: none;">
         <i class="fas fa-users me-2"></i>
-        <span>用户管理</span>
+        <span data-i18n="sidebar.userManager">用户管理</span>
       </a></li>
       <li><a href="#" data-page="announcement-admin" id="sidebar-announcement-admin" style="display: none;">
         <i class="fas fa-bullhorn me-2"></i>
-        <span>公告管理</span>
+        <span data-i18n="sidebar.announcementAdmin">公告管理</span>
       </a></li>
       <li><a href="#" data-page="site-admin" id="sidebar-site-admin" style="display: none;">
         <i class="fas fa-cogs me-2"></i>
-        <span>网站管理</span>
+        <span data-i18n="sidebar.siteAdmin">网站管理</span>
       </a></li>
       <li><a href="#" data-page="download-admin" id="sidebar-download-admin" style="display: none;">
         <i class="fas fa-download me-2"></i>
-        <span>下载管理</span>
+        <span data-i18n="sidebar.downloadAdmin">下载管理</span>
       </a></li>
 	  <li><a href="#" data-page="points-shop-admin" id="sidebar-points-shop-admin" style="display: none;">
 		<i class="fas fa-coins me-2"></i>
-		<span>积分商品管理</span>
+		<span data-i18n="sidebar.pointsShopAdmin">积分商品管理</span>
 	  </a></li>
 	  <li><a href="#" data-page="point2-shop-admin" id="sidebar-point2-shop-admin" style="display: none;">
 		<i class="fas fa-dove me-2"></i>
-		<span>鸽屋积分商品管理</span>
+		<span data-i18n="sidebar.point2ShopAdmin">鸽屋积分商品管理</span>
 	  </a></li>
 	  <li><a href="#" data-page="credit-shop-admin" id="sidebar-credit-shop-admin" style="display: none;">
 	    <i class="fas fa-star me-2"></i>
-	    <span>CREDIT点数商品管理</span>
+	    <span data-i18n="sidebar.creditShopAdmin">CREDIT点数商品管理</span>
 	  </a></li>
       <li><a href="#" data-page="order-entry" id="sidebar-order-entry" style="display: none;">
         <i class="fas fa-file-invoice me-2"></i>
-        <span>订单录入</span>
+        <span data-i18n="sidebar.orderEntry">订单录入</span>
       </a></li>
     </ul>
 
@@ -280,11 +279,11 @@
   
   <div class="main-content" id="content-container">
     <div class="section">
-      <h1 class="page-title">首页</h1>
-      <p>请从左侧菜单选择功能</p>
+      <h1 class="page-title" data-i18n="home.title">首页</h1>
+      <p data-i18n="home.selectFunction">请从左侧菜单选择功能</p>
       <div class="alert alert-info mt-4">
         <i class="fas fa-info-circle me-2"></i>
-        Loading...
+        <span data-i18n="common.loading">Loading...</span>
       </div>
     </div>
   </div>
@@ -308,10 +307,10 @@
   <script defer src="js/cursor.js"></script>
   <script defer src="js/announcement.js"></script>
 
-  <!-- 3. 表情缓存系统（合并版） -->
+  <!-- 3. 表情缓存系统（合并版）-->
   <script defer src="js/emoji-cache.js"></script>
 
-  <!-- 4. 表情系统（合并版） -->
+  <!-- 4. 表情系统（合并版）-->
   <script defer src="js/emoji.js"></script>
 
   <!-- 5. 消息系统 -->
@@ -343,5 +342,26 @@
 
   <!-- 10. 移动端优化 -->
   <script defer src="js/mobile-sidebar.js"></script>
+  
+  <!-- 页面加载完成后初始化语言 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 监听页面内容更新事件，自动更新翻译
+      window.addEventListener('pageLoaded', function() {
+        if (typeof languageModule !== 'undefined' && languageModule.updateTranslations) {
+          setTimeout(function() {
+            languageModule.updateTranslations();
+          }, 100);
+        }
+      });
+      
+      // 监听SPA页面切换事件
+      window.addEventListener('contentUpdated', function() {
+        if (typeof languageModule !== 'undefined' && languageModule.updateTranslations) {
+          languageModule.updateTranslations();
+        }
+      });
+    });
+  </script>
  </body>
 </html>
