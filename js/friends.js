@@ -20,6 +20,8 @@
   let lastDataLoadTime = 0;
   let currentView = 'friends'; // 新增：当前视图（friends, blacklist）
   let friendMessagesCount = 0; // 新增：好友未读消息数
+  let heartbeatInterval = null; // 新增：心跳相关变量
+  let chatStatusCheckInterval = null; // 新增：聊天在线状态检查
 
   // 缓存数据的有效期（毫秒）
   const DATA_CACHE_DURATION = 60000; // 1分钟
@@ -43,6 +45,9 @@
     
     // 检查好友消息
     checkFriendMessages();
+    
+    // 启动心跳机制
+    startHeartbeat();
     
     // 设置定时检查 - 缩短到10秒
     if (friendsCheckInterval) {
@@ -71,6 +76,126 @@
     // 监听好友消息更新事件
     window.addEventListener('friendMessagesUpdate', handleFriendMessagesUpdate);
   }
+
+  // 心跳机制函数
+  function startHeartbeat() {
+    // 清除旧的心跳
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+    }
+    
+    // 立即发送一次心跳
+    sendHeartbeat();
+    
+    // 每30秒发送一次心跳
+    heartbeatInterval = setInterval(sendHeartbeat, 30000);
+    
+    console.log('心跳机制已启动');
+  }
+
+  async function sendHeartbeat() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      stopHeartbeat();
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/heartbeat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok && response.status === 401) {
+        // Token失效，停止心跳
+        stopHeartbeat();
+        // 清除本地存储
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // 触发登出事件
+        window.dispatchEvent(new Event('userLoggedOut'));
+      } else if (response.ok) {
+        // 心跳成功，可以在这里更新一些状态
+        const data = await response.json();
+        // 可选：更新在线好友数等信息
+      }
+    } catch (error) {
+      console.error('心跳发送失败:', error);
+    }
+  }
+
+  function stopHeartbeat() {
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
+      console.log('心跳机制已停止');
+    }
+  }
+
+  // 登出函数
+  async function logout() {
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      try {
+        await fetch(`${API_BASE_URL}/api/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      } catch (error) {
+        console.error('登出API调用失败:', error);
+      }
+    }
+    
+    // 停止心跳
+    stopHeartbeat();
+    
+    // 清理好友系统
+    cleanupFriendsSystem();
+    
+    // 清除本地存储
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // 触发登出事件
+    window.dispatchEvent(new Event('userLoggedOut'));
+    
+    // 重定向到登录页
+    window.location.href = '/login.html';
+  }
+
+  // 页面卸载时调用登出API
+  window.addEventListener('beforeunload', () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // 使用sendBeacon确保请求发送
+      const data = new FormData();
+      data.append('token', token);
+      navigator.sendBeacon(`${API_BASE_URL}/api/logout`, data);
+    }
+  });
+
+  // 监听visibility变化，优化心跳
+  document.addEventListener('visibilitychange', () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    if (document.hidden) {
+      // 页面隐藏时，减少心跳频率
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = setInterval(sendHeartbeat, 60000); // 1分钟
+      }
+    } else {
+      // 页面可见时，恢复正常心跳
+      startHeartbeat();
+    }
+  });
 
   // 新增：处理好友消息更新事件
   function handleFriendMessagesUpdate(event) {
@@ -191,20 +316,15 @@
       });
       
       if (response.ok) {
-        const rawFriendsList = await response.json();
-        const updatedFriends = processFriendsList(rawFriendsList);
+        const updatedFriends = await response.json();
         
-        // 更新在线状态
-        friendsList.forEach(friend => {
-          const updatedFriend = updatedFriends.find(f => f.id === friend.id);
-          if (updatedFriend) {
-            friend.online = updatedFriend.online;
-          }
-        });
+        // 更新好友列表，保持原有数据结构
+        friendsList = processFriendsList(updatedFriends);
         
         // 如果下拉菜单打开，更新显示
         const dropdown = document.querySelector('.friends-dropdown.show, .friends-dropdown-mobile.show');
         if (dropdown) {
+          // 只更新在线状态，不重新渲染整个菜单
           updateFriendsListDisplay();
         }
       }
@@ -229,6 +349,49 @@
         item.dataset.online = friend.online;
       }
     });
+  }
+
+  // 开始聊天在线状态检查
+  function startChatOnlineStatusCheck(userId) {
+    // 清除旧的检查
+    if (chatStatusCheckInterval) {
+      clearInterval(chatStatusCheckInterval);
+    }
+    
+    // 每30秒检查一次在线状态
+    chatStatusCheckInterval = setInterval(async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        clearInterval(chatStatusCheckInterval);
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/users/${userId}/online-status`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          // 更新聊天窗口的在线状态显示
+          updateChatOnlineStatus(data.online);
+        }
+      } catch (error) {
+        console.error('获取在线状态失败:', error);
+      }
+    }, 30000);
+  }
+
+  function updateChatOnlineStatus(isOnline) {
+    // 更新聊天窗口中的在线状态
+    const statusElement = document.querySelector('.chat-user-status, .chat-modal-status');
+    if (statusElement) {
+      statusElement.textContent = isOnline ? '在线' : '离线';
+      statusElement.className = statusElement.className.replace(/online|offline/, '') + 
+                             ` ${isOnline ? 'online' : 'offline'}`;
+    }
   }
 
   // 预加载好友数据（后台加载）
@@ -1215,6 +1378,8 @@
     // 调用消息系统的聊天函数
     if (typeof window.openChatModal === 'function') {
       window.openChatModal(friendId);
+      // 启动在线状态定期检查
+      startChatOnlineStatusCheck(friendId);
     } else {
       console.error('聊天功能未初始化');
       showErrorMessage('聊天功能暂时不可用');
@@ -1272,6 +1437,9 @@
       clearInterval(friendMessageCheckInterval);
       friendMessageCheckInterval = null;
     }
+    
+    // 停止心跳
+    stopHeartbeat();
     
     // 移除事件监听器
     window.removeEventListener('friendMessagesUpdate', handleFriendMessagesUpdate);
@@ -1353,6 +1521,9 @@
   global.updateFriendsOnlineStatus = updateFriendsOnlineStatus;
   global.updateFriendsMessageBadge = updateFriendsMessageBadge;
   global.checkFriendMessages = checkFriendMessages;
+  global.logout = logout;  // 暴露登出函数
+  global.startHeartbeat = startHeartbeat;  // 暴露心跳启动函数
+  global.stopHeartbeat = stopHeartbeat;  // 暴露心跳停止函数
   
   // 确保在登录后立即初始化
   if (!window.friendsSystemInitialized) {
@@ -1384,12 +1555,16 @@
       if (!window.friendsSystemInitialized) {
         window.friendsSystemInitialized = true;
         setTimeout(initFriendsSystem, 100);
+        // 启动心跳
+        startHeartbeat();
       }
     });
     
     // 登出事件
     window.addEventListener('userLoggedOut', function() {
       window.friendsSystemInitialized = false;
+      // 停止心跳
+      stopHeartbeat();
       cleanupFriendsSystem();
     });
   }
