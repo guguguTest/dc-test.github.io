@@ -10,22 +10,25 @@
   window.API_BASE_URL = window.API_BASE_URL || 'https://api.am-all.com.cn';
   const API_BASE_URL = window.API_BASE_URL;
 
-  // 全局状态管理
+  // 全局状态管理 - 包含补丁中的新字段
   const MessageState = {
     initialized: false,
     unreadCount: 0,
     currentChatUser: null,
     checkInterval: null,
     refreshInterval: null,
-    chatRefreshInterval: null,  // 聊天消息刷新定时器
-    heartbeatInterval: null,     // 心跳定时器
+    chatRefreshInterval: null,
+    heartbeatInterval: null,
     isSending: false,
     lastSendTime: 0,
     currentEmojiPicker: null,
     emojiPacksLoaded: false,
-    lastMessageId: null,         // 记录最后一条消息ID
-    loadedMessages: new Map(),   // 存储已加载的消息
-    messageCheckInterval: null    // 消息检查定时器
+    lastMessageId: null,
+    loadedMessages: new Map(),
+    messageCheckInterval: null,
+    statusUpdateInterval: null,      // 新增：状态更新定时器
+    lastSentContent: null,           // 新增：记录最后发送的内容，用于去重
+    lastActivityTime: Date.now()     // 新增：记录最后活动时间
   };
 
   // ==================== 初始化系统 ====================
@@ -39,7 +42,7 @@
     
     addMessageIcon();
     checkUnreadMessages();
-    startHeartbeat();  // 启动心跳
+    startHeartbeat();
     
     if (MessageState.checkInterval) {
       clearInterval(MessageState.checkInterval);
@@ -48,8 +51,6 @@
     
     bindEvents();
     requestNotificationPermission();
-    
-    // 预加载表情包数据
     preloadEmojiPacks();
   }
 
@@ -75,8 +76,8 @@
       }
     };
     
-    sendHeartbeat(); // 立即发送一次
-    MessageState.heartbeatInterval = setInterval(sendHeartbeat, 30000); // 每30秒发送一次
+    sendHeartbeat();
+    MessageState.heartbeatInterval = setInterval(sendHeartbeat, 30000);
   }
 
   // 预加载表情包
@@ -160,7 +161,6 @@
       }
     });
     
-    // 更新图标颜色
     const icons = document.querySelectorAll('.message-icon');
     icons.forEach(icon => {
       if (icon) {
@@ -279,7 +279,6 @@
     
     dropdown.innerHTML = html;
     
-    // 绑定消息点击事件
     dropdown.querySelectorAll('.message-item').forEach(item => {
       item.addEventListener('click', function() {
         const messageId = this.getAttribute('data-message-id');
@@ -373,7 +372,6 @@
       });
     }
     
-    // 表情按钮
     const emojiBtn = document.getElementById('emoji-btn');
     if (emojiBtn) {
       emojiBtn.onclick = function(e) {
@@ -383,11 +381,9 @@
       };
     }
     
-    // 监听滚动事件
     const messagesDiv = document.getElementById('chat-messages');
     if (messagesDiv) {
       messagesDiv.addEventListener('scroll', function() {
-        // 如果滚动到底部，移除新消息提示
         if (this.scrollHeight - this.scrollTop < this.clientHeight + 100) {
           const indicator = this.querySelector('.new-message-indicator');
           if (indicator) {
@@ -403,21 +399,17 @@
     const chatContainer = document.getElementById('chat-container');
     if (!chatContainer) return;
     
-    // 设置全局选中的输入框
     window.selectedChatInput = document.getElementById('chat-input');
     
-    // 检查是否有表情选择器
     let picker = MessageState.currentEmojiPicker;
     
-    // 如果没有选择器，创建一个
     if (!picker) {
       picker = createEmojiPicker();
       chatContainer.appendChild(picker);
       MessageState.currentEmojiPicker = picker;
       
-      // 设置位置（相对于聊天容器）
       picker.style.position = 'absolute';
-      picker.style.bottom = '70px'; // 在输入区域上方
+      picker.style.bottom = '70px';
       picker.style.left = '10px';
       picker.style.right = '10px';
       picker.style.maxWidth = 'calc(100% - 20px)';
@@ -430,29 +422,24 @@
       picker.style.display = 'none';
       picker.style.flexDirection = 'column';
       
-      // 确保预加载的表情包数据
       if (!MessageState.emojiPacksLoaded) {
         loadEmojiPacksForPicker();
       } else {
         updatePickerTabs();
-        // 加载第一个表情包
         if (window.emojiPacks && window.emojiPacks.length > 0) {
           loadEmojiPackContent(window.emojiPacks[0].id);
         }
       }
     }
     
-    // 切换显示状态
     if (picker.style.display === 'flex') {
       picker.style.display = 'none';
       btn.classList.remove('active');
     } else {
       picker.style.display = 'flex';
       btn.classList.add('active');
-      // 如果有表情包，检查是否需要加载
       if (window.emojiPacks && window.emojiPacks.length > 0) {
         const emojiGrid = picker.querySelector('.emoji-grid');
-        // 只有当网格不存在或为空时才加载
         if (!emojiGrid || !emojiGrid.children.length) {
           loadEmojiPackContent(window.emojiPacks[0].id);
         }
@@ -460,7 +447,6 @@
     }
   }
 
-  // 创建表情选择器
   function createEmojiPicker() {
     const picker = document.createElement('div');
     picker.className = 'emoji-picker chat-emoji-picker';
@@ -477,7 +463,6 @@
       </div>
     `;
     
-    // 绑定标签点击事件
     picker.addEventListener('click', function(e) {
       const tab = e.target.closest('.emoji-tab');
       if (tab) {
@@ -490,7 +475,6 @@
     return picker;
   }
 
-  // 加载表情包数据
   async function loadEmojiPacksForPicker() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/emoji/packs`);
@@ -499,7 +483,6 @@
         MessageState.emojiPacksLoaded = true;
         updatePickerTabs();
         
-        // 加载第一个表情包
         if (window.emojiPacks.length > 0) {
           loadEmojiPackContent(window.emojiPacks[0].id);
         }
@@ -509,7 +492,6 @@
     }
   }
 
-  // 更新表情选择器标签
   function updatePickerTabs() {
     const picker = MessageState.currentEmojiPicker;
     if (!picker) return;
@@ -517,14 +499,12 @@
     const tabsContainer = picker.querySelector('.emoji-tabs');
     if (!tabsContainer) return;
     
-    // 保留最近使用标签
     const recentTab = tabsContainer.querySelector('.recent-tab');
     tabsContainer.innerHTML = '';
     if (recentTab) {
       tabsContainer.appendChild(recentTab);
     }
     
-    // 添加表情包标签
     if (window.emojiPacks) {
       window.emojiPacks.forEach(pack => {
         const tab = document.createElement('button');
@@ -543,12 +523,10 @@
     }
   }
 
-  // 选择表情标签
   function selectEmojiTab(tab, packId) {
     const picker = MessageState.currentEmojiPicker;
     if (!picker) return;
     
-    // 移除所有激活状态
     picker.querySelectorAll('.emoji-tab').forEach(t => {
       t.classList.remove('active');
     });
@@ -562,7 +540,6 @@
     }
   }
 
-  // 加载表情包内容
   async function loadEmojiPackContent(packId) {
     const picker = MessageState.currentEmojiPicker;
     if (!picker) return;
@@ -578,7 +555,6 @@
         const emojis = await response.json();
         renderEmojiGrid(emojis);
         
-        // 激活对应的标签
         picker.querySelectorAll('.emoji-tab').forEach(t => {
           t.classList.remove('active');
           if (t.dataset.packId == packId) {
@@ -592,7 +568,6 @@
     }
   }
 
-  // 渲染表情网格（使用缓存系统）
   async function renderEmojiGrid(emojis) {
     const picker = MessageState.currentEmojiPicker;
     if (!picker) return;
@@ -617,10 +592,9 @@
     grid.style.gap = '8px';
     grid.style.padding = '12px';
     
-    // 如果缓存系统可用，预加载所有表情
     if (window.EmojiCache) {
       const urls = emojis.map(emoji => `${API_BASE_URL}${emoji.file_path}`);
-      window.EmojiCache.preloadEmojis(urls); // 异步预加载
+      window.EmojiCache.preloadEmojis(urls);
     }
     
     emojis.forEach(emoji => {
@@ -637,12 +611,10 @@
       img.style.height = '32px';
       img.style.objectFit = 'contain';
       
-      // 使用缓存系统加载图片
       const fullUrl = `${API_BASE_URL}${emoji.file_path}`;
       if (window.EmojiCache && window.EmojiCache.loadImageWithCache) {
         window.EmojiCache.loadImageWithCache(fullUrl, img);
       } else {
-        // 降级到直接加载
         img.src = fullUrl;
       }
       
@@ -676,17 +648,13 @@
     gridContainer.appendChild(grid);
   }
 
-  // 发送表情
   function sendEmoji(emoji) {
     if (!window.selectedChatInput) return;
     
-    // 创建表情消息 - 包含音频信息
     let emojiMessage;
     if (emoji.audio_path) {
-      // 如果有音频，将音频路径也包含在消息中
       emojiMessage = `[emoji:${emoji.id}:${emoji.file_path}:${emoji.audio_path}]`;
       
-      // 播放音频
       if (window.EmojiAudioManager) {
         window.EmojiAudioManager.playAudio(`${API_BASE_URL}${emoji.audio_path}`);
       }
@@ -694,27 +662,22 @@
       emojiMessage = `[emoji:${emoji.id}:${emoji.file_path}]`;
     }
     
-    // 插入到输入框
     window.selectedChatInput.value = emojiMessage;
     
-    // 触发发送
     const sendBtn = window.selectedChatInput.parentElement.querySelector('.chat-send-btn');
     if (sendBtn) {
       sendBtn.click();
     }
     
-    // 关闭选择器
     if (MessageState.currentEmojiPicker) {
       MessageState.currentEmojiPicker.style.display = 'none';
     }
     
-    // 移除激活状态
     document.querySelectorAll('.emoji-btn').forEach(btn => {
       btn.classList.remove('active');
     });
   }
 
-  // 加载最近使用的表情
   async function loadRecentEmojis() {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -749,13 +712,11 @@
     const token = localStorage.getItem('token');
     if (!token) return;
     
-    // 清除旧的检查定时器
     if (MessageState.messageCheckInterval) {
       clearInterval(MessageState.messageCheckInterval);
       MessageState.messageCheckInterval = null;
     }
     
-    // 清空已加载消息记录
     MessageState.loadedMessages.clear();
     MessageState.lastMessageId = null;
     
@@ -769,20 +730,16 @@
       if (response.ok) {
         const messages = await response.json();
         
-        // 初次渲染所有消息
         renderInitialMessages(messages);
         
-        // 记录已加载的消息
         messages.forEach(msg => {
           MessageState.loadedMessages.set(msg.id, msg);
         });
         
-        // 记录最后一条消息ID
         if (messages.length > 0) {
           MessageState.lastMessageId = messages[messages.length - 1].id;
         }
         
-        // 启动增量检查
         startIncrementalCheck(userId);
       }
     } catch (error) {
@@ -790,7 +747,6 @@
     }
   }
 
-  // 初次渲染消息
   function renderInitialMessages(messages) {
     const messagesDiv = document.getElementById('chat-messages');
     if (!messagesDiv) return;
@@ -804,7 +760,6 @@
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  // 创建单条消息HTML
   function createMessageHTML(msg) {
     const content = parseMessageContent(msg.content, msg.message_type);
     
@@ -830,21 +785,69 @@
     `;
   }
 
-  // 启动增量检查
+  // ==================== 智能刷新策略（补丁优化版）====================
   function startIncrementalCheck(userId) {
-    // 每1.5秒检查一次新消息
-    MessageState.messageCheckInterval = setInterval(() => {
-      checkForNewMessages(userId);
-    }, 1500);
+    if (MessageState.messageCheckInterval) {
+      clearInterval(MessageState.messageCheckInterval);
+    }
+    
+    let checkInterval = 2000;
+    let idleTime = 0;
+    let lastActivity = Date.now();
+    
+    const resetIdleTime = () => {
+      idleTime = 0;
+      lastActivity = Date.now();
+      
+      if (checkInterval !== 2000) {
+        checkInterval = 2000;
+        restartCheck();
+      }
+    };
+    
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    
+    if (chatMessages) {
+      chatMessages.addEventListener('scroll', resetIdleTime);
+      chatMessages.addEventListener('mouseenter', resetIdleTime);
+    }
+    
+    if (chatInput) {
+      chatInput.addEventListener('focus', resetIdleTime);
+      chatInput.addEventListener('input', resetIdleTime);
+    }
+    
+    const restartCheck = () => {
+      if (MessageState.messageCheckInterval) {
+        clearInterval(MessageState.messageCheckInterval);
+      }
+      
+      MessageState.messageCheckInterval = setInterval(() => {
+        const now = Date.now();
+        const timeSinceActivity = now - lastActivity;
+        
+        if (timeSinceActivity > 30000 && checkInterval < 5000) {
+          checkInterval = 5000;
+          restartCheck();
+        } else if (timeSinceActivity > 120000 && checkInterval < 10000) {
+          checkInterval = 10000;
+          restartCheck();
+        }
+        
+        checkForNewMessages(userId);
+      }, checkInterval);
+    };
+    
+    restartCheck();
   }
 
-  // 检查新消息（增量更新）
+  // ==================== 优化的消息增量更新（避免重复）====================
   async function checkForNewMessages(userId) {
     const token = localStorage.getItem('token');
     if (!token || !MessageState.currentChatUser) return;
     
     try {
-      // 只获取最后一条消息之后的新消息
       const url = MessageState.lastMessageId 
         ? `${API_BASE_URL}/api/messages/conversation/${userId}?after_id=${MessageState.lastMessageId}`
         : `${API_BASE_URL}/api/messages/conversation/${userId}`;
@@ -859,14 +862,30 @@
         const messages = await response.json();
         
         if (messages.length > 0) {
-          // 只处理新消息
-          const newMessages = messages.filter(msg => !MessageState.loadedMessages.has(msg.id));
+          const newMessages = messages.filter(msg => {
+            if (MessageState.loadedMessages.has(msg.id)) {
+              return false;
+            }
+            
+            if (msg.is_sent && MessageState.lastSentContent) {
+              const msgContent = typeof msg.content === 'object' 
+                ? JSON.stringify(msg.content) 
+                : msg.content;
+              const timeDiff = new Date() - new Date(msg.created_at);
+              
+              if (msgContent === MessageState.lastSentContent && timeDiff < 5000) {
+                updateTempMessage(msg);
+                return false;
+              }
+            }
+            
+            return true;
+          });
           
           if (newMessages.length > 0) {
             appendNewMessages(newMessages);
           }
           
-          // 更新已有消息的状态（如已读状态）
           updateExistingMessagesStatus(messages);
         }
       }
@@ -875,17 +894,36 @@
     }
   }
 
-  // 添加新消息到聊天窗口
+  // 更新临时消息为正式消息
+  function updateTempMessage(message) {
+    const tempMsg = document.querySelector(`[data-temp-id]`);
+    if (tempMsg) {
+      tempMsg.setAttribute('data-message-id', message.id);
+      tempMsg.removeAttribute('data-temp-id');
+      const meta = tempMsg.querySelector('.message-meta');
+      if (meta) {
+        const statusIcon = message.is_read 
+          ? '<i class="fas fa-check-double read-icon" title="已读"></i>'
+          : '<i class="fas fa-check unread-icon" title="已送达"></i>';
+        meta.innerHTML = `
+          <span class="message-time">${formatTime(message.created_at)}</span>
+          ${statusIcon}
+        `;
+      }
+    }
+    
+    MessageState.loadedMessages.set(message.id, message);
+    MessageState.lastMessageId = message.id;
+    MessageState.lastSentContent = null;
+  }
+
   function appendNewMessages(newMessages) {
     const messagesDiv = document.getElementById('chat-messages');
     if (!messagesDiv) return;
     
-    // 记录当前滚动位置
     const wasAtBottom = messagesDiv.scrollHeight - messagesDiv.scrollTop < messagesDiv.clientHeight + 100;
     
-    // 添加新消息
     newMessages.forEach(msg => {
-      // 跳过临时消息
       const tempMsg = messagesDiv.querySelector(`[data-temp-id]`);
       if (tempMsg) {
         const tempContent = tempMsg.querySelector('.message-bubble').textContent;
@@ -894,45 +932,36 @@
         }
       }
       
-      // 添加消息到DOM
       const messageHTML = createMessageHTML(msg);
       messagesDiv.insertAdjacentHTML('beforeend', messageHTML);
       
-      // 记录消息
       MessageState.loadedMessages.set(msg.id, msg);
       MessageState.lastMessageId = msg.id;
       
-      // 如果是收到的消息，播放提示音（可选）
       if (!msg.is_sent && window.playMessageSound) {
         window.playMessageSound();
       }
       
-      // 动画效果
       const newMsgElement = messagesDiv.querySelector(`[data-message-id="${msg.id}"]`);
       if (newMsgElement) {
         newMsgElement.style.animation = 'messageSlide 0.3s ease';
       }
     });
     
-    // 只有在用户原本在底部时才自动滚动
     if (wasAtBottom) {
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     } else {
-      // 显示新消息提示
       showNewMessageIndicator();
     }
   }
 
-  // 更新已有消息的状态
   function updateExistingMessagesStatus(messages) {
     messages.forEach(msg => {
       const existingMsg = MessageState.loadedMessages.get(msg.id);
       
-      // 只更新状态变化的消息
       if (existingMsg && existingMsg.is_read !== msg.is_read) {
         existingMsg.is_read = msg.is_read;
         
-        // 更新DOM中的状态图标
         const msgElement = document.querySelector(`[data-message-id="${msg.id}"]`);
         if (msgElement) {
           const statusIcon = msgElement.querySelector('.message-meta i');
@@ -950,12 +979,10 @@
     });
   }
 
-  // 显示新消息提示
   function showNewMessageIndicator() {
     const messagesDiv = document.getElementById('chat-messages');
     if (!messagesDiv) return;
     
-    // 检查是否已有提示
     let indicator = messagesDiv.querySelector('.new-message-indicator');
     if (!indicator) {
       indicator = document.createElement('div');
@@ -972,7 +999,7 @@
     }
   }
 
-  // ==================== 发送消息（优化版本）====================
+  // ==================== 改进的发送消息函数（补丁优化版）====================
   async function sendMessage() {
     const now = Date.now();
     if (MessageState.isSending || (now - MessageState.lastSendTime) < 1000) {
@@ -993,15 +1020,12 @@
       return;
     }
     
-    // 清空输入框
     input.value = '';
     
-    // 处理消息内容
     let processedContent = content;
     let messageType = 'text';
     let displayContent = escapeHtml(content);
     
-    // 处理表情消息
     if (content.startsWith('[emoji:') && content.endsWith(']')) {
       messageType = 'emoji';
       const match = content.match(/\[emoji:(\d+):(.*?)\]/);
@@ -1014,18 +1038,10 @@
       }
     }
     
-    // 生成临时ID
-    const tempId = 'temp_' + Date.now();
-    const tempMessageData = {
-      id: tempId,
-      content: processedContent,
-      message_type: messageType,
-      is_sent: true,
-      is_read: false,
-      created_at: new Date().toISOString()
-    };
+    MessageState.lastSentContent = processedContent;
     
-    // 添加临时消息显示（不重新渲染整个列表）
+    const tempId = 'temp_' + Date.now();
+    
     const messagesDiv = document.getElementById('chat-messages');
     if (messagesDiv) {
       const messageHTML = `
@@ -1061,7 +1077,6 @@
       if (response.ok) {
         const result = await response.json();
         
-        // 更新临时消息为正式消息
         const tempMsg = document.querySelector(`[data-temp-id="${tempId}"]`);
         if (tempMsg) {
           tempMsg.setAttribute('data-message-id', result.id);
@@ -1075,13 +1090,18 @@
           }
         }
         
-        // 记录消息
         MessageState.loadedMessages.set(result.id, {
           ...result,
           is_sent: true,
           is_read: false
         });
         MessageState.lastMessageId = result.id;
+        
+        setTimeout(() => {
+          if (MessageState.lastSentContent === processedContent) {
+            MessageState.lastSentContent = null;
+          }
+        }, 3000);
       } else {
         throw new Error('发送失败');
       }
@@ -1097,6 +1117,7 @@
           `;
         }
       }
+      MessageState.lastSentContent = null;
     } finally {
       setTimeout(() => {
         MessageState.isSending = false;
@@ -1104,9 +1125,59 @@
     }
   }
 
+  // ==================== 修复的在线状态获取（补丁版）====================
+  async function updateUserOnlineStatus(userId) {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+      let response = await fetch(`${API_BASE_URL}/api/users/${userId}/status`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          updateStatusDisplay(userData.is_online || userData.online || false);
+          return;
+        }
+      } else {
+        const data = await response.json();
+        updateStatusDisplay(data.online || data.is_online || false);
+      }
+    } catch (error) {
+      console.error('获取用户状态失败:', error);
+      updateStatusDisplay(false);
+    }
+  }
+
+  // 更新状态显示的辅助函数
+  function updateStatusDisplay(isOnline) {
+    const statusEl = document.getElementById('chat-user-status');
+    if (statusEl) {
+      const indicator = statusEl.querySelector('.status-indicator');
+      const text = statusEl.querySelector('.status-text');
+      
+      if (isOnline) {
+        indicator.className = 'status-indicator online';
+        text.textContent = '在线';
+      } else {
+        indicator.className = 'status-indicator offline';
+        text.textContent = '离线';
+      }
+    }
+  }
+
   // ==================== 解析消息内容（支持缓存）====================
   function parseMessageContent(content, messageType) {
-    // 处理表情消息
     if (messageType === 'emoji' || 
         (typeof content === 'string' && 
          (content.includes('emoji_path') || content.includes('emoji_id')))) {
@@ -1114,12 +1185,10 @@
       try {
         let emojiData;
         
-        // 尝试解析JSON
         if (typeof content === 'string' && content.startsWith('{')) {
           try {
             emojiData = JSON.parse(content);
           } catch (e) {
-            // 如果解析失败，尝试提取路径
             const match = content.match(/"emoji_path":"([^"]+)"/);
             if (match && match[1]) {
               emojiData = { emoji_path: match[1] };
@@ -1129,7 +1198,6 @@
           emojiData = content;
         }
         
-        // 渲染表情图片
         if (emojiData && emojiData.emoji_path) {
           let emojiPath = emojiData.emoji_path;
           if (!emojiPath.startsWith('http')) {
@@ -1139,10 +1207,8 @@
             emojiPath = API_BASE_URL + emojiPath;
           }
           
-          // 创建图片元素
           const imgId = 'emoji_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
           
-          // 异步加载缓存图片
           if (window.EmojiCache && window.EmojiCache.loadImageWithCache) {
             setTimeout(() => {
               const imgElement = document.getElementById(imgId);
@@ -1159,13 +1225,11 @@
       }
     }
     
-    // 处理普通文本中的表情标记
     if (typeof content === 'string' && content.includes('[emoji:')) {
       content = content.replace(/\[emoji:(\d+):(.*?)\]/g, function(match, id, path) {
         const fullPath = API_BASE_URL + path;
         const imgId = 'emoji_msg_' + id + '_' + Date.now();
         
-        // 异步加载缓存图片
         if (window.EmojiCache && window.EmojiCache.loadImageWithCache) {
           setTimeout(() => {
             const imgElement = document.getElementById(imgId);
@@ -1180,13 +1244,11 @@
       return content;
     }
     
-    // 默认返回转义的文本
     return escapeHtml(content);
   }
 
   // ==================== 系统消息模态框 ====================
   function showSystemMessage(message) {
-    // 先关闭消息下拉窗口
     closeMessageDropdown();
     
     const oldModal = document.getElementById('system-message-modal');
@@ -1242,7 +1304,6 @@
     if (!token) return;
     
     try {
-      // 标记已读
       await fetch(`${API_BASE_URL}/api/messages/${messageId}/read`, {
         method: 'PUT',
         headers: {
@@ -1250,7 +1311,6 @@
         }
       });
       
-      // 获取消息详情
       const response = await fetch(`${API_BASE_URL}/api/messages/${messageId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -1260,7 +1320,6 @@
       if (response.ok) {
         const message = await response.json();
         
-        // 关闭消息下拉窗口
         closeMessageDropdown();
         
         if (message.message_type === 'user') {
@@ -1299,7 +1358,7 @@
     }
   }
 
-  // 关闭聊天窗口（清理定时器）
+  // ==================== 关闭聊天窗口（补丁优化版）====================
   function closeChatModal() {
     const modal = document.getElementById('chat-modal');
     if (modal) {
@@ -1307,25 +1366,28 @@
       setTimeout(() => modal.remove(), 300);
     }
     
-    // 清理表情选择器
     if (MessageState.currentEmojiPicker) {
       MessageState.currentEmojiPicker.remove();
       MessageState.currentEmojiPicker = null;
     }
     
-    // 清理消息检查定时器
     if (MessageState.messageCheckInterval) {
       clearInterval(MessageState.messageCheckInterval);
       MessageState.messageCheckInterval = null;
     }
     
-    // 清理已加载消息记录
+    if (MessageState.statusUpdateInterval) {
+      clearInterval(MessageState.statusUpdateInterval);
+      MessageState.statusUpdateInterval = null;
+    }
+    
     MessageState.loadedMessages.clear();
     MessageState.currentChatUser = null;
     MessageState.lastMessageId = null;
+    MessageState.lastSentContent = null;
   }
 
-  // 选择聊天用户
+  // ==================== 选择聊天用户（补丁优化版）====================
   function selectChatUser(userId, username, avatar) {
     MessageState.currentChatUser = { id: userId, username, avatar };
     
@@ -1340,48 +1402,20 @@
       avatarEl.style.display = 'block';
     }
     
-    // 显示在线状态
     const statusEl = document.getElementById('chat-user-status');
     if (statusEl) {
       statusEl.style.display = 'flex';
-      // 这里可以根据实际在线状态更新显示
       updateUserOnlineStatus(userId);
+      
+      if (MessageState.statusUpdateInterval) {
+        clearInterval(MessageState.statusUpdateInterval);
+      }
+      MessageState.statusUpdateInterval = setInterval(() => {
+        updateUserOnlineStatus(userId);
+      }, 30000);
     }
     
     loadChatHistory(userId);
-  }
-
-  // 更新用户在线状态
-  async function updateUserOnlineStatus(userId) {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/status`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const statusEl = document.getElementById('chat-user-status');
-        if (statusEl) {
-          const indicator = statusEl.querySelector('.status-indicator');
-          const text = statusEl.querySelector('.status-text');
-          
-          if (data.online) {
-            indicator.className = 'status-indicator online';
-            text.textContent = '在线';
-          } else {
-            indicator.className = 'status-indicator offline';
-            text.textContent = '离线';
-          }
-        }
-      }
-    } catch (error) {
-      console.error('获取用户状态失败:', error);
-    }
   }
 
   async function searchUsers(query) {
@@ -1457,7 +1491,6 @@
   }
 
   function openMessageCenter() {
-    // 关闭消息下拉窗口
     closeMessageDropdown();
     
     if (typeof window.loadPage === 'function') {
@@ -1604,6 +1637,9 @@
       }
       if (MessageState.messageCheckInterval) {
         clearInterval(MessageState.messageCheckInterval);
+      }
+      if (MessageState.statusUpdateInterval) {
+        clearInterval(MessageState.statusUpdateInterval);
       }
     }
   }, 2000);
