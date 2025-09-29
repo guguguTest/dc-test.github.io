@@ -1,10 +1,10 @@
-// message.js - 完善的消息系统实现（包含实时更新优化）
+// message.js - 完善的消息系统实现（支持好友和陌生人消息分离）
 // 包含所有必要功能：表情解析、样式保持、系统消息模态框、心跳机制、消息轮询
 
 (function(global) {
   'use strict';
 
-  console.log('Loading complete message system with real-time features...');
+  console.log('Loading complete message system with friend/stranger message separation...');
 
   // 确保API_BASE_URL存在
   window.API_BASE_URL = window.API_BASE_URL || 'https://api.am-all.com.cn';
@@ -14,6 +14,8 @@
   const MessageState = {
     initialized: false,
     unreadCount: 0,
+    unreadFriendCount: 0,     // 新增：好友未读消息数
+    unreadStrangerCount: 0,   // 新增：陌生人未读消息数
     currentChatUser: null,
     checkInterval: null,
     refreshInterval: null,
@@ -26,9 +28,10 @@
     lastMessageId: null,
     loadedMessages: new Map(),
     messageCheckInterval: null,
-    statusUpdateInterval: null,      // 新增：状态更新定时器
-    lastSentContent: null,           // 新增：记录最后发送的内容，用于去重
-    lastActivityTime: Date.now()     // 新增：记录最后活动时间
+    statusUpdateInterval: null,
+    lastSentContent: null,
+    lastActivityTime: Date.now(),
+    friendsList: []           // 新增：缓存好友列表用于判断
   };
 
   // ==================== 初始化系统 ====================
@@ -41,6 +44,7 @@
     MessageState.initialized = true;
     
     addMessageIcon();
+    loadFriendsList();  // 新增：加载好友列表
     checkUnreadMessages();
     startHeartbeat();
     
@@ -52,6 +56,28 @@
     bindEvents();
     requestNotificationPermission();
     preloadEmojiPacks();
+  }
+
+  // ==================== 新增：加载好友列表 ====================
+  async function loadFriendsList() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/friends`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const friends = await response.json();
+        MessageState.friendsList = friends.map(f => f.id);
+      }
+    } catch (error) {
+      console.error('加载好友列表失败:', error);
+      MessageState.friendsList = [];
+    }
   }
 
   // ==================== 心跳机制 ====================
@@ -122,28 +148,68 @@
     }
   }
 
-  // ==================== 检查未读消息 ====================
+  // ==================== 修改：检查未读消息（区分好友和陌生人）====================
   async function checkUnreadMessages() {
     const token = localStorage.getItem('token');
     if (!token) return;
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/messages/unread-count`, {
+      // 先更新好友列表
+      await loadFriendsList();
+      
+      // 获取所有未读消息
+      const response = await fetch(`${API_BASE_URL}/api/messages?unread=true`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       if (response.ok) {
-        const data = await response.json();
-        updateUnreadBadge(data.count || 0);
+        const messages = await response.json();
+        
+        // 分离好友和陌生人消息
+        let friendUnreadCount = 0;
+        let strangerUnreadCount = 0;
+        
+        messages.forEach(msg => {
+          if (!msg.is_read && msg.message_type === 'user') {
+            if (MessageState.friendsList.includes(msg.sender_id)) {
+              friendUnreadCount++;
+            } else {
+              strangerUnreadCount++;
+            }
+          } else if (!msg.is_read && msg.message_type !== 'user') {
+            // 系统消息归类到陌生人消息
+            strangerUnreadCount++;
+          }
+        });
+        
+        MessageState.unreadFriendCount = friendUnreadCount;
+        MessageState.unreadStrangerCount = strangerUnreadCount;
+        MessageState.unreadCount = strangerUnreadCount; // 消息图标只显示陌生人消息数
+        
+        updateUnreadBadge(strangerUnreadCount);
+        updateFriendUnreadBadge(friendUnreadCount);
       }
     } catch (error) {
       console.error('获取未读消息失败:', error);
     }
   }
 
-  // ==================== 更新未读徽章 ====================
+  // ==================== 新增：更新好友未读徽章 ====================
+  function updateFriendUnreadBadge(count) {
+    // 通知好友系统更新徽章
+    if (typeof window.updateFriendsMessageBadge === 'function') {
+      window.updateFriendsMessageBadge(count);
+    }
+    
+    // 发送自定义事件
+    window.dispatchEvent(new CustomEvent('friendMessagesUpdate', {
+      detail: { unreadCount: count }
+    }));
+  }
+
+  // ==================== 更新未读徽章（只显示陌生人消息）====================
   function updateUnreadBadge(count) {
     MessageState.unreadCount = count;
     const badges = document.querySelectorAll('#message-badge, #message-badge-mobile');
@@ -201,6 +267,7 @@
     }
   }
 
+  // 修改：打开消息下拉菜单（只显示陌生人消息）
   async function openMessageDropdown(dropdown) {
     const token = localStorage.getItem('token');
     
@@ -226,7 +293,12 @@
       
       if (response.ok) {
         const messages = await response.json();
-        renderMessageDropdown(dropdown, messages);
+        // 过滤出陌生人消息
+        const strangerMessages = messages.filter(msg => {
+          if (msg.message_type !== 'user') return true; // 系统消息
+          return !MessageState.friendsList.includes(msg.sender_id); // 非好友消息
+        });
+        renderMessageDropdown(dropdown, strangerMessages);
         dropdown.classList.add('show');
       }
     } catch (error) {
@@ -243,7 +315,7 @@
     let html = `
       <div class="message-dropdown-header">
         <div class="message-dropdown-title">消息</div>
-        ${MessageState.unreadCount > 0 ? `<span class="mark-all-read" onclick="markAllAsRead()">全部已读</span>` : ''}
+        ${MessageState.unreadStrangerCount > 0 ? `<span class="mark-all-read" onclick="markAllAsRead('stranger')">全部已读</span>` : ''}
       </div>
       <div class="message-dropdown-body">
     `;
@@ -1469,12 +1541,23 @@
     resultsDiv.classList.add('show');
   }
 
-  async function markAllAsRead() {
+  // 修改：标记已读（区分类型）
+  async function markAllAsRead(type = 'all') {
     const token = localStorage.getItem('token');
     if (!token) return;
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/messages/mark-all-read`, {
+      // 根据类型标记不同的消息
+      let url = `${API_BASE_URL}/api/messages/mark-all-read`;
+      if (type === 'stranger') {
+        // 只标记陌生人消息
+        url += '?type=stranger';
+      } else if (type === 'friend') {
+        // 只标记好友消息
+        url += '?type=friend';
+      }
+      
+      const response = await fetch(url, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -1482,7 +1565,14 @@
       });
       
       if (response.ok) {
-        updateUnreadBadge(0);
+        if (type === 'stranger') {
+          updateUnreadBadge(0);
+        } else if (type === 'friend') {
+          updateFriendUnreadBadge(0);
+        } else {
+          updateUnreadBadge(0);
+          updateFriendUnreadBadge(0);
+        }
         closeMessageDropdown();
       }
     } catch (error) {
@@ -1659,6 +1749,6 @@
     }
   });
 
-  console.log('Complete message system with real-time features loaded');
+  console.log('Complete message system with friend/stranger separation loaded');
 
 })(window);

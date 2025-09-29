@@ -1,4 +1,4 @@
-// 好友功能JavaScript - 修复在线状态版
+// 好友功能JavaScript - 增加好友消息提示和优化界面
 (function(global) {
   'use strict';
 
@@ -13,10 +13,13 @@
   let friendRequests = [];
   let currentSearchResults = [];
   let friendsCheckInterval = null;
-  let friendsStatusInterval = null; // 新增：好友状态更新定时器
+  let friendsStatusInterval = null;
+  let friendMessageCheckInterval = null;  // 新增：好友消息检查定时器
   let isInitialized = false;
   let isLoadingData = false;
   let lastDataLoadTime = 0;
+  let currentView = 'friends'; // 新增：当前视图（friends, blacklist）
+  let friendMessagesCount = 0; // 新增：好友未读消息数
 
   // 缓存数据的有效期（毫秒）
   const DATA_CACHE_DURATION = 60000; // 1分钟
@@ -38,26 +41,141 @@
     // 预加载好友数据（后台加载，不阻塞UI）
     preloadFriendsData();
     
+    // 检查好友消息
+    checkFriendMessages();
+    
     // 设置定时检查 - 缩短到10秒
     if (friendsCheckInterval) {
       clearInterval(friendsCheckInterval);
     }
     friendsCheckInterval = setInterval(checkFriendRequests, 10000);
     
-    // 新增：定期更新好友在线状态（每30秒）
+    // 定期更新好友在线状态（每30秒）
     if (friendsStatusInterval) {
       clearInterval(friendsStatusInterval);
     }
     friendsStatusInterval = setInterval(updateFriendsOnlineStatus, 30000);
+    
+    // 新增：定期检查好友消息（每5秒）
+    if (friendMessageCheckInterval) {
+      clearInterval(friendMessageCheckInterval);
+    }
+    friendMessageCheckInterval = setInterval(checkFriendMessages, 5000);
     
     // 绑定事件
     bindFriendsEvents();
     
     // 请求通知权限
     requestNotificationPermission();
+    
+    // 监听好友消息更新事件
+    window.addEventListener('friendMessagesUpdate', handleFriendMessagesUpdate);
   }
 
-  // 新增：更新好友在线状态
+  // 新增：处理好友消息更新事件
+  function handleFriendMessagesUpdate(event) {
+    const count = event.detail.unreadCount;
+    updateFriendsMessageBadge(count);
+  }
+
+  // 新增：检查好友消息
+  async function checkFriendMessages() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+      // 先确保好友列表已加载
+      if (friendsList.length === 0) {
+        await loadFriendsData();
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/api/messages?unread=true`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const messages = await response.json();
+        
+        // 统计好友未读消息
+        let friendUnreadCount = 0;
+        const friendIds = friendsList.map(f => f.id);
+        
+        messages.forEach(msg => {
+          if (!msg.is_read && msg.message_type === 'user' && friendIds.includes(msg.sender_id)) {
+            friendUnreadCount++;
+          }
+        });
+        
+        // 如果有新的好友消息，显示通知
+        if (friendUnreadCount > friendMessagesCount && friendMessagesCount > 0) {
+          showNotification('好友新消息', `您有 ${friendUnreadCount - friendMessagesCount} 条新的好友消息`);
+        }
+        
+        friendMessagesCount = friendUnreadCount;
+        updateFriendsMessageBadge(friendUnreadCount);
+      }
+    } catch (error) {
+      console.error('检查好友消息失败:', error);
+    }
+  }
+
+  // 新增：更新好友消息徽章
+  function updateFriendsMessageBadge(count) {
+    friendMessagesCount = count;
+    
+    // 更新好友图标徽章
+    const badge = document.getElementById('friends-badge');
+    const mobileBadge = document.getElementById('friends-badge-mobile');
+    
+    // 合并好友请求数和消息数
+    const pendingCount = friendRequests.filter(r => r.status === 'pending').length;
+    const totalCount = pendingCount + count;
+    
+    [badge, mobileBadge].forEach(b => {
+      if (b) {
+        if (totalCount > 0) {
+          // 显示详细信息
+          if (pendingCount > 0 && count > 0) {
+            b.textContent = totalCount > 99 ? '99+' : totalCount;
+            b.title = `${pendingCount}个好友请求, ${count}条未读消息`;
+          } else if (pendingCount > 0) {
+            b.textContent = pendingCount > 99 ? '99+' : pendingCount;
+            b.title = `${pendingCount}个好友请求`;
+          } else {
+            b.textContent = count > 99 ? '99+' : count;
+            b.title = `${count}条未读消息`;
+          }
+          b.style.display = 'block';
+        } else {
+          b.style.display = 'none';
+        }
+      }
+    });
+    
+    // 更新图标颜色
+    const icon = document.querySelector('.friends-icon');
+    const mobileIcon = document.querySelector('.friends-icon-wrapper-mobile .friends-icon');
+    
+    [icon, mobileIcon].forEach(i => {
+      if (i) {
+        if (totalCount > 0) {
+          i.classList.add('has-notifications');
+          if (count > 0) {
+            i.style.color = '#667eea'; // 有消息时显示紫色
+          } else {
+            i.style.color = '#dc3545'; // 只有请求时显示红色
+          }
+        } else {
+          i.classList.remove('has-notifications');
+          i.style.color = '#6c757d'; // 无通知时显示灰色
+        }
+      }
+    });
+  }
+
+  // 更新好友在线状态
   async function updateFriendsOnlineStatus() {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -95,7 +213,7 @@
     }
   }
 
-  // 新增：更新好友列表显示（不重新渲染整个下拉菜单）
+  // 更新好友列表显示（不重新渲染整个下拉菜单）
   function updateFriendsListDisplay() {
     const friendItems = document.querySelectorAll('.friend-item');
     friendItems.forEach(item => {
@@ -238,7 +356,7 @@
     }
   }
 
-  // 处理好友列表数据 - 修复：正确处理在线状态
+  // 处理好友列表数据
   function processFriendsList(rawFriendsList) {
     const rankBackgrounds = {
       0: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_normal.png',
@@ -259,7 +377,7 @@
         rankSp: hasRainbowEffect ? 1 : 0,
         banState: friend.ban_state || 0,
         avatar: friend.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png',
-        online: friend.online === true // 使用后端返回的真实在线状态
+        online: friend.online === true
       };
     });
   }
@@ -302,13 +420,15 @@
   // 更新好友请求徽章
   function updateFriendsBadge() {
     const pendingCount = friendRequests.filter(r => r.status === 'pending').length;
+    const totalCount = pendingCount + friendMessagesCount;
+    
     const badge = document.getElementById('friends-badge');
     const mobileBadge = document.getElementById('friends-badge-mobile');
     
     [badge, mobileBadge].forEach(b => {
       if (b) {
-        if (pendingCount > 0) {
-          b.textContent = pendingCount > 99 ? '99+' : pendingCount;
+        if (totalCount > 0) {
+          b.textContent = totalCount > 99 ? '99+' : totalCount;
           b.style.display = 'block';
         } else {
           b.style.display = 'none';
@@ -322,7 +442,7 @@
     
     [icon, mobileIcon].forEach(i => {
       if (i) {
-        if (pendingCount > 0) {
+        if (totalCount > 0) {
           i.classList.add('has-requests');
         } else {
           i.classList.remove('has-requests');
@@ -365,7 +485,8 @@
           '.search-action-btn',
           '.unblock-btn',
           '.friends-search-input',
-          '.friends-group-header'
+          '.friends-group-header',
+          '.friend-message-item'  // 新增：好友消息项
         ];
         
         for (let selector of clickableElements) {
@@ -412,6 +533,9 @@
     // 强制刷新好友数据
     await loadFriendsData(true);
     
+    // 检查好友消息
+    await checkFriendMessages();
+    
     // 渲染实际内容
     renderFriendsDropdown(type);
   }
@@ -443,9 +567,12 @@
         searchBox.classList.remove('show');
       }
     });
+    
+    // 重置当前视图
+    currentView = 'friends';
   }
 
-  // 渲染好友下拉菜单 - 修复：显示实际在线状态
+  // 渲染好友下拉菜单 - 修改：增加三按钮界面
   function renderFriendsDropdown(type = 'desktop') {
     const dropdownId = type === 'mobile' ? 'friends-dropdown-mobile' : 'friends-dropdown';
     const dropdown = document.getElementById(dropdownId);
@@ -459,15 +586,20 @@
         <div class="friends-dropdown-title">
           <i class="fas fa-user-friends"></i>
           <span>好友</span>
+          ${friendMessagesCount > 0 ? `<span class="friends-message-count" style="background: #667eea; color: white; padding: 2px 6px; border-radius: 10px; font-size: 12px; margin-left: 8px;">${friendMessagesCount}</span>` : ''}
         </div>
       </div>
       
       <div class="friends-toolbar">
+        <button class="friends-toolbar-btn ${currentView === 'friends' ? 'active' : ''}" data-action="show-friends">
+          <i class="fas fa-users"></i>
+          <span>好友列表</span>
+        </button>
         <button class="friends-toolbar-btn" data-action="toggle-search">
           <i class="fas fa-user-plus"></i>
           <span>添加好友</span>
         </button>
-        <button class="friends-toolbar-btn" data-action="toggle-blacklist">
+        <button class="friends-toolbar-btn ${currentView === 'blacklist' ? 'active' : ''}" data-action="show-blacklist">
           <i class="fas fa-user-slash"></i>
           <span>黑名单</span>
         </button>
@@ -482,24 +614,106 @@
       <div class="friends-list-container">
     `;
     
-    // 好友请求分组
-    if (pendingRequests.length > 0) {
+    // 根据当前视图显示不同内容
+    if (currentView === 'friends') {
+      // 好友消息提示
+      if (friendMessagesCount > 0) {
+        html += `
+          <div class="friends-messages-notification" style="background: #f0f2ff; padding: 12px; margin: 0 10px 10px 10px; border-radius: 8px; cursor: pointer;" onclick="openFriendMessagesCenter()">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center;">
+                <i class="fas fa-envelope" style="color: #667eea; margin-right: 10px;"></i>
+                <span style="color: #333;">您有 ${friendMessagesCount} 条好友未读消息</span>
+              </div>
+              <i class="fas fa-chevron-right" style="color: #667eea;"></i>
+            </div>
+          </div>
+        `;
+      }
+      
+      // 好友请求分组
+      if (pendingRequests.length > 0) {
+        html += `
+          <div class="friends-group" id="requests-group">
+            <div class="friends-group-header" data-group="requests">
+              <div class="friends-group-title">
+                <i class="fas fa-user-clock"></i>
+                <span>好友请求</span>
+                <span class="friends-group-count">${pendingRequests.length}</span>
+              </div>
+              <i class="fas fa-chevron-down friends-group-arrow"></i>
+            </div>
+            <div class="friends-group-content">
+        `;
+        
+        pendingRequests.forEach(request => {
+          html += renderFriendRequest(request);
+        });
+        
+        html += `
+            </div>
+          </div>
+        `;
+      }
+      
+      // 好友列表
       html += `
-        <div class="friends-group" id="requests-group">
-          <div class="friends-group-header" data-group="requests">
+        <div class="friends-group" id="friends-group">
+          <div class="friends-group-header" data-group="friends">
             <div class="friends-group-title">
-              <i class="fas fa-user-clock"></i>
-              <span>好友请求</span>
-              <span class="friends-group-count">${pendingRequests.length}</span>
+              <i class="fas fa-users"></i>
+              <span>我的好友</span>
+              <span class="friends-group-count">${friendsList.length}</span>
             </div>
             <i class="fas fa-chevron-down friends-group-arrow"></i>
           </div>
           <div class="friends-group-content">
       `;
       
-      pendingRequests.forEach(request => {
-        html += renderFriendRequest(request);
-      });
+      if (friendsList.length > 0) {
+        friendsList.forEach(friend => {
+          html += renderFriendItem(friend);
+        });
+      } else {
+        html += `
+          <div class="friends-empty">
+            <i class="fas fa-user-friends"></i>
+            <p>暂无好友</p>
+          </div>
+        `;
+      }
+      
+      html += `
+          </div>
+        </div>
+      `;
+    } else if (currentView === 'blacklist') {
+      // 黑名单视图
+      html += `
+        <div class="friends-group" id="blacklist-group">
+          <div class="friends-group-header" data-group="blacklist">
+            <div class="friends-group-title">
+              <i class="fas fa-ban"></i>
+              <span>黑名单</span>
+              <span class="friends-group-count">${blacklist.length}</span>
+            </div>
+            <i class="fas fa-chevron-down friends-group-arrow"></i>
+          </div>
+          <div class="friends-group-content">
+      `;
+      
+      if (blacklist.length > 0) {
+        blacklist.forEach(user => {
+          html += renderBlacklistItem(user);
+        });
+      } else {
+        html += `
+          <div class="friends-empty">
+            <i class="fas fa-ban"></i>
+            <p>黑名单为空</p>
+          </div>
+        `;
+      }
       
       html += `
           </div>
@@ -507,69 +721,8 @@
       `;
     }
     
-    // 好友列表分组
     html += `
-      <div class="friends-group" id="friends-group">
-        <div class="friends-group-header" data-group="friends">
-          <div class="friends-group-title">
-            <i class="fas fa-users"></i>
-            <span>我的好友</span>
-            <span class="friends-group-count">${friendsList.length}</span>
-          </div>
-          <i class="fas fa-chevron-down friends-group-arrow"></i>
-        </div>
-        <div class="friends-group-content">
-    `;
-    
-    if (friendsList.length > 0) {
-      friendsList.forEach(friend => {
-        html += renderFriendItem(friend);
-      });
-    } else {
-      html += `
-        <div class="friends-empty">
-          <i class="fas fa-user-friends"></i>
-          <p>暂无好友</p>
-        </div>
-      `;
-    }
-    
-    html += `
-        </div>
       </div>
-    `;
-    
-    // 黑名单分组
-    html += `
-      <div class="friends-group collapsed" id="blacklist-group" style="display: none;">
-        <div class="friends-group-header" data-group="blacklist">
-          <div class="friends-group-title">
-            <i class="fas fa-ban"></i>
-            <span>黑名单</span>
-            <span class="friends-group-count">${blacklist.length}</span>
-          </div>
-          <i class="fas fa-chevron-down friends-group-arrow"></i>
-        </div>
-        <div class="friends-group-content">
-    `;
-    
-    if (blacklist.length > 0) {
-      blacklist.forEach(user => {
-        html += renderBlacklistItem(user);
-      });
-    } else {
-      html += `
-        <div class="friends-empty">
-          <i class="fas fa-ban"></i>
-          <p>黑名单为空</p>
-        </div>
-      `;
-    }
-    
-    html += `
-        </div>
-      </div>
-    </div>
     `;
     
     dropdown.innerHTML = html;
@@ -585,10 +738,20 @@
       btn.addEventListener('click', function(e) {
         e.stopPropagation();
         const action = this.dataset.action;
+        
+        // 移除所有按钮的active类
+        dropdown.querySelectorAll('.friends-toolbar-btn').forEach(b => b.classList.remove('active'));
+        
         if (action === 'toggle-search') {
           toggleFriendsSearch();
-        } else if (action === 'toggle-blacklist') {
-          toggleBlacklist();
+        } else if (action === 'show-blacklist') {
+          currentView = 'blacklist';
+          this.classList.add('active');
+          renderFriendsDropdown();
+        } else if (action === 'show-friends') {
+          currentView = 'friends';
+          this.classList.add('active');
+          renderFriendsDropdown();
         }
       });
     });
@@ -652,6 +815,7 @@
         const friendId = this.dataset.friendId;
         if (friendId) {
           openChatWithFriend(friendId);
+          closeFriendsDropdown(); // 打开聊天后关闭下拉菜单
         }
       });
     });
@@ -679,7 +843,7 @@
     });
   }
 
-  // 添加删除好友函数
+  // 删除好友函数
   async function deleteFriend(friendId) {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -728,7 +892,7 @@
     `;
   }
 
-  // 渲染好友项 - 修复：显示实际在线状态
+  // 渲染好友项
   function renderFriendItem(friend) {
     // 添加在线状态样式类
     const onlineClass = friend.online ? 'online' : 'offline';
@@ -810,22 +974,6 @@
       if (searchBox.classList.contains('show')) {
         const input = searchBox.querySelector('.friends-search-input');
         if (input) input.focus();
-      }
-    }
-  }
-
-  // 切换黑名单显示
-  function toggleBlacklist() {
-    const blacklistGroup = document.getElementById('blacklist-group');
-    const friendsGroup = document.getElementById('friends-group');
-    
-    if (blacklistGroup) {
-      if (blacklistGroup.style.display === 'none') {
-        blacklistGroup.style.display = 'block';
-        if (friendsGroup) friendsGroup.style.display = 'none';
-      } else {
-        blacklistGroup.style.display = 'none';
-        if (friendsGroup) friendsGroup.style.display = 'block';
       }
     }
   }
@@ -1073,6 +1221,18 @@
     }
   }
 
+  // 新增：打开好友消息中心
+  function openFriendMessagesCenter() {
+    closeFriendsDropdown();
+    
+    // 跳转到消息中心页面，并筛选好友消息
+    if (typeof window.loadPage === 'function') {
+      window.loadPage('message-center', { filter: 'friends' });
+    } else {
+      window.location.hash = '#/message-center?filter=friends';
+    }
+  }
+
   // 显示通知
   function showNotification(title, message) {
     // 如果浏览器支持通知API
@@ -1108,6 +1268,14 @@
       friendsStatusInterval = null;
     }
     
+    if (friendMessageCheckInterval) {
+      clearInterval(friendMessageCheckInterval);
+      friendMessageCheckInterval = null;
+    }
+    
+    // 移除事件监听器
+    window.removeEventListener('friendMessagesUpdate', handleFriendMessagesUpdate);
+    
     // 移除好友图标
     const pcWrapper = document.getElementById('friends-icon-wrapper');
     const mobileWrapper = document.getElementById('friends-icon-wrapper-mobile');
@@ -1119,6 +1287,8 @@
     friendsList = [];
     blacklist = [];
     friendRequests = [];
+    friendMessagesCount = 0;
+    currentView = 'friends';
     isInitialized = false;
     isLoadingData = false;
     lastDataLoadTime = 0;
@@ -1178,8 +1348,11 @@
   global.cleanupFriendsSystem = cleanupFriendsSystem;
   global.loadFriendsData = loadFriendsData;
   global.openChatWithFriend = openChatWithFriend;
+  global.openFriendMessagesCenter = openFriendMessagesCenter;
   global.requestNotificationPermission = requestNotificationPermission;
   global.updateFriendsOnlineStatus = updateFriendsOnlineStatus;
+  global.updateFriendsMessageBadge = updateFriendsMessageBadge;
+  global.checkFriendMessages = checkFriendMessages;
   
   // 确保在登录后立即初始化
   if (!window.friendsSystemInitialized) {

@@ -1120,3 +1120,45 @@
 .friend-item.offline .online-status {
   color: #9e9e9e;
 }
+
+/* 好友消息徽章样式 */
+.friends-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 三按钮工具栏样式 */
+.friends-toolbar {
+    display: flex;
+    padding: 8px;
+    gap: 4px;
+    border-bottom: 1px solid #e4e6eb;
+}
+
+.friends-toolbar-btn {
+    flex: 1;
+    padding: 8px 12px;
+    background: #f0f2f5;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.friends-toolbar-btn.active {
+    background: #667eea;
+    color: white;
+}
+
+.friends-toolbar-btn:hover:not(.active) {
+    background: #e4e6eb;
+}
+
+/* 好友消息提示框 */
+.friends-messages-notification {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
