@@ -1,10 +1,11 @@
 // message.js - 完善的消息系统实现（支持好友和陌生人消息分离）
 // 包含所有必要功能：表情解析、样式保持、系统消息模态框、心跳机制、消息轮询
+// 已整合所有修复：历史消息加载、在线状态显示、DOM选择器问题
 
 (function(global) {
   'use strict';
 
-  console.log('Loading complete message system with friend/stranger message separation...');
+  console.log('Loading complete message system with all fixes integrated...');
 
   // 确保API_BASE_URL存在
   window.API_BASE_URL = window.API_BASE_URL || 'https://api.am-all.com.cn';
@@ -376,7 +377,7 @@
               <div>
                 <div class="chat-username" id="chat-username">发送消息</div>
                 <div class="chat-user-status" id="chat-user-status" style="display: none;">
-                  <span class="status-indicator"></span>
+                  <span class="status-indicator offline"></span>
                   <span class="status-text">离线</span>
                 </div>
               </div>
@@ -402,10 +403,49 @@
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
+    // 添加状态样式
+    addStatusStyles();
+    
     bindChatEvents();
     
     if (!isMobile) {
       setupDraggable();
+    }
+  }
+
+  // 添加状态指示器样式
+  function addStatusStyles() {
+    if (!document.getElementById('status-styles')) {
+      const styles = document.createElement('style');
+      styles.id = 'status-styles';
+      styles.textContent = `
+        .status-indicator {
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          margin-right: 5px;
+        }
+        .status-indicator.online {
+          background-color: #28a745;
+          animation: pulse 2s infinite;
+        }
+        .status-indicator.offline {
+          background-color: #6c757d;
+        }
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+          70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+        #chat-user-status {
+          display: flex;
+          align-items: center;
+          font-size: 12px;
+          color: #6c757d;
+        }
+      `;
+      document.head.appendChild(styles);
     }
   }
 
@@ -779,7 +819,7 @@
     }
   }
 
-  // ==================== 改进的聊天记录加载（增量更新）====================
+  // ==================== 修复的聊天记录加载（增量更新）====================
   async function loadChatHistory(userId) {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -800,7 +840,20 @@
       });
       
       if (response.ok) {
-        const messages = await response.json();
+        const data = await response.json();
+        
+        // 处理不同的API返回格式
+        let messages = [];
+        if (Array.isArray(data)) {
+          messages = data;
+        } else if (data && Array.isArray(data.messages)) {
+          messages = data.messages;
+        } else if (data && data.data && Array.isArray(data.data)) {
+          messages = data.data;
+        } else {
+          console.warn('未知的消息格式，尝试将其作为空数组处理:', data);
+          messages = [];
+        }
         
         renderInitialMessages(messages);
         
@@ -813,15 +866,36 @@
         }
         
         startIncrementalCheck(userId);
+      } else {
+        console.error('加载聊天记录失败，状态码:', response.status);
+        const messagesDiv = document.getElementById('chat-messages');
+        if (messagesDiv) {
+          messagesDiv.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">加载消息失败</div>';
+        }
       }
     } catch (error) {
       console.error('加载聊天记录失败:', error);
+      const messagesDiv = document.getElementById('chat-messages');
+      if (messagesDiv) {
+        messagesDiv.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">网络错误，请重试</div>';
+      }
     }
   }
 
   function renderInitialMessages(messages) {
     const messagesDiv = document.getElementById('chat-messages');
     if (!messagesDiv) return;
+    
+    // 确保messages是数组
+    if (!Array.isArray(messages)) {
+      console.error('消息格式错误：期望数组，收到', typeof messages);
+      messages = [];
+    }
+    
+    if (messages.length === 0) {
+      messagesDiv.innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">暂无消息记录</div>';
+      return;
+    }
     
     let html = '';
     messages.forEach(msg => {
@@ -931,7 +1005,17 @@
       });
       
       if (response.ok) {
-        const messages = await response.json();
+        const data = await response.json();
+        
+        // 处理返回的数据格式
+        let messages = [];
+        if (Array.isArray(data)) {
+          messages = data;
+        } else if (data && Array.isArray(data.messages)) {
+          messages = data.messages;
+        } else if (data && data.data && Array.isArray(data.data)) {
+          messages = data.data;
+        }
         
         if (messages.length > 0) {
           const newMessages = messages.filter(msg => {
@@ -1203,28 +1287,51 @@
     if (!token) return;
     
     try {
-      let response = await fetch(`${API_BASE_URL}/api/users/${userId}/status`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // 尝试多个可能的API端点
+      const endpoints = [
+        `/api/users/${userId}/online-status`,
+        `/api/users/${userId}`,
+        `/api/friends`  // 从好友列表获取状态
+      ];
       
-      if (!response.ok) {
-        response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
+      let isOnline = false;
+      let foundStatus = false;
+      
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            
+            if (endpoint === '/api/friends') {
+              // 从好友列表中查找
+              const friends = Array.isArray(data) ? data : [];
+              const friend = friends.find(f => f.id === userId);
+              if (friend) {
+                isOnline = friend.online || friend.is_online || false;
+                foundStatus = true;
+              }
+            } else {
+              // 直接获取用户状态
+              isOnline = data.online || data.is_online || data.status === 'online' || false;
+              foundStatus = true;
+            }
+            
+            if (foundStatus) break;
           }
-        });
-        
-        if (response.ok) {
-          const userData = await response.json();
-          updateStatusDisplay(userData.is_online || userData.online || false);
-          return;
+        } catch (err) {
+          console.log(`尝试端点 ${endpoint} 失败`);
         }
-      } else {
-        const data = await response.json();
-        updateStatusDisplay(data.online || data.is_online || false);
       }
+      
+      // 更新显示
+      updateStatusDisplay(isOnline);
+      
     } catch (error) {
       console.error('获取用户状态失败:', error);
       updateStatusDisplay(false);
@@ -1234,22 +1341,81 @@
   // 更新状态显示的辅助函数
   function updateStatusDisplay(isOnline) {
     const statusEl = document.getElementById('chat-user-status');
-    if (statusEl) {
-      const indicator = statusEl.querySelector('.status-indicator');
-      const text = statusEl.querySelector('.status-text');
-      
-      if (isOnline) {
-        indicator.className = 'status-indicator online';
-        text.textContent = '在线';
-      } else {
-        indicator.className = 'status-indicator offline';
-        text.textContent = '离线';
-      }
+    if (!statusEl) return;
+    
+    // 确保有正确的结构
+    let indicator = statusEl.querySelector('.status-indicator');
+    let text = statusEl.querySelector('.status-text');
+    
+    if (!indicator || !text) {
+      statusEl.innerHTML = `
+        <span class="status-indicator ${isOnline ? 'online' : 'offline'}"></span>
+        <span class="status-text">${isOnline ? '在线' : '离线'}</span>
+      `;
+    } else {
+      indicator.className = `status-indicator ${isOnline ? 'online' : 'offline'}`;
+      text.textContent = isOnline ? '在线' : '离线';
     }
+  }
+
+  // ==================== 修复的选择聊天用户函数（补丁版）====================
+  function selectChatUser(userId, username, avatar) {
+    MessageState.currentChatUser = { id: userId, username, avatar };
+    
+    // 隐藏搜索区域，显示聊天区域
+    const searchArea = document.getElementById('user-search-area');
+    const messagesArea = document.getElementById('chat-messages');
+    const inputArea = document.getElementById('chat-input-area');
+    
+    if (searchArea) searchArea.style.display = 'none';
+    if (messagesArea) messagesArea.style.display = 'block';
+    if (inputArea) inputArea.style.display = 'flex';
+    
+    // 更新用户名
+    const usernameEl = document.getElementById('chat-username');
+    if (usernameEl) {
+      usernameEl.textContent = username;
+    }
+    
+    // 更新头像
+    const avatarEl = document.getElementById('chat-avatar');
+    if (avatarEl) {
+      avatarEl.src = avatar || '/avatars/default_avatar.png';
+      avatarEl.style.display = 'block';
+    }
+    
+    // 显示在线状态
+    const statusEl = document.getElementById('chat-user-status');
+    if (statusEl) {
+      statusEl.style.display = 'flex';
+      // 初始化状态显示结构
+      if (!statusEl.querySelector('.status-indicator')) {
+        statusEl.innerHTML = `
+          <span class="status-indicator offline"></span>
+          <span class="status-text">离线</span>
+        `;
+      }
+      updateUserOnlineStatus(userId);
+      
+      // 清除旧的定时器
+      if (MessageState.statusUpdateInterval) {
+        clearInterval(MessageState.statusUpdateInterval);
+      }
+      
+      // 设置新的定时器检查在线状态
+      MessageState.statusUpdateInterval = setInterval(() => {
+        updateUserOnlineStatus(userId);
+      }, 30000);
+    }
+    
+    // 加载聊天历史
+    loadChatHistory(userId);
   }
 
   // ==================== 解析消息内容（支持缓存）====================
   function parseMessageContent(content, messageType) {
+    if (!content) return '';
+    
     if (messageType === 'emoji' || 
         (typeof content === 'string' && 
          (content.includes('emoji_path') || content.includes('emoji_id')))) {
@@ -1459,37 +1625,6 @@
     MessageState.lastSentContent = null;
   }
 
-  // ==================== 选择聊天用户（补丁优化版）====================
-  function selectChatUser(userId, username, avatar) {
-    MessageState.currentChatUser = { id: userId, username, avatar };
-    
-    document.getElementById('user-search-area').style.display = 'none';
-    document.getElementById('chat-messages').style.display = 'block';
-    document.getElementById('chat-input-area').style.display = 'flex';
-    document.getElementById('chat-username').textContent = username;
-    
-    const avatarEl = document.getElementById('chat-avatar');
-    if (avatarEl) {
-      avatarEl.src = avatar || '/avatars/default_avatar.png';
-      avatarEl.style.display = 'block';
-    }
-    
-    const statusEl = document.getElementById('chat-user-status');
-    if (statusEl) {
-      statusEl.style.display = 'flex';
-      updateUserOnlineStatus(userId);
-      
-      if (MessageState.statusUpdateInterval) {
-        clearInterval(MessageState.statusUpdateInterval);
-      }
-      MessageState.statusUpdateInterval = setInterval(() => {
-        updateUserOnlineStatus(userId);
-      }, 30000);
-    }
-    
-    loadChatHistory(userId);
-  }
-
   async function searchUsers(query) {
     if (!query || query.length < 2) {
       const results = document.getElementById('user-search-results');
@@ -1697,6 +1832,9 @@
   global.closeSystemMessage = closeSystemMessage;
   global.loadEmojiPackContent = loadEmojiPackContent;
   global.startHeartbeat = startHeartbeat;
+  global.loadChatHistory = loadChatHistory;
+  global.updateUserOnlineStatus = updateUserOnlineStatus;
+  global.MessageState = MessageState;
   
   // 兼容好友系统
   global.openChatWithFriend = function(friendId) {
@@ -1749,6 +1887,6 @@
     }
   });
 
-  console.log('Complete message system with friend/stranger separation loaded');
+  console.log('Complete message system with all fixes integrated loaded successfully');
 
 })(window);
