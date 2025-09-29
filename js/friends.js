@@ -1,4 +1,4 @@
-// 好友功能JavaScript - 增加好友消息提示和优化界面
+// 好友功能JavaScript - 增加好友消息提示和优化界面（修复移动端切换问题）
 (function(global) {
   'use strict';
 
@@ -735,7 +735,7 @@
     currentView = 'friends';
   }
 
-  // 渲染好友下拉菜单 - 修改：增加三按钮界面
+  // 修复：渲染好友下拉菜单 - 增加三按钮界面
   function renderFriendsDropdown(type = 'desktop') {
     const dropdownId = type === 'mobile' ? 'friends-dropdown-mobile' : 'friends-dropdown';
     const dropdown = document.getElementById(dropdownId);
@@ -890,12 +890,12 @@
     
     dropdown.innerHTML = html;
     
-    // 绑定内部事件
-    bindDropdownEvents(dropdown);
+    // 绑定内部事件，传递type参数
+    bindDropdownEvents(dropdown, type);
   }
 
-  // 绑定下拉菜单内部事件
-  function bindDropdownEvents(dropdown) {
+  // 修复：绑定下拉菜单内部事件
+  function bindDropdownEvents(dropdown, type) {
     // 工具栏按钮
     dropdown.querySelectorAll('.friends-toolbar-btn').forEach(btn => {
       btn.addEventListener('click', function(e) {
@@ -910,11 +910,11 @@
         } else if (action === 'show-blacklist') {
           currentView = 'blacklist';
           this.classList.add('active');
-          renderFriendsDropdown();
+          renderFriendsDropdown(type); // 修复：传递type参数
         } else if (action === 'show-friends') {
           currentView = 'friends';
           this.classList.add('active');
-          renderFriendsDropdown();
+          renderFriendsDropdown(type); // 修复：传递type参数
         }
       });
     });
@@ -1023,7 +1023,9 @@
       if (response.ok) {
         showSuccessMessage('已删除好友');
         await loadFriendsData(true);
-        renderFriendsDropdown();
+        // 获取当前是移动端还是桌面端
+        const dropdown = document.querySelector('.friends-dropdown-mobile.show') ? 'mobile' : 'desktop';
+        renderFriendsDropdown(dropdown);
       }
     } catch (error) {
       console.error('删除好友失败:', error);
@@ -1283,7 +1285,9 @@
       if (response.ok) {
         showSuccessMessage('已添加好友');
         await loadFriendsData(true);
-        renderFriendsDropdown();
+        // 获取当前是移动端还是桌面端
+        const dropdown = document.querySelector('.friends-dropdown-mobile.show') ? 'mobile' : 'desktop';
+        renderFriendsDropdown(dropdown);
       }
     } catch (error) {
       console.error('接受好友请求失败:', error);
@@ -1309,7 +1313,9 @@
       if (response.ok) {
         showSuccessMessage('已拒绝请求');
         await loadFriendsData(true);
-        renderFriendsDropdown();
+        // 获取当前是移动端还是桌面端
+        const dropdown = document.querySelector('.friends-dropdown-mobile.show') ? 'mobile' : 'desktop';
+        renderFriendsDropdown(dropdown);
       }
     } catch (error) {
       console.error('拒绝好友请求失败:', error);
@@ -1338,7 +1344,9 @@
       if (response.ok) {
         showSuccessMessage('已加入黑名单');
         await loadFriendsData(true);
-        renderFriendsDropdown();
+        // 获取当前是移动端还是桌面端
+        const dropdown = document.querySelector('.friends-dropdown-mobile.show') ? 'mobile' : 'desktop';
+        renderFriendsDropdown(dropdown);
       }
     } catch (error) {
       console.error('加入黑名单失败:', error);
@@ -1365,7 +1373,9 @@
       if (response.ok) {
         showSuccessMessage('已解除黑名单');
         await loadFriendsData(true);
-        renderFriendsDropdown();
+        // 获取当前是移动端还是桌面端
+        const dropdown = document.querySelector('.friends-dropdown-mobile.show') ? 'mobile' : 'desktop';
+        renderFriendsDropdown(dropdown);
       }
     } catch (error) {
       console.error('解除黑名单失败:', error);
