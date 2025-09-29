@@ -1,4 +1,4 @@
-/* 消息系统样式 - 移动端优化版（含聊天窗口调整修复） */
+/* 消息系统样式 - 移动端优化版（含聊天窗口调整修复和实时更新优化）*/
 
 /* PC端消息图标调整位置 */
 .message-icon-wrapper {
@@ -620,22 +620,30 @@
   min-height: 0;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 20px;
+  position: relative;
+}
+
+/* 防止图片重新加载闪烁 */
+.chat-messages img {
+  min-height: 50px;
+  background: #f0f2f5;
 }
 
 .chat-message {
   margin-bottom: 15px;
   display: flex;
-  animation: messageSlide 0.3s;
+  animation: messageSlide 0.3s ease;
 }
 
+/* 消息动画优化 */
 @keyframes messageSlide {
   from {
-    transform: translateX(-20px);
     opacity: 0;
+    transform: translateY(20px);
   }
   to {
-    transform: translateX(0);
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -668,6 +676,62 @@
   font-size: 11px;
   margin-top: 5px;
   opacity: 0.7;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* 新消息提示 */
+.new-message-indicator {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #007bff;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  animation: bounce 2s infinite;
+  z-index: 10;
+}
+
+.new-message-indicator:hover {
+  background: #0056b3;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+  40% { transform: translateX(-50%) translateY(-10px); }
+  60% { transform: translateX(-50%) translateY(-5px); }
+}
+
+/* 发送中图标 */
+.sending-icon {
+  color: #6c757d;
+  font-size: 12px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 消息状态图标 */
+.message-meta .read-icon {
+  color: #4fc3f7;
+  font-size: 12px;
+}
+
+.message-meta .unread-icon {
+  color: #999;
+  font-size: 12px;
 }
 
 /* 消息状态指示器 */
@@ -807,7 +871,7 @@
   height: 8px;
   border-radius: 50%;
   background: #28a745;
-  animation: pulse 2s infinite;
+  animation: pulse-green 2s infinite;
 }
 
 .connection-status.disconnected {
@@ -817,7 +881,31 @@
 
 .connection-status.reconnecting {
   background: #ffc107;
-  animation: pulse 1s infinite;
+  animation: pulse-yellow 1s infinite;
+}
+
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+  }
+}
+
+@keyframes pulse-yellow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+  }
 }
 
 /* 消息加载指示器 */
@@ -832,9 +920,79 @@
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+/* 聊天用户状态 */
+.chat-user-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 2px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9e9e9e;
+}
+
+.status-indicator.online {
+  background: #4caf50;
+  animation: pulse-green 2s infinite;
+}
+
+.status-indicator.offline {
+  background: #9e9e9e;
+}
+
+.status-text {
+  font-size: 11px;
+}
+
+/* 聊天窗口中的表情选择器 */
+.chat-emoji-picker {
+  position: absolute !important;
+  bottom: 60px;
+  left: 10px;
+  width: 340px;
+  height: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  display: none;
+  flex-direction: column;
+  z-index: 1400;
+  animation: slideUp 0.3s ease;
+  border: 1px solid #e4e6eb;
+}
+
+.chat-emoji-picker.show {
+  display: flex !important;
+}
+
+/* 确保聊天容器允许表情选择器溢出显示 */
+.chat-container {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* PC端拖动模式下保持可见 */
+.pc-draggable .chat-container {
+  overflow: visible !important;
+}
+
+/* 表情标签栏 */
+.chat-emoji-picker .emoji-tabs {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background: #f7f8fa;
+  border-top: 1px solid #e4e6eb;
+  border-radius: 0 0 12px 12px;
+  gap: 8px;
+  overflow-x: auto;
+  flex-shrink: 0;
 }
 
 /* 小屏幕设备自动调整最大尺寸 */
@@ -1364,51 +1522,6 @@
   }
 }
 
-/* 聊天窗口中的表情选择器 */
-.chat-emoji-picker {
-  position: absolute !important;
-  bottom: 60px;
-  left: 10px;
-  width: 340px;
-  height: 400px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
-  display: none;
-  flex-direction: column;
-  z-index: 1400;
-  animation: slideUp 0.3s ease;
-  border: 1px solid #e4e6eb;
-}
-
-.chat-emoji-picker.show {
-  display: flex !important;
-}
-
-/* 确保聊天容器允许表情选择器溢出显示 */
-.chat-container {
-  position: relative;
-  overflow: visible !important;
-}
-
-/* PC端拖动模式下保持可见 */
-.pc-draggable .chat-container {
-  overflow: visible !important;
-}
-
-/* 表情标签栏 */
-.chat-emoji-picker .emoji-tabs {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  background: #f7f8fa;
-  border-top: 1px solid #e4e6eb;
-  border-radius: 0 0 12px 12px;
-  gap: 8px;
-  overflow-x: auto;
-  flex-shrink: 0;
-}
-
 /* ========== 圆环形进度条样式 ========== */
 
 /* 圆环进度条容器 */
@@ -1469,7 +1582,7 @@
   letter-spacing: 0.5px;
 }
 
-/* 缓存统计卡片布局调整（配合圆环） */
+/* 缓存统计卡片布局调整（配合圆环）*/
 .cache-progress {
   margin: 25px 0;
 }
@@ -1499,7 +1612,7 @@
   }
 }
 
-/* 深色模式支持（如果需要） */
+/* 深色模式支持（如果需要）*/
 @media (prefers-color-scheme: dark) {
   .ring-progress-bg {
     stroke: #2d3748;

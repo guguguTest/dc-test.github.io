@@ -1,10 +1,10 @@
-// message-complete.js - 完善的消息系统实现
-// 包含所有必要功能：表情解析、样式保持、系统消息模态框等
+// message.js - 完善的消息系统实现（包含实时更新优化）
+// 包含所有必要功能：表情解析、样式保持、系统消息模态框、心跳机制、消息轮询
 
 (function(global) {
   'use strict';
 
-  console.log('Loading complete message system...');
+  console.log('Loading complete message system with real-time features...');
 
   // 确保API_BASE_URL存在
   window.API_BASE_URL = window.API_BASE_URL || 'https://api.am-all.com.cn';
@@ -17,10 +17,15 @@
     currentChatUser: null,
     checkInterval: null,
     refreshInterval: null,
+    chatRefreshInterval: null,  // 聊天消息刷新定时器
+    heartbeatInterval: null,     // 心跳定时器
     isSending: false,
     lastSendTime: 0,
     currentEmojiPicker: null,
-    emojiPacksLoaded: false
+    emojiPacksLoaded: false,
+    lastMessageId: null,         // 记录最后一条消息ID
+    loadedMessages: new Map(),   // 存储已加载的消息
+    messageCheckInterval: null    // 消息检查定时器
   };
 
   // ==================== 初始化系统 ====================
@@ -34,6 +39,7 @@
     
     addMessageIcon();
     checkUnreadMessages();
+    startHeartbeat();  // 启动心跳
     
     if (MessageState.checkInterval) {
       clearInterval(MessageState.checkInterval);
@@ -45,6 +51,32 @@
     
     // 预加载表情包数据
     preloadEmojiPacks();
+  }
+
+  // ==================== 心跳机制 ====================
+  function startHeartbeat() {
+    if (MessageState.heartbeatInterval) {
+      clearInterval(MessageState.heartbeatInterval);
+    }
+    
+    const sendHeartbeat = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      try {
+        await fetch(`${API_BASE_URL}/api/heartbeat`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      } catch (error) {
+        console.error('Heartbeat failed:', error);
+      }
+    };
+    
+    sendHeartbeat(); // 立即发送一次
+    MessageState.heartbeatInterval = setInterval(sendHeartbeat, 30000); // 每30秒发送一次
   }
 
   // 预加载表情包
@@ -272,6 +304,10 @@
               <img src="" alt="" class="chat-avatar" id="chat-avatar" style="display: none;">
               <div>
                 <div class="chat-username" id="chat-username">发送消息</div>
+                <div class="chat-user-status" id="chat-user-status" style="display: none;">
+                  <span class="status-indicator"></span>
+                  <span class="status-text">离线</span>
+                </div>
               </div>
             </div>
             <button class="chat-close" id="chat-close-btn">&times;</button>
@@ -337,7 +373,7 @@
       });
     }
     
-    // 表情按钮 - 修复版
+    // 表情按钮
     const emojiBtn = document.getElementById('emoji-btn');
     if (emojiBtn) {
       emojiBtn.onclick = function(e) {
@@ -346,9 +382,23 @@
         toggleEmojiPicker(this);
       };
     }
+    
+    // 监听滚动事件
+    const messagesDiv = document.getElementById('chat-messages');
+    if (messagesDiv) {
+      messagesDiv.addEventListener('scroll', function() {
+        // 如果滚动到底部，移除新消息提示
+        if (this.scrollHeight - this.scrollTop < this.clientHeight + 100) {
+          const indicator = this.querySelector('.new-message-indicator');
+          if (indicator) {
+            indicator.remove();
+          }
+        }
+      });
+    }
   }
 
-  // ==================== 表情选择器（修复版）====================
+  // ==================== 表情选择器 ====================
   function toggleEmojiPicker(btn) {
     const chatContainer = document.getElementById('chat-container');
     if (!chatContainer) return;
@@ -694,7 +744,235 @@
     }
   }
 
-  // ==================== 发送消息（支持表情）====================
+  // ==================== 改进的聊天记录加载（增量更新）====================
+  async function loadChatHistory(userId) {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    // 清除旧的检查定时器
+    if (MessageState.messageCheckInterval) {
+      clearInterval(MessageState.messageCheckInterval);
+      MessageState.messageCheckInterval = null;
+    }
+    
+    // 清空已加载消息记录
+    MessageState.loadedMessages.clear();
+    MessageState.lastMessageId = null;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/messages/conversation/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const messages = await response.json();
+        
+        // 初次渲染所有消息
+        renderInitialMessages(messages);
+        
+        // 记录已加载的消息
+        messages.forEach(msg => {
+          MessageState.loadedMessages.set(msg.id, msg);
+        });
+        
+        // 记录最后一条消息ID
+        if (messages.length > 0) {
+          MessageState.lastMessageId = messages[messages.length - 1].id;
+        }
+        
+        // 启动增量检查
+        startIncrementalCheck(userId);
+      }
+    } catch (error) {
+      console.error('加载聊天记录失败:', error);
+    }
+  }
+
+  // 初次渲染消息
+  function renderInitialMessages(messages) {
+    const messagesDiv = document.getElementById('chat-messages');
+    if (!messagesDiv) return;
+    
+    let html = '';
+    messages.forEach(msg => {
+      html += createMessageHTML(msg);
+    });
+    
+    messagesDiv.innerHTML = html;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  // 创建单条消息HTML
+  function createMessageHTML(msg) {
+    const content = parseMessageContent(msg.content, msg.message_type);
+    
+    let statusIcon = '';
+    if (msg.is_sent) {
+      if (msg.is_read) {
+        statusIcon = '<i class="fas fa-check-double read-icon" title="已读"></i>';
+      } else {
+        statusIcon = '<i class="fas fa-check unread-icon" title="已送达"></i>';
+      }
+    }
+    
+    return `
+      <div class="chat-message ${msg.is_sent ? 'sent' : 'received'}" data-message-id="${msg.id}">
+        <div class="message-bubble">
+          ${content}
+          <div class="message-meta">
+            <span class="message-time">${formatTime(msg.created_at)}</span>
+            ${statusIcon}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 启动增量检查
+  function startIncrementalCheck(userId) {
+    // 每1.5秒检查一次新消息
+    MessageState.messageCheckInterval = setInterval(() => {
+      checkForNewMessages(userId);
+    }, 1500);
+  }
+
+  // 检查新消息（增量更新）
+  async function checkForNewMessages(userId) {
+    const token = localStorage.getItem('token');
+    if (!token || !MessageState.currentChatUser) return;
+    
+    try {
+      // 只获取最后一条消息之后的新消息
+      const url = MessageState.lastMessageId 
+        ? `${API_BASE_URL}/api/messages/conversation/${userId}?after_id=${MessageState.lastMessageId}`
+        : `${API_BASE_URL}/api/messages/conversation/${userId}`;
+        
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const messages = await response.json();
+        
+        if (messages.length > 0) {
+          // 只处理新消息
+          const newMessages = messages.filter(msg => !MessageState.loadedMessages.has(msg.id));
+          
+          if (newMessages.length > 0) {
+            appendNewMessages(newMessages);
+          }
+          
+          // 更新已有消息的状态（如已读状态）
+          updateExistingMessagesStatus(messages);
+        }
+      }
+    } catch (error) {
+      console.error('检查新消息失败:', error);
+    }
+  }
+
+  // 添加新消息到聊天窗口
+  function appendNewMessages(newMessages) {
+    const messagesDiv = document.getElementById('chat-messages');
+    if (!messagesDiv) return;
+    
+    // 记录当前滚动位置
+    const wasAtBottom = messagesDiv.scrollHeight - messagesDiv.scrollTop < messagesDiv.clientHeight + 100;
+    
+    // 添加新消息
+    newMessages.forEach(msg => {
+      // 跳过临时消息
+      const tempMsg = messagesDiv.querySelector(`[data-temp-id]`);
+      if (tempMsg) {
+        const tempContent = tempMsg.querySelector('.message-bubble').textContent;
+        if (msg.is_sent && tempContent.includes(msg.content)) {
+          tempMsg.remove();
+        }
+      }
+      
+      // 添加消息到DOM
+      const messageHTML = createMessageHTML(msg);
+      messagesDiv.insertAdjacentHTML('beforeend', messageHTML);
+      
+      // 记录消息
+      MessageState.loadedMessages.set(msg.id, msg);
+      MessageState.lastMessageId = msg.id;
+      
+      // 如果是收到的消息，播放提示音（可选）
+      if (!msg.is_sent && window.playMessageSound) {
+        window.playMessageSound();
+      }
+      
+      // 动画效果
+      const newMsgElement = messagesDiv.querySelector(`[data-message-id="${msg.id}"]`);
+      if (newMsgElement) {
+        newMsgElement.style.animation = 'messageSlide 0.3s ease';
+      }
+    });
+    
+    // 只有在用户原本在底部时才自动滚动
+    if (wasAtBottom) {
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    } else {
+      // 显示新消息提示
+      showNewMessageIndicator();
+    }
+  }
+
+  // 更新已有消息的状态
+  function updateExistingMessagesStatus(messages) {
+    messages.forEach(msg => {
+      const existingMsg = MessageState.loadedMessages.get(msg.id);
+      
+      // 只更新状态变化的消息
+      if (existingMsg && existingMsg.is_read !== msg.is_read) {
+        existingMsg.is_read = msg.is_read;
+        
+        // 更新DOM中的状态图标
+        const msgElement = document.querySelector(`[data-message-id="${msg.id}"]`);
+        if (msgElement) {
+          const statusIcon = msgElement.querySelector('.message-meta i');
+          if (statusIcon) {
+            if (msg.is_read) {
+              statusIcon.className = 'fas fa-check-double read-icon';
+              statusIcon.title = '已读';
+            } else {
+              statusIcon.className = 'fas fa-check unread-icon';
+              statusIcon.title = '已送达';
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // 显示新消息提示
+  function showNewMessageIndicator() {
+    const messagesDiv = document.getElementById('chat-messages');
+    if (!messagesDiv) return;
+    
+    // 检查是否已有提示
+    let indicator = messagesDiv.querySelector('.new-message-indicator');
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.className = 'new-message-indicator';
+      indicator.innerHTML = `
+        <i class="fas fa-arrow-down"></i>
+        <span>新消息</span>
+      `;
+      indicator.onclick = () => {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        indicator.remove();
+      };
+      messagesDiv.appendChild(indicator);
+    }
+  }
+
+  // ==================== 发送消息（优化版本）====================
   async function sendMessage() {
     const now = Date.now();
     if (MessageState.isSending || (now - MessageState.lastSendTime) < 1000) {
@@ -736,19 +1014,32 @@
       }
     }
     
-    // 添加临时消息显示
-    const messagesDiv = document.getElementById('chat-messages');
+    // 生成临时ID
     const tempId = 'temp_' + Date.now();
+    const tempMessageData = {
+      id: tempId,
+      content: processedContent,
+      message_type: messageType,
+      is_sent: true,
+      is_read: false,
+      created_at: new Date().toISOString()
+    };
     
+    // 添加临时消息显示（不重新渲染整个列表）
+    const messagesDiv = document.getElementById('chat-messages');
     if (messagesDiv) {
       const messageHTML = `
-        <div class="chat-message sent" data-temp-id="${tempId}">
+        <div class="chat-message sent" data-temp-id="${tempId}" style="animation: messageSlide 0.3s ease;">
           <div class="message-bubble">
             ${displayContent}
-            <div class="message-meta">发送中...</div>
+            <div class="message-meta">
+              <span class="message-time">发送中...</span>
+              <i class="fas fa-circle-notch fa-spin sending-icon"></i>
+            </div>
           </div>
         </div>
       `;
+      
       messagesDiv.insertAdjacentHTML('beforeend', messageHTML);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
@@ -770,68 +1061,47 @@
       if (response.ok) {
         const result = await response.json();
         
-        // 更新临时消息
+        // 更新临时消息为正式消息
         const tempMsg = document.querySelector(`[data-temp-id="${tempId}"]`);
         if (tempMsg) {
           tempMsg.setAttribute('data-message-id', result.id);
           tempMsg.removeAttribute('data-temp-id');
           const meta = tempMsg.querySelector('.message-meta');
-          if (meta) meta.textContent = '刚刚';
+          if (meta) {
+            meta.innerHTML = `
+              <span class="message-time">刚刚</span>
+              <i class="fas fa-check unread-icon"></i>
+            `;
+          }
         }
+        
+        // 记录消息
+        MessageState.loadedMessages.set(result.id, {
+          ...result,
+          is_sent: true,
+          is_read: false
+        });
+        MessageState.lastMessageId = result.id;
       } else {
         throw new Error('发送失败');
       }
     } catch (error) {
       console.error('发送消息失败:', error);
       const tempMsg = document.querySelector(`[data-temp-id="${tempId}"]`);
-      if (tempMsg) tempMsg.remove();
+      if (tempMsg) {
+        const meta = tempMsg.querySelector('.message-meta');
+        if (meta) {
+          meta.innerHTML = `
+            <span class="message-time" style="color: #dc3545;">发送失败</span>
+            <i class="fas fa-exclamation-circle" style="color: #dc3545;" onclick="resendMessage('${tempId}')"></i>
+          `;
+        }
+      }
     } finally {
       setTimeout(() => {
         MessageState.isSending = false;
       }, 1000);
     }
-  }
-
-  // ==================== 加载和显示聊天记录 ====================
-  async function loadChatHistory(userId) {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/messages/conversation/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const messages = await response.json();
-        renderChatMessages(messages);
-      }
-    } catch (error) {
-      console.error('加载聊天记录失败:', error);
-    }
-  }
-
-  function renderChatMessages(messages) {
-    const messagesDiv = document.getElementById('chat-messages');
-    if (!messagesDiv) return;
-    
-    let html = '';
-    messages.forEach(msg => {
-      const content = parseMessageContent(msg.content, msg.message_type);
-      html += `
-        <div class="chat-message ${msg.is_sent ? 'sent' : 'received'}" data-message-id="${msg.id}">
-          <div class="message-bubble">
-            ${content}
-            <div class="message-meta">${formatTime(msg.created_at)}</div>
-          </div>
-        </div>
-      `;
-    });
-    
-    messagesDiv.innerHTML = html;
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
   // ==================== 解析消息内容（支持缓存）====================
@@ -1029,6 +1299,7 @@
     }
   }
 
+  // 关闭聊天窗口（清理定时器）
   function closeChatModal() {
     const modal = document.getElementById('chat-modal');
     if (modal) {
@@ -1042,13 +1313,19 @@
       MessageState.currentEmojiPicker = null;
     }
     
-    MessageState.currentChatUser = null;
-    if (MessageState.refreshInterval) {
-      clearInterval(MessageState.refreshInterval);
-      MessageState.refreshInterval = null;
+    // 清理消息检查定时器
+    if (MessageState.messageCheckInterval) {
+      clearInterval(MessageState.messageCheckInterval);
+      MessageState.messageCheckInterval = null;
     }
+    
+    // 清理已加载消息记录
+    MessageState.loadedMessages.clear();
+    MessageState.currentChatUser = null;
+    MessageState.lastMessageId = null;
   }
 
+  // 选择聊天用户
   function selectChatUser(userId, username, avatar) {
     MessageState.currentChatUser = { id: userId, username, avatar };
     
@@ -1063,7 +1340,48 @@
       avatarEl.style.display = 'block';
     }
     
+    // 显示在线状态
+    const statusEl = document.getElementById('chat-user-status');
+    if (statusEl) {
+      statusEl.style.display = 'flex';
+      // 这里可以根据实际在线状态更新显示
+      updateUserOnlineStatus(userId);
+    }
+    
     loadChatHistory(userId);
+  }
+
+  // 更新用户在线状态
+  async function updateUserOnlineStatus(userId) {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/status`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const statusEl = document.getElementById('chat-user-status');
+        if (statusEl) {
+          const indicator = statusEl.querySelector('.status-indicator');
+          const text = statusEl.querySelector('.status-text');
+          
+          if (data.online) {
+            indicator.className = 'status-indicator online';
+            text.textContent = '在线';
+          } else {
+            indicator.className = 'status-indicator offline';
+            text.textContent = '离线';
+          }
+        }
+      }
+    } catch (error) {
+      console.error('获取用户状态失败:', error);
+    }
   }
 
   async function searchUsers(query) {
@@ -1255,6 +1573,7 @@
   global.showSystemMessage = showSystemMessage;
   global.closeSystemMessage = closeSystemMessage;
   global.loadEmojiPackContent = loadEmojiPackContent;
+  global.startHeartbeat = startHeartbeat;
   
   // 兼容好友系统
   global.openChatWithFriend = function(friendId) {
@@ -1280,6 +1599,12 @@
       if (MessageState.checkInterval) {
         clearInterval(MessageState.checkInterval);
       }
+      if (MessageState.heartbeatInterval) {
+        clearInterval(MessageState.heartbeatInterval);
+      }
+      if (MessageState.messageCheckInterval) {
+        clearInterval(MessageState.messageCheckInterval);
+      }
     }
   }, 2000);
 
@@ -1298,6 +1623,6 @@
     }
   });
 
-  console.log('Complete message system loaded');
+  console.log('Complete message system with real-time features loaded');
 
 })(window);

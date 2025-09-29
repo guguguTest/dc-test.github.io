@@ -1,4 +1,4 @@
-// 好友功能JavaScript - 性能优化版
+// 好友功能JavaScript - 修复在线状态版
 (function(global) {
   'use strict';
 
@@ -13,9 +13,10 @@
   let friendRequests = [];
   let currentSearchResults = [];
   let friendsCheckInterval = null;
+  let friendsStatusInterval = null; // 新增：好友状态更新定时器
   let isInitialized = false;
-  let isLoadingData = false; // 防止重复加载
-  let lastDataLoadTime = 0; // 记录上次加载数据的时间
+  let isLoadingData = false;
+  let lastDataLoadTime = 0;
 
   // 缓存数据的有效期（毫秒）
   const DATA_CACHE_DURATION = 60000; // 1分钟
@@ -43,11 +44,73 @@
     }
     friendsCheckInterval = setInterval(checkFriendRequests, 10000);
     
+    // 新增：定期更新好友在线状态（每30秒）
+    if (friendsStatusInterval) {
+      clearInterval(friendsStatusInterval);
+    }
+    friendsStatusInterval = setInterval(updateFriendsOnlineStatus, 30000);
+    
     // 绑定事件
     bindFriendsEvents();
     
     // 请求通知权限
     requestNotificationPermission();
+  }
+
+  // 新增：更新好友在线状态
+  async function updateFriendsOnlineStatus() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/friends`, {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const rawFriendsList = await response.json();
+        const updatedFriends = processFriendsList(rawFriendsList);
+        
+        // 更新在线状态
+        friendsList.forEach(friend => {
+          const updatedFriend = updatedFriends.find(f => f.id === friend.id);
+          if (updatedFriend) {
+            friend.online = updatedFriend.online;
+          }
+        });
+        
+        // 如果下拉菜单打开，更新显示
+        const dropdown = document.querySelector('.friends-dropdown.show, .friends-dropdown-mobile.show');
+        if (dropdown) {
+          updateFriendsListDisplay();
+        }
+      }
+    } catch (error) {
+      console.error('更新好友在线状态失败:', error);
+    }
+  }
+
+  // 新增：更新好友列表显示（不重新渲染整个下拉菜单）
+  function updateFriendsListDisplay() {
+    const friendItems = document.querySelectorAll('.friend-item');
+    friendItems.forEach(item => {
+      const friendId = parseInt(item.dataset.friendId);
+      const friend = friendsList.find(f => f.id === friendId);
+      if (friend) {
+        // 更新在线状态显示
+        const statusElement = item.querySelector('.friend-status span:first-child');
+        if (statusElement) {
+          statusElement.textContent = friend.online ? '在线' : '离线';
+        }
+        // 更新data属性
+        item.dataset.online = friend.online;
+      }
+    });
   }
 
   // 预加载好友数据（后台加载）
@@ -175,7 +238,7 @@
     }
   }
 
-  // 处理好友列表数据
+  // 处理好友列表数据 - 修复：正确处理在线状态
   function processFriendsList(rawFriendsList) {
     const rankBackgrounds = {
       0: 'https://oss.am-all.com.cn/asset/img/main/dc/UserRank/UserRank_normal.png',
@@ -196,7 +259,7 @@
         rankSp: hasRainbowEffect ? 1 : 0,
         banState: friend.ban_state || 0,
         avatar: friend.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png',
-        online: friend.online || false
+        online: friend.online === true // 使用后端返回的真实在线状态
       };
     });
   }
@@ -346,11 +409,8 @@
     dropdown.classList.add('show');
     renderLoadingState(dropdown);
     
-    // 如果数据需要更新，异步加载
-    const now = Date.now();
-    if (now - lastDataLoadTime > DATA_CACHE_DURATION) {
-      await loadFriendsData();
-    }
+    // 强制刷新好友数据
+    await loadFriendsData(true);
     
     // 渲染实际内容
     renderFriendsDropdown(type);
@@ -385,7 +445,7 @@
     });
   }
 
-  // 渲染好友下拉菜单
+  // 渲染好友下拉菜单 - 修复：显示实际在线状态
   function renderFriendsDropdown(type = 'desktop') {
     const dropdownId = type === 'mobile' ? 'friends-dropdown-mobile' : 'friends-dropdown';
     const dropdown = document.getElementById(dropdownId);
@@ -668,16 +728,21 @@
     `;
   }
 
-  // 渲染好友项
+  // 渲染好友项 - 修复：显示实际在线状态
   function renderFriendItem(friend) {
+    // 添加在线状态样式类
+    const onlineClass = friend.online ? 'online' : 'offline';
+    const onlineStatusText = friend.online ? '在线' : '离线';
+    
     return `
-        <div class="friend-item" 
+        <div class="friend-item ${onlineClass}" 
              data-friend-id="${friend.id}"
              data-friend-uid="${friend.uid}"
              data-friend-username="${friend.username}"
              data-friend-nickname="${friend.nickname || friend.username}"
              data-user-id="${friend.id}"
-             data-user-uid="${friend.uid}">
+             data-user-uid="${friend.uid}"
+             data-online="${friend.online}">
             <div class="friend-user-info" style="--user-rank-bg: url(${friend.rankBackground || ''})">
                 <div class="friend-avatar-container">
                     ${friend.rankSp === 1 ? '<div class="friend-avatar-rainbow"></div>' : ''}
@@ -685,11 +750,13 @@
                          alt="" class="friend-avatar">
                     ${friend.banState ? `<img src="https://oss.am-all.com.cn/asset/img/other/dc/banState/bs${friend.banState}.png" 
                                               class="friend-state-icon">` : ''}
+                    <!-- 在线状态指示器 -->
+                    <div class="online-indicator ${onlineClass}"></div>
                 </div>
                 <div class="friend-info">
                     <div class="friend-name">${friend.nickname || friend.username}</div>
                     <div class="friend-status">
-                        <span>${friend.online ? '在线' : '离线'}</span>
+                        <span class="online-status">${onlineStatusText}</span>
                         <span>UID: ${friend.uid}</span>
                     </div>
                 </div>
@@ -1036,6 +1103,11 @@
       friendsCheckInterval = null;
     }
     
+    if (friendsStatusInterval) {
+      clearInterval(friendsStatusInterval);
+      friendsStatusInterval = null;
+    }
+    
     // 移除好友图标
     const pcWrapper = document.getElementById('friends-icon-wrapper');
     const mobileWrapper = document.getElementById('friends-icon-wrapper-mobile');
@@ -1107,6 +1179,7 @@
   global.loadFriendsData = loadFriendsData;
   global.openChatWithFriend = openChatWithFriend;
   global.requestNotificationPermission = requestNotificationPermission;
+  global.updateFriendsOnlineStatus = updateFriendsOnlineStatus;
   
   // 确保在登录后立即初始化
   if (!window.friendsSystemInitialized) {
