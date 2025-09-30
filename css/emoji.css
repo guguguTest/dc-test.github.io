@@ -877,3 +877,93 @@
     opacity: 1;
   }
 }
+
+/* 环形进度条容器 */
+.ring-progress-container {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
+}
+
+/* SVG容器 */
+.ring-progress-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg); /* 从顶部开始 */
+}
+
+/* 背景圆环 */
+.ring-progress-bg {
+  fill: none;
+  stroke: #e4e6eb;
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+/* 进度圆环 */
+.ring-progress-fill {
+  fill: none;
+  stroke: url(#ring-gradient);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 408.4; /* 2 * π * 65 ≈ 408.4 */
+  stroke-dashoffset: 408.4; /* 初始为0% */
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+/* 进度文字 */
+.ring-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.ring-progress-percent {
+  display: block;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1c1e21;
+  line-height: 1.2;
+}
+
+.ring-progress-label {
+  display: block;
+  font-size: 12px;
+  color: #65676b;
+  margin-top: 4px;
+}
+
+/* 缓存使用信息 */
+.cache-progress-info {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+  color: #65676b;
+}
+
+/* 缓存进度区域 */
+.cache-progress {
+  padding: 20px;
+  background: #f7f8fa;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .ring-progress-container {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .ring-progress-percent {
+    font-size: 20px;
+  }
+  
+  .ring-progress-label {
+    font-size: 11px;
+  }
+}
