@@ -104,112 +104,125 @@
     console.warn('使用备用歌曲数据');
   }
   
-  // 检查运势状态
-  async function checkFortuneStatus() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      showErrorState('请先登录');
-      return;
+// 检查运势状态
+async function checkFortuneStatus() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    showErrorState('请先登录');
+    return;
+  }
+  
+  try {
+    const response = await fetch('https://api.am-all.com.cn/api/fortune/last-draw', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    try {
-      const response = await fetch('https://api.am-all.com.cn/api/fortune/last-draw', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json();
+    console.log('运势状态数据:', data);
+    
+    const drawBtn = document.getElementById('draw-btn');
+    const fortuneHint = document.getElementById('fortune-hint');
+    
+    if (data.canDraw) {
+      // 可以抽取
+      if (drawBtn) {
+        drawBtn.disabled = false;
+        drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
+      }
+      if (fortuneHint) {
+        fortuneHint.textContent = '今日运势待抽取';
+        fortuneHint.style.color = '#667eea';
       }
       
-      const data = await response.json();
-      console.log('运势状态数据:', data);
-      
-      const drawBtn = document.getElementById('draw-btn');
-      const fortuneHint = document.getElementById('fortune-hint');
-      
-      if (data.canDraw) {
-        // 可以抽取
-        if (drawBtn) {
-          drawBtn.disabled = false;
-          drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
-        }
-        if (fortuneHint) {
-          fortuneHint.textContent = '今日运势待抽取';
-          fortuneHint.style.color = '#667eea';
+      // 显示占位符
+      displayDummyFortune();
+    } else {
+      // 已经抽取过，显示上次抽取的结果
+      if (data.lastFortune) {
+        console.log('显示上次抽取结果:', data.lastFortune);
+        
+        // 解析song_data（可能是JSON字符串）
+        let songData = data.lastFortune.song_data;
+        if (typeof songData === 'string') {
+          try {
+            songData = JSON.parse(songData);
+          } catch (e) {
+            console.error('解析歌曲数据失败:', e);
+          }
         }
         
-        // 显示占位符
-        displayDummyFortune();
-      } else {
-        // 已经抽取过，显示上次抽取的结果
-        if (data.lastFortune) {
-          console.log('显示上次抽取结果:', data.lastFortune);
-          
-          // 解析song_data（可能是JSON字符串）
-          let songData = data.lastFortune.song_data;
-          if (typeof songData === 'string') {
-            try {
-              songData = JSON.parse(songData);
-            } catch (e) {
-              console.error('解析歌曲数据失败:', e);
-            }
+        // 解析recommendations
+        let recommendations = data.lastFortune.recommendations;
+        if (typeof recommendations === 'string') {
+          try {
+            recommendations = JSON.parse(recommendations);
+          } catch (e) {
+            console.error('解析推荐数据失败:', e);
           }
-          
-          // 解析recommendations
-          let recommendations = data.lastFortune.recommendations;
-          if (typeof recommendations === 'string') {
-            try {
-              recommendations = JSON.parse(recommendations);
-            } catch (e) {
-              console.error('解析推荐数据失败:', e);
-            }
-          }
-          
-          displayFortune(
-            songData,
-            data.lastFortune.luck,
-            recommendations
-          );
-          
-          // 显示历史获得的积分
+        }
+        
+        displayFortune(
+          songData,
+          data.lastFortune.luck,
+          recommendations
+        );
+        
+        // 始终更新提示文字
+        if (fortuneHint) {
           if (data.lastFortune.points_earned && window.currentUser) {
             const totalPoints = (window.currentUser.points || 0) + (window.currentUser.point2 || 0);
-            if (fortuneHint) {
-              fortuneHint.textContent = `昨日获得 ${data.lastFortune.points_earned} 积分，当前积分: ${totalPoints}`;
-              fortuneHint.style.color = '#7f8c8d';
+            fortuneHint.textContent = `昨日获得 ${data.lastFortune.points_earned} 积分，当前积分: ${totalPoints}`;
+            fortuneHint.style.color = '#7f8c8d';
+          } else {
+            // 即使没有积分信息，也要更新提示
+            if (data.nextDrawTime) {
+              const nextDraw = new Date(data.nextDrawTime);
+              const now = new Date();
+              const hoursLeft = Math.ceil((nextDraw - now) / (1000 * 60 * 60));
+              fortuneHint.textContent = `今日运势已抽取，${hoursLeft}小时后可再次抽取`;
+            } else {
+              fortuneHint.textContent = '今日运势已抽取，请明天再来';
             }
+            fortuneHint.style.color = '#7f8c8d';
           }
-        } else {
-          // 没有历史数据，显示占位符
-          displayDummyFortune();
         }
+      } else {
+        // 没有历史数据，显示占位符
+        displayDummyFortune();
         
-        if (drawBtn) {
-          drawBtn.disabled = true;
-          drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-        }
-        
-        if (fortuneHint && !data.lastFortune) {
+        // 更新提示文字
+        if (fortuneHint) {
           if (data.nextDrawTime) {
             const nextDraw = new Date(data.nextDrawTime);
             const now = new Date();
             const hoursLeft = Math.ceil((nextDraw - now) / (1000 * 60 * 60));
             fortuneHint.textContent = `今日运势已抽取，${hoursLeft}小时后可再次抽取`;
           } else {
-            fortuneHint.textContent = `今日运势已抽取，请明天再来`;
+            fortuneHint.textContent = '今日运势已抽取，请明天再来';
           }
+          fortuneHint.style.color = '#7f8c8d';
         }
       }
-    } catch (error) {
-      console.error('检查运势抽取状态失败:', error);
-      showErrorState('无法获取抽取状态，请稍后重试');
       
-      // 显示占位符作为后备
-      displayDummyFortune();
+      if (drawBtn) {
+        drawBtn.disabled = true;
+        drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
+      }
     }
+  } catch (error) {
+    console.error('检查运势抽取状态失败:', error);
+    showErrorState('无法获取抽取状态，请稍后重试');
+    
+    // 显示占位符作为后备
+    displayDummyFortune();
   }
+}
   
   // 显示占位符运势
   function displayDummyFortune() {
