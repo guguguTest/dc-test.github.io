@@ -215,8 +215,11 @@ const languageModule = (function() {
             'userSettings.creditPoints': 'CREDIT点数',
             'userSettings.changePassword': '修改密码',
             'userSettings.currentPassword': '当前密码',
+			'userSettings.currentPasswordPlaceholder': '请输入当前密码',
             'userSettings.newPassword': '新密码',
+			'userSettings.newPasswordPlaceholder': '请输入新密码', 
             'userSettings.confirmNewPassword': '确认新密码',
+			'userSettings.confirmNewPasswordPlaceholder': '请再次输入新密码',
             'userSettings.updatePassword': '更新密码',
             'userSettings.ccbBinding': '查分绑定信息',
             'userSettings.server': '服务器',
@@ -283,9 +286,9 @@ const languageModule = (function() {
             'settings.cursorDefault': '默认',
             'settings.cursorDefaultDesc': '系统默认鼠标',
             'settings.cursorCustom1': '井盖',
-            'settings.cursorCustom1Desc': '个性化鼠标样式',
-            'settings.cursorCustom2': 'まひろ',
-            'settings.cursorCustom2Desc': '可爱风格鼠标',
+            'settings.cursorCustom1Desc': 'Dungeon & Fighter',
+            'settings.cursorCustom2': '绪山真寻',
+            'settings.cursorCustom2Desc': 'お兄ちゃんおしまい！',
             
             // 通用按钮和操作
             'common.back': '返回',
@@ -302,7 +305,7 @@ const languageModule = (function() {
             'common.error': '发生错误',
             
             // Footer
-            'footer.text1': 'SEGAY FEIWU',
+            'footer.text1': 'EVIL LEAKER',
             'footer.text2': '1145141919810'
         },
         
@@ -519,8 +522,11 @@ const languageModule = (function() {
             'userSettings.creditPoints': 'CREDIT Points',
             'userSettings.changePassword': 'Change Password',
             'userSettings.currentPassword': 'Current Password',
+			'userSettings.currentPasswordPlaceholder': 'Enter current password',
             'userSettings.newPassword': 'New Password',
+			'userSettings.newPasswordPlaceholder': 'Enter new password',
             'userSettings.confirmNewPassword': 'Confirm New Password',
+			'userSettings.confirmNewPasswordPlaceholder': 'Re-enter new password', 
             'userSettings.updatePassword': 'Update Password',
             'userSettings.ccbBinding': 'CCB Binding Info',
             'userSettings.server': 'Server',
@@ -606,7 +612,7 @@ const languageModule = (function() {
             'common.error': 'Error',
             
             // Footer
-            'footer.text1': 'SEGAY FEIWU',
+            'footer.text1': 'EVIL LEAKER',
             'footer.text2': '1145141919810'
         },
         
@@ -639,10 +645,10 @@ const languageModule = (function() {
             
             // 用户区域
             'user.login': 'ログイン',
-            'user.register': '登録',
+            'user.register': '新規登録',
             'user.logout': 'ログアウト',
             'user.settings': 'ユーザー設定',
-            'user.normalUser': '一般ユーザー',
+            'user.normalUser': 'ノーマル',
             'user.points': 'ポイント',
             'user.credit': 'クレジット',
             
@@ -853,7 +859,7 @@ const languageModule = (function() {
             'userSettings.savePrivacy': 'プライバシー保存',
             
             // 每日签到
-            'fortune.title': '毎日チェックイン',
+            'fortune.title': 'おんみくじ',
             'fortune.backHome': 'ホームに戻る',
             'fortune.todayFortune': '今日の運勢',
             'fortune.suitable': '宜：',
@@ -874,7 +880,7 @@ const languageModule = (function() {
             'settings.title': '設定',
             'settings.back': '戻る',
             'settings.language': '言語設定',
-            'settings.interfaceLanguage': 'インターフェース言語',
+            'settings.interfaceLanguage': '表示言語',
             'settings.rememberLanguage': '言語設定を記憶',
             'settings.rememberLanguageDesc': '次回訪問時に選択した言語を自動使用',
             'settings.emojiCache': '絵文字キャッシュ管理',
@@ -895,10 +901,10 @@ const languageModule = (function() {
             'settings.saveSettings': '設定を保存',
             'settings.cursorDefault': 'デフォルト',
             'settings.cursorDefaultDesc': 'システムデフォルトカーソル',
-            'settings.cursorCustom1': 'マンホール',
-            'settings.cursorCustom1Desc': 'カスタムカーソルスタイル',
+            'settings.cursorCustom1': '井蓋',
+            'settings.cursorCustom1Desc': 'アラド戦記',
             'settings.cursorCustom2': 'まひろ',
-            'settings.cursorCustom2Desc': 'かわいいカーソルスタイル',
+            'settings.cursorCustom2Desc': 'お兄ちゃんおしまい！',
             
             // 通用按钮和操作
             'common.back': '戻る',
@@ -915,7 +921,7 @@ const languageModule = (function() {
             'common.error': 'エラー',
             
             // Footer
-            'footer.text1': 'SEGAY FEIWU',
+            'footer.text1': 'EVIL LEAKER',
             'footer.text2': '1145141919810'
         }
     };
