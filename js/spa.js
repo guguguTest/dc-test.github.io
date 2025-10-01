@@ -863,6 +863,11 @@ function updateUserInfo(user) {
   const defaultAvatarUrl = 'https://api.am-all.com.cn/avatars/default_avatar.png';
   const rankInfo = getUserRankInfo(user.user_rank || 0);
 
+  // 调用新的显示更新函数
+  if (typeof updateUserInfoDisplay === 'function') {
+    updateUserInfoDisplay(user);
+  }
+
   // 添加CREDIT显示更新
   const dropdownCredit = document.getElementById('dropdown-credit');
   if (dropdownCredit) {

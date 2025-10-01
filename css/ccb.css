@@ -3,9 +3,9 @@
 
 /* 主容器现代化设计 */
 .ccb-container {
-    max-width: 680px;
+    max-width: 800px;
     margin: 0 auto;
-    padding: 24px;
+    padding: 20px;
     position: relative;
 }
 
@@ -15,8 +15,8 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: var(--modern-border-radius);
-    padding: 32px;
-    margin-bottom: 24px;
+    padding: 20px;
+    margin-bottom: 16px;
     box-shadow: var(--modern-shadow-medium);
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: var(--modern-transition);
@@ -42,12 +42,12 @@
 
 /* 标题现代化设计 */
 .ccb-title {
-    font-size: 1.75rem;
+    font-size: 1.35rem;
     font-weight: 700;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     color: var(--modern-text-primary);
     position: relative;
-    padding-bottom: 16px;
+    padding-bottom: 10px;
     border: none;
 }
 
@@ -56,8 +56,8 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 60px;
-    height: 4px;
+    width: 50px;
+    height: 3px;
     background: var(--modern-primary-gradient);
     border-radius: 2px;
 }
@@ -66,7 +66,7 @@
 .ccb-form {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 14px;
 }
 
 .ccb-form .form-group {
@@ -78,10 +78,10 @@
 
 .ccb-form label {
     display: block;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     font-weight: 600;
     color: var(--modern-text-primary);
-    font-size: 14px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -90,10 +90,10 @@
 .ccb-form select,
 .ccb-form input {
     width: 100%;
-    padding: 16px 20px;
+    padding: 10px 14px;
     border: 2px solid var(--modern-border-color);
     border-radius: var(--modern-border-radius-small);
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     color: var(--modern-text-primary);
     background: rgba(255, 255, 255, 0.8);
@@ -121,8 +121,8 @@
 .checkbox-group {
     display: flex;
     align-items: center;
-    margin-top: 12px;
-    padding: 16px;
+    margin-top: 10px;
+    padding: 12px;
     background: rgba(102, 126, 234, 0.05);
     border-radius: var(--modern-border-radius-small);
     border: 1px solid rgba(102, 126, 234, 0.1);
@@ -155,8 +155,8 @@
     background: var(--modern-warning-gradient);
     border: none;
     border-radius: var(--modern-border-radius);
-    padding: 24px;
-    margin: 20px 0;
+    padding: 14px;
+    margin: 12px 0;
     box-shadow: var(--modern-shadow-light);
     position: relative;
     overflow: hidden;
@@ -168,24 +168,24 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
+    height: 3px;
     background: linear-gradient(90deg, #ff9a56, #ff6b35);
 }
 
 .ccb-notice-title {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 700;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
     color: #8b4513;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .ccb-notice-content {
-    font-size: 14px;
+    font-size: 12px;
     color: #8b4513;
-    line-height: 1.6;
+    line-height: 1.5;
     font-weight: 500;
 }
 
@@ -197,17 +197,17 @@
 /* 按钮现代化设计 */
 .ccb-actions {
     display: flex;
-    gap: 16px;
-    margin-top: 32px;
+    gap: 10px;
+    margin-top: 16px;
 }
 
 .ccb-btn {
-    padding: 16px 32px;
+    padding: 10px 20px;
     border: none;
     border-radius: var(--modern-border-radius-small);
     cursor: pointer;
     font-weight: 600;
-    font-size: 16px;
+    font-size: 14px;
     transition: var(--modern-transition);
     position: relative;
     overflow: hidden;
@@ -268,12 +268,20 @@
 
 /* 查询结果区域 */
 .ccb-result {
-    margin-top: 24px;
+    margin-top: 0;
     text-align: center;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .ccb-result img {
     max-width: 100%;
+    max-height: calc(100vh - 150px);
+    width: auto;
+    height: auto;
     border-radius: var(--modern-border-radius);
     box-shadow: var(--modern-shadow-heavy);
     transition: var(--modern-transition);
@@ -286,31 +294,32 @@
 
 /* 保存按钮容器 */
 .ccb-save-action {
-    margin-top: 24px;
+    margin-top: 12px;
     text-align: center;
 }
 
 /* 冷却计时器 */
 .ccb-cooldown {
-    margin-top: 16px;
+    margin-top: 12px;
     color: var(--modern-error-color);
     font-weight: 600;
     text-align: center;
-    padding: 12px 20px;
+    padding: 10px 16px;
     background: rgba(255, 107, 107, 0.1);
     border-radius: var(--modern-border-radius-small);
     border: 1px solid rgba(255, 107, 107, 0.2);
+    font-size: 13px;
 }
 
 /* 积分信息现代化 */
 .ccb-points-info {
-    margin-top: 16px;
+    margin-top: 10px;
     color: var(--modern-text-secondary);
-    font-size: 14px;
+    font-size: 12px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
+    gap: 8px;
+    padding: 10px 14px;
     background: rgba(102, 126, 234, 0.05);
     border-radius: var(--modern-border-radius-small);
     border: 1px solid rgba(102, 126, 234, 0.1);
@@ -324,9 +333,9 @@
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    padding: 8px 16px;
+    gap: 4px;
+    font-size: 11px;
+    padding: 5px 10px;
     border-radius: var(--modern-border-radius-small);
     transition: var(--modern-transition);
     text-transform: uppercase;
@@ -496,8 +505,8 @@
     }
     
     .ccb-section {
-        padding: 24px;
-        margin-bottom: 20px;
+        padding: 18px;
+        margin-bottom: 14px;
     }
     
     .ccb-actions {
@@ -516,21 +525,25 @@
     .admin-card {
         padding: 24px;
     }
+    
+    .ccb-result {
+        min-height: 250px;
+    }
 }
 
 @media (max-width: 480px) {
     .ccb-section {
-        padding: 20px;
+        padding: 16px;
     }
     
     .ccb-form select,
     .ccb-form input {
-        padding: 14px 16px;
+        padding: 12px 14px;
         font-size: 16px; /* 防止iOS缩放 */
     }
     
     .ccb-title {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
     
     .admin-container {
@@ -563,31 +576,14 @@
         align-items: flex-start;
         gap: 8px;
     }
-}
-
-/* 动画优化 */
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    
+    .ccb-result {
+        min-height: 200px;
     }
 }
 
-.ccb-section {
-    animation: slideIn 0.6s ease-out;
-}
-
-.ccb-section:nth-child(2) {
-    animation-delay: 0.1s;
-}
-
-.ccb-section:nth-child(3) {
-    animation-delay: 0.2s;
-}
+/* 动画优化 - 移除滑入动画 */
+/* 卡片直接显示，不再使用动画 */
 
 /* 加载状态优化 */
 .ccb-btn:disabled {

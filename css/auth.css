@@ -1931,3 +1931,27 @@
   margin-right: 8px;
   font-size: 14px;
 }
+
+/* 特殊用户组和认证显示样式 */
+#user-info-pc .dropdown-special-rank,
+#user-info-pc .dropdown-auth {
+  color: #ecf0f1;
+  padding: 8px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+#user-info-pc .dropdown-special-rank i,
+#user-info-pc .dropdown-auth i {
+  margin-right: 8px;
+  font-size: 14px;
+  color: #f1c40f;
+}
+
+/* 隐藏无特殊等级和无认证的项 */
+#user-info-pc .dropdown-special-rank.hidden,
+#user-info-pc .dropdown-auth.hidden {
+  display: none;
+}

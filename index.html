@@ -117,23 +117,31 @@
               <span id="user-nickname-pc" class="user-nickname"></span>
               <span id="user-uid-pc" class="user-uid"></span>
             </div>
-            <div class="user-dropdown">
-              <div class="dropdown-rank">
-                <span id="dropdown-rank" data-i18n="user.normalUser">普通用户</span>
-              </div>
-              <div class="dropdown-uid">
-                <i class="fas fa-id-card me-2"></i>
-                <span id="dropdown-uid"></span>
-              </div>
-              <div class="dropdown-points" id="dropdown-points">
-                <i class="fas fa-coins me-2"></i><span data-i18n="user.points">积分</span>: 0
-              </div>
-			  <div class="dropdown-credit" id="dropdown-credit">
-				<i class="fas fa-star me-2"></i><span data-i18n="user.credit">CREDIT</span>: 0
+			<div class="user-dropdown">
+			  <div class="dropdown-rank">
+				<span id="dropdown-rank"></span>
 			  </div>
-              <a href="#" data-page="user-settings" data-i18n="user.settings">用户设置</a>
-              <a href="#" id="logout-pc" data-i18n="user.logout">退出登录</a>
-            </div>
+			  <div class="dropdown-special-rank">
+				<i class="fas fa-crown me-2"></i>
+				<span id="dropdown-special-rank"></span>
+			  </div>
+			  <div class="dropdown-auth">
+				<i class="fas fa-certificate me-2"></i>
+				<span id="dropdown-auth"></span>
+			  </div>
+			  <div class="dropdown-uid">
+				<i class="fas fa-id-card me-2"></i>
+				<span id="dropdown-uid"></span>
+			  </div>
+			  <div class="dropdown-points" id="dropdown-points">
+				<i class="fas fa-coins me-2"></i><span data-i18n="user.points">积分</span>: <span id="dropdown-points-value">0</span>
+			  </div>
+			  <div class="dropdown-credit" id="dropdown-credit">
+				<i class="fas fa-star me-2"></i><span data-i18n="user.credit">CREDIT</span>: <span id="dropdown-credit-value">0</span>
+			  </div>
+			  <a href="#" data-page="user-settings" data-i18n="user.settings">用户设置</a>
+			  <a href="#" id="logout-pc" data-i18n="user.logout">退出登录</a>
+			</div>
           </div>
         </div>
       </div>
@@ -321,6 +329,9 @@
 
   <!-- 6. 社交功能 -->
   <script defer src="js/friends.js"></script>
+  
+  <!-- 用户信息更新器 -->
+  <script defer src="js/userInfoUpdater.js"></script>
 
   <!-- 7. 业务功能模块 -->
   <script defer src="js/dl.js"></script>
