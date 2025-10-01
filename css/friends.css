@@ -557,7 +557,7 @@
 .friend-rank-icon {
   position: absolute;
   right: 5px;
-  top: 50%;
+  top: 35%;
   transform: translateY(-50%);
   width: 35px;
   height: 35px;
@@ -759,6 +759,46 @@
     width: 35px;
     height: 35px;
   }
+  /* 移动端七彩光环调整 - 保持协调比例 */
+  .friend-avatar-rainbow {
+    top: -2px;
+    left: -2px;
+    width: 39px;
+    height: 39px;
+  }
+  
+  /* 移动端光晕效果也需要调整 */
+  .friend-avatar-rainbow::before {
+    top: -1.5px;
+    left: -1.5px;
+    right: -1.5px;
+    bottom: -1.5px;
+    filter: blur(4px);
+  }
+  
+  /* 移动端头像边框微调 */
+  .friend-avatar {
+    border-width: 1.5px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* 移动端状态图标调整 */
+  .friend-state-icon {
+    width: 16px;
+    height: 16px;
+    bottom: 1px;
+    left: 1px;
+  }
+  
+  /* 移动端在线指示器调整 */
+  .online-indicator {
+    width: 8px;
+    height: 8px;
+    border-width: 1.5px;
+    bottom: 1px;
+    right: 1px;
+  }
+  
   
   .friend-name {
     font-size: 13px;
