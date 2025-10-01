@@ -624,3 +624,71 @@
     min-width: 80px;
   }
 }
+
+/* 还原率和积分显示徽章 */
+.rate-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin-right: 8px;
+}
+
+.points-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+/* 积分预览样式 */
+#points-preview {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* 还原率输入框特殊样式 */
+#redemption-rate {
+  font-weight: 600;
+  color: #667eea;
+}
+
+#redemption-rate:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .rate-badge,
+  .points-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    margin-right: 4px;
+  }
+  
+  /* 移动端可能需要将还原率和积分分行显示 */
+  .rate-badge {
+    display: block;
+    margin-bottom: 4px;
+    margin-right: 0;
+    width: fit-content;
+  }
+  
+  .points-badge {
+    display: block;
+    width: fit-content;
+  }
+}

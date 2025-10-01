@@ -6,67 +6,85 @@
   let shippingAddress = null;
   const BASE_URL = 'https://api.am-all.com.cn';
   
-  // 初始化CREDIT商店
-  window.initCreditShop = async function() {
-    try {
-      currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
-      
-      const addressRes = await secureFetch('https://api.am-all.com.cn/api/shop/shipping-address');
-      
-      if (addressRes.success && addressRes.address) {
-        shippingAddress = addressRes.address;
+// 初始化CREDIT商店
+window.initCreditShop = async function() {
+  try {
+    currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    
+    const addressRes = await secureFetch('https://api.am-all.com.cn/api/shop/shipping-address');
+    
+    if (addressRes.success && addressRes.address) {
+      shippingAddress = addressRes.address;
+      renderCreditShopPage();
+    } else {
+      const skipped = localStorage.getItem('shipping_skipped');
+      if (skipped === 'true') {
+        shippingAddress = null;
         renderCreditShopPage();
       } else {
         renderShippingFormForCredit();
       }
-    } catch (error) {
-      console.error('初始化CREDIT商店失败:', error);
-      showErrorMessage('加载失败，请刷新重试');
     }
-  };
+  } catch (error) {
+    console.error('初始化CREDIT商店失败:', error);
+    showErrorMessage('加载失败，请刷新重试');
+  }
+};
   
-  // 渲染收货信息表单
-  function renderShippingFormForCredit() {
-    const content = document.getElementById('content-container');
-    content.innerHTML = `
-      <div class="section">
-        <h1 class="page-title">绑定收货信息</h1>
-        <div class="shipping-form-container">
-          <div class="form-card">
-            <p class="form-hint">首次使用CREDIT商店需要绑定收货信息</p>
-            <form id="credit-shipping-form">
-              <div class="form-group">
-                <label for="taobao-id">淘宝ID <span class="required">*</span></label>
-                <input type="text" id="taobao-id" class="form-control" required>
-              </div>
-              <div class="form-group">
-                <label for="receiver-name">收件人 <span class="required">*</span></label>
-                <input type="text" id="receiver-name" class="form-control" required>
-              </div>
-              <div class="form-group">
-                <label for="shipping-address">收货地址 <span class="required">*</span></label>
-                <textarea id="shipping-address" class="form-control" rows="3" required></textarea>
-              </div>
-              <div class="form-group">
-                <label for="contact-phone">联系电话 <span class="required">*</span></label>
-                <input type="tel" id="contact-phone" class="form-control" required>
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="btn btn-primary">
-                  <i class="fas fa-check"></i> 绑定信息
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="loadPage('home')">
-                  <i class="fas fa-times"></i> 取消
-                </button>
-              </div>
-            </form>
-          </div>
+// 渲染收货信息表单
+function renderShippingFormForCredit() {
+  const content = document.getElementById('content-container');
+  content.innerHTML = `
+    <div class="section">
+      <h1 class="page-title">绑定收货信息</h1>
+      <div class="shipping-form-container">
+        <div class="form-card">
+          <p class="form-hint">首次使用CREDIT商店需要绑定收货信息（如果只兑换虚拟物品可以跳过）</p>
+          <form id="credit-shipping-form">
+            <div class="form-group">
+              <label for="taobao-id">淘宝ID <span class="required">*</span></label>
+              <input type="text" id="taobao-id" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="receiver-name">收件人 <span class="required">*</span></label>
+              <input type="text" id="receiver-name" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="shipping-address">收货地址 <span class="required">*</span></label>
+              <textarea id="shipping-address" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="contact-phone">联系电话 <span class="required">*</span></label>
+              <input type="tel" id="contact-phone" class="form-control" required>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check"></i> 绑定信息
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="skipCreditShippingBinding()">
+                <i class="fas fa-forward"></i> 跳过（仅兑换虚拟物品）
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="loadPage('home')">
+                <i class="fas fa-times"></i> 取消
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-    `;
-    
-    document.getElementById('credit-shipping-form').addEventListener('submit', handleCreditShippingSubmit);
+    </div>
+  `;
+  
+  document.getElementById('credit-shipping-form').addEventListener('submit', handleCreditShippingSubmit);
+}
+
+// 跳过CREDIT收货信息绑定
+window.skipCreditShippingBinding = function() {
+  if (confirm('跳过后您将无法兑换实物商品，只能兑换虚拟物品。确定要跳过吗？')) {
+    localStorage.setItem('shipping_skipped', 'true');
+    shippingAddress = null;
+    renderCreditShopPage();
   }
+};
   
   // 处理收货信息提交
   async function handleCreditShippingSubmit(e) {
@@ -192,49 +210,57 @@
     loadCreditItems(search, minPrice, maxPrice);
   };
   
-  // 显示商品详情
-  window.showCreditItemDetail = async function(itemId) {
-    try {
-      const params = new URLSearchParams({ shop_type: 'credit' });
-      const res = await secureFetch(`https://api.am-all.com.cn/api/shop/items?${params}`);
-      
-      const item = res.items.find(i => i.id === itemId);
-      if (!item) return;
-      
-      const modal = document.createElement('div');
-      modal.className = 'modal show';
-      modal.innerHTML = `
-        <div class="modal-content shop-detail-modal">
-          <div class="modal-header">
-            <h3>${item.item_name}</h3>
-            <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+// 显示商品详情
+window.showCreditItemDetail = async function(itemId) {
+  try {
+    const params = new URLSearchParams({ shop_type: 'credit' });
+    const res = await secureFetch(`https://api.am-all.com.cn/api/shop/items?${params}`);
+    
+    const item = res.items.find(i => i.id === itemId);
+    if (!item) return;
+    
+    // 检查是否为实物商品且未绑定收货信息
+    if (item.item_type === 'physical' && !shippingAddress) {
+      if (confirm('兑换实物商品需要绑定收货信息。是否现在去绑定？')) {
+        renderShippingFormForCredit();
+      }
+      return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.innerHTML = `
+      <div class="modal-content shop-detail-modal">
+        <div class="modal-header">
+          <h3>${item.item_name}</h3>
+          <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-image">
+            <img src="${item.item_image ? BASE_URL + item.item_image : '/images/default-item.png'}" alt="${item.item_name}">
           </div>
-          <div class="modal-body">
-            <div class="detail-image">
-              <img src="${item.item_image ? BASE_URL + item.item_image : '/images/default-item.png'}" alt="${item.item_name}">
-            </div>
-            <div class="detail-info">
-              <div class="detail-desc">${item.item_description || '暂无介绍'}</div>
-              <div class="detail-price">价格：${item.price} CREDIT</div>
-              <div class="detail-stock">库存：${item.stock}</div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" onclick="redeemCreditItem(${item.id})" ${item.stock === 0 ? 'disabled' : ''}>
-              <i class="fas fa-shopping-cart"></i> 兑换
-            </button>
-            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
-              <i class="fas fa-times"></i> 取消
-            </button>
+          <div class="detail-info">
+            <div class="detail-desc">${item.item_description || '暂无介绍'}</div>
+            <div class="detail-price">价格：${item.price} CREDIT</div>
+            <div class="detail-stock">库存：${item.stock}</div>
           </div>
         </div>
-      `;
-      
-      document.body.appendChild(modal);
-    } catch (error) {
-      showErrorMessage('加载商品详情失败');
-    }
-  };
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="redeemCreditItem(${item.id})" ${item.stock === 0 ? 'disabled' : ''}>
+            <i class="fas fa-shopping-cart"></i> 兑换
+          </button>
+          <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+            <i class="fas fa-times"></i> 取消
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+  } catch (error) {
+    showErrorMessage('加载商品详情失败');
+  }
+};
   
 // 兑换商品
 window.redeemCreditItem = async function(itemId) {

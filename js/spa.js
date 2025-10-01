@@ -503,19 +503,6 @@ function handleUnbindShipping() {
     });
 }
 
-// 获取随机推荐行动（修复重复问题）
-function getRandomRecommendations() {
-  const actions = ['出勤', '家勤', '越级', '下埋', '理论'];
-  
-  // 打乱数组
-  const shuffled = [...actions].sort(() => Math.random() - 0.5);
-  
-  return {
-    lucky: shuffled[0],
-    unlucky: shuffled[1]
-  };
-}
-
 // 添加一个函数来强制重新渲染用户信息
 function refreshUserInfoDisplay() {
   const userInfoMobile = document.getElementById('user-info-mobile');
@@ -721,168 +708,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 });
-
-// 更新显示函数 (已移到全局作用域)
-function updateDisplay(song, luck, recommendations) {
-  // 通过ID直接获取元素
-  const difficultiesContainer = document.querySelector('.difficulties');
-  const coverImg = document.getElementById('cover-img');
-  const songIdEl = document.getElementById('song-id');
-  const songTitleEl = document.getElementById('song-title');
-  const songArtistEl = document.getElementById('song-artist');
-  const songCategoryEl = document.getElementById('song-category');
-  const fortuneLuckEl = document.getElementById('fortune-luck');
-  const luckyActionEl = document.getElementById('lucky-action');
-  const unluckyActionEl = document.getElementById('unlucky-action');
-  
-  if (!song) return;
-  
-  // 更新吉凶显示
-  if (fortuneLuckEl && luck) {
-    fortuneLuckEl.textContent = luck;
-  }
-  
-  // 更新宜不宜显示
-  if (luckyActionEl && recommendations?.lucky) {
-    luckyActionEl.textContent = recommendations.lucky;
-  }
-  
-  if (unluckyActionEl && recommendations?.unlucky) {
-    unluckyActionEl.textContent = recommendations.unlucky;
-  }
-  
-  if (difficultiesContainer) {
-    difficultiesContainer.innerHTML = '';
-  }
-  
-  if (coverImg) {
-    coverImg.src = song.image ? 
-      `https://oss.am-all.com.cn/asset/img/main/music/${song.image}` : 
-      'https://oss.am-all.com.cn/asset/img/main/music/dummy.jpg';
-  }
-  if (songIdEl) songIdEl.textContent = song.id || '???';
-  if (songTitleEl) songTitleEl.textContent = song.title || '???';
-  if (songArtistEl) songArtistEl.textContent = song.artist || '???';
-  if (fortuneLuckEl) fortuneLuckEl.textContent = luck || '???';
-  
-  if (luckyActionEl && unluckyActionEl) {
-    luckyActionEl.textContent = recommendations?.lucky || '?';
-    unluckyActionEl.textContent = recommendations?.unlucky || '?';
-  }
-  
-  const isDummy = song.id === '???';
-  
-  if (songCategoryEl) {
-    if (isDummy) {
-      songCategoryEl.textContent = '???';
-      songCategoryEl.className = 'song-category cat-dummy';
-    } else if (song.catname) {
-      songCategoryEl.textContent = song.catname;
-      songCategoryEl.className = 'song-category ' + getCategoryClass(song.catname);
-    } else {
-      songCategoryEl.textContent = '???';
-      songCategoryEl.className = 'song-category';
-    }
-  }
-  
-  const isWorldsEndSong = song.we_kanji || song.we_star;
-  
-  if (isWorldsEndSong && !isDummy) {
-    if (song.we_kanji || song.we_star) {
-      const weDiv = document.createElement('div');
-      weDiv.className = 'difficulty-tag lev-we';
-      weDiv.textContent = 'World\'s End: ';
-      
-      if (song.we_kanji) {
-        weDiv.textContent += song.we_kanji;
-      }
-      
-      if (song.we_star) {
-        const starsContainer = document.createElement('span');
-        starsContainer.className = 'we-stars';
-        
-        const starCount = parseInt(song.we_star);
-        const starDisplayCount = Math.ceil(starCount / 2);
-        
-        for (let i = 0; i < starDisplayCount; i++) {
-          const star = document.createElement('i');
-          star.className = 'fas fa-star star';
-          starsContainer.appendChild(star);
-        }
-        
-        weDiv.appendChild(starsContainer);
-      }
-      
-      if (difficultiesContainer) {
-        difficultiesContainer.appendChild(weDiv);
-      }
-    }
-  } else {
-    if (song.lev_bas || isDummy) {
-      const basDiv = document.createElement('div');
-      basDiv.className = 'difficulty-tag lev-bas';
-      basDiv.setAttribute('data-level', 'BASIC');
-      const basSpan = document.createElement('span');
-      basSpan.textContent = isDummy ? '?' : song.lev_bas;
-      basDiv.appendChild(basSpan);
-      if (difficultiesContainer) difficultiesContainer.appendChild(basDiv);
-    }
-    
-    if (song.lev_adv || isDummy) {
-      const advDiv = document.createElement('div');
-      advDiv.className = 'difficulty-tag lev-adv';
-      advDiv.setAttribute('data-level', 'ADVANCE');
-      const advSpan = document.createElement('span');
-      advSpan.textContent = isDummy ? '?' : song.lev_adv;
-      advDiv.appendChild(advSpan);
-      if (difficultiesContainer) difficultiesContainer.appendChild(advDiv);
-    }
-    
-    if (song.lev_exp || isDummy) {
-      const expDiv = document.createElement('div');
-      expDiv.className = 'difficulty-tag lev-exp';
-      expDiv.setAttribute('data-level', 'EXPERT');
-      const expSpan = document.createElement('span');
-      expSpan.textContent = isDummy ? '?' : song.lev_exp;
-      expDiv.appendChild(expSpan);
-      if (difficultiesContainer) difficultiesContainer.appendChild(expDiv);
-    }
-    
-    if (song.lev_mas || isDummy) {
-      const masDiv = document.createElement('div');
-      masDiv.className = 'difficulty-tag lev-mas';
-      masDiv.setAttribute('data-level', 'MASTER');
-      const masSpan = document.createElement('span');
-      masSpan.textContent = isDummy ? '?' : song.lev_mas;
-      masDiv.appendChild(masSpan);
-      if (difficultiesContainer) difficultiesContainer.appendChild(masDiv);
-    }
-    
-    if (song.lev_ult || isDummy) {
-      const ultDiv = document.createElement('div');
-      ultDiv.className = 'difficulty-tag lev-ult';
-      ultDiv.setAttribute('data-level', 'ULTIMA');
-      const ultSpan = document.createElement('span');
-      ultSpan.textContent = isDummy ? '?' : song.lev_ult;
-      ultDiv.appendChild(ultSpan);
-      if (difficultiesContainer) difficultiesContainer.appendChild(ultDiv);
-    }
-  }
-}
-
-// 获取分类样式 (已移到全局作用域)
-function getCategoryClass(catname) {
-    switch (catname) {
-        case 'POPS & ANIME': return 'cat-pops';
-        case 'niconico': return 'cat-nico';
-        case '東方Project': return 'cat-touhou';
-        case 'VARIETY': return 'cat-variety';
-        case 'イロドリミドリ': return 'cat-irodori';
-        case 'ゲキマイ': return 'cat-gekimai';
-        case 'ORIGINAL': return 'cat-original';
-        default: return '';
-    }
-}
 
 // 显示临时错误消息
 function showTempErrorMessage(element, message, duration = 3000) {
@@ -2189,40 +2014,6 @@ function setupCharCounters() {
   }
 }
 
-// 显示每日运势结果
-function displayFortune(song, luck, recommendations, pointsEarned) {
-  // 确保封面图片显示，动画隐藏
-  const coverImg = document.getElementById('cover-img');
-  const animationContainer = document.querySelector('.fortune-animation');
-  
-  if (coverImg) {
-    coverImg.style.display = 'block';
-    // 修复：安全地访问song.image属性
-    const imagePath = song && song.image ? song.image : 'dummy.jpg';
-    coverImg.src = `https://oss.am-all.com.cn/asset/img/main/music/${imagePath}`;
-  }
-  
-  if (animationContainer) {
-    animationContainer.style.display = 'none';
-  }
-  
-  // 确保song对象存在，否则使用dummy数据
-  const displaySong = song || {
-    id: '???',
-    title: '???',
-    artist: '???',
-    catname: '???',
-    lev_bas: '?',
-    lev_adv: '?',
-    lev_exp: '?',
-    lev_mas: '?',
-    lev_ult: '?'
-  };
-  
-  updateDisplay(displaySong, luck, recommendations);
-
-}
-
 // 获取用户权限
 async function getUserPermissions() {
   const token = localStorage.getItem('token');
@@ -3019,345 +2810,32 @@ function initCursorSettingsManually() {
 		  }
 		}
 
-      if (pageId === 'fortune') {
-        setTimeout(() => {
-          const coverImg = document.getElementById('cover-img');
-          const songIdEl = document.getElementById('song-id');
-          const songCategoryEl = document.getElementById('song-category');
-          const songTitleEl = document.getElementById('song-title');
-          const songArtistEl = document.getElementById('song-artist');
-          const difficultiesContainer = document.querySelector('.difficulties');
-          const fortuneLuckEl = document.getElementById('fortune-luck');
-          const drawBtn = document.getElementById('draw-btn');
-          const fortuneHint = document.getElementById('fortune-hint');
-          const luckyActionEl = document.getElementById('lucky-action');
-          const unluckyActionEl = document.getElementById('unlucky-action');
-          
-          if (coverImg) {
-            if (window.innerWidth <= 768) {
-              coverImg.style.width = '190px';
-              coverImg.style.height = '190px';
-            } else {
-              coverImg.style.width = '';
-              coverImg.style.height = '';
-            }
-          }
-          
-          const luckTexts = ['大凶', '凶', '末吉', '吉', '小吉', '中吉', '大吉', '特大吉'];
-          
-          const lastDrawDate = localStorage.getItem('dailyFortuneDate');
-          const today = new Date().toDateString();
-          const dailyFortuneData = localStorage.getItem('dailyFortuneData');
-          
-          let songList = [];
-          
-          const dummySong = {
-            id: '???',
-            title: '???',
-            artist: '???',
-            catname: '???',
-            lev_bas: '?',
-            lev_adv: '?',
-            lev_exp: '?',
-            lev_mas: '?',
-            lev_ult: '?'
-          };
-          
-          updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-          
-          // 修改歌曲数据加载逻辑
-          const fetchMusicData = async () => {
-            for (const url of MUSIC_DATA_URLS) {
-              try {
-                const response = await fetch(url);
-                if (!response.ok) continue;
-                const data = await response.json();
-                
-                // 确保数据是数组格式
-                if (Array.isArray(data)) {
-                  return data;
-                } else if (data.songs && Array.isArray(data.songs)) {
-                  return data.songs;
-                } else {
-                  console.error('无效的音乐数据格式:', data);
-                  continue;
-                }
-              } catch (e) {
-                console.log(`尝试从 ${url} 加载数据失败`, e);
-                continue;
-              }
-            }
-            throw new Error('所有数据源均不可用');
-          };
-          
-          fetchMusicData()
-            .then(data => {
-              songList = data;
-              console.log('成功加载歌曲数据:', songList.length, '首歌曲');
-              
-              // 只有在没有已保存的运势数据时才显示占位符
-              if (!(lastDrawDate === today && dailyFortuneData)) {
-                updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-              }
-              
-              // 检查是否可以抽取运势
-              const token = localStorage.getItem('token');
-              if (token) {
-                // 在获取上次抽取时间的代码部分，添加错误处理
-                fetch('https://api.am-all.com.cn/api/fortune/last-draw', {
-                  headers: {
-                    'Authorization': `Bearer ${token}`
-                  }
-                })
-                .then(response => {
-                  if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                  }
-                  return response.json();
-                })
-                .then(data => {
-                  if (data.canDraw) {
-                    if (drawBtn) {
-                      drawBtn.disabled = false;
-                      drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
-                    }
-                    if (fortuneHint) {
-                      fortuneHint.textContent = '今日运势待抽取';
-                    }
-                  } else {
-                    // 已经抽取过，显示上次抽取的结果
-                    if (data.lastFortune) {
-                      displayFortune(
-                        data.lastFortune.song_data,
-                        data.lastFortune.luck,
-                        data.lastFortune.recommendations
-                      );
-                      
-                      // 显示历史获得的积分
-                      if (data.lastFortune.points_earned) {
-                        const fortuneHint = document.getElementById('fortune-hint');
-                        if (fortuneHint) {
-                          // 使用当前用户积分显示，而不是历史积分
-                          const totalPoints = (currentUser.points || 0) + (currentUser.point2 || 0);
-                          fortuneHint.textContent = `昨日获得 ${data.lastFortune.points_earned} 积分，当前积分: ${totalPoints}`;
-                          fortuneHint.style.color = '#7f8c8d'; // 使用灰色表示历史记录
-                        }
-                      }
-                    }
-                    
-                    if (drawBtn) {
-                      drawBtn.disabled = true;
-                      drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-                    }
-                    
-                    if (fortuneHint) {
-                      if (data.nextDrawTime) {
-                        const nextDraw = new Date(data.nextDrawTime);
-                        const now = new Date();
-                        const hoursLeft = Math.ceil((nextDraw - now) / (1000 * 60 * 60));
-                        fortuneHint.textContent = `今日运势已抽取，${hoursLeft}小时后可再次抽取`;
-                      } else {
-                        fortuneHint.textContent = `今日运势已抽取，请明天再来`;
-                      }
-                    }
-                  }
-                })
-                .catch(error => {
-                  console.error('检查运势抽取状态失败:', error);
-                  // 使用本地逻辑作为后备
-                  if (lastDrawDate === today && dailyFortureData) {
-                    try {
-                      const data = JSON.parse(dailyFortuneData);
-                      if (data && data.song) {
-                        displayFortune(data.song, data.luck, data.recommendations);
-                        if (drawBtn) {
-                          drawBtn.disabled = true;
-                          drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-                        }
-                        if (fortuneHint) {
-                          fortuneHint.textContent = '今日幸运乐曲已抽取，请明天再来！';
-                        }
-                      }
-                    } catch (e) {
-                      console.error('解析运势数据失败', e);
-                      localStorage.removeItem('dailyFortuneDate');
-                      localStorage.removeItem('dailyFortuneData');
-                      updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-                    }
-                  } else {
-                    // 显示通用错误信息，而不是NaN
-                    if (fortuneHint) {
-                      fortuneHint.textContent = '无法获取抽取状态，请稍后重试';
-                    }
-                    if (drawBtn) {
-                      drawBtn.disabled = false;
-                      drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
-                    }
-                  }
-                });
-              }
-            })
-            .catch(error => {
-              console.error('加载歌曲数据失败:', error);
-              if (fortuneHint) {
-                fortuneHint.textContent = '加载歌曲数据失败，使用备用数据';
-              }
-              // 使用本地备用数据
-              songList = [
-                {
-                  id: '001',
-                  title: '备用歌曲',
-                  artist: '系统',
-                  catname: 'ORIGINAL',
-                  lev_bas: '3',
-                  lev_adv: '5',
-                  lev_exp: '7',
-                  lev_mas: '9',
-                  lev_ult: '12',
-                  image: 'dummy.jpg'
-                }
-              ];
-              // 只有在没有已保存的运势数据时才显示占位符
-              if (!(lastDrawDate === today && dailyFortuneData)) {
-                updateDisplay(dummySong, '???', {lucky: '?', unlucky: '?'});
-              }
-            });
-          
-          if (drawBtn) {
-            drawBtn.addEventListener('click', () => {
-              if (!drawBtn) return;
-              
-              const token = localStorage.getItem('token');
-              if (!token) {
-                showErrorMessage('请先登录');
-                return;
-              }
-              
-              drawBtn.disabled = true;
-              drawBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>抽取中...';
-              if (fortuneHint) fortuneHint.textContent = '';
-              
-              // 隐藏封面，显示动画
-              const coverImg = document.getElementById('cover-img');
-              const animationContainer = contentContainer.querySelector('.fortune-animation');
-              const kuji01 = contentContainer.querySelector('#kuji-01');
-              const kuji02 = contentContainer.querySelector('#kuji-02');
-              
-              if (coverImg) {
-                coverImg.style.display = 'none';
-              }
-              
-              if (animationContainer) {
-                animationContainer.style.display = 'flex';
-                kuji01.style.display = 'block';
-                kuji01.classList.add('kuji-swing');
-                kuji02.style.display = 'none';
-                kuji02.classList.remove('kuji-fadein');
-              }
-              
-              setTimeout(() => {
-                let scrollCount = 0;
-                const scrollInterval = setInterval(() => {
-                  if (songList.length === 0) {
-                    clearInterval(scrollInterval);
-                    return;
-                  }
-                  
-                  const tempSong = songList[Math.floor(Math.random() * songList.length)];
-                  
-                  updateDisplay(tempSong, '???', {lucky: '?', unlucky: '?'});
-                  scrollCount++;
-                  
-                  if (scrollCount > 30) {
-                    clearInterval(scrollInterval);
-                    
-                    // 调用后端API抽取运势
-                  fetch('https://api.am-all.com.cn/api/fortune/draw', {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': `Bearer ${token}`,
-                      'Content-Type': 'application/json'
-                    }
-                  })
-                  .then(response => response.json())
-                  .then(data => {
-                    if (data.success) {
-                      // 修复：传递正确的参数，包括获得的积分
-                      displayFortune(data.song, data.luck, data.recommendations);
-                      
-                      // 显示获得的积分信息
-                      if (data.pointsEarned) {
-                        const fortuneHint = document.getElementById('fortune-hint');
-                        if (fortuneHint) {
-                          const totalPoints = data.points + (data.point2 || 0);
-                          fortuneHint.textContent = `恭喜获得 ${data.pointsEarned} 积分！当前积分: ${totalPoints}`;
-                          fortuneHint.style.color = '#27ae60';
-                        }
-                      }
-                      
-                      // 保存到本地存储，用于页面刷新后显示
-                      const today = new Date().toDateString();
-                      localStorage.setItem('dailyFortuneDate', today);
-                      localStorage.setItem('dailyFortuneData', JSON.stringify({
-                        song: data.song,
-                        luck: data.luck,
-                        recommendations: data.recommendations,
-                        pointsEarned: data.pointsEarned
-                      }));
-                      
-                      if (drawBtn) {
-                        drawBtn.disabled = true;
-                        drawBtn.innerHTML = '<i class="fas fa-check me-2"></i>今日已抽取';
-                      }
-                      
-                      // 更新用户信息
-                      if (currentUser) {
-                        currentUser.points = data.points;
-                        currentUser.point2 = data.point2;
-                        updateUserInfo(currentUser);
-                      }
-                    } else {
-                      // 抽取失败，显示错误信息
-                      if (drawBtn) {
-                        drawBtn.disabled = false;
-                        drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
-                      }
-                      if (fortuneHint) {
-                        fortuneHint.textContent = data.error || '抽取运势失败';
-                        fortuneHint.style.color = '#e74c3c';
-                      }
-                      
-                      // 失败时也要恢复封面显示
-                      const coverImg = document.getElementById('cover-img');
-                      const animationContainer = document.querySelector('.fortune-animation');
-                      if (coverImg) coverImg.style.display = 'block';
-                      if (animationContainer) animationContainer.style.display = 'none';
-                    }
-                  })
-                  .catch(error => {
-                    console.error('抽取运势失败:', error);
-                    if (drawBtn) {
-                      drawBtn.disabled = false;
-                      drawBtn.innerHTML = '<i class="fas fa-star me-2"></i>抽取今日运势';
-                    }
-                    if (fortuneHint) {
-                      fortuneHint.textContent = '网络错误，请重试';
-                      fortuneHint.style.color = '#e74c3c';
-                    }
-                    
-                    // 失败时恢复封面显示并隐藏动画
-                    const coverImg = document.getElementById('cover-img');
-                    const animationContainer = document.querySelector('.fortune-animation');
-                    if (coverImg) coverImg.style.display = 'block';
-                    if (animationContainer) animationContainer.style.display = 'none';
-                   });
-                  }
-                }, 100);
-              }, 500);
-            });
-          }
-        }, 100);
-      }
+		if (pageId === 'fortune') {
+		  // 使用新的运势模块
+		  setTimeout(() => {
+			// 确保运势模块已加载
+			if (typeof window.FortuneModule === 'undefined') {
+			  console.error('运势模块未加载');
+			  const contentContainer = document.getElementById('content-container');
+			  if (contentContainer) {
+				contentContainer.innerHTML = `
+				  <div class="section">
+					<div class="error-state">
+					  <i class="fas fa-exclamation-triangle"></i>
+					  <h2>加载失败</h2>
+					  <p>运势模块未正确加载，请刷新页面重试</p>
+					</div>
+				  </div>
+				`;
+			  }
+			  return;
+			}
+			
+			// 重置并初始化运势模块
+			window.FortuneModule.reset();
+			window.FortuneModule.init();
+		  }, 100);
+		}
       
       if (pageId === 'home') {
         // 初始化公告系统
@@ -3800,7 +3278,7 @@ function renderOrders(orders) {
   if (orders.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7">
+        <td colspan="8">
           <div class="empty-state">
             <i class="fas fa-inbox"></i>
             <p>暂无订单数据</p>
@@ -3818,7 +3296,10 @@ function renderOrders(orders) {
     const price = typeof order.price === 'number' ? order.price : parseFloat(order.price || 0);
     const formattedPrice = isNaN(price) ? '0.00' : price.toFixed(2);
     
-    // 正确判断兑换状态
+    // 计算积分（使用还原率）
+    const redemptionRate = order.redemption_rate || 100;
+    const calculatedPoints = Math.floor(price * redemptionRate / 100);
+    
     const isRedeemed = order.redeemed === true || order.redeemed === 1 || order.redeemed === '1';
     
     tr.innerHTML = `
@@ -3827,6 +3308,10 @@ function renderOrders(orders) {
       <td title="${order.product_name || '-'}">${order.product_name || '-'}</td>
       <td>${order.order_number || '-'}</td>
       <td>¥${formattedPrice}</td>
+      <td>
+        <span class="rate-badge">${redemptionRate}%</span>
+        <span class="points-badge">${calculatedPoints}积分</span>
+      </td>
       <td>
         ${isRedeemed ? 
           '<span class="status-badge redeemed"><i class="fas fa-check-circle"></i>已兑换</span>' : 
@@ -4042,6 +3527,55 @@ function showOrderModal(order = null) {
   
   if (!modal || !form || !title) return;
   
+  // 确保还原率字段存在（动态添加）
+  let redemptionRateGroup = document.getElementById('redemption-rate-group');
+  if (!redemptionRateGroup) {
+    // 在价格字段后面插入还原率字段
+    const priceGroup = document.querySelector('#order-form .form-group:has(#price)');
+    if (priceGroup) {
+      const rateGroupHtml = `
+        <div class="form-group" id="redemption-rate-group">
+          <label for="redemption-rate">
+            还原率 (%)
+            <span class="text-muted" style="font-size: 12px; font-weight: normal;">
+              - 1%-100%，积分 = 价格 × 还原率，取整数
+            </span>
+          </label>
+          <input 
+            type="number" 
+            id="redemption-rate" 
+            class="form-control" 
+            min="1" 
+            max="100" 
+            step="1" 
+            value="100"
+            placeholder="输入还原率 (1-100)"
+            required
+          >
+          <small class="form-text text-muted" id="points-preview" style="margin-top: 8px; display: block; color: #667eea; font-weight: 500;">
+            预计积分: 0
+          </small>
+        </div>
+      `;
+      priceGroup.insertAdjacentHTML('afterend', rateGroupHtml);
+      
+      // 添加实时积分预览
+      const priceInput = document.getElementById('price');
+      const rateInput = document.getElementById('redemption-rate');
+      const previewEl = document.getElementById('points-preview');
+      
+      function updatePointsPreview() {
+        const price = parseFloat(priceInput.value) || 0;
+        const rate = parseFloat(rateInput.value) || 100;
+        const points = Math.floor(price * rate / 100);
+        previewEl.textContent = `预计积分: ${points}`;
+      }
+      
+      priceInput.addEventListener('input', updatePointsPreview);
+      rateInput.addEventListener('input', updatePointsPreview);
+    }
+  }
+  
   if (order) {
     title.innerHTML = '<i class="fas fa-edit me-2"></i>编辑订单';
     document.getElementById('order-id').value = order.id;
@@ -4050,15 +3584,41 @@ function showOrderModal(order = null) {
     document.getElementById('order-number').value = order.order_number || '';
     document.getElementById('price').value = order.price || '';
     
-    // 修复：正确设置兑换状态选择框的值
+    // 设置还原率（如果存在）
+    const rateInput = document.getElementById('redemption-rate');
+    if (rateInput) {
+      rateInput.value = order.redemption_rate || 100;
+    }
+    
     const redeemedSelect = document.getElementById('redeemed');
     const isRedeemed = order.redeemed === true || order.redeemed === 1 || order.redeemed === '1';
     redeemedSelect.value = isRedeemed ? 'true' : 'false';
+    
+    // 更新积分预览
+    const previewEl = document.getElementById('points-preview');
+    if (previewEl) {
+      const price = parseFloat(order.price) || 0;
+      const rate = parseFloat(order.redemption_rate || 100);
+      const points = Math.floor(price * rate / 100);
+      previewEl.textContent = `预计积分: ${points}`;
+    }
   } else {
     title.innerHTML = '<i class="fas fa-plus-circle me-2"></i>添加订单';
     form.reset();
     document.getElementById('order-id').value = '';
     document.getElementById('redeemed').value = 'false';
+    
+    // 重置还原率为默认值100%
+    const rateInput = document.getElementById('redemption-rate');
+    if (rateInput) {
+      rateInput.value = 100;
+    }
+    
+    // 重置积分预览
+    const previewEl = document.getElementById('points-preview');
+    if (previewEl) {
+      previewEl.textContent = '预计积分: 0';
+    }
   }
   
   modal.classList.add('show');
@@ -4090,7 +3650,19 @@ async function saveOrder() {
     const orderNumber = document.getElementById('order-number').value.trim();
     const price = parseFloat(document.getElementById('price').value);
     
-    // 修复：正确获取兑换状态的布尔值
+    // 获取还原率
+    const redemptionRateInput = document.getElementById('redemption-rate');
+    let redemptionRate = redemptionRateInput ? parseFloat(redemptionRateInput.value) : 100;
+    
+    // 验证还原率范围
+    if (isNaN(redemptionRate) || redemptionRate < 1 || redemptionRate > 100) {
+      showErrorMessage('还原率必须在 1% 到 100% 之间');
+      return;
+    }
+    
+    // 确保还原率是整数
+    redemptionRate = Math.floor(redemptionRate);
+    
     const redeemedValue = document.getElementById('redeemed').value;
     const redeemed = redeemedValue === 'true' || redeemedValue === '1';
     
@@ -4129,7 +3701,8 @@ async function saveOrder() {
         product_name: productName,
         order_number: orderNumber,
         price: price,
-        redeemed: redeemed  // 发送布尔值
+        redemption_rate: redemptionRate,  // 添加还原率字段
+        redeemed: redeemed
       })
     });
     
@@ -4141,15 +3714,17 @@ async function saveOrder() {
     closeOrderModal();
     await loadOrders();
     
-    // 显示成功动画（如果有的话）
+    // 计算实际积分
+    const actualPoints = Math.floor(price * redemptionRate / 100);
+    
     if (typeof showSuccessAnimation === 'function') {
       showSuccessAnimation(
         `订单${orderId ? '更新' : '添加'}成功`,
-        `订单号: ${orderNumber}`,
-        2000
+        `订单号: ${orderNumber}\n还原率: ${redemptionRate}%\n预计积分: ${actualPoints}`,
+        2500
       );
     } else {
-      showSuccessMessage(`订单${orderId ? '更新' : '添加'}成功`);
+      showSuccessMessage(`订单${orderId ? '更新' : '添加'}成功，预计积分: ${actualPoints}`);
     }
   } catch (error) {
     console.error('保存订单错误:', error);

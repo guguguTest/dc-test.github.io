@@ -160,7 +160,7 @@ download: `
     </button>
     
     <div class="section">
-      <h2 class="section-title">
+      <h2 class="section-title" id="detail-title">
         <i class="fas fa-download"></i>
         <span data-i18n="download.downloadList">下载列表</span>
       </h2>
