@@ -178,6 +178,44 @@
   background: #e5e7eb;
 }
 
+.forum-btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.forum-btn-danger:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.forum-btn-success {
+  background: #10b981;
+  color: white;
+}
+
+.forum-btn-success:hover {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.forum-btn-warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.forum-btn-warning:hover {
+  background: #d97706;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.forum-btn-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
 /* ==================== 帖子列表 ==================== */
 .post-list {
   background: white;
@@ -518,6 +556,25 @@
   color: #6b7280;
 }
 
+.post-detail-reward {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  margin-top: 12px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+  color: #92400e;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.post-detail-reward i {
+  font-size: 18px;
+  color: #f59e0b;
+}
+
 .post-detail-toolbar {
   display: flex;
   gap: 12px;
@@ -538,6 +595,17 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   display: grid;
   grid-template-columns: 200px 1fr;
+  transition: all 0.3s ease;
+}
+
+.reply-item.reply-accepted {
+  background: linear-gradient(to right, #f0fdf4 0%, #ffffff 100%);
+  border-left: 4px solid #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+}
+
+.reply-item.reply-accepted .reply-author {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
 }
 
 .reply-author {
@@ -582,6 +650,15 @@
   border-radius: 8px;
   background: #fef3c7;
   color: #92400e;
+}
+
+.reply-author-badge.accepted {
+  background: #d1fae5;
+  color: #065f46;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .reply-content-wrapper {
@@ -633,10 +710,15 @@
   color: #667eea;
   font-weight: 600;
   cursor: pointer;
+  background: #e0e7ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
 }
 
 .mention:hover {
-  text-decoration: underline;
+  background: #c7d2fe;
+  text-decoration: none;
 }
 
 .reply-actions {
@@ -665,6 +747,28 @@
   font-weight: 600;
   color: #1f2937;
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-closed-notice {
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  color: #991b1b;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.post-closed-notice i {
+  font-size: 20px;
 }
 
 .post-navigation {
@@ -978,4 +1082,72 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* 置顶徽章样式 */
+.post-pin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.post-pin-badge.super-pin {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.post-pin-badge.normal-pin {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+/* 置顶帖子列表项高亮 */
+.post-item.post-pinned {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%);
+  border-left: 3px solid #ef4444;
+}
+
+/* 未读帖子指示器 */
+.unread-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 未读帖子高亮 */
+.post-item.post-unread {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+  border-left: 2px solid #3b82f6;
+}
+
+/* 未读标题加粗 */
+.post-title-unread {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* 已读帖子样式 */
+.post-item:not(.post-unread) .post-title {
+  color: #64748b;
 }

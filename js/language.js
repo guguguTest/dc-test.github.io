@@ -289,6 +289,10 @@ const languageModule = (function() {
             'settings.cursorCustom1Desc': 'Dungeon & Fighter',
             'settings.cursorCustom2': '绪山真寻',
             'settings.cursorCustom2Desc': 'お兄ちゃんおしまい！',
+			
+			// 交流区相关
+			'sidebar.forum': '交流区',
+			'sidebar.forumAdmin': '论坛管理',
             
             // 通用按钮和操作
             'common.back': '返回',
@@ -596,6 +600,10 @@ const languageModule = (function() {
             'settings.cursorCustom1Desc': 'Personalized cursor style',
             'settings.cursorCustom2': 'Mahiro',
             'settings.cursorCustom2Desc': 'Cute cursor style',
+			
+			// 交流区相关
+			'sidebar.forum': 'Forum',
+			'sidebar.forumAdmin': 'Forum Admin',
             
             // 通用按钮和操作
             'common.back': 'Back',
@@ -905,6 +913,10 @@ const languageModule = (function() {
             'settings.cursorCustom1Desc': 'アラド戦記',
             'settings.cursorCustom2': 'まひろ',
             'settings.cursorCustom2Desc': 'お兄ちゃんおしまい！',
+			
+			// 交流区相关
+			'sidebar.forum': '掲示板',
+			'sidebar.forumAdmin': '掲示板管理',
             
             // 通用按钮和操作
             'common.back': '戻る',

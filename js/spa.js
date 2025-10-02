@@ -538,7 +538,7 @@ async function updateSidebarVisibility(user) {
 	  'ccb', 'exchange', 'announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry',
 	  'point-shop', 'points-shop-admin', 'point2-shop-admin',
 	  'credit-shop-admin', 'redemption-code-admin', 'emoji-admin',
-	  'forum','forum-admin'
+	  'forum', 'forum-admin'
 	];
 
   // 存储每个页面的可见性
@@ -617,7 +617,9 @@ async function updateSidebarVisibility(user) {
     'sidebar-point2-shop-admin': 'point2-shop-admin',
     'sidebar-credit-shop-admin': 'credit-shop-admin',
     'sidebar-redemption-code-admin': 'redemption-code-admin',
-    'sidebar-emoji-admin': 'emoji-admin'
+    'sidebar-emoji-admin': 'emoji-admin',
+	'sidebar-forum': 'forum',
+    'sidebar-forum-admin': 'forum-admin'
   };
 
   for (const [id, pid] of Object.entries(legacyMap)) {
@@ -638,22 +640,21 @@ async function updateSidebarVisibility(user) {
   // 处理分类标题
   // 等待一段时间确保所有元素都已更新
   setTimeout(() => {
-	// 功能分类
-	const functionTitle = document.querySelector('.sidebar-section-title');
-	const functionNav = functionTitle ? functionTitle.nextElementSibling : null;
+	  // 功能分类
+	  const functionTitle = document.querySelector('.sidebar-section-title');
+	  const functionNav = functionTitle ? functionTitle.nextElementSibling : null;
 
-	if (functionTitle && functionNav && functionNav.tagName === 'UL') {
-	  if (!token) {
-		setDisplay(functionTitle, false);
-		setDisplay(functionNav, false);
-	  } else {
-		// 添加 point-shop 到功能页面列表
-		const functionPages = ['fortune', 'ccb', 'exchange', 'point-shop', 'forum'];
-		const hasVisibleFunction = functionPages.some(p => pageVisibility[p]);
-		setDisplay(functionTitle, hasVisibleFunction);
-		setDisplay(functionNav, hasVisibleFunction);
+	  if (functionTitle && functionNav && functionNav.tagName === 'UL') {
+		if (!token) {
+		  setDisplay(functionTitle, false);
+		  setDisplay(functionNav, false);
+		} else {
+		  const functionPages = ['fortune', 'ccb', 'exchange', 'point-shop', 'forum'];
+		  const hasVisibleFunction = functionPages.some(p => pageVisibility[p]);
+		  setDisplay(functionTitle, hasVisibleFunction);
+		  setDisplay(functionNav, hasVisibleFunction);
+		}
 	  }
-	}
 
 	// 管理分类
 	const adminTitle = document.getElementById('admin-section-title');
@@ -685,7 +686,7 @@ async function updateSidebarVisibility(user) {
 		});
 	  }
 	}
-  }, 300);  // 增加延迟确保所有异步操作完成
+  }, 500);
 }
 
 
