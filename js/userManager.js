@@ -447,7 +447,9 @@ async saveUserChanges(userId) {
       { id: 'exchange', name: '积分兑换' },
 	  { id: 'point-shop', name: '积分商店' },
 	  { id: 'points-shop-admin', name: '积分商品管理' },
-      { id: 'point2-shop-admin', name: '鸽屋积分商品管理' }
+      { id: 'point2-shop-admin', name: '鸽屋积分商品管理' },
+	  { id: 'forum', name: '交流区' },
+	  { id: 'forum-admin', name: '论坛管理' }
     ];
 
     const list = this.permissionModal.querySelector('#permission-list');

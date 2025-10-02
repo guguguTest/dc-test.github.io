@@ -307,35 +307,51 @@
       'password_changed': '密码修改',
       'welcome_message': '欢迎消息',
       'birthday_message': '生日祝福',
-      'levelup_message': '等级提升'
+      'levelup_message': '等级提升',
+	  'forum_reply': '帖子有新回复',
+	  'forum_mention': '被@提醒',
+      'forum_answer_accepted': '回答被采纳',
+      'forum_spam_warning': '发帖频率警告',
+      'forum_spam_ban': '发帖被限制'
     };
-    
-    templates.forEach(template => {
-      html += `
-        <div class="template-item">
-          <div class="template-header">
-            <h4>${eventLabels[template.event_type] || template.event_type}</h4>
-            <label class="template-toggle">
-              <input type="checkbox" ${template.is_active ? 'checked' : ''} 
-                     data-event-type="${template.event_type}">
-              <span>启用</span>
-            </label>
-          </div>
-          <div class="form-group">
-            <label>标题</label>
-            <input type="text" class="form-control" value="${escapeHtml(template.title)}" 
-                   data-field="title" data-event-type="${template.event_type}">
-          </div>
-          <div class="form-group">
-            <label>内容</label>
-            <textarea class="form-control" rows="3" 
-                      data-field="content" data-event-type="${template.event_type}">${escapeHtml(template.content)}</textarea>
-            <small class="form-hint">支持变量: {username}, {nickname}, {date}</small>
-          </div>
-        </div>
-      `;
-    });
-    
+
+	templates.forEach(template => {
+	  // 根据事件类型显示不同的变量提示
+	  let variableHints = '{username}, {nickname}, {date}';
+	  
+	  if (template.event_type === 'forum_reply' || template.event_type === 'forum_mention') {
+		variableHints = '{post_title}, {post_id}';
+	  } else if (template.event_type === 'forum_answer_accepted') {
+		variableHints = '{post_title}, {reward_points}, {reward_credit}';
+	  } else if (template.event_type === 'forum_spam_ban') {
+		variableHints = '{hours}';
+	  }
+	  
+	  html += `
+		<div class="template-item">
+		  <div class="template-header">
+			<h4>${eventLabels[template.event_type] || template.event_type}</h4>
+			<label class="template-toggle">
+			  <input type="checkbox" ${template.is_active ? 'checked' : ''} 
+					 data-event-type="${template.event_type}">
+			  <span>启用</span>
+			</label>
+		  </div>
+		  <div class="form-group">
+			<label>标题</label>
+			<input type="text" class="form-control" value="${escapeHtml(template.title)}" 
+				   data-field="title" data-event-type="${template.event_type}">
+		  </div>
+		  <div class="form-group">
+			<label>内容</label>
+			<textarea class="form-control" rows="3" 
+					  data-field="content" data-event-type="${template.event_type}">${escapeHtml(template.content)}</textarea>
+			<small class="form-hint">支持变量: ${variableHints}</small>
+		  </div>
+		</div>
+	  `;
+	});
+
     html += '</div>';
     container.innerHTML = html;
   }

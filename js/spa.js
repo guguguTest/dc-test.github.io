@@ -13,7 +13,7 @@ const PROTECTED_PAGES = [
   'download','tools','dllpatcher','fortune','user-settings',
   'ccb','exchange','announcement-admin','site-admin','download-admin','order-entry','user-manager',
   'point-shop', 'points-shop-admin', 'point2-shop-admin',
-  'credit-shop-admin', 'redemption-code-admin', 'emoji-admin'
+  'credit-shop-admin', 'redemption-code-admin', 'emoji-admin', 'forum', 'forum-admin'
 ];
 
 // 数据源
@@ -537,7 +537,8 @@ async function updateSidebarVisibility(user) {
 	  'home', 'download', 'tools', 'dllpatcher', 'settings', 'help', 'fortune', 'user-settings',
 	  'ccb', 'exchange', 'announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry',
 	  'point-shop', 'points-shop-admin', 'point2-shop-admin',
-	  'credit-shop-admin', 'redemption-code-admin', 'emoji-admin'
+	  'credit-shop-admin', 'redemption-code-admin', 'emoji-admin',
+	  'forum','forum-admin'
 	];
 
   // 存储每个页面的可见性
@@ -647,7 +648,7 @@ async function updateSidebarVisibility(user) {
 		setDisplay(functionNav, false);
 	  } else {
 		// 添加 point-shop 到功能页面列表
-		const functionPages = ['fortune', 'ccb', 'exchange', 'point-shop'];
+		const functionPages = ['fortune', 'ccb', 'exchange', 'point-shop', 'forum'];
 		const hasVisibleFunction = functionPages.some(p => pageVisibility[p]);
 		setDisplay(functionTitle, hasVisibleFunction);
 		setDisplay(functionNav, hasVisibleFunction);
@@ -664,7 +665,7 @@ async function updateSidebarVisibility(user) {
 		setDisplay(adminNav, false);
 	  } else {
 		// 包含 site-admin 在内的所有管理页面
-		const adminPages = ['announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry', 'points-shop-admin', 'point2-shop-admin', 'credit-shop-admin', 'redemption-code-admin'];
+		const adminPages = ['announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry', 'points-shop-admin', 'point2-shop-admin', 'credit-shop-admin', 'redemption-code-admin', 'forum-admin'];
 		const hasVisibleAdmin = adminPages.some(p => pageVisibility[p]);
 		
 		console.log('管理页面可见性:', adminPages.map(p => `${p}: ${pageVisibility[p]}`));
@@ -2140,6 +2141,36 @@ async function loadPage(pageId) {
   document.documentElement.scrollTop = 0;
   
 setTimeout(() => {
+
+	// 论坛页面
+	if (pageId === 'forum') {
+	  if (typeof window.ForumModule !== 'undefined' && window.ForumModule.init) {
+		setTimeout(() => {
+		  window.ForumModule.init();
+		}, 100);
+	  } else {
+		contentContainer.innerHTML = '<div class="section"><h1>加载失败</h1><p>论坛模块未正确加载</p></div>';
+	  }
+	  
+	  document.body.classList.remove('spa-loading');
+	  updateActiveMenuItem(pageId);
+	  return;
+	}
+
+	// 论坛管理页面
+	if (pageId === 'forum-admin') {
+	  if (typeof window.ForumAdminModule !== 'undefined' && window.ForumAdminModule.init) {
+		setTimeout(() => {
+		  window.ForumAdminModule.init();
+		}, 100);
+	  } else {
+		contentContainer.innerHTML = '<div class="section"><h1>加载失败</h1><p>论坛管理模块未正确加载</p></div>';
+	  }
+	  
+	  document.body.classList.remove('spa-loading');
+	  updateActiveMenuItem(pageId);
+	  return;
+	}
 
     // ===== 特殊处理tools页面 =====
     if (pageId === 'tools') {

@@ -8,6 +8,7 @@
   <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://cdn.bootcdn.net/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+  
   <!-- 核心样式 -->
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/spa.css">
@@ -33,6 +34,9 @@
   <link rel="stylesheet" href="css/pointShop.css">
   <link rel="stylesheet" href="css/creditShop.css">
   <link rel="stylesheet" href="css/redemptionCode.css">
+
+  <!-- 论坛系统样式 -->
+  <link rel="stylesheet" href="css/forum.css">
 
   <!-- 管理后台样式 -->
   <link rel="stylesheet" href="css/dladmin.css">
@@ -117,31 +121,31 @@
               <span id="user-nickname-pc" class="user-nickname"></span>
               <span id="user-uid-pc" class="user-uid"></span>
             </div>
-			<div class="user-dropdown">
-			  <div class="dropdown-rank">
-				<span id="dropdown-rank"></span>
-			  </div>
-			  <div class="dropdown-special-rank">
-				<i class="fas fa-crown me-2"></i>
-				<span id="dropdown-special-rank"></span>
-			  </div>
-			  <div class="dropdown-auth">
-				<i class="fas fa-certificate me-2"></i>
-				<span id="dropdown-auth"></span>
-			  </div>
-			  <div class="dropdown-uid">
-				<i class="fas fa-id-card me-2"></i>
-				<span id="dropdown-uid"></span>
-			  </div>
-			  <div class="dropdown-points" id="dropdown-points">
-				<i class="fas fa-coins me-2"></i><span data-i18n="user.points">积分</span>: <span id="dropdown-points-value">0</span>
-			  </div>
-			  <div class="dropdown-credit" id="dropdown-credit">
-				<i class="fas fa-star me-2"></i><span data-i18n="user.credit">CREDIT</span>: <span id="dropdown-credit-value">0</span>
-			  </div>
-			  <a href="#" data-page="user-settings" data-i18n="user.settings">用户设置</a>
-			  <a href="#" id="logout-pc" data-i18n="user.logout">退出登录</a>
-			</div>
+            <div class="user-dropdown">
+              <div class="dropdown-rank">
+                <span id="dropdown-rank"></span>
+              </div>
+              <div class="dropdown-special-rank">
+                <i class="fas fa-crown me-2"></i>
+                <span id="dropdown-special-rank"></span>
+              </div>
+              <div class="dropdown-auth">
+                <i class="fas fa-certificate me-2"></i>
+                <span id="dropdown-auth"></span>
+              </div>
+              <div class="dropdown-uid">
+                <i class="fas fa-id-card me-2"></i>
+                <span id="dropdown-uid"></span>
+              </div>
+              <div class="dropdown-points" id="dropdown-points">
+                <i class="fas fa-coins me-2"></i><span data-i18n="user.points">积分</span>: <span id="dropdown-points-value">0</span>
+              </div>
+              <div class="dropdown-credit" id="dropdown-credit">
+                <i class="fas fa-star me-2"></i><span data-i18n="user.credit">CREDIT</span>: <span id="dropdown-credit-value">0</span>
+              </div>
+              <a href="#" data-page="user-settings" data-i18n="user.settings">用户设置</a>
+              <a href="#" id="logout-pc" data-i18n="user.logout">退出登录</a>
+            </div>
           </div>
         </div>
       </div>
@@ -230,14 +234,18 @@
         <i class="fas fa-search me-2"></i>
         <span data-i18n="sidebar.ccb">游戏查分</span>
       </a></li>
+      <li><a href="#" data-page="forum" id="sidebar-forum" style="display: none;">
+        <i class="fas fa-comments me-2"></i>
+        <span data-i18n="sidebar.forum">交流区</span>
+      </a></li>
       <li><a href="#" data-page="exchange" id="sidebar-exchange" style="display: none;">
         <i class="fas fa-exchange-alt me-2"></i>
         <span data-i18n="sidebar.exchange">兑换码</span>
       </a></li>
-	  <li><a href="#" data-page="point-shop" id="sidebar-point-shop" style="display: none;">
-		<i class="fas fa-store me-2"></i>
-		<span data-i18n="sidebar.pointShop">积分商店</span>
-	  </a></li>
+      <li><a href="#" data-page="point-shop" id="sidebar-point-shop" style="display: none;">
+        <i class="fas fa-store me-2"></i>
+        <span data-i18n="sidebar.pointShop">积分商店</span>
+      </a></li>
     </ul>
 
     <div class="sidebar-divider"></div>
@@ -260,22 +268,26 @@
         <i class="fas fa-cogs me-2"></i>
         <span data-i18n="sidebar.siteAdmin">网站管理</span>
       </a></li>
+      <li><a href="#" data-page="forum-admin" id="sidebar-forum-admin" style="display: none;">
+        <i class="fas fa-toolbox me-2"></i>
+        <span data-i18n="sidebar.forumAdmin">论坛管理</span>
+      </a></li>
       <li><a href="#" data-page="download-admin" id="sidebar-download-admin" style="display: none;">
         <i class="fas fa-download me-2"></i>
         <span data-i18n="sidebar.downloadAdmin">下载管理</span>
       </a></li>
-	  <li><a href="#" data-page="points-shop-admin" id="sidebar-points-shop-admin" style="display: none;">
-		<i class="fas fa-coins me-2"></i>
-		<span data-i18n="sidebar.pointsShopAdmin">积分商品管理</span>
-	  </a></li>
-	  <li><a href="#" data-page="point2-shop-admin" id="sidebar-point2-shop-admin" style="display: none;">
-		<i class="fas fa-dove me-2"></i>
-		<span data-i18n="sidebar.point2ShopAdmin">鸽屋积分商品管理</span>
-	  </a></li>
-	  <li><a href="#" data-page="credit-shop-admin" id="sidebar-credit-shop-admin" style="display: none;">
-	    <i class="fas fa-star me-2"></i>
-	    <span data-i18n="sidebar.creditShopAdmin">CREDIT点数商品管理</span>
-	  </a></li>
+      <li><a href="#" data-page="points-shop-admin" id="sidebar-points-shop-admin" style="display: none;">
+        <i class="fas fa-coins me-2"></i>
+        <span data-i18n="sidebar.pointsShopAdmin">积分商品管理</span>
+      </a></li>
+      <li><a href="#" data-page="point2-shop-admin" id="sidebar-point2-shop-admin" style="display: none;">
+        <i class="fas fa-dove me-2"></i>
+        <span data-i18n="sidebar.point2ShopAdmin">鸽屋积分商品管理</span>
+      </a></li>
+      <li><a href="#" data-page="credit-shop-admin" id="sidebar-credit-shop-admin" style="display: none;">
+        <i class="fas fa-star me-2"></i>
+        <span data-i18n="sidebar.creditShopAdmin">CREDIT点数商品管理</span>
+      </a></li>
       <li><a href="#" data-page="order-entry" id="sidebar-order-entry" style="display: none;">
         <i class="fas fa-file-invoice me-2"></i>
         <span data-i18n="sidebar.orderEntry">订单录入</span>
@@ -308,8 +320,6 @@
   <!-- 1. 基础框架和核心功能 -->
   <script defer src="js/language.js"></script>
   <script defer src="js/shims.js"></script>
-  <script defer src="js/spa.js"></script>
-  <script defer src="js/spa_pages.js"></script>
 
   <!-- 2. 基础UI组件 -->
   <script defer src="js/cursor.js"></script>
@@ -347,12 +357,21 @@
   <script defer src="js/creditShop.js"></script>
   <script defer src="js/redemptionCode.js"></script>
 
-  <!-- 9. 管理后台 -->
+  <!-- 9. 论坛系统 -->
+  <script defer src="js/forum-editor.js"></script>
+  <script defer src="js/forum.js"></script>
+  <script defer src="js/forum-admin.js"></script>
+
+  <!-- 10. 管理后台 -->
   <script defer src="js/dladmin.js"></script>
   <script defer src="js/userManager.js"></script>
   <script defer src="js/siteAdmin.js"></script>
 
-  <!-- 10. 移动端优化 -->
+  <!-- 11. SPA路由（最后加载） -->
+  <script defer src="js/spa.js"></script>
+  <script defer src="js/spa_pages.js"></script>
+
+  <!-- 12. 移动端优化 -->
   <script defer src="js/mobile-sidebar.js"></script>
   
   <!-- 页面加载完成后初始化语言 -->
@@ -375,5 +394,5 @@
       });
     });
   </script>
- </body>
+</body>
 </html>
