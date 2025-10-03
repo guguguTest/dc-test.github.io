@@ -855,22 +855,78 @@ function renderPostDetail(post, replies) {
     return mentions;
   }
 
-  // 处理内容,高亮@用户
-  function processContent(content) {
-    if (!content) return '';
+// 处理内容,高亮@用户和表情
+// 处理内容,高亮@用户和表情
+// 替换 forum.js 中的 processContent 函数
+function processContent(content) {
+  if (!content) return '';
+  
+  console.log('=== processContent Debug ===');
+  console.log('Input:', content);
+  
+  // 先解码HTML实体
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = content;
+  let decodedContent = tempDiv.innerHTML;
+  
+  console.log('Decoded:', decodedContent);
+  
+  // 处理表情标记
+  // 正则说明: 匹配 [emoji:数字:路径] 或 [emoji:数字:路径:音频路径]
+  // 路径可以是相对路径或绝对路径,包含 / - . 等字符
+  const emojiRegex = /\[emoji:(\d+):((?:https?:)?\/[^\]]+?)(?::([^\]]+?))?\]/g;
+  
+  let hasEmoji = false;
+  let processedContent = decodedContent.replace(emojiRegex, function(match, emojiId, imagePath, audioPath) {
+    hasEmoji = true;
+    console.log('Found emoji:', { match, emojiId, imagePath, audioPath });
     
-    // 不对富文本内容进行转义，保留HTML格式
-    // 只处理@mention功能
-    let processedContent = content;
+    // 清理路径
+    imagePath = imagePath.trim();
     
-    // 使用更精确的正则表达式匹配@用户，避免匹配已经在span标签内的@
-    processedContent = processedContent.replace(
-      /@([^\s@<]+)(?![^<]*<\/span>)/g,
-      '<span class="mention" data-username="$1">@$1</span>'
-    );
+    // 构建完整URL
+    const API_BASE_URL = window.API_BASE_URL || 'https://api.am-all.com.cn';
+    const fullImagePath = imagePath.startsWith('http') ? imagePath : `${API_BASE_URL}${imagePath}`;
     
-    return processedContent;
+    console.log('Image URL:', fullImagePath);
+    
+    // 构建音频属性
+    let audioAttr = '';
+    if (audioPath) {
+      audioPath = audioPath.trim();
+      const fullAudioPath = audioPath.startsWith('http') ? audioPath : `${API_BASE_URL}${audioPath}`;
+      audioAttr = `data-audio-path="${fullAudioPath}" onclick="if(window.playEmojiAudio) window.playEmojiAudio('${fullAudioPath}')" style="cursor: pointer;"`;
+      console.log('Audio URL:', fullAudioPath);
+    }
+    
+    // 生成表情图片HTML
+    const emojiHtml = `<img src="${fullImagePath}" class="emoji-message-img" ${audioAttr} style="max-width: 120px; max-height: 120px; vertical-align: middle; border-radius: 8px; margin: 0 4px;" alt="表情">`;
+    
+    console.log('Generated HTML:', emojiHtml);
+    
+    return emojiHtml;
+  });
+  
+  if (hasEmoji) {
+    console.log('After emoji processing:', processedContent);
+  } else {
+    console.log('No emoji found in content');
   }
+  
+  // 处理@mention功能
+  // 避免匹配已经在HTML标签内的@
+  processedContent = processedContent.replace(
+    /@([^\s@<]+)(?![^<]*>)/g,
+    function(match, username) {
+      return `<span class="mention" data-username="${username}">@${username}</span>`;
+    }
+  );
+  
+  console.log('Final output:', processedContent);
+  console.log('=== End processContent Debug ===');
+  
+  return processedContent;
+}
 
   // 采纳答案
   async function acceptReply(replyId) {
