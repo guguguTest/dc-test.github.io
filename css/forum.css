@@ -471,6 +471,7 @@
   border-radius: 8px;
   overflow: hidden;
   transition: border-color 0.3s;
+  position: relative;
 }
 
 .forum-editor:focus-within {
@@ -1151,16 +1152,13 @@
 .forum-emoji-picker {
   display: none;
   flex-direction: column;
-  position: absolute;
-  bottom: 50px;
-  left: 0;
-  right: 0;
-  height: 320px;
+  /* 使用 fixed 定位，在 JS 中动态设置位置 */
+  position: fixed;
   background: white;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  z-index: 1000;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  z-index: 10001;
   overflow: hidden;
   animation: emojiPickerSlideUp 0.2s ease;
 }
@@ -1202,8 +1200,8 @@
 
 .forum-emoji-picker .emoji-tabs {
   display: flex;
-  gap: 8px;
-  padding: 12px;
+  gap: 6px;
+  padding: 10px;
   border-top: 1px solid #e5e7eb;
   background: #f9fafb;
   overflow-x: auto;
@@ -1224,11 +1222,11 @@
 
 .forum-emoji-picker .emoji-tab {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border: none;
   background: white;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1236,7 +1234,7 @@
   transition: all 0.2s;
   position: relative;
   color: #6b7280;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .forum-emoji-picker .emoji-tab:hover {
@@ -1251,43 +1249,46 @@
 }
 
 .forum-emoji-picker .emoji-tab img {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
 }
 
 .forum-emoji-picker .emoji-item {
   cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 4px;
+  border-radius: 6px;
   transition: all 0.2s;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  aspect-ratio: 1;
 }
 
 .forum-emoji-picker .emoji-item:hover {
   background: #f0f2f5;
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 .forum-emoji-picker .emoji-item img {
-  width: 36px;
-  height: 36px;
+  width: 100%;
+  height: 100%;
+  max-width: 32px;
+  max-height: 32px;
   object-fit: contain;
 }
 
 /* 表情音频指示器 */
 .forum-emoji-picker .emoji-item .fa-volume-up {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
-  font-size: 10px;
+  bottom: 2px;
+  right: 2px;
+  font-size: 8px;
   color: #667eea;
   background: white;
   border-radius: 50%;
-  padding: 2px;
+  padding: 1px;
 }
 
 /* 帖子和回复中的表情样式 */
@@ -1306,11 +1307,6 @@
 .reply-content .emoji-message-img:hover,
 .post-content .emoji-message-img:hover {
   transform: scale(1.05);
-}
-
-/* 编辑器容器需要相对定位以便放置表情选择器 */
-.forum-editor {
-  position: relative;
 }
 
 /* 编辑器中的表情预览样式 */
@@ -1360,9 +1356,4 @@
 .forum-emoji-picker .emoji-loading i {
   font-size: 24px;
   animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
