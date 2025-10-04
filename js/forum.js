@@ -653,21 +653,49 @@
         </div>
 
         <div class="reply-list" id="reply-list">
-          <!-- 楼主帖子 -->
-          <div class="reply-item" id="floor-0">
-            <div class="reply-author">
-              <img src="${post.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
-              <div class="reply-author-name">${escapeHtml(post.author_name)}</div>
-              <div class="reply-author-rank">${getUserRankText(post.user_rank)}</div>
-            </div>
-            <div class="reply-content-wrapper">
-              <div class="reply-meta">
-                <span class="reply-floor op">楼主</span>
-                <span>${formatTime(post.created_at)}</span>
-              </div>
-              <div class="reply-content">${processContent(post.content)}</div>
-            </div>
-          </div>
+			<!-- 楼主帖子 -->
+			<div class="reply-item" id="floor-0">
+			  <div class="reply-author">
+				<!-- 头像容器,添加光环和认证图标 -->
+				<div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
+				  <img src="${post.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
+				  
+				  <!-- 彩虹光环特效 (rankSp === 1) -->
+				  ${post.rankSp === 1 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
+				  
+				  <!-- 账户认证图标 (右下角) -->
+				  ${post.account_auth === 1 ? `
+					<img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
+						 class="forum-auth-icon" 
+						 title="个人认证" 
+						 alt="个人认证">
+				  ` : ''}
+				  ${post.account_auth === 2 ? `
+					<img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
+						 class="forum-auth-icon" 
+						 title="官方认证" 
+						 alt="官方认证">
+				  ` : ''}
+				</div>
+				
+				<div class="reply-author-name">${escapeHtml(post.author_name)}</div>
+				<div class="reply-author-rank">${getUserRankText(post.user_rank)}</div>
+				
+				<!-- 特殊用户组显示 -->
+				${post.rankSp === 1 ? `
+				  <div class="reply-author-badge special-rank">
+					<i class="fas fa-crown"></i> 特殊用户组
+				  </div>
+				` : ''}
+			  </div>
+			  <div class="reply-content-wrapper">
+				<div class="reply-meta">
+				  <span class="reply-floor op">楼主</span>
+				  <span>${formatTime(post.created_at)}</span>
+				</div>
+				<div class="reply-content">${processContent(post.content)}</div>
+			  </div>
+			</div>
         </div>
 
         ${!post.is_closed ? `
@@ -740,42 +768,71 @@
       const isAccepted = reply.id === post.accepted_reply_id;
       const canAccept = isQA && isPostAuthor && !postClosed && !postSolved && !isAccepted;
 
-      const replyHtml = `
-        <div class="reply-item ${isAccepted ? 'reply-accepted' : ''}" id="floor-${reply.floor_number}">
-          <div class="reply-author">
-            <img src="${reply.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
-            <div class="reply-author-name">${escapeHtml(reply.author_name)}</div>
-            <div class="reply-author-rank">${getUserRankText(reply.user_rank)}</div>
-            ${isAccepted ? '<div class="reply-author-badge accepted"><i class="fas fa-check-circle"></i> 已采纳</div>' : ''}
-          </div>
-          <div class="reply-content-wrapper">
-            <div class="reply-meta">
-              <span class="reply-floor">#${reply.floor_number}</span>
-              <span>${formatTime(reply.created_at)}</span>
-            </div>
-            <div class="reply-content">${processContent(reply.content)}</div>
-            ${(canEdit || canDelete || canAccept) ? `
-              <div class="reply-actions">
-                ${canAccept ? `
-                  <button class="forum-btn forum-btn-success forum-btn-sm" onclick="window.ForumModule.acceptReply(${reply.id})">
-                    <i class="fas fa-check-circle"></i> 采纳答案
-                  </button>
-                ` : ''}
-                ${canEdit ? `
-                  <button class="forum-btn forum-btn-secondary forum-btn-sm" onclick="window.ForumModule.editReply(${reply.id})">
-                    <i class="fas fa-edit"></i> 编辑
-                  </button>
-                ` : ''}
-                ${canDelete ? `
-                  <button class="forum-btn forum-btn-danger forum-btn-sm" onclick="window.ForumModule.deleteReply(${reply.id})">
-                    <i class="fas fa-trash"></i> 删除
-                  </button>
-                ` : ''}
-              </div>
-            ` : ''}
-          </div>
-        </div>
-      `;
+		const replyHtml = `
+		  <div class="reply-item ${isAccepted ? 'reply-accepted' : ''}" id="floor-${reply.floor_number}">
+			<div class="reply-author">
+			  <!-- 头像容器,添加光环和认证图标 -->
+			  <div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
+				<img src="${reply.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
+				
+				<!-- 彩虹光环特效 (rankSp === 1) -->
+				${reply.rankSp === 1 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
+				
+				<!-- 账户认证图标 (右下角) -->
+				${reply.account_auth === 1 ? `
+				  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
+					   class="forum-auth-icon" 
+					   title="个人认证" 
+					   alt="个人认证">
+				` : ''}
+				${reply.account_auth === 2 ? `
+				  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
+					   class="forum-auth-icon" 
+					   title="官方认证" 
+					   alt="官方认证">
+				` : ''}
+			  </div>
+			  
+			  <div class="reply-author-name">${escapeHtml(reply.author_name)}</div>
+			  <div class="reply-author-rank">${getUserRankText(reply.user_rank)}</div>
+			  
+			  <!-- 特殊用户组显示 -->
+			  ${reply.rankSp === 1 ? `
+				<div class="reply-author-badge special-rank">
+				  <i class="fas fa-crown"></i> 特殊用户组
+				</div>
+			  ` : ''}
+			  
+			  ${isAccepted ? '<div class="reply-author-badge accepted"><i class="fas fa-check-circle"></i> 已采纳</div>' : ''}
+			</div>
+			<div class="reply-content-wrapper">
+			  <div class="reply-meta">
+				<span class="reply-floor">#${reply.floor_number}</span>
+				<span>${formatTime(reply.created_at)}</span>
+			  </div>
+			  <div class="reply-content">${processContent(reply.content)}</div>
+			  ${(canEdit || canDelete || canAccept) ? `
+				<div class="reply-actions">
+				  ${canAccept ? `
+					<button class="forum-btn forum-btn-success forum-btn-sm" onclick="window.ForumModule.acceptReply(${reply.id})">
+					  <i class="fas fa-check-circle"></i> 采纳答案
+					</button>
+				  ` : ''}
+				  ${canEdit ? `
+					<button class="forum-btn forum-btn-secondary forum-btn-sm" onclick="window.ForumModule.editReply(${reply.id})">
+					  <i class="fas fa-edit"></i> 编辑
+					</button>
+				  ` : ''}
+				  ${canDelete ? `
+					<button class="forum-btn forum-btn-danger forum-btn-sm" onclick="window.ForumModule.deleteReply(${reply.id})">
+					  <i class="fas fa-trash"></i> 删除
+					</button>
+				  ` : ''}
+				</div>
+			  ` : ''}
+			</div>
+		  </div>
+		`;
 
       container.insertAdjacentHTML('beforeend', replyHtml);
     });
