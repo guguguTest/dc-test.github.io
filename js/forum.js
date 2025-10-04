@@ -1,4 +1,4 @@
-// forum.js - 论坛功能主模块(完整修复版 + 图片支持)
+// forum.js - 论坛功能主模块(完整修复版 + 图片支持 + 楼层编辑)
 
 (function() {
   'use strict';
@@ -9,6 +9,7 @@
   let currentPostAuthorId = null;
   let postEditor = null;
   let replyEditor = null;
+  let currentRepliesCache = []; // 缓存当前帖子的回复列表
 
   // 初始化论坛
   function initForum() {
@@ -729,8 +730,12 @@
     const postClosed = post.is_closed;
     const postSolved = post.is_solved;
 
+    // 缓存回复列表供编辑使用
+    currentRepliesCache = replies;
+
     replies.forEach(reply => {
       const isAuthor = currentUser.id === reply.user_id;
+      const canEdit = isAuthor || isAdmin;
       const canDelete = isAuthor || isAdmin;
       const isAccepted = reply.id === post.accepted_reply_id;
       const canAccept = isQA && isPostAuthor && !postClosed && !postSolved && !isAccepted;
@@ -749,11 +754,16 @@
               <span>${formatTime(reply.created_at)}</span>
             </div>
             <div class="reply-content">${processContent(reply.content)}</div>
-            ${(canDelete || canAccept) ? `
+            ${(canEdit || canDelete || canAccept) ? `
               <div class="reply-actions">
                 ${canAccept ? `
                   <button class="forum-btn forum-btn-success forum-btn-sm" onclick="window.ForumModule.acceptReply(${reply.id})">
                     <i class="fas fa-check-circle"></i> 采纳答案
+                  </button>
+                ` : ''}
+                ${canEdit ? `
+                  <button class="forum-btn forum-btn-secondary forum-btn-sm" onclick="window.ForumModule.editReply(${reply.id})">
+                    <i class="fas fa-edit"></i> 编辑
                   </button>
                 ` : ''}
                 ${canDelete ? `
@@ -813,6 +823,111 @@
       await viewPost(currentPostId);
     } catch (error) {
       console.error('回复失败:', error);
+      if (typeof showErrorMessage === 'function') {
+        showErrorMessage(error.message);
+      }
+    }
+  }
+
+  // 编辑回复
+  async function editReply(replyId) {
+    // 从缓存中查找回复数据
+    const reply = currentRepliesCache.find(r => r.id === replyId);
+    
+    if (!reply) {
+      if (typeof showErrorMessage === 'function') {
+        showErrorMessage('未找到回复数据');
+      }
+      return;
+    }
+    
+    showEditReplyModal(reply);
+  }
+
+  // 显示编辑回复模态框
+  async function showEditReplyModal(reply) {
+    const modal = document.createElement('div');
+    modal.className = 'forum-modal show';
+    modal.id = 'edit-reply-modal';
+    
+    modal.innerHTML = `
+      <div class="forum-modal-content">
+        <div class="forum-modal-header">
+          <h3 class="forum-modal-title">
+            <i class="fas fa-edit"></i>
+            编辑回复
+          </h3>
+          <button class="forum-modal-close" onclick="window.ForumModule.closeModal('edit-reply-modal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="forum-modal-body">
+          <div class="forum-form-group">
+            <label class="forum-form-label">回复内容 *</label>
+            <div class="forum-editor" id="edit-reply-editor">
+              <div class="editor-toolbar"></div>
+              <div class="editor-content" data-placeholder="请输入回复内容..."></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="forum-modal-footer">
+          <button class="forum-btn forum-btn-secondary" onclick="window.ForumModule.closeModal('edit-reply-modal')">
+            取消
+          </button>
+          <button class="forum-btn forum-btn-primary" onclick="window.ForumModule.updateReply(${reply.id})">
+            <i class="fas fa-save"></i>
+            保存
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    
+    const editorContainer = document.getElementById('edit-reply-editor');
+    replyEditor = new ForumEditor(editorContainer);
+    replyEditor.setContent(reply.content);
+  }
+
+  // 更新回复
+  async function updateReply(replyId) {
+    const content = replyEditor.getContent();
+    
+    if (replyEditor.isEmpty()) {
+      if (typeof showErrorMessage === 'function') {
+        showErrorMessage('请输入回复内容');
+      }
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/forum/replies/${replyId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || '更新失败');
+      }
+
+      closeModal('edit-reply-modal');
+      
+      if (typeof showSuccessMessage === 'function') {
+        showSuccessMessage('更新成功!');
+      }
+      
+      await viewPost(currentPostId);
+    } catch (error) {
+      console.error('更新回复失败:', error);
       if (typeof showErrorMessage === 'function') {
         showErrorMessage(error.message);
       }
@@ -1321,6 +1436,8 @@
     updatePost,
     viewPost,
     submitReply,
+    editReply,
+    updateReply,
     acceptReply,
     closePost,
     deleteReply,
