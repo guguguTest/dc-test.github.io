@@ -682,9 +682,9 @@
 				<div class="reply-author-rank">${getUserRankText(post.user_rank)}</div>
 				
 				<!-- 特殊用户组显示 -->
-				${post.rankSp === 1 ? `
+				${post.rankSp === 2 ? `
 				  <div class="reply-author-badge special-rank">
-					<i class="fas fa-crown"></i> 特殊用户组
+					<i class="fas fa-crown"></i> 协同管理员
 				  </div>
 				` : ''}
 			  </div>
@@ -797,9 +797,9 @@
 			  <div class="reply-author-rank">${getUserRankText(reply.user_rank)}</div>
 			  
 			  <!-- 特殊用户组显示 -->
-			  ${reply.rankSp === 1 ? `
+			  ${reply.rankSp === 2 ? `
 				<div class="reply-author-badge special-rank">
-				  <i class="fas fa-crown"></i> 特殊用户组
+				  <i class="fas fa-crown"></i> 协同管理员
 				</div>
 			  ` : ''}
 			  
