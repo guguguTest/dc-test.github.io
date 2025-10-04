@@ -219,7 +219,12 @@ function renderShippingForm() {
       <h1 class="page-title">绑定收货信息</h1>
       <div class="shipping-form-container">
         <div class="form-card">
-          <p class="form-hint">首次使用积分商城需要绑定收货信息（如果只兑换虚拟物品可以跳过）</p>
+          <p class="form-hint"><b>首次使用积分商城需要绑定收货信息（如果只兑换虚拟物品可以跳过）</b></p>
+		  <p class="form-hint"><b>您填写的信息将被加密保存到服务器中，请放心填写。</b></p>
+		  <hr>
+		  <p class="form-hint"><b>We do not offer physical item delivery services to users outside Mainland China. Please skip the delivery information section.</b></p>
+		  <p class="form-hint"><b>中国本土以外のお客様には、実物商品の配送サービスを提供しておりません。配送先情報の登録はスキップしてください。</b></p>
+		  
           <form id="shipping-form">
             <div class="form-group">
               <label for="taobao-id">淘宝ID <span class="required">*</span></label>
