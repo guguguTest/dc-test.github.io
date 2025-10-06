@@ -1,4 +1,4 @@
-// forum.js - 论坛功能主模块(完整修复版 + 图片支持 + 楼层编辑)
+// forum.js - 论坛功能主模块(完整修复版 + 图片支持 + 楼层编辑 + 新功能)
 
 (function() {
   'use strict';
@@ -10,6 +10,7 @@
   let postEditor = null;
   let replyEditor = null;
   let currentRepliesCache = []; // 缓存当前帖子的回复列表
+  let currentUserInfo = {}; // 存储当前用户信息
 
   // 初始化论坛
   function initForum() {
@@ -23,6 +24,10 @@
       }
       return;
     }
+
+    // 获取用户信息
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    currentUserInfo = userInfo;
 
     showSectionSelection();
   }
@@ -112,7 +117,7 @@
               <i class="fas fa-check-double"></i>
               全部已读
             </button>
-            <button class="forum-btn forum-btn-primary" onclick="window.ForumModule.showNewPostModal()">
+            <button class="forum-btn forum-btn-primary" id="new-post-btn" style="display: none;" onclick="window.ForumModule.showNewPostModal()">
               <i class="fas fa-plus-circle"></i>
               发布主题
             </button>
@@ -151,6 +156,13 @@
       if (!response.ok) throw new Error('加载失败');
       
       const data = await response.json();
+      
+      // 根据用户权限显示发帖按钮
+      const newPostBtn = document.getElementById('new-post-btn');
+      if (newPostBtn && data.userInfo && data.userInfo.canPost) {
+        newPostBtn.style.display = 'inline-flex';
+      }
+      
       renderPosts(data.posts);
     } catch (error) {
       console.error('加载帖子失败:', error);
@@ -190,6 +202,12 @@
         pinBadge = '<i class="fas fa-thumbtack" style="color: #f59e0b; margin-right: 8px;" title="普通置顶"></i>';
       }
       
+      // 禁止回复标记
+      let replyDisabledBadge = '';
+      if (post.reply_disabled) {
+        replyDisabledBadge = '<span class="post-status" style="background: #fecaca; color: #991b1b;"><i class="fas fa-ban"></i> 禁止回复</span>';
+      }
+      
       html += `
         <div class="post-item ${pinLevel > 0 ? 'post-pinned' : ''} ${isUnread ? 'post-unread' : ''}" onclick="window.ForumModule.viewPost(${post.id})">
           <img src="${post.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="post-avatar" alt="avatar">
@@ -201,6 +219,7 @@
               <span class="post-title ${isUnread ? 'post-title-unread' : ''}">${escapeHtml(post.title)}</span>
               ${post.tag_name ? `<span class="post-tag" style="background: ${post.tag_color}; color: ${post.text_color};">${post.tag_name}</span>` : ''}
               ${statusBadge}
+              ${replyDisabledBadge}
             </div>
             <div class="post-meta">
               <span>${post.author_name}</span>
@@ -227,7 +246,7 @@
 
   // 获取状态徽章
   function getStatusBadge(post) {
-    if (currentSection !== 'qa') return '';
+    if (currentSection !== 'qa' || post.is_announcement) return '';
     
     if (post.is_solved) {
       return '<span class="post-status solved"><i class="fas fa-check-circle"></i> 已解决</span>';
@@ -238,162 +257,207 @@
     }
   }
 
-  // 显示发帖模态框
-  async function showNewPostModal() {
-    const token = localStorage.getItem('token');
-    let tags = [];
-    
-    try {
-      const response = await fetch(`${API_BASE}/forum/tags?section=${currentSection}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        tags = await response.json();
-      }
-    } catch (error) {
-      console.error('加载标签失败:', error);
+// 显示发帖模态框 - 修复版
+async function showNewPostModal() {
+  const token = localStorage.getItem('token');
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  const isAdmin = userInfo.user_rank >= 5;
+  let tags = [];
+  
+  try {
+    const response = await fetch(`${API_BASE}/forum/tags?section=${currentSection}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (response.ok) {
+      tags = await response.json();
     }
-
-    const modal = document.createElement('div');
-    modal.className = 'forum-modal show';
-    modal.id = 'new-post-modal';
-    
-    const isQA = currentSection === 'qa';
-    
-    modal.innerHTML = `
-      <div class="forum-modal-content">
-        <div class="forum-modal-header">
-          <h3 class="forum-modal-title">
-            <i class="fas fa-edit"></i>
-            发布新主题
-          </h3>
-          <button class="forum-modal-close" onclick="window.ForumModule.closeModal('new-post-modal')">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        
-        <div class="forum-modal-body">
-          <div class="forum-form-group">
-            <label class="forum-form-label">帖子标题 *</label>
-            <input type="text" class="forum-form-input" id="post-title" placeholder="请输入帖子标题" maxlength="100">
-          </div>
-          
-          <div class="forum-form-group">
-            <label class="forum-form-label">帖子分类</label>
-            <select class="forum-form-select" id="post-tag">
-              <option value="">请选择分类</option>
-              ${tags.map(tag => `<option value="${tag.id}">${tag.tag_name}</option>`).join('')}
-            </select>
-          </div>
-          
-          ${isQA ? `
-            <div class="forum-form-group">
-              <label class="forum-form-label">悬赏设置</label>
-              <div class="reward-inputs">
-                <div>
-                  <label>普通积分</label>
-                  <input type="number" class="forum-form-input" id="reward-points" min="0" value="0" placeholder="0">
-                </div>
-                <div>
-                  <label>CREDIT</label>
-                  <input type="number" class="forum-form-input" id="reward-credit" min="0" value="0" placeholder="0">
-                </div>
-              </div>
-            </div>
-          ` : ''}
-          
-          <div class="forum-form-group">
-            <label class="forum-form-label">帖子内容 *</label>
-            <div class="forum-editor" id="post-editor">
-              <div class="editor-toolbar"></div>
-              <div class="editor-content" data-placeholder="请输入帖子内容..."></div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="forum-modal-footer">
-          <button class="forum-btn forum-btn-secondary" onclick="window.ForumModule.closeModal('new-post-modal')">
-            取消
-          </button>
-          <button class="forum-btn forum-btn-primary" onclick="window.ForumModule.submitPost()">
-            <i class="fas fa-paper-plane"></i>
-            发布
-          </button>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-    
-    const editorContainer = document.getElementById('post-editor');
-    postEditor = new ForumEditor(editorContainer);
+  } catch (error) {
+    console.error('加载标签失败:', error);
   }
 
-  // 提交帖子
-  async function submitPost() {
-    const title = document.getElementById('post-title').value.trim();
-    const tagId = document.getElementById('post-tag').value;
-    const content = postEditor.getContent();
+  const modal = document.createElement('div');
+  modal.className = 'forum-modal show';
+  modal.id = 'new-post-modal';
+  
+  const isQA = currentSection === 'qa';
+  
+  modal.innerHTML = `
+    <div class="forum-modal-content">
+      <div class="forum-modal-header">
+        <h3 class="forum-modal-title">
+          <i class="fas fa-edit"></i>
+          发布新主题
+        </h3>
+        <button class="forum-modal-close" onclick="window.ForumModule.closeModal('new-post-modal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="forum-modal-body">
+        <div class="forum-form-group">
+          <label class="forum-form-label">帖子标题 *</label>
+          <input type="text" class="forum-form-input" id="post-title" placeholder="请输入帖子标题" maxlength="100">
+        </div>
+        
+        <div class="forum-form-group">
+          <label class="forum-form-label">帖子分类</label>
+          <select class="forum-form-select" id="post-tag" onchange="window.ForumModule.onTagChange()">
+            <option value="">请选择分类</option>
+            ${tags.map(tag => `<option value="${tag.id}" data-tag-name="${tag.tag_name}">${tag.tag_name}</option>`).join('')}
+          </select>
+        </div>
+        
+        ${isQA ? `
+          <div class="forum-form-group" id="reward-group">
+            <label class="forum-form-label">悬赏设置</label>
+            <div class="reward-inputs">
+              <div>
+                <label>普通积分</label>
+                <input type="number" class="forum-form-input" id="reward-points" min="0" value="0" placeholder="0">
+              </div>
+              <div>
+                <label>CREDIT</label>
+                <input type="number" class="forum-form-input" id="reward-credit" min="0" value="0" placeholder="0">
+              </div>
+            </div>
+            <small style="color: #6b7280; margin-top: 8px; display: block;">提示：选择"公告"或"通知"分类时无需设置悬赏</small>
+          </div>
+        ` : ''}
+        
+        ${isAdmin ? `
+          <div class="forum-form-group">
+            <label class="forum-form-label">
+              <input type="checkbox" id="reply-disabled" style="width: auto; margin-right: 8px;">
+              禁止回复本帖(仅管理员可回复)
+            </label>
+          </div>
+        ` : ''}
+        
+        <div class="forum-form-group">
+          <label class="forum-form-label">帖子内容 *</label>
+          <div class="forum-editor" id="post-editor">
+            <div class="editor-toolbar"></div>
+            <div class="editor-content" data-placeholder="请输入帖子内容..."></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="forum-modal-footer">
+        <button class="forum-btn forum-btn-secondary" onclick="window.ForumModule.closeModal('new-post-modal')">
+          取消
+        </button>
+        <button class="forum-btn forum-btn-primary" onclick="window.ForumModule.submitPost()">
+          <i class="fas fa-paper-plane"></i>
+          发布
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  
+  const editorContainer = document.getElementById('post-editor');
+  postEditor = new ForumEditor(editorContainer);
+}
+
+// 标签变化时的处理 - 修复版
+function onTagChange() {
+  const tagSelect = document.getElementById('post-tag');
+  const selectedOption = tagSelect.options[tagSelect.selectedIndex];
+  const tagName = selectedOption.getAttribute('data-tag-name');
+  const rewardGroup = document.getElementById('reward-group');
+  
+  // 如果是公告或通知标签,隐藏悬赏设置
+  if (rewardGroup && (tagName === '公告' || tagName === '通知')) {
+    rewardGroup.style.display = 'none';
+  } else if (rewardGroup) {
+    rewardGroup.style.display = 'block';
+  }
+}
+
+// 提交帖子 - 修复版
+async function submitPost() {
+  const title = document.getElementById('post-title').value.trim();
+  const tagId = document.getElementById('post-tag').value;
+  const content = postEditor.getContent();
+  const replyDisabledCheck = document.getElementById('reply-disabled');
+  
+  if (!title) {
+    if (typeof showErrorMessage === 'function') {
+      showErrorMessage('请输入帖子标题');
+    }
+    return;
+  }
+  
+  if (postEditor.isEmpty()) {
+    if (typeof showErrorMessage === 'function') {
+      showErrorMessage('请输入帖子内容');
+    }
+    return;
+  }
+
+  const postData = {
+    title,
+    tag_id: tagId || null,
+    content,
+    reply_disabled: replyDisabledCheck && replyDisabledCheck.checked ? 1 : 0
+  };
+
+  // 只有问答区且悬赏输入框存在时才处理悬赏
+  if (currentSection === 'qa') {
+    const rewardPointsInput = document.getElementById('reward-points');
+    const rewardCreditInput = document.getElementById('reward-credit');
     
-    if (!title) {
-      if (typeof showErrorMessage === 'function') {
-        showErrorMessage('请输入帖子标题');
-      }
-      return;
+    // 检查是否为公告/通知标签
+    let isAnnouncementTag = false;
+    if (tagId) {
+      const tagSelect = document.getElementById('post-tag');
+      const selectedOption = tagSelect.options[tagSelect.selectedIndex];
+      const tagName = selectedOption.getAttribute('data-tag-name');
+      isAnnouncementTag = (tagName === '公告' || tagName === '通知');
     }
     
-    if (postEditor.isEmpty()) {
-      if (typeof showErrorMessage === 'function') {
-        showErrorMessage('请输入帖子内容');
-      }
-      return;
-    }
-
-    const postData = {
-      title,
-      tag_id: tagId || null,
-      content
-    };
-
-    if (currentSection === 'qa') {
-      const rewardPoints = parseInt(document.getElementById('reward-points').value) || 0;
-      const rewardCredit = parseInt(document.getElementById('reward-credit').value) || 0;
+    // 只有非公告/通知标签且输入框存在时才添加悬赏
+    if (!isAnnouncementTag && rewardPointsInput && rewardCreditInput) {
+      const rewardPoints = parseInt(rewardPointsInput.value) || 0;
+      const rewardCredit = parseInt(rewardCreditInput.value) || 0;
       
       postData.reward_points = rewardPoints;
       postData.reward_credit = rewardCredit;
     }
+  }
 
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/forum/${currentSection}/posts`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(postData)
-      });
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/forum/${currentSection}/posts`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(postData)
+    });
 
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || '发布失败');
-      }
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.error || '发布失败');
+    }
 
-      closeModal('new-post-modal');
-      
-      if (typeof showSuccessMessage === 'function') {
-        showSuccessMessage('发布成功!');
-      }
-      
-      await loadPosts();
-    } catch (error) {
-      console.error('发布帖子失败:', error);
-      if (typeof showErrorMessage === 'function') {
-        showErrorMessage(error.message);
-      }
+    closeModal('new-post-modal');
+    
+    if (typeof showSuccessMessage === 'function') {
+      showSuccessMessage('发布成功!');
+    }
+    
+    await loadPosts();
+  } catch (error) {
+    console.error('发布帖子失败:', error);
+    if (typeof showErrorMessage === 'function') {
+      showErrorMessage(error.message);
     }
   }
+}
 
   // 编辑帖子
   async function editPost(postId) {
@@ -592,7 +656,7 @@
     
     currentPostAuthorId = post.user_id;
     
-    const isQA = currentSection === 'qa';
+    const isQA = currentSection === 'qa' && !post.is_announcement;
     const statusBadge = getStatusBadge(post);
     const pinLevel = post.pin_level || 0;
     
@@ -601,6 +665,17 @@
       pinBadge = '<span class="post-pin-badge super-pin"><i class="fas fa-crown"></i> 超级置顶</span>';
     } else if (pinLevel === 1) {
       pinBadge = '<span class="post-pin-badge normal-pin"><i class="fas fa-thumbtack"></i> 普通置顶</span>';
+    }
+
+    // 禁止回复提示
+    let replyDisabledNotice = '';
+    if (post.reply_disabled && !isAdmin) {
+      replyDisabledNotice = `
+        <div class="post-closed-notice">
+          <i class="fas fa-ban"></i>
+          <span>该帖已禁止回复</span>
+        </div>
+      `;
     }
 
     let html = `
@@ -618,6 +693,7 @@
             ${post.tag_name ? `<span class="post-tag" style="background: ${post.tag_color}; color: ${post.text_color};">${post.tag_name}</span>` : ''}
             ${pinBadge}
             ${statusBadge}
+            ${post.reply_disabled ? '<span class="post-status" style="background: #fecaca; color: #991b1b;"><i class="fas fa-ban"></i> 禁止回复</span>' : ''}
             <span><i class="fas fa-eye"></i> ${post.view_count || 0} 浏览</span>
             <span><i class="fas fa-comment"></i> ${post.reply_count || 0} 回复</span>
             <span><i class="fas fa-clock"></i> ${formatTime(post.created_at)}</span>
@@ -643,6 +719,9 @@
               <button class="forum-btn forum-btn-warning forum-btn-sm" onclick="window.ForumModule.showPinMenu(${post.id}, ${pinLevel})">
                 <i class="fas fa-thumbtack"></i> 置顶管理
               </button>
+              <button class="forum-btn forum-btn-${post.is_closed ? 'success' : 'danger'} forum-btn-sm" onclick="window.ForumModule.toggleAdminClose(${post.id}, ${post.is_closed})">
+                <i class="fas fa-${post.is_closed ? 'unlock' : 'lock'}"></i> ${post.is_closed ? '撤销结贴' : '管理员结贴'}
+              </button>
             ` : ''}
             ${isQA && isAuthor && !post.is_closed && !post.is_solved ? `
               <button class="forum-btn forum-btn-warning forum-btn-sm" onclick="window.ForumModule.closePost(${post.id})">
@@ -653,52 +732,52 @@
         </div>
 
         <div class="reply-list" id="reply-list">
-			<!-- 楼主帖子 -->
-			<div class="reply-item" id="floor-0">
-			  <div class="reply-author">
-				<!-- 头像容器,添加光环和认证图标 -->
-				<div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
-				  <img src="${post.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
-				  
-				  <!-- 彩虹光环特效 (rankSp === 1) -->
-				  ${post.rankSp === 1 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
-				  
-				  <!-- 账户认证图标 (右下角) -->
-				  ${post.account_auth === 1 ? `
-					<img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
-						 class="forum-auth-icon" 
-						 title="个人认证" 
-						 alt="个人认证">
-				  ` : ''}
-				  ${post.account_auth === 2 ? `
-					<img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
-						 class="forum-auth-icon" 
-						 title="官方认证" 
-						 alt="官方认证">
-				  ` : ''}
-				</div>
-				
-				<div class="reply-author-name">${escapeHtml(post.author_name)}</div>
-				<div class="reply-author-rank">${getUserRankText(post.user_rank)}</div>
-				
-				<!-- 特殊用户组显示 -->
-				${post.rankSp === 2 ? `
-				  <div class="reply-author-badge special-rank">
-					<i class="fas fa-crown"></i> 协同管理员
-				  </div>
-				` : ''}
-			  </div>
-			  <div class="reply-content-wrapper">
-				<div class="reply-meta">
-				  <span class="reply-floor op">楼主</span>
-				  <span>${formatTime(post.created_at)}</span>
-				</div>
-				<div class="reply-content">${processContent(post.content)}</div>
-			  </div>
-			</div>
+          <!-- 楼主帖子 -->
+          <div class="reply-item" id="floor-0">
+            <div class="reply-author">
+              <!-- 头像容器,添加光环和认证图标 -->
+              <div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
+                <img src="${post.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
+                
+                <!-- 彩虹光环特效 (rankSp === 1) -->
+                ${post.rankSp === 1 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
+                
+                <!-- 账户认证图标 (右下角) -->
+                ${post.account_auth === 1 ? `
+                  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
+                       class="forum-auth-icon" 
+                       title="个人认证" 
+                       alt="个人认证">
+                ` : ''}
+                ${post.account_auth === 2 ? `
+                  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
+                       class="forum-auth-icon" 
+                       title="官方认证" 
+                       alt="官方认证">
+                ` : ''}
+              </div>
+              
+              <div class="reply-author-name">${escapeHtml(post.author_name)}</div>
+              <div class="reply-author-rank">${getUserRankText(post.user_rank)}</div>
+              
+              <!-- 特殊用户组显示 -->
+              ${post.rankSp === 2 ? `
+                <div class="reply-author-badge special-rank">
+                  <i class="fas fa-crown"></i> 协作管理员
+                </div>
+              ` : ''}
+            </div>
+            <div class="reply-content-wrapper">
+              <div class="reply-meta">
+                <span class="reply-floor op">楼主</span>
+                <span>${formatTime(post.created_at)}</span>
+              </div>
+              <div class="reply-content">${processContent(post.content)}</div>
+            </div>
+          </div>
         </div>
 
-        ${!post.is_closed ? `
+        ${!post.is_closed && (!post.reply_disabled || isAdmin) ? `
           <div class="reply-input-area">
             <div class="reply-input-title">
               <i class="fas fa-reply"></i>
@@ -716,7 +795,7 @@
               </button>
             </div>
           </div>
-        ` : `
+        ` : replyDisabledNotice || `
           <div class="post-closed-notice">
             <i class="fas fa-lock"></i>
             <span>该帖已结贴,无法继续回复</span>
@@ -731,7 +810,7 @@
 
     container.innerHTML = html;
 
-    if (!post.is_closed) {
+    if (!post.is_closed && (!post.reply_disabled || isAdmin)) {
       const editorContainer = document.getElementById('reply-editor');
       replyEditor = new ForumEditor(editorContainer);
     }
@@ -768,71 +847,71 @@
       const isAccepted = reply.id === post.accepted_reply_id;
       const canAccept = isQA && isPostAuthor && !postClosed && !postSolved && !isAccepted;
 
-		const replyHtml = `
-		  <div class="reply-item ${isAccepted ? 'reply-accepted' : ''}" id="floor-${reply.floor_number}">
-			<div class="reply-author">
-			  <!-- 头像容器,添加光环和认证图标 -->
-			  <div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
-				<img src="${reply.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
-				
-				<!-- 彩虹光环特效 (rankSp === 1) -->
-				${reply.rankSp === 1 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
-				
-				<!-- 账户认证图标 (右下角) -->
-				${reply.account_auth === 1 ? `
-				  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
-					   class="forum-auth-icon" 
-					   title="个人认证" 
-					   alt="个人认证">
-				` : ''}
-				${reply.account_auth === 2 ? `
-				  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
-					   class="forum-auth-icon" 
-					   title="官方认证" 
-					   alt="官方认证">
-				` : ''}
-			  </div>
-			  
-			  <div class="reply-author-name">${escapeHtml(reply.author_name)}</div>
-			  <div class="reply-author-rank">${getUserRankText(reply.user_rank)}</div>
-			  
-			  <!-- 特殊用户组显示 -->
-			  ${reply.rankSp === 2 ? `
-				<div class="reply-author-badge special-rank">
-				  <i class="fas fa-crown"></i> 协同管理员
-				</div>
-			  ` : ''}
-			  
-			  ${isAccepted ? '<div class="reply-author-badge accepted"><i class="fas fa-check-circle"></i> 已采纳</div>' : ''}
-			</div>
-			<div class="reply-content-wrapper">
-			  <div class="reply-meta">
-				<span class="reply-floor">#${reply.floor_number}</span>
-				<span>${formatTime(reply.created_at)}</span>
-			  </div>
-			  <div class="reply-content">${processContent(reply.content)}</div>
-			  ${(canEdit || canDelete || canAccept) ? `
-				<div class="reply-actions">
-				  ${canAccept ? `
-					<button class="forum-btn forum-btn-success forum-btn-sm" onclick="window.ForumModule.acceptReply(${reply.id})">
-					  <i class="fas fa-check-circle"></i> 采纳答案
-					</button>
-				  ` : ''}
-				  ${canEdit ? `
-					<button class="forum-btn forum-btn-secondary forum-btn-sm" onclick="window.ForumModule.editReply(${reply.id})">
-					  <i class="fas fa-edit"></i> 编辑
-					</button>
-				  ` : ''}
-				  ${canDelete ? `
-					<button class="forum-btn forum-btn-danger forum-btn-sm" onclick="window.ForumModule.deleteReply(${reply.id})">
-					  <i class="fas fa-trash"></i> 删除
-					</button>
-				  ` : ''}
-				</div>
-			  ` : ''}
-			</div>
-		  </div>
-		`;
+      const replyHtml = `
+        <div class="reply-item ${isAccepted ? 'reply-accepted' : ''}" id="floor-${reply.floor_number}">
+          <div class="reply-author">
+            <!-- 头像容器,添加光环和认证图标 -->
+            <div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
+              <img src="${reply.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
+              
+              <!-- 彩虹光环特效 (rankSp === 1) -->
+              ${reply.rankSp === 1 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
+              
+              <!-- 账户认证图标 (右下角) -->
+              ${reply.account_auth === 1 ? `
+                <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
+                     class="forum-auth-icon" 
+                     title="个人认证" 
+                     alt="个人认证">
+              ` : ''}
+              ${reply.account_auth === 2 ? `
+                <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
+                     class="forum-auth-icon" 
+                     title="官方认证" 
+                     alt="官方认证">
+              ` : ''}
+            </div>
+            
+            <div class="reply-author-name">${escapeHtml(reply.author_name)}</div>
+            <div class="reply-author-rank">${getUserRankText(reply.user_rank)}</div>
+            
+            <!-- 特殊用户组显示 -->
+            ${reply.rankSp === 2 ? `
+              <div class="reply-author-badge special-rank">
+                <i class="fas fa-crown"></i> 协作管理员
+              </div>
+            ` : ''}
+            
+            ${isAccepted ? '<div class="reply-author-badge accepted"><i class="fas fa-check-circle"></i> 已采纳</div>' : ''}
+          </div>
+          <div class="reply-content-wrapper">
+            <div class="reply-meta">
+              <span class="reply-floor">#${reply.floor_number}</span>
+              <span>${formatTime(reply.created_at)}</span>
+            </div>
+            <div class="reply-content">${processContent(reply.content)}</div>
+            ${(canEdit || canDelete || canAccept) ? `
+              <div class="reply-actions">
+                ${canAccept ? `
+                  <button class="forum-btn forum-btn-success forum-btn-sm" onclick="window.ForumModule.acceptReply(${reply.id})">
+                    <i class="fas fa-check-circle"></i> 采纳答案
+                  </button>
+                ` : ''}
+                ${canEdit ? `
+                  <button class="forum-btn forum-btn-secondary forum-btn-sm" onclick="window.ForumModule.editReply(${reply.id})">
+                    <i class="fas fa-edit"></i> 编辑
+                  </button>
+                ` : ''}
+                ${canDelete ? `
+                  <button class="forum-btn forum-btn-danger forum-btn-sm" onclick="window.ForumModule.deleteReply(${reply.id})">
+                    <i class="fas fa-trash"></i> 删除
+                  </button>
+                ` : ''}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
 
       container.insertAdjacentHTML('beforeend', replyHtml);
     });
@@ -1240,6 +1319,42 @@
     }
   }
 
+  // 管理员结贴/撤销结贴
+  async function toggleAdminClose(postId, currentStatus) {
+    const action = currentStatus ? '撤销结贴' : '结贴';
+    if (!confirm(`确定${action}吗?`)) {
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+
+    try {
+      const response = await fetch(`${API_BASE}/forum/posts/${postId}/toggle-close`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || `${action}失败`);
+      }
+
+      if (typeof showSuccessMessage === 'function') {
+        showSuccessMessage(result.message);
+      }
+      
+      await viewPost(postId);
+    } catch (error) {
+      console.error(`${action}失败:`, error);
+      if (typeof showErrorMessage === 'function') {
+        showErrorMessage(error.message);
+      }
+    }
+  }
+
   // 显示置顶菜单
   async function showPinMenu(postId, currentPinLevel) {
     const menuHtml = `
@@ -1488,6 +1603,7 @@
     showSections: showSectionSelection,
     loadSection,
     showNewPostModal,
+    onTagChange,
     submitPost,
     editPost,
     updatePost,
@@ -1505,6 +1621,7 @@
     refreshPosts,
     markAllRead,
     showPinMenu,
-    setPinLevel
+    setPinLevel,
+    toggleAdminClose
   };
 })();
