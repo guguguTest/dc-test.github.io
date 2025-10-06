@@ -1519,3 +1519,197 @@
     margin-bottom: 8px;
   }
 }
+
+/* ==================== 禁止回复标记样式 ==================== */
+.post-status.reply-disabled {
+  background: #fecaca;
+  color: #991b1b;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  gap: 4px;
+}
+
+.post-status.reply-disabled i {
+  font-size: 11px;
+}
+
+/* ==================== 禁止回复提示框样式 ==================== */
+.post-reply-disabled-notice {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 2px solid #fca5a5;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  color: #991b1b;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+}
+
+.post-reply-disabled-notice i {
+  font-size: 20px;
+  color: #dc2626;
+}
+
+/* ==================== 管理员结贴按钮样式 ==================== */
+.forum-btn-admin-close {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  color: white;
+}
+
+.forum-btn-admin-close:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.forum-btn-admin-unlock {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.forum-btn-admin-unlock:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* ==================== 公告标签特殊样式 ==================== */
+.post-tag.announcement {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  animation: announcement-pulse 2s ease-in-out infinite;
+}
+
+@keyframes announcement-pulse {
+  0%, 100% {
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.5);
+  }
+}
+
+.post-tag.notice {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+/* ==================== 发帖权限提示 ==================== */
+.post-permission-notice {
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #92400e;
+  font-size: 14px;
+}
+
+.post-permission-notice i {
+  font-size: 16px;
+  color: #f59e0b;
+}
+
+/* ==================== 问答区公告帖特殊样式 ==================== */
+.post-item.announcement-post {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%);
+  border-left: 3px solid #ef4444;
+}
+
+.post-item.announcement-post:hover {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.08) 0%, transparent 100%);
+}
+
+/* ==================== 响应式适配 ==================== */
+@media (max-width: 768px) {
+  .post-reply-disabled-notice {
+    padding: 16px;
+    font-size: 14px;
+  }
+  
+  .post-reply-disabled-notice i {
+    font-size: 18px;
+  }
+  
+  .post-permission-notice {
+    font-size: 13px;
+    padding: 10px 14px;
+  }
+}
+
+/* ==================== 管理员专属功能标识 ==================== */
+.admin-only-feature {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.admin-only-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.admin-only-label i {
+  font-size: 10px;
+}
+
+/* ==================== 帖子状态组合显示优化 ==================== */
+.post-status-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ==================== 结贴后的视觉反馈 ==================== */
+.post-item.post-closed {
+  opacity: 0.85;
+  background: linear-gradient(90deg, rgba(156, 163, 175, 0.05) 0%, transparent 100%);
+}
+
+.post-detail-header.post-closed {
+  opacity: 0.9;
+  border-left: 4px solid #9ca3af;
+}
+
+/* ==================== 动画效果优化 ==================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.post-permission-notice,
+.post-reply-disabled-notice {
+  animation: fadeIn 0.3s ease;
+}

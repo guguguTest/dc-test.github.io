@@ -425,75 +425,84 @@
   }
 
   // 渲染标签列表
-  function renderTags(tags) {
-    const container = document.getElementById('tags-table');
-    
-    if (!tags || tags.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <i class="fas fa-inbox"></i>
-          <p>暂无分类标签</p>
-        </div>
-      `;
-      return;
-    }
-
-    let html = `
-      <table>
-        <thead>
-          <tr>
-            <th width="150">预览</th>
-            <th>标签名称</th>
-            <th width="150">背景颜色</th>
-            <th width="150">文字颜色</th>
-            <th width="120">操作</th>
-          </tr>
-        </thead>
-        <tbody>
+function renderTags(tags) {
+  const container = document.getElementById('tags-table');
+  
+  if (!tags || tags.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>暂无分类标签</p>
+      </div>
     `;
-
-    tags.forEach(tag => {
-      html += `
-        <tr data-tag-id="${tag.id}">
-          <td>
-            <span class="tag-preview" style="background: ${tag.tag_color}; color: ${tag.text_color};">
-              ${escapeHtml(tag.tag_name)}
-            </span>
-          </td>
-          <td>${escapeHtml(tag.tag_name)}</td>
-          <td>
-            <div class="color-input-group">
-              <div class="color-preview" style="background: ${tag.tag_color};"></div>
-              <span>${tag.tag_color}</span>
-            </div>
-          </td>
-          <td>
-            <div class="color-input-group">
-              <div class="color-preview" style="background: ${tag.text_color};"></div>
-              <span>${tag.text_color}</span>
-            </div>
-          </td>
-          <td>
-            <button class="forum-btn forum-btn-primary forum-btn-sm" 
-                    onclick="window.ForumAdminModule.editTag(${tag.id})">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="forum-btn forum-btn-danger forum-btn-sm" 
-                    onclick="window.ForumAdminModule.deleteTag(${tag.id})">
-              <i class="fas fa-trash"></i>
-            </button>
-          </td>
-        </tr>
-      `;
-    });
-
-    html += `
-        </tbody>
-      </table>
-    `;
-
-    container.innerHTML = html;
+    return;
   }
+
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th width="150">预览</th>
+          <th>标签名称</th>
+          <th width="150">背景颜色</th>
+          <th width="150">文字颜色</th>
+          <th width="180">允许使用的用户组</th>
+          <th width="120">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  tags.forEach(tag => {
+    // 获取用户组权限显示文本
+    const userGroupText = tag.allowed_user_groups === 'admin_only' ? '仅系统管理员' : '全部用户';
+    
+    html += `
+      <tr data-tag-id="${tag.id}">
+        <td>
+          <span class="tag-preview" style="background: ${tag.tag_color}; color: ${tag.text_color};">
+            ${escapeHtml(tag.tag_name)}
+          </span>
+        </td>
+        <td>${escapeHtml(tag.tag_name)}</td>
+        <td>
+          <div class="color-input-group">
+            <div class="color-preview" style="background: ${tag.tag_color};"></div>
+            <span>${tag.tag_color}</span>
+          </div>
+        </td>
+        <td>
+          <div class="color-input-group">
+            <div class="color-preview" style="background: ${tag.text_color};"></div>
+            <span>${tag.text_color}</span>
+          </div>
+        </td>
+        <td>
+          <span class="status-badge" style="background: ${tag.allowed_user_groups === 'admin_only' ? '#ef4444' : '#10b981'}; color: white;">
+            ${userGroupText}
+          </span>
+        </td>
+        <td>
+          <button class="forum-btn forum-btn-primary forum-btn-sm" 
+                  onclick="window.ForumAdminModule.editTag(${tag.id})">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="forum-btn forum-btn-danger forum-btn-sm" 
+                  onclick="window.ForumAdminModule.deleteTag(${tag.id})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  container.innerHTML = html;
+}
 
   // 显示新建标签模态框
   function showNewTagModal() {
@@ -523,88 +532,101 @@
     }
   }
 
-  // 显示标签编辑模态框
-  function showTagModal(tag = null, section = 'player') {
-    const isEdit = tag !== null;
-    
-    const modal = document.createElement('div');
-    modal.className = 'forum-modal show';
-    modal.id = 'tag-edit-modal';
-    
-    modal.innerHTML = `
-      <div class="forum-modal-content">
-        <div class="forum-modal-header">
-          <h3 class="forum-modal-title">
-            <i class="fas fa-tag"></i>
-            ${isEdit ? '编辑分类' : '添加分类'}
-          </h3>
-          <button class="forum-modal-close" onclick="window.ForumAdminModule.closeModal('tag-edit-modal')">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        
-        <div class="forum-modal-body">
-          <div class="forum-form-group">
-            <label class="forum-form-label">标签名称</label>
-            <input type="text" class="forum-form-input" id="tag-name" 
-                   placeholder="请输入标签名称" maxlength="20"
-                   value="${tag ? escapeHtml(tag.tag_name) : ''}">
-          </div>
-          
-          <div class="forum-form-group">
-            <label class="forum-form-label">背景颜色</label>
-            <div class="color-input-wrapper">
-              <input type="color" id="tag-bg-color-picker" 
-                     value="${tag ? tag.tag_color : '#667eea'}">
-              <div class="color-preview" id="tag-bg-preview" 
-                   style="background: ${tag ? tag.tag_color : '#667eea'};"
-                   onclick="document.getElementById('tag-bg-color-picker').click()">
-              </div>
-              <input type="text" class="forum-form-input" id="tag-bg-color" 
-                     placeholder="#667eea" value="${tag ? tag.tag_color : '#667eea'}">
-            </div>
-          </div>
-          
-          <div class="forum-form-group">
-            <label class="forum-form-label">文字颜色</label>
-            <div class="color-input-wrapper">
-              <input type="color" id="tag-text-color-picker" 
-                     value="${tag ? tag.text_color : '#ffffff'}">
-              <div class="color-preview" id="tag-text-preview" 
-                   style="background: ${tag ? tag.text_color : '#ffffff'};"
-                   onclick="document.getElementById('tag-text-color-picker').click()">
-              </div>
-              <input type="text" class="forum-form-input" id="tag-text-color" 
-                     placeholder="#ffffff" value="${tag ? tag.text_color : '#ffffff'}">
-            </div>
-          </div>
-          
-          <div class="forum-form-group">
-            <label class="forum-form-label">预览效果</label>
-            <span class="tag-preview" id="tag-live-preview" 
-                  style="background: ${tag ? tag.tag_color : '#667eea'}; color: ${tag ? tag.text_color : '#ffffff'};">
-              ${tag ? escapeHtml(tag.tag_name) : '示例标签'}
-            </span>
-          </div>
-        </div>
-        
-        <div class="forum-modal-footer">
-          <button class="forum-btn forum-btn-secondary" onclick="window.ForumAdminModule.closeModal('tag-edit-modal')">
-            取消
-          </button>
-          <button class="forum-btn forum-btn-primary" 
-                  onclick="window.ForumAdminModule.saveTag(${isEdit ? tag.id : 'null'}, '${section}')">
-            <i class="fas fa-save"></i>
-            保存
-          </button>
-        </div>
-      </div>
-    `;
+	// 显示标签编辑模态框
+	function showTagModal(tag = null, section = 'player') {
+	  const isEdit = tag !== null;
+	  
+	  const modal = document.createElement('div');
+	  modal.className = 'forum-modal show';
+	  modal.id = 'tag-edit-modal';
+	  
+	  modal.innerHTML = `
+		<div class="forum-modal-content">
+		  <div class="forum-modal-header">
+			<h3 class="forum-modal-title">
+			  <i class="fas fa-tag"></i>
+			  ${isEdit ? '编辑分类' : '添加分类'}
+			</h3>
+			<button class="forum-modal-close" onclick="window.ForumAdminModule.closeModal('tag-edit-modal')">
+			  <i class="fas fa-times"></i>
+			</button>
+		  </div>
+		  
+		  <div class="forum-modal-body">
+			<div class="forum-form-group">
+			  <label class="forum-form-label">标签名称</label>
+			  <input type="text" class="forum-form-input" id="tag-name" 
+					 placeholder="请输入标签名称" maxlength="20"
+					 value="${tag ? escapeHtml(tag.tag_name) : ''}">
+			</div>
+			
+			<div class="forum-form-group">
+			  <label class="forum-form-label">背景颜色</label>
+			  <div class="color-input-wrapper">
+				<input type="color" id="tag-bg-color-picker" 
+					   value="${tag ? tag.tag_color : '#667eea'}">
+				<div class="color-preview" id="tag-bg-preview" 
+					 style="background: ${tag ? tag.tag_color : '#667eea'};"
+					 onclick="document.getElementById('tag-bg-color-picker').click()">
+				</div>
+				<input type="text" class="forum-form-input" id="tag-bg-color" 
+					   placeholder="#667eea" value="${tag ? tag.tag_color : '#667eea'}">
+			  </div>
+			</div>
+			
+			<div class="forum-form-group">
+			  <label class="forum-form-label">文字颜色</label>
+			  <div class="color-input-wrapper">
+				<input type="color" id="tag-text-color-picker" 
+					   value="${tag ? tag.text_color : '#ffffff'}">
+				<div class="color-preview" id="tag-text-preview" 
+					   style="background: ${tag ? tag.text_color : '#ffffff'};"
+					   onclick="document.getElementById('tag-text-color-picker').click()">
+				</div>
+				<input type="text" class="forum-form-input" id="tag-text-color" 
+					   placeholder="#ffffff" value="${tag ? tag.text_color : '#ffffff'}">
+			  </div>
+			</div>
+			
+			<!-- 新增：用户组权限选择 -->
+			<div class="forum-form-group">
+			  <label class="forum-form-label">允许使用的用户组</label>
+			  <select class="forum-form-select" id="tag-user-groups">
+				<option value="all" ${(!tag || tag.allowed_user_groups === 'all') ? 'selected' : ''}>
+				  全部用户（包括用户组0-5、特殊组、个人/官方认证）
+				</option>
+				<option value="admin_only" ${(tag && tag.allowed_user_groups === 'admin_only') ? 'selected' : ''}>
+				  仅系统管理员（用户组5及以上）
+				</option>
+			  </select>
+			</div>
+			
+			<div class="forum-form-group">
+			  <label class="forum-form-label">预览效果</label>
+			  <span class="tag-preview" id="tag-live-preview" 
+					style="background: ${tag ? tag.tag_color : '#667eea'}; color: ${tag ? tag.text_color : '#ffffff'};">
+				${tag ? escapeHtml(tag.tag_name) : '示例标签'}
+			  </span>
+			</div>
+		  </div>
+		  
+		  <div class="forum-modal-footer">
+			<button class="forum-btn forum-btn-secondary" onclick="window.ForumAdminModule.closeModal('tag-edit-modal')">
+			  取消
+			</button>
+			<button class="forum-btn forum-btn-primary" 
+					onclick="window.ForumAdminModule.saveTag(${isEdit ? tag.id : 'null'}, '${section}')">
+			  <i class="fas fa-save"></i>
+			  保存
+			</button>
+		  </div>
+		</div>
+	  `;
 
-    document.body.appendChild(modal);
+	  document.body.appendChild(modal);
 
-    setupColorPickers();
-  }
+	  setupColorPickers();
+	}
 
   // 设置颜色选择器
   function setupColorPickers() {
@@ -652,61 +674,63 @@
     });
   }
 
-  // 保存标签（修复API路径）
-  async function saveTag(tagId, section) {
-    const name = document.getElementById('tag-name').value.trim();
-    const bgColor = document.getElementById('tag-bg-color').value;
-    const textColor = document.getElementById('tag-text-color').value;
+	// 保存标签
+	async function saveTag(tagId, section) {
+	  const name = document.getElementById('tag-name').value.trim();
+	  const bgColor = document.getElementById('tag-bg-color').value;
+	  const textColor = document.getElementById('tag-text-color').value;
+	  const userGroups = document.getElementById('tag-user-groups').value; // 新增
 
-    if (!name) {
-      if (typeof showErrorMessage === 'function') {
-        showErrorMessage('请输入标签名称');
-      }
-      return;
-    }
+	  if (!name) {
+		if (typeof showErrorMessage === 'function') {
+		  showErrorMessage('请输入标签名称');
+		}
+		return;
+	  }
 
-    const data = {
-      section_key: section,
-      tag_name: name,
-      tag_color: bgColor,
-      text_color: textColor
-    };
+	  const data = {
+		section_key: section,
+		tag_name: name,
+		tag_color: bgColor,
+		text_color: textColor,
+		allowed_user_groups: userGroups // 新增
+	  };
 
-    try {
-      const token = localStorage.getItem('token');
-      // 修复：统一API路径
-      const url = tagId ? `${API_BASE}/forum/admin/tags/${tagId}` : `${API_BASE}/forum/admin/tags`;
-      const method = tagId ? 'PUT' : 'POST';
+	  try {
+		const token = localStorage.getItem('token');
+		// 修复:统一API路径
+		const url = tagId ? `${API_BASE}/forum/admin/tags/${tagId}` : `${API_BASE}/forum/admin/tags`;
+		const method = tagId ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
+		const response = await fetch(url, {
+		  method,
+		  headers: {
+			'Authorization': `Bearer ${token}`,
+			'Content-Type': 'application/json'
+		  },
+		  body: JSON.stringify(data)
+		});
 
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || '保存失败');
-      }
+		const result = await response.json();
+		
+		if (!response.ok) {
+		  throw new Error(result.error || '保存失败');
+		}
 
-      closeModal('tag-edit-modal');
-      
-      if (typeof showSuccessMessage === 'function') {
-        showSuccessMessage('标签已保存');
-      }
-      
-      await loadTags(section);
-    } catch (error) {
-      console.error('保存标签失败:', error);
-      if (typeof showErrorMessage === 'function') {
-        showErrorMessage(error.message);
-      }
-    }
-  }
+		closeModal('tag-edit-modal');
+		
+		if (typeof showSuccessMessage === 'function') {
+		  showSuccessMessage('标签已保存');
+		}
+		
+		await loadTags(section);
+	  } catch (error) {
+		console.error('保存标签失败:', error);
+		if (typeof showErrorMessage === 'function') {
+		  showErrorMessage(error.message);
+		}
+	  }
+	}
 
   // 删除标签（修复API路径）
   async function deleteTag(tagId) {

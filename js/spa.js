@@ -969,30 +969,31 @@ if (userAvatarPc) {
       stateIcon.title = '正常';
   }
   
-  // 【新增】添加账户认证图标（右下角）
-  let authIcon = userAvatarPc.parentElement.querySelector('.user-auth-icon');
-  if (!authIcon && (user.account_auth === 1 || user.account_auth === 2)) {
-    authIcon = document.createElement('img');
-    authIcon.className = 'user-auth-icon';
-    userAvatarPc.parentElement.appendChild(authIcon);
+  // 【新增】添加账户认证图标（右下角）- 根据类型使用不同类名
+  // 先移除已存在的认证图标（避免重复）
+  const existingAuthIcon = userAvatarPc.parentElement.querySelector('.user-auth-icon-official, .user-auth-icon-personal');
+  if (existingAuthIcon) {
+    existingAuthIcon.remove();
   }
   
-  // 设置认证图标
-  if (authIcon) {
-    switch(user.account_auth || 0) {
-      case 1:
-        authIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png';
-        authIcon.title = '个人认证';
-        authIcon.style.display = 'block';
-        break;
-      case 2:
-        authIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png';
-        authIcon.title = '官方认证';
-        authIcon.style.display = 'block';
-        break;
-      default:
-        authIcon.style.display = 'none';
-    }
+  // 根据认证类型创建对应的图标
+  let authIcon = null;
+  const authType = user.account_auth || 0;
+  
+  if (authType === 1) {
+    // 个人认证
+    authIcon = document.createElement('img');
+    authIcon.className = 'user-auth-icon-personal';
+    authIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png';
+    authIcon.title = '个人认证';
+    userAvatarPc.parentElement.appendChild(authIcon);
+  } else if (authType === 2) {
+    // 官方认证
+    authIcon = document.createElement('img');
+    authIcon.className = 'user-auth-icon-official';
+    authIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png';
+    authIcon.title = '官方认证';
+    userAvatarPc.parentElement.appendChild(authIcon);
   }
 }
     
