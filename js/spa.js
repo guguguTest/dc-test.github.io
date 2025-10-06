@@ -930,27 +930,49 @@ function updateUserInfo(user) {
     rankIcon.src = rankInfo.icon;
   }
   
-// 在PC端头像部分添加账户认证图标
+// PC视图 - 头像部分（完全重构）
 if (userAvatarPc) {
+  // 检查是否已经有容器
+  let avatarWrapper = userAvatarPc.closest('.user-avatar-wrapper-pc');
+  
+  if (!avatarWrapper) {
+    // 创建头像容器
+    avatarWrapper = document.createElement('div');
+    avatarWrapper.className = 'user-avatar-wrapper-pc';
+    
+    // 将头像插入容器前，先保存父元素
+    const parent = userAvatarPc.parentElement;
+    const nextSibling = userAvatarPc.nextSibling;
+    
+    // 将头像放入容器
+    avatarWrapper.appendChild(userAvatarPc);
+    
+    // 将容器插回原位置
+    if (nextSibling) {
+      parent.insertBefore(avatarWrapper, nextSibling);
+    } else {
+      parent.appendChild(avatarWrapper);
+    }
+  }
+  
+  // 设置头像
   userAvatarPc.src = avatarUrl;
-  // 特效保持不变
-  let effect = userAvatarPc.parentElement.querySelector('.avatar-effect-rainbow');
-  if (!effect) {
-    effect = document.createElement('div');
+  
+  // 清理容器内的所有图标（避免重复）
+  const oldIcons = avatarWrapper.querySelectorAll('.user-state-icon, .user-auth-icon-official, .user-auth-icon-personal, .avatar-effect-rainbow');
+  oldIcons.forEach(icon => icon.remove());
+  
+  // 添加七彩光环特效
+  if (user.rankSp === 1) {
+    const effect = document.createElement('div');
     effect.className = 'avatar-effect-rainbow';
-    userAvatarPc.parentElement.appendChild(effect);
-  }
-  effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
-  
-  // 添加账户状态图标（左下角）
-  let stateIcon = userAvatarPc.parentElement.querySelector('.user-state-icon');
-  if (!stateIcon) {
-    stateIcon = document.createElement('img');
-    stateIcon.className = 'user-state-icon';
-    userAvatarPc.parentElement.appendChild(stateIcon);
+    avatarWrapper.appendChild(effect);
   }
   
-  // 根据状态设置图标
+  // 添加状态图标（左下角）
+  const stateIcon = document.createElement('img');
+  stateIcon.className = 'user-state-icon';
+  
   switch(user.banState || 0) {
     case 0:
       stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs0.png';
@@ -968,32 +990,25 @@ if (userAvatarPc) {
       stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs0.png';
       stateIcon.title = '正常';
   }
+  avatarWrapper.appendChild(stateIcon);
   
-  // 【新增】添加账户认证图标（右下角）- 根据类型使用不同类名
-  // 先移除已存在的认证图标（避免重复）
-  const existingAuthIcon = userAvatarPc.parentElement.querySelector('.user-auth-icon-official, .user-auth-icon-personal');
-  if (existingAuthIcon) {
-    existingAuthIcon.remove();
-  }
-  
-  // 根据认证类型创建对应的图标
-  let authIcon = null;
+  // 添加认证图标（右下角）
   const authType = user.account_auth || 0;
   
   if (authType === 1) {
     // 个人认证
-    authIcon = document.createElement('img');
+    const authIcon = document.createElement('img');
     authIcon.className = 'user-auth-icon-personal';
     authIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png';
     authIcon.title = '个人认证';
-    userAvatarPc.parentElement.appendChild(authIcon);
+    avatarWrapper.appendChild(authIcon);
   } else if (authType === 2) {
     // 官方认证
-    authIcon = document.createElement('img');
+    const authIcon = document.createElement('img');
     authIcon.className = 'user-auth-icon-official';
     authIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png';
     authIcon.title = '官方认证';
-    userAvatarPc.parentElement.appendChild(authIcon);
+    avatarWrapper.appendChild(authIcon);
   }
 }
     
@@ -1018,93 +1033,84 @@ if (userAvatarPc) {
     dropdownPoints.innerHTML = `<i class="fas fa-coins me-2"></i>积分: ${totalPoints}`;
   }
   
-// 移动视图
+// 移动视图 - 头像部分（完全重构）
 if (userAvatarMobile) {
+  // 检查是否已经有容器
+  let avatarWrapper = userAvatarMobile.closest('.user-avatar-wrapper-mobile');
+  
+  if (!avatarWrapper) {
+    // 创建头像容器
+    avatarWrapper = document.createElement('div');
+    avatarWrapper.className = 'user-avatar-wrapper-mobile';
+    
+    // 将头像插入容器前，先保存父元素
+    const parent = userAvatarMobile.parentElement;
+    const nextSibling = userAvatarMobile.nextSibling;
+    
+    // 将头像放入容器
+    avatarWrapper.appendChild(userAvatarMobile);
+    
+    // 将容器插回原位置
+    if (nextSibling) {
+      parent.insertBefore(avatarWrapper, nextSibling);
+    } else {
+      parent.appendChild(avatarWrapper);
+    }
+  }
+  
+  // 设置头像
   userAvatarMobile.src = avatarUrl;
   
-  // 获取头像的直接父容器（应该是 .user-basic）
-  const userBasic = document.querySelector('.sidebar-user-area .user-basic');
+  // 清理容器内的所有图标
+  const oldIcons = avatarWrapper.querySelectorAll('.user-state-icon-mobile, .user-auth-icon-mobile, .avatar-effect-rainbow');
+  oldIcons.forEach(icon => icon.remove());
   
-  // 创建一个专门的头像容器（如果还不存在）
-  let avatarContainer = userAvatarMobile.parentElement;
-  if (!avatarContainer.classList.contains('avatar-container-mobile')) {
-    // 创建新的头像容器
-    const newContainer = document.createElement('div');
-    newContainer.className = 'avatar-container-mobile';
-    newContainer.style.position = 'relative';
-    newContainer.style.display = 'inline-block';
-    
-    // 将头像移到新容器中
-    userAvatarMobile.parentElement.insertBefore(newContainer, userAvatarMobile);
-    newContainer.appendChild(userAvatarMobile);
-    avatarContainer = newContainer;
-  }
-  
-  // 特效保持不变
-  let effect = avatarContainer.querySelector('.avatar-effect-rainbow');
-  if (!effect) {
-    effect = document.createElement('div');
+  // 添加七彩光环特效
+  if (user.rankSp === 1) {
+    const effect = document.createElement('div');
     effect.className = 'avatar-effect-rainbow';
-    avatarContainer.appendChild(effect);
-  }
-  effect.style.display = (user.rankSp === 1) ? 'block' : 'none';
-  
-  // 【关键修改】认证图标添加到头像容器内
-  let authIconMobile = avatarContainer.querySelector('.user-auth-icon-mobile');
-  if (!authIconMobile && (user.account_auth === 1 || user.account_auth === 2)) {
-    authIconMobile = document.createElement('img');
-    authIconMobile.className = 'user-auth-icon-mobile';
-    avatarContainer.appendChild(authIconMobile);  // 添加到头像容器
+    avatarWrapper.appendChild(effect);
   }
   
-  // 设置认证图标
-  if (authIconMobile) {
-    switch(user.account_auth || 0) {
-      case 1:
-        authIconMobile.src = 'https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png';
-        authIconMobile.title = '个人认证';
-        authIconMobile.style.display = 'block';
-        break;
-      case 2:
-        authIconMobile.src = 'https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png';
-        authIconMobile.title = '官方认证';
-        authIconMobile.style.display = 'block';
-        break;
-      default:
-        if (authIconMobile) {
-          authIconMobile.style.display = 'none';
-        }
-    }
-  }
+  // 添加状态图标（左下角）
+  const stateIcon = document.createElement('img');
+  stateIcon.className = 'user-state-icon-mobile';
   
-  // 状态图标保持原来的位置（在 user-info-text 中）
-  const userInfoText = document.querySelector('.sidebar-user-area .user-info-text');
-  if (userInfoText) {
-    let stateIcon = document.querySelector('.sidebar-user-area .user-state-icon-mobile');
-    if (!stateIcon) {
-      stateIcon = document.createElement('img');
-      stateIcon.className = 'user-state-icon-mobile';
-      userInfoText.insertBefore(stateIcon, userInfoText.firstChild);
+  switch(user.banState || 0) {
+    case 0:
+      stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs0.png';
+      stateIcon.title = '正常';
+      break;
+    case 1:
+      stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs1.png';
+      stateIcon.title = '受限';
+      break;
+    case 2:
+      stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs2.png';
+      stateIcon.title = '封禁';
+      break;
+    default:
+      stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs0.png';
+      stateIcon.title = '正常';
+  }
+  avatarWrapper.appendChild(stateIcon);
+  
+  // 添加认证图标（右下角）
+  const authType = user.account_auth || 0;
+  
+  if (authType === 1 || authType === 2) {
+    const authIcon = document.createElement('img');
+    authIcon.className = 'user-auth-icon-mobile';
+    
+    if (authType === 1) {
+      authIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png';
+      authIcon.title = '个人认证';
+    } else {
+      authIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png';
+      authIcon.title = '官方认证';
     }
     
-    // 根据状态设置图标
-    switch(user.banState || 0) {
-      case 0:
-        stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs0.png';
-        stateIcon.title = '正常';
-        break;
-      case 1:
-        stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs1.png';
-        stateIcon.title = '受限';
-        break;
-      case 2:
-        stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs2.png';
-        stateIcon.title = '封禁';
-        break;
-      default:
-        stateIcon.src = 'https://oss.am-all.com.cn/asset/img/other/dc/banState/bs0.png';
-        stateIcon.title = '正常';
-    }
+    avatarWrapper.appendChild(authIcon);
   }
 }
   

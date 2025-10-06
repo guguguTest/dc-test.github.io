@@ -107,20 +107,6 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* 用户头像 */
-#user-info-pc .user-avatar-pc {
-  width: 55px;
-  height: 55px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-right: 15px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  position: relative;
-  z-index: 2;
-}
-
 /* 用户基本信息容器 */
 #user-info-pc .user-basic-info {
   display: flex;
@@ -243,10 +229,174 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* CREDIT点数显示样式 */
+#user-info-pc .dropdown-credit {
+  padding: 8px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+
 #user-info-pc .dropdown-uid i,
-#user-info-pc .dropdown-points i {
+#user-info-pc .dropdown-points i,
+#user-info-pc .dropdown-credit i {
   margin-right: 8px;
   font-size: 14px;
+}
+
+/* 特殊用户组和认证显示样式 */
+#user-info-pc .dropdown-special-rank,
+#user-info-pc .dropdown-auth {
+  color: #ecf0f1;
+  padding: 8px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+#user-info-pc .dropdown-special-rank i,
+#user-info-pc .dropdown-auth i {
+  margin-right: 8px;
+  font-size: 14px;
+  color: #f1c40f;
+}
+
+/* 隐藏无特殊等级和无认证的项 */
+#user-info-pc .dropdown-special-rank.hidden,
+#user-info-pc .dropdown-auth.hidden {
+  display: none;
+}
+
+/* ====== PC端头像容器和图标（完全修复版） ====== */
+
+/* 头像外层容器 - 这是定位的关键 */
+.user-avatar-wrapper-pc {
+  position: relative;
+  display: inline-block;
+  width: 55px;
+  height: 55px;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+/* PC端用户头像 */
+#user-info-pc .user-avatar-pc {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: block;
+  position: relative;
+  z-index: 2;
+}
+
+/* PC端账户状态图标 - 头像左下角 */
+.user-avatar-wrapper-pc .user-state-icon {
+  position: absolute;
+  bottom: -4px;
+  left: -10px;
+  width: 24px;
+  height: 24px;
+  z-index: 4;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* PC端认证图标 - 头像右下角 */
+.user-avatar-wrapper-pc .user-auth-icon-official,
+.user-avatar-wrapper-pc .user-auth-icon-personal {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  z-index: 4;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  object-fit: contain;
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+/* 悬停效果 */
+.user-avatar-wrapper-pc .user-auth-icon-official:hover,
+.user-avatar-wrapper-pc .user-auth-icon-personal:hover,
+.user-avatar-wrapper-pc .user-state-icon:hover {
+  transform: scale(1.15);
+}
+
+/* 七彩光环效果 */
+.user-avatar-wrapper-pc .avatar-effect-rainbow {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 63px;
+  height: 63px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #ff0080, #ff0040, #ff4000, #ff8000, #ffbf00, #ffff00,
+    #bfff00, #80ff00, #40ff00, #00ff00, #00ff40, #00ff80,
+    #00ffbf, #00ffff, #00bfff, #0080ff, #0040ff, #0000ff,
+    #4000ff, #8000ff, #bf00ff, #ff00ff, #ff00bf, #ff0080
+  );
+  animation: rainbow-rotate 4s linear infinite;
+  z-index: 1;
+  pointer-events: none;
+  filter: brightness(1.2) saturate(1.3);
+}
+
+/* 光环动画 */
+@keyframes rainbow-rotate {
+  0% { 
+    transform: rotate(0deg);
+    filter: brightness(1.2) saturate(1.3) hue-rotate(0deg);
+  }
+  50% {
+    filter: brightness(1.3) saturate(1.4) hue-rotate(180deg);
+  }
+  100% { 
+    transform: rotate(360deg);
+    filter: brightness(1.2) saturate(1.3) hue-rotate(360deg);
+  }
+}
+
+/* 光晕效果 */
+.user-avatar-wrapper-pc .avatar-effect-rainbow::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: inherit;
+  filter: blur(4px);
+  opacity: 0.7;
+  z-index: -1;
+  animation: rainbow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes rainbow-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
 }
 
 /* ====== 移动端专属样式 ====== */
@@ -282,7 +432,7 @@
 .sidebar-user-area .user-rank-icon-mobile {
   position: absolute; 
   top: -2px; 
-  right: 5px; 
+  right: 1px; 
   width: 50px; 
   height: 50px; 
   object-fit: contain;
@@ -299,19 +449,6 @@
   margin-bottom: 10px; 
   position: relative; 
   z-index: 2; 
-}
-
-/* 用户头像 */
-.sidebar-user-area .user-avatar-mobile {
-  width: 55px;
-  height: 55px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-right: 12px;
-  border: 2px solid #eee;
-  position: relative; 
-  z-index: 2; 
-  margin-top: -38px; 
 }
 
 /* 用户信息文本区域 */
@@ -476,6 +613,84 @@
   background: #c0392b;
 }
 
+/* ====== 移动端头像容器和图标 ====== */
+
+/* 移动端头像容器 */
+.user-avatar-wrapper-mobile {
+  position: relative;
+  display: inline-block;
+  width: 55px;
+  height: 55px;
+  margin-right: 12px;
+  margin-top: -38px;
+  flex-shrink: 0;
+}
+
+/* 移动端用户头像 */
+.user-avatar-wrapper-mobile .user-avatar-mobile {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #eee;
+  display: block;
+  position: relative;
+  z-index: 2;
+}
+
+/* 移动端状态图标 - 头像左下角 */
+.user-avatar-wrapper-mobile .user-state-icon-mobile {
+  position: absolute;
+  bottom: -2px;
+  left: -6px;
+  width: 22px;
+  height: 22px;
+  z-index: 4;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* 移动端认证图标 - 头像右下角 */
+.user-avatar-wrapper-mobile .user-auth-icon-mobile {
+  position: absolute;
+  bottom: -2px;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  z-index: 4;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* 移动端七彩光环 */
+.user-avatar-wrapper-mobile .avatar-effect-rainbow {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 63px;
+  height: 63px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #ff0080, #ff0040, #ff4000, #ff8000, #ffbf00, #ffff00,
+    #bfff00, #80ff00, #40ff00, #00ff00, #00ff40, #00ff80,
+    #00ffbf, #00ffff, #00bfff, #0080ff, #0040ff, #0000ff,
+    #4000ff, #8000ff, #bf00ff, #ff00ff, #ff00bf, #ff0080
+  );
+  animation: rainbow-rotate 4s linear infinite;
+  z-index: 1;
+  pointer-events: none;
+  filter: brightness(1.2) saturate(1.3);
+}
+
 /* ====== 响应式调整 ====== */
 @media (max-width: 992px) {
   .top-navbar .user-area {
@@ -487,20 +702,57 @@
     padding: 6px 10px;
   }
   
-  #user-info-pc .user-avatar-pc {
+  #user-info-pc .user-basic-info {
+    margin-right: 20px;
+  }
+  
+  .user-avatar-wrapper-pc {
     width: 40px;
     height: 40px;
     margin-right: 10px;
   }
   
-  #user-info-pc .user-basic-info {
-    margin-right: 20px;
+  .user-avatar-wrapper-pc .user-state-icon,
+  .user-avatar-wrapper-pc .user-auth-icon-official,
+  .user-avatar-wrapper-pc .user-auth-icon-personal {
+    width: 20px;
+    height: 20px;
+    bottom: 0;
+  }
+  
+  .user-avatar-wrapper-pc .user-state-icon {
+    left: 0;
+  }
+  
+  .user-avatar-wrapper-pc .user-auth-icon-official,
+  .user-avatar-wrapper-pc .user-auth-icon-personal {
+    right: 0;
+  }
+  
+  .user-avatar-wrapper-pc .avatar-effect-rainbow {
+    top: -3px;
+    left: -3px;
+    width: 46px;
+    height: 46px;
   }
 }
 
 @media (min-width: 993px) {
   .sidebar .sidebar-user-area {
     display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-avatar-wrapper-mobile .user-state-icon-mobile,
+  .user-avatar-wrapper-mobile .user-auth-icon-mobile {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .user-state-badge {
+    font-size: 12px;
+    padding: 3px 10px;
   }
 }
 
@@ -577,6 +829,109 @@
   min-width: 0;
 }
 
+.verification-code-group button {
+  width: 120px;
+}
+
+/* 忘记密码链接样式 */
+.forgot-password {
+  margin-left: 15px;
+}
+
+.forgot-password a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}
+
+/* 登录提示界面样式 */
+.login-required-container {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.login-required-icon {
+  font-size: 60px;
+  color: #3498db;
+  margin-bottom: 20px;
+}
+
+.login-required-container h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.login-required-container p {
+  margin-bottom: 25px;
+  color: #666;
+  font-size: 16px;
+}
+
+.login-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.login-btn:hover {
+  background: #2980b9;
+}
+
+.login-btn i {
+  margin-right: 8px;
+}
+
+/* 确保侧边栏底部有足够空间 */
+.sidebar-nav {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* ====== 账户状态徽章样式 ====== */
+.user-state-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.user-state-badge.state-normal {
+  background: linear-gradient(135deg, #27ae60, #229954);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.user-state-badge.state-limited {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.user-state-badge.state-banned {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.user-state-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
 /* ====== 新的用户设置页面重构样式 ====== */
 .user-settings-container {
   max-width: 1200px;
@@ -640,7 +995,7 @@
   gap: 30px;
   margin-top: -50px;
   position: relative;
-  z-index: 2; /* 确保内容在背景之上 */
+  z-index: 2;
 }
 
 /* 头像部分 */
@@ -699,30 +1054,21 @@
   flex: 1;
   min-width: 0;
   position: relative;
-  z-index: 3; /* 更高的层级确保文字可见 */
+  z-index: 3;
 }
 
 /* 用户显示名称 - 改为白色字体并添加阴影 */
 .user-display-name {
   font-size: 24px;
   font-weight: 600;
-  color: #ffffff; /* PC端白色 */
+  color: #ffffff;
   margin: 0 0 8px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* PC端保留阴影 */
-}
-
-/* 移动端样式覆盖 */
-@media (max-width: 768px) {
-  .user-display-name {
-    color: #2c3e50; /* 移动端黑色 */
-    text-shadow: none; /* 移动端移除阴影 */
-    font-size: 20px; /* 保持原有的移动端字体大小 */
-  }
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* 用户邮箱 - 改为浅色并添加阴影 */
 .user-email {
-  color: rgba(0, 0, 0, 0.9); /* 改为浅白色 */
+  color: rgba(0, 0, 0, 0.9);
   font-size: 14px;
   margin: 0 0 12px;
 }
@@ -737,7 +1083,7 @@
 .badge-uid {
   display: inline-block;
   padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.9); /* 半透明白色背景 */
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 20px;
   font-size: 13px;
   color: #34495e;
@@ -829,7 +1175,7 @@
   margin: 0;
   font-size: 18px;
   color: #2c3e50;
-  font-weight: 600; /* 增加字重 */
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -837,31 +1183,26 @@
 
 .card-header i {
   color: #667eea;
-  font-size: 18px; /* 稍微增大图标 */
+  font-size: 18px;
 }
 
 .card-body {
   padding: 25px;
 }
 
-/* 表单样式 - 统一优化 */
-.form-group {
-  margin-bottom: 20px;
-}
-
 /* 表单标签 - 统一与用户信息显示的样式 */
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  color: #2c3e50; /* 统一深色 */
-  font-weight: 600; /* 增加字重 */
-  font-size: 16px; /* 增大字号与显示名称保持一致 */
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 16px;
 }
 
 .form-group label i {
-  margin-right: 8px; /* 增加图标间距 */
-  color: #667eea; /* 图标颜色 */
-  font-size: 16px; /* 图标大小 */
+  margin-right: 8px;
+  color: #667eea;
+  font-size: 16px;
 }
 
 .form-input {
@@ -911,9 +1252,9 @@
 
 /* 信息行标签 - 统一样式 */
 .info-row label {
-  color: #2c3e50; /* 统一颜色 */
-  font-size: 16px; /* 统一字号 */
-  font-weight: 600; /* 统一字重 */
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
   margin: 0;
 }
 
@@ -921,7 +1262,7 @@
 .info-value {
   color: #2c3e50;
   font-weight: 500;
-  font-size: 16px; /* 增大字号 */
+  font-size: 16px;
 }
 
 /* 积分网格 */
@@ -1150,6 +1491,8 @@
   
   .user-display-name {
     font-size: 20px;
+    color: #2c3e50;
+    text-shadow: none;
   }
   
   .tab-nav {
@@ -1201,205 +1544,6 @@
   }
 }
 
-@media (max-width: 480px) {
-  .user-overview-bg {
-    height: 120px;
-  }
-  
-  .user-badges {
-    justify-content: center;
-  }
-  
-  .form-input {
-    font-size: 16px; /* 防止iOS缩放 */
-  }
-}
-
-/* ====== 保留下面的原有样式 ====== */
-
-/* 验证码输入组样式 */
-.verification-code-group {
-  display: flex;
-  gap: 10px;
-}
-
-.verification-code-group input {
-  flex: 1;
-}
-
-.verification-code-group button {
-  width: 120px;
-}
-
-/* 忘记密码链接样式 */
-.forgot-password {
-  margin-left: 15px;
-}
-
-.forgot-password a {
-  color: #3498db;
-  text-decoration: none;
-}
-
-.forgot-password a:hover {
-  text-decoration: underline;
-}
-
-/* 登录提示界面样式 */
-.login-required-container {
-  text-align: center;
-  padding: 40px 20px;
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.login-required-icon {
-  font-size: 60px;
-  color: #3498db;
-  margin-bottom: 20px;
-}
-
-.login-required-container h2 {
-  margin-bottom: 15px;
-  color: #333;
-}
-
-.login-required-container p {
-  margin-bottom: 25px;
-  color: #666;
-  font-size: 16px;
-}
-
-.login-btn {
-  background: #3498db;
-  color: white;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.login-btn:hover {
-  background: #2980b9;
-}
-
-.login-btn i {
-  margin-right: 8px;
-}
-
-/* 确保侧边栏底部有足够空间 */
-.sidebar-nav {
-  padding-bottom: env(safe-area-inset-bottom, 20px);
-}
-
-/* ====== 账户状态徽章样式 ====== */
-.user-state-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-}
-
-.user-state-badge.state-normal {
-  background: linear-gradient(135deg, #27ae60, #229954);
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.user-state-badge.state-limited {
-  background: linear-gradient(135deg, #f39c12, #e67e22);
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.user-state-badge.state-banned {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.user-state-badge:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-}
-
-/* ====== 账户状态图标样式 ====== */
-/* PC端状态图标 - 左下角位置 */
-#user-info-pc .user-state-icon {
-  position: absolute;
-  bottom: 3px;
-  left: 4px;
-  width: 26px;
-  height: 26px;
-  z-index: 3;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  box-shadow: none;
-}
-
-/* 移动端状态图标 - 左下角位置 */
-.sidebar-user-area .user-state-icon-mobile {
-  position: absolute !important;
-  bottom: 30px !important;
-  left: -79px !important;
-  width: 26px !important;
-  height: 26px !important;
-  z-index: 10 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  padding: 0 !important;
-  box-shadow: none !important;
-}
-
-.sidebar-user-area .user-info-text {
-  position: relative !important;
-}
-
-/* 响应式调整 */
-@media (max-width: 992px) {
-  #user-info-pc .user-state-icon {
-    bottom: 0;
-    left: 8px;
-    width: 22px;
-    height: 22px;
-  }
-  
-  .user-settings-form {
-    padding: 15px 0;
-  }
-  
-  .setting-section {
-    padding: 15px;
-  }
-  
-  .user-settings-title {
-    padding-left: 15px;
-  }
-}
-
-@media (max-width: 768px) {
-  .sidebar-user-area .user-state-icon-mobile {
-    width: 24px;
-    height: 24px;
-    bottom: 2px;
-    left: 2px;
-  }
-  
-  .user-state-badge {
-    font-size: 12px;
-    padding: 3px 10px;
-  }
-}
-
-/* 响应式调整验证码按钮组 */
 @media (max-width: 576px) {
   .verification-code-group {
     flex-direction: column;
@@ -1410,221 +1554,18 @@
   }
 }
 
-/* ====== 账户认证图标样式 ====== */
-/* PC端官方认证图标 - 右下角位置 */
-#user-info-pc .user-auth-icon-official {
-  position: absolute;
-  bottom: 4px;
-  right: 190px;     /* 官方认证位置 */
-  width: 30px;
-  height: 30px;
-  z-index: 3;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  box-shadow: none;
-  object-fit: contain;
-}
-
-/* PC端个人认证图标 - 右下角位置（与官方认证对齐） */
-#user-info-pc .user-auth-icon-personal {
-  position: absolute;
-  bottom: 4px;
-  right: 170px;     /* 个人认证位置，更靠右20px */
-  width: 30px;
-  height: 30px;
-  z-index: 3;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  box-shadow: none;
-  object-fit: contain;
-}
-
-/* 移动端认证图标 - 右下角位置（通用样式） */
-.sidebar-user-area .user-auth-icon-mobile {
-  position: absolute !important;
-  bottom: 10px !important;
-  right: 10px !important;
-  width: 20px !important;
-  height: 20px !important;
-  z-index: 10 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  padding: 0 !important;
-  box-shadow: none !important;
-  object-fit: contain !important;
-}
-
-/* 移动端头像的直接容器需要相对定位 */
-.sidebar-user-area .user-basic {
-  position: relative;
-  z-index: 2;
-}
-
-/* 如果头像有专门的容器，也要设置相对定位 */
-.sidebar-user-area .user-avatar-mobile {
-  position: relative;
-}
-
-/* 响应式调整 */
-@media (max-width: 992px) {
-  #user-info-pc .user-auth-icon-official,
-  #user-info-pc .user-auth-icon-personal {
-    bottom: 0;
-    width: 35px;
-    height: 35px;
-  }
-  
-  #user-info-pc .user-auth-icon-official {
-    right: 0;
-  }
-  
-  #user-info-pc .user-auth-icon-personal {
-    right: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .sidebar-user-area .user-auth-icon-mobile {
-    width: 35px !important;
-    height: 35px !important;
-    bottom: 1px !important;
-    right: 1px !important;
-  }
-}
-
-/* 小屏幕设备进一步调整 */
 @media (max-width: 480px) {
-  .sidebar-user-area .user-auth-icon-mobile {
-    width: 30px !important;
-    height: 30px !important;
-    bottom: 0 !important;
-    right: 0 !important;
+  .user-overview-bg {
+    height: 120px;
   }
-}
-
-/* 添加悬停效果（可选） */
-.user-auth-icon-official:hover,
-.user-auth-icon-personal:hover,
-.user-auth-icon-mobile:hover {
-  transform: scale(1.1);
-  transition: transform 0.2s ease;
-}
-
-/* ====== 用户组特效样式 ====== */
-/* PC端头像容器 */
-.user-avatar-container-pc {
-  position: relative;
-  display: inline-block;
-  margin-right: 15px;
-  width: 55px;
-  height: 55px;
-}
-
-/* 移动端头像容器 */
-.user-avatar-container-mobile {
-  position: relative;
-  display: inline-block;
-  margin-right: 12px;
-  width: 55px;
-  height: 55px;
-}
-
-/* 七彩光环效果 - 更鲜艳的颜色 */
-.avatar-effect-rainbow {
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  width: 63px;
-  height: 63px;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    #ff0080,
-    #ff0040,
-    #ff4000,
-    #ff8000,
-    #ffbf00,
-    #ffff00,
-    #bfff00,
-    #80ff00,
-    #40ff00,
-    #00ff00,
-    #00ff40,
-    #00ff80,
-    #00ffbf,
-    #00ffff,
-    #00bfff,
-    #0080ff,
-    #0040ff,
-    #0000ff,
-    #4000ff,
-    #8000ff,
-    #bf00ff,
-    #ff00ff,
-    #ff00bf,
-    #ff0080
-  );
-  background-size: 100% 100%;
-  animation: rainbow-rotate 4s linear infinite;
-  z-index: 1;
-  pointer-events: none;
-  filter: brightness(1.2) saturate(1.3);
-}
-
-/* 改进的七彩光环动画 - 旋转效果 */
-@keyframes rainbow-rotate {
-  0% { 
-    transform: rotate(0deg);
-    filter: brightness(1.2) saturate(1.3) hue-rotate(0deg);
+  
+  .user-badges {
+    justify-content: center;
   }
-  50% {
-    filter: brightness(1.3) saturate(1.4) hue-rotate(180deg);
+  
+  .form-input {
+    font-size: 16px;
   }
-  100% { 
-    transform: rotate(360deg);
-    filter: brightness(1.2) saturate(1.3) hue-rotate(360deg);
-  }
-}
-
-/* 添加光晕效果 */
-.avatar-effect-rainbow::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  border-radius: 50%;
-  background: inherit;
-  filter: blur(4px);
-  opacity: 0.7;
-  z-index: -1;
-  animation: rainbow-pulse 2s ease-in-out infinite;
-}
-
-@keyframes rainbow-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.9;
-  }
-}
-
-/* PC端特定调整 */
-#user-info-pc .avatar-effect-rainbow {
-  top: 6px !important;
-  left: 11px !important;
-}
-
-/* 移动端特定调整 */
-.sidebar-user-area .avatar-effect-rainbow {
-  top: -38px !important;
-  left: -4px !important;
 }
 
 /* ====== 成功动画提示窗 ====== */
@@ -1927,55 +1868,4 @@
     transform: scale(1);
     opacity: 1;
   }
-}
-
-/* 积分显示样式 */
-#user-info-pc .dropdown-points {
-  padding: 8px 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* CREDIT点数显示样式 */
-#user-info-pc .dropdown-credit {
-  padding: 8px 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-#user-info-pc .dropdown-uid i,
-#user-info-pc .dropdown-points i,
-#user-info-pc .dropdown-credit i {
-  margin-right: 8px;
-  font-size: 14px;
-}
-
-/* 特殊用户组和认证显示样式 */
-#user-info-pc .dropdown-special-rank,
-#user-info-pc .dropdown-auth {
-  color: #ecf0f1;
-  padding: 8px 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-}
-
-#user-info-pc .dropdown-special-rank i,
-#user-info-pc .dropdown-auth i {
-  margin-right: 8px;
-  font-size: 14px;
-  color: #f1c40f;
-}
-
-/* 隐藏无特殊等级和无认证的项 */
-#user-info-pc .dropdown-special-rank.hidden,
-#user-info-pc .dropdown-auth.hidden {
-  display: none;
 }
