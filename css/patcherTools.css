@@ -1,17 +1,14 @@
-/* 补丁工具系统样式 */
+/* 补丁工具系统样式 - 参考积分商店样式 */
 
+/* ========== 通用样式 ========== */
 .patcher-page {
   padding: 20px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-.patcher-header {
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-.patcher-header .page-title {
+/* 补丁工具专用标题样式 - 避免与全局样式冲突 */
+.patcher-page-title {
   font-size: 2rem;
   font-weight: 600;
   color: #2c3e50;
@@ -22,112 +19,81 @@
   gap: 10px;
 }
 
-.patcher-header .page-description {
+.patcher-page-description {
   color: #7f8c8d;
   font-size: 1rem;
   margin: 0;
+  text-align: center;
 }
 
-.back-button {
-  position: absolute;
-  left: 20px;
-  top: 20px;
-  padding: 8px 16px;
+/* 返回按钮 */
+.btn-back {
   background: #667eea;
   color: white;
   border: none;
-  border-radius: 8px;
+  padding: 8px 15px;
+  border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
-  display: flex;
+  transition: background 0.3s;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  transition: all 0.3s;
-  z-index: 10;
 }
 
-.back-button:hover {
-  background: #5568d3;
-  transform: translateX(-3px);
+.btn-back:hover {
+  background: #5a67d8;
 }
 
-/* 一级页面 - 分类卡片 */
+/* ========== 一级页面 - 分类选择（参考积分商店） ========== */
+.patcher-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.patcher-categories-container {
+  padding: 30px 20px;
+}
+
 .patcher-categories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 30px;
-  padding: 20px 0;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .patcher-category-card {
   background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  border-radius: 15px;
+  padding: 30px;
+  text-align: center;
   cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   position: relative;
+  overflow: hidden;
 }
 
 .patcher-category-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
 }
 
-.category-card-image {
-  position: relative;
-  width: 100%;
-  padding-top: 56.25%; /* 16:9 比例 */
-  overflow: hidden;
+.category-card-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.category-card-image img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s;
-}
-
-.patcher-category-card:hover .category-card-image img {
-  transform: scale(1.1);
-}
-
-.category-card-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.patcher-category-card:hover .category-card-overlay {
-  opacity: 1;
-}
-
-.category-card-overlay i {
-  font-size: 4rem;
-  color: white;
-}
-
-.category-card-content {
-  padding: 25px;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .category-card-title {
   font-size: 1.5rem;
   font-weight: 600;
   color: #2c3e50;
-  margin-bottom: 10px;
+  margin: 15px 0;
 }
 
 .category-card-description {
@@ -159,28 +125,49 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-/* 二级页面 - 工具卡片 */
+/* ========== 二级页面 - 工具列表（参考积分商店） ========== */
+.patcher-tools-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.patcher-tools-header .patcher-page-title {
+  margin: 0;
+}
+
+.patcher-tools-container {
+  padding: 20px 0;
+}
+
 .patcher-tools-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
-  padding: 20px 0;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
 }
 
 .patcher-tool-card {
   background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
 }
 
 .patcher-tool-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border-color: #667eea;
 }
 
 .tool-card-image {
@@ -189,6 +176,8 @@
   position: relative;
   overflow: hidden;
   background: #f5f7fa;
+  border-radius: 8px;
+  margin-bottom: 15px;
 }
 
 .tool-card-image img {
@@ -208,52 +197,89 @@
 .tool-card-divider {
   height: 3px;
   background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  margin-bottom: 10px;
 }
 
 .tool-card-title {
-  padding: 15px;
   font-size: 0.95rem;
   font-weight: 500;
   color: #2c3e50;
   text-align: center;
   line-height: 1.4;
-  min-height: 60px;
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* 三级页面 - iframe页面 */
+/* ========== 三级页面 - iframe页面（完全修正版） ========== */
+
+/* 移除 patcher-page 的默认 padding，只针对 iframe 页面 */
+.patcher-iframe-page.patcher-page {
+  padding: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
 .patcher-iframe-page {
-  padding: 0;
-  max-width: 100%;
-  height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-.patcher-iframe-header {
-  position: relative;
-  padding: 20px;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 100;
-}
-
-.patcher-iframe-header .page-title {
-  font-size: 1.5rem;
-  margin: 0;
-  text-align: center;
-}
-
-.patcher-iframe-container {
-  flex: 1;
-  position: relative;
-  background: #f5f7fa;
+  width: 100%;
+  /* 计算高度：视口高度 - 顶部导航栏(70px) - main-content的padding(30px*2) */
+  min-height: calc(100vh - 70px - 60px);
+  height: calc(100vh - 70px - 60px);
   overflow: hidden;
 }
 
+.patcher-iframe-header {
+  position: sticky;
+  top: 0;
+  padding: 10px 20px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  flex-shrink: 0;
+  height: 50px;
+  box-sizing: border-box;
+}
+
+.patcher-iframe-header .btn-back {
+  align-self: center;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.patcher-iframe-header .patcher-page-title {
+  font-size: 1.2rem;
+  margin: 0;
+  text-align: center;
+  justify-content: center;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patcher-iframe-container {
+  position: relative;
+  background: #f5f7fa;
+  overflow: hidden;
+  width: 100%;
+  /* iframe 容器占据剩余所有空间 */
+  flex: 1;
+  min-height: 600px;
+}
+
 .patcher-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   border: none;
@@ -281,20 +307,7 @@
   font-size: 1rem;
 }
 
-.patcher-footer {
-  padding: 15px;
-  text-align: center;
-  background: white;
-  border-top: 1px solid #e1e8ed;
-  color: #95a5a6;
-  font-size: 0.85rem;
-}
-
-.patcher-footer p {
-  margin: 5px 0;
-}
-
-/* 加载状态 */
+/* ========== 加载状态 ========== */
 .patcher-categories-loading,
 .patcher-tools-loading,
 .patcher-detail-loading {
@@ -318,7 +331,7 @@
   font-size: 1rem;
 }
 
-/* 错误状态 */
+/* ========== 错误状态 ========== */
 .error-state {
   text-align: center;
   padding: 60px 20px;
@@ -340,7 +353,7 @@
   margin-bottom: 20px;
 }
 
-/* 空状态 */
+/* ========== 空状态 ========== */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -362,44 +375,94 @@
   margin-bottom: 20px;
 }
 
-/* 移动端适配 */
+/* ========== 按钮样式 ========== */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102,126,234,0.3);
+}
+
+/* ========== 移动端适配（iframe 相关部分） ========== */
 @media (max-width: 768px) {
   .patcher-page {
     padding: 15px;
   }
   
-  .patcher-header .page-title {
+  /* iframe 页面移动端特殊处理 */
+  .patcher-iframe-page.patcher-page {
+    padding: 0 !important;
+  }
+  
+  .patcher-iframe-page {
+    /* 移动端：视口高度 - 顶部导航(70px) - main-content padding(15px*2) */
+    min-height: calc(100vh - 70px - 30px);
+    height: calc(100vh - 70px - 30px);
+  }
+  
+  .patcher-page-title {
     font-size: 1.5rem;
   }
   
-  .back-button {
-    position: static;
-    margin-bottom: 15px;
-    width: fit-content;
+  .btn-back {
+    width: 100%;
+    justify-content: center;
   }
   
   .patcher-categories-grid {
     grid-template-columns: 1fr;
     gap: 20px;
+    padding: 15px;
+  }
+  
+  .patcher-tools-header {
+    flex-direction: column;
+    align-items: stretch;
   }
   
   .patcher-tools-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 15px;
+    padding: 15px;
   }
   
   .tool-card-title {
     font-size: 0.85rem;
-    padding: 12px;
-    min-height: 50px;
+    min-height: 38px;
   }
   
   .patcher-iframe-header {
-    padding: 15px;
+    padding: 8px 10px;
+    height: 45px;
   }
   
-  .patcher-iframe-header .page-title {
-    font-size: 1.2rem;
+  .patcher-iframe-header .patcher-page-title {
+    font-size: 1rem;
+  }
+  
+  .patcher-iframe-header .btn-back {
+    font-size: 12px;
+    padding: 6px 10px;
+    width: auto;
+  }
+  
+  .patcher-iframe-container {
+    min-height: 500px;
   }
 }
 
@@ -411,6 +474,19 @@
   
   .tool-card-title {
     font-size: 0.8rem;
-    padding: 10px;
+    min-height: 36px;
+  }
+  
+  .patcher-iframe-header {
+    height: 42px;
+    padding: 6px 8px;
+  }
+  
+  .patcher-iframe-header .patcher-page-title {
+    font-size: 0.9rem;
+  }
+  
+  .patcher-iframe-container {
+    min-height: 450px;
   }
 }

@@ -4,6 +4,15 @@
   
   const API_BASE = 'https://api.am-all.com.cn';
   
+  // 辅助函数：获取完整的图片URL
+  function getFullImageUrl(path) {
+    if (!path) return 'https://oss.am-all.com.cn/asset/img/main/default-tool.png';
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    return API_BASE + path;
+  }
+  
   // 渲染一级页面（工具分类选择）
   window.renderPatcherCategories = async function() {
     const container = document.getElementById('content-container');
@@ -12,11 +21,11 @@
     container.innerHTML = `
       <div class="patcher-page">
         <div class="patcher-header">
-          <h1 class="page-title">
+          <h1 class="patcher-page-title">
             <i class="fas fa-plug me-2"></i>
             补丁工具
           </h1>
-          <p class="page-description">选择游戏类型查看可用的补丁工具</p>
+          <p class="patcher-page-description">选择游戏类型查看可用的补丁工具</p>
         </div>
         
         <div class="patcher-categories-loading">
@@ -59,20 +68,15 @@
       <div class="patcher-categories-grid">
         ${categories.map(cat => `
           <div class="patcher-category-card" data-category="${cat.id}">
-            <div class="category-card-image">
-              <img src="${cat.coverImage}" alt="${cat.name}">
-              <div class="category-card-overlay">
-                <i class="${cat.icon}"></i>
-              </div>
+            <div class="category-card-icon">
+              <i class="${cat.icon}"></i>
             </div>
-            <div class="category-card-content">
-              <h3 class="category-card-title">${cat.name}</h3>
-              <p class="category-card-description">${cat.description}</p>
-              <button class="btn-category-enter">
-                <i class="fas fa-arrow-right me-2"></i>
-                进入
-              </button>
-            </div>
+            <h3 class="category-card-title">${cat.name}</h3>
+            <p class="category-card-description">${cat.description}</p>
+            <button class="btn-category-enter">
+              <i class="fas fa-arrow-right me-2"></i>
+              进入
+            </button>
           </div>
         `).join('')}
       </div>
@@ -102,16 +106,15 @@
     
     container.innerHTML = `
       <div class="patcher-page">
-        <div class="patcher-header">
-          <button class="back-button" onclick="renderPatcherCategories()">
+        <div class="patcher-tools-header">
+          <button class="btn-back" onclick="renderPatcherCategories()">
             <i class="fas fa-arrow-left me-2"></i>
             返回
           </button>
-          <h1 class="page-title">
+          <h1 class="patcher-page-title">
             <i class="fas fa-gamepad me-2"></i>
             ${categoryNames[category] || '补丁工具'}
           </h1>
-          <p class="page-description">选择需要的补丁工具</p>
         </div>
         
         <div class="patcher-tools-loading">
@@ -189,7 +192,7 @@
           ${tools.map(tool => `
             <div class="patcher-tool-card" data-tool-id="${tool.id}">
               <div class="tool-card-image">
-                <img src="${tool.cover_image || 'https://oss.am-all.com.cn/asset/img/main/default-tool.png'}" alt="${tool.tool_name}">
+                <img src="${getFullImageUrl(tool.cover_image)}" alt="${tool.tool_name}">
               </div>
               <div class="tool-card-divider"></div>
               <div class="tool-card-title">${tool.tool_name}</div>
@@ -278,11 +281,11 @@
     container.innerHTML = `
       <div class="patcher-page patcher-iframe-page">
         <div class="patcher-iframe-header">
-          <button class="back-button" onclick="renderPatcherTools('${category}')">
+          <button class="btn-back" onclick="renderPatcherTools('${category}')">
             <i class="fas fa-arrow-left me-2"></i>
             返回
           </button>
-          <h1 class="page-title">${tool.tool_name}</h1>
+          <h1 class="patcher-page-title">${tool.tool_name}</h1>
         </div>
         
         <div class="patcher-iframe-container">
@@ -297,11 +300,6 @@
             onload="this.previousElementSibling.style.display='none'">
           </iframe>
         </div>
-        
-        <footer class="patcher-footer">
-          <p>SEGAY FEIWU</p>
-          <p>1145141919810</p>
-        </footer>
       </div>
     `;
   }

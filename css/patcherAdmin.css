@@ -61,12 +61,15 @@
   color: #7f8c8d;
 }
 
+/* 表格容器 - 修复移动端滚动 */
 .tools-table-container {
-  overflow-x: auto;
+  overflow-x: auto; /* 允许横向滚动 */
+  -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
 }
 
 .tools-table {
   width: 100%;
+  min-width: 800px; /* 设置最小宽度，确保在小屏幕上可以滚动 */
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -126,17 +129,70 @@
   font-size: 12px;
 }
 
-/* 模态框样式 */
+/* 模态框样式 - 完全重构 */
 .modal.show {
   display: flex !important;
   align-items: center;
   justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
 }
 
 .modal-content.large {
-  max-width: 800px;
+  max-width: 700px;
   width: 90%;
   max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  padding: 20px 25px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #95a5a6;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: #f0f0f0;
+  color: #2c3e50;
+}
+
+/* 模态框内容区 - 竖向排列 */
+.modal-body {
+  padding: 25px;
+  max-height: calc(90vh - 140px);
   overflow-y: auto;
 }
 
@@ -146,9 +202,10 @@
   gap: 20px;
 }
 
+/* 表单组 - 竖向排列，不使用grid */
 .form-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 20px;
 }
 
@@ -162,14 +219,28 @@
   font-weight: 500;
   color: #2c3e50;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 复选框标签对齐 */
+.form-group label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .form-control {
+  width: 100%;
   padding: 10px 12px;
   border: 1px solid #ced4da;
   border-radius: 6px;
   font-size: 14px;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
 .form-control:focus {
@@ -178,12 +249,18 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
 .form-text {
   font-size: 12px;
   color: #6c757d;
   margin-top: 4px;
 }
 
+/* 封面上传区域 */
 .cover-upload-area {
   display: flex;
   flex-direction: column;
@@ -199,18 +276,37 @@
   justify-content: center;
   background: #f8f9fa;
   overflow: hidden;
+  padding: 15px;
 }
 
 .cover-preview img {
   max-width: 100%;
   max-height: 200px;
   object-fit: contain;
+  border-radius: 4px;
 }
 
 .cover-preview:empty::before {
   content: '未选择图片';
   color: #adb5bd;
   font-size: 14px;
+}
+
+/* 必填标记 */
+.required {
+  color: #e74c3c;
+  margin-left: 2px;
+}
+
+/* 模态框底部 */
+.modal-footer {
+  padding: 20px 25px;
+  border-top: 1px solid #eee;
+  background: #f8f9fa;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 /* 按钮样式 */
@@ -235,6 +331,7 @@
 
 .btn-primary:hover {
   background: #5568d3;
+  transform: translateY(-1px);
 }
 
 .btn-success {
@@ -312,6 +409,8 @@
 
 .error-state i {
   margin-bottom: 20px;
+  font-size: 3rem;
+  color: #e74c3c;
 }
 
 /* 移动端适配 */
@@ -354,51 +453,34 @@
     font-size: 1.5rem;
   }
   
+  /* 保持表格横向滚动，不改变布局 */
+  .tools-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tools-table {
+    min-width: 800px; /* 确保表格有足够宽度可以滚动 */
+  }
+  
+  /* 模态框适配 */
   .modal-content.large {
     width: 95%;
     max-height: 95vh;
+    margin: 10px;
   }
   
-  .form-row {
-    grid-template-columns: 1fr;
+  .modal-body {
+    padding: 20px;
   }
   
-  /* 简化表格显示 */
-  .tools-table thead {
-    display: none;
+  .modal-footer {
+    padding: 15px 20px;
+    flex-direction: column;
   }
   
-  .tools-table,
-  .tools-table tbody,
-  .tools-table tr,
-  .tools-table td {
-    display: block;
-  }
-  
-  .tools-table tr {
-    margin-bottom: 15px;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 10px;
-  }
-  
-  .tools-table td {
-    padding: 8px 0;
-    border: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .tools-table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: #2c3e50;
-  }
-  
-  .tool-cover-thumb {
-    width: 100px;
-    height: 75px;
+  .modal-footer .btn {
+    width: 100%;
   }
 }
 
@@ -411,5 +493,14 @@
   .btn {
     font-size: 13px;
     padding: 8px 16px;
+  }
+  
+  .modal-body {
+    padding: 15px;
+  }
+  
+  /* 防止iOS自动缩放 */
+  .form-control {
+    font-size: 16px;
   }
 }
