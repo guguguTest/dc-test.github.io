@@ -1,0 +1,415 @@
+/* 补丁工具管理页面样式 */
+
+.patcher-admin-page {
+  padding: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.admin-header .page-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-actions .btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.admin-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.loading-state .spinner-border {
+  width: 3rem;
+  height: 3rem;
+  border-width: 0.3em;
+}
+
+.loading-state p {
+  margin-top: 20px;
+  color: #7f8c8d;
+}
+
+.tools-table-container {
+  overflow-x: auto;
+}
+
+.tools-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tools-table thead {
+  background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tools-table th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+}
+
+.tools-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.tools-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.tools-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.tool-cover-thumb {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.tool-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.tools-table .badge {
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+.tools-table .btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* 模态框样式 */
+.modal.show {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content.large {
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-body form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.form-control {
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-text {
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 4px;
+}
+
+.cover-upload-area {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cover-preview {
+  min-height: 150px;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  overflow: hidden;
+}
+
+.cover-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+}
+
+.cover-preview:empty::before {
+  content: '未选择图片';
+  color: #adb5bd;
+  font-size: 14px;
+}
+
+/* 按钮样式 */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #5568d3;
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #218838;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Badge样式 */
+.badge {
+  display: inline-block;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.bg-primary {
+  background: #667eea;
+  color: white;
+}
+
+.bg-success {
+  background: #28a745;
+  color: white;
+}
+
+.bg-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.bg-info {
+  background: #17a2b8;
+  color: white;
+}
+
+.bg-warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+/* 错误状态 */
+.error-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.error-state i {
+  margin-bottom: 20px;
+}
+
+/* 移动端适配 */
+@media (max-width: 992px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .admin-actions {
+    flex-wrap: wrap;
+  }
+  
+  .admin-actions .btn {
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  .tools-table {
+    font-size: 12px;
+  }
+  
+  .tools-table th,
+  .tools-table td {
+    padding: 8px;
+  }
+  
+  .tool-cover-thumb {
+    width: 60px;
+    height: 45px;
+  }
+}
+
+@media (max-width: 768px) {
+  .patcher-admin-page {
+    padding: 15px;
+  }
+  
+  .admin-header .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .modal-content.large {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  /* 简化表格显示 */
+  .tools-table thead {
+    display: none;
+  }
+  
+  .tools-table,
+  .tools-table tbody,
+  .tools-table tr,
+  .tools-table td {
+    display: block;
+  }
+  
+  .tools-table tr {
+    margin-bottom: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+  }
+  
+  .tools-table td {
+    padding: 8px 0;
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .tools-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  
+  .tool-cover-thumb {
+    width: 100px;
+    height: 75px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-actions .btn {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  
+  .btn {
+    font-size: 13px;
+    padding: 8px 16px;
+  }
+}

@@ -1,0 +1,416 @@
+/* 补丁工具系统样式 */
+
+.patcher-page {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.patcher-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.patcher-header .page-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.patcher-header .page-description {
+  color: #7f8c8d;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.back-button {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  padding: 8px 16px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background: #5568d3;
+  transform: translateX(-3px);
+}
+
+/* 一级页面 - 分类卡片 */
+.patcher-categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 30px;
+  padding: 20px 0;
+}
+
+.patcher-category-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.patcher-category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.category-card-image {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 比例 */
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.category-card-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.patcher-category-card:hover .category-card-image img {
+  transform: scale(1.1);
+}
+
+.category-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.patcher-category-card:hover .category-card-overlay {
+  opacity: 1;
+}
+
+.category-card-overlay i {
+  font-size: 4rem;
+  color: white;
+}
+
+.category-card-content {
+  padding: 25px;
+}
+
+.category-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.category-card-description {
+  color: #7f8c8d;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.btn-category-enter {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-category-enter:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* 二级页面 - 工具卡片 */
+.patcher-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.patcher-tool-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.patcher-tool-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.tool-card-image {
+  width: 100%;
+  padding-top: 75%; /* 4:3 比例 */
+  position: relative;
+  overflow: hidden;
+  background: #f5f7fa;
+}
+
+.tool-card-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.patcher-tool-card:hover .tool-card-image img {
+  transform: scale(1.05);
+}
+
+.tool-card-divider {
+  height: 3px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.tool-card-title {
+  padding: 15px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #2c3e50;
+  text-align: center;
+  line-height: 1.4;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 三级页面 - iframe页面 */
+.patcher-iframe-page {
+  padding: 0;
+  max-width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.patcher-iframe-header {
+  position: relative;
+  padding: 20px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.patcher-iframe-header .page-title {
+  font-size: 1.5rem;
+  margin: 0;
+  text-align: center;
+}
+
+.patcher-iframe-container {
+  flex: 1;
+  position: relative;
+  background: #f5f7fa;
+  overflow: hidden;
+}
+
+.patcher-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.iframe-loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 10;
+}
+
+.iframe-loader .spinner-border {
+  width: 3rem;
+  height: 3rem;
+  border-width: 0.3em;
+}
+
+.iframe-loader p {
+  margin-top: 15px;
+  color: #7f8c8d;
+  font-size: 1rem;
+}
+
+.patcher-footer {
+  padding: 15px;
+  text-align: center;
+  background: white;
+  border-top: 1px solid #e1e8ed;
+  color: #95a5a6;
+  font-size: 0.85rem;
+}
+
+.patcher-footer p {
+  margin: 5px 0;
+}
+
+/* 加载状态 */
+.patcher-categories-loading,
+.patcher-tools-loading,
+.patcher-detail-loading {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.patcher-categories-loading .spinner-border,
+.patcher-tools-loading .spinner-border,
+.patcher-detail-loading .spinner-border {
+  width: 3rem;
+  height: 3rem;
+  border-width: 0.3em;
+}
+
+.patcher-categories-loading p,
+.patcher-tools-loading p,
+.patcher-detail-loading p {
+  margin-top: 20px;
+  color: #7f8c8d;
+  font-size: 1rem;
+}
+
+/* 错误状态 */
+.error-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.error-state i {
+  font-size: 4rem;
+  color: #e74c3c;
+  margin-bottom: 20px;
+}
+
+.error-state h3 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.error-state p {
+  color: #7f8c8d;
+  margin-bottom: 20px;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-state i {
+  font-size: 4rem;
+  color: #95a5a6;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  color: #7f8c8d;
+  margin-bottom: 20px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .patcher-page {
+    padding: 15px;
+  }
+  
+  .patcher-header .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .back-button {
+    position: static;
+    margin-bottom: 15px;
+    width: fit-content;
+  }
+  
+  .patcher-categories-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .patcher-tools-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+  }
+  
+  .tool-card-title {
+    font-size: 0.85rem;
+    padding: 12px;
+    min-height: 50px;
+  }
+  
+  .patcher-iframe-header {
+    padding: 15px;
+  }
+  
+  .patcher-iframe-header .page-title {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .patcher-tools-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .tool-card-title {
+    font-size: 0.8rem;
+    padding: 10px;
+  }
+}

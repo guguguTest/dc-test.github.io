@@ -2232,6 +2232,33 @@ setTimeout(() => {
 	  return;
 	}
 
+	// ===== 补丁工具系统 =====
+	if (pageId === 'dllpatcher') {
+	  // 一级页面：工具分类选择
+	  if (typeof renderPatcherCategories === 'function') {
+		renderPatcherCategories();
+	  } else {
+		contentContainer.innerHTML = '<div class="section"><h1>加载失败</h1><p>补丁工具模块未正确加载</p></div>';
+	  }
+	  
+	  document.body.classList.remove('spa-loading');
+	  updateActiveMenuItem(pageId);
+	  return;
+	}
+
+	// 补丁工具管理页面
+	if (pageId === 'patcher-admin') {
+	  if (typeof renderPatcherAdmin === 'function') {
+		renderPatcherAdmin();
+	  } else {
+		contentContainer.innerHTML = '<div class="section"><h1>加载失败</h1><p>补丁工具管理模块未正确加载</p></div>';
+	  }
+	  
+	  document.body.classList.remove('spa-loading');
+	  updateActiveMenuItem(pageId);
+	  return;
+	}
+
 	// CREDIT商店管理页面
 	if (pageId === 'credit-shop-admin') {
 	  contentContainer.innerHTML = '<div class="section"><div class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div></div>';

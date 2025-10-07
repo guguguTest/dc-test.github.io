@@ -1,4 +1,4 @@
-// siteAdmin.js – 网站管理（独立）- 修复版
+// siteAdmin.js — 网站管理（独立）- 修复版
 // 依赖：currentUser / secureFetch / showLoginRequired / showErrorMessage / showSuccessMessage / loadPage
 
 (function (global) {
@@ -82,6 +82,11 @@
               <div class="admin-entry-desc">管理聊天表情包和表情图片。</div>
               <div class="admin-actions"><button class="admin-btn admin-btn-ghost" type="button">进入</button></div>
             </a>
+            <a class="admin-card admin-entry" id="entry-patcher">
+              <div class="admin-entry-title">补丁工具管理</div>
+              <div class="admin-entry-desc">管理CHUNITHM和BEMANI补丁工具。</div>
+              <div class="admin-actions"><button class="admin-btn admin-btn-ghost" type="button">进入</button></div>
+            </a>
           </div>
         </div>
       </div>
@@ -101,6 +106,15 @@
         window.renderEmojiManagement();
       } else {
         showErrorMessage('表情管理模块未加载');
+      }
+    };
+    // 补丁工具管理入口
+    root.querySelector('#entry-patcher').onclick = (e) => { 
+      e.preventDefault(); 
+      if (typeof loadPage === 'function') {
+        loadPage('patcher-admin');
+      } else {
+        showErrorMessage('页面加载函数未定义');
       }
     };
   }
