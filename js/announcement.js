@@ -1,4 +1,4 @@
-// 公告系统功能
+// 公告系统功能 - 更新版
 class AnnouncementSystem {
   constructor() {
     this._successNotifiedAt = 0;
@@ -7,21 +7,17 @@ class AnnouncementSystem {
     this.totalPages = 1;
     this.announcements = [];
     this.pinnedAnnouncements = [];
-    this.currentLanguage = 'zh-CN'; // 当前语言
-    this.originalContent = {}; // 存储原始内容
+    this.currentLanguage = 'zh-CN';
+    this.originalContent = {};
   }
 
-  // 初始化公告系统
   init() {
     this.loadAnnouncements();
     this.setupEventListeners();
   }
 
-  // 设置事件监听器
   setupEventListeners() {
-    // 使用事件委托来处理动态生成的公告项
     document.addEventListener('click', (e) => {
-      // 检查点击的是否是公告项或其中的元素
       const announcementItem = e.target.closest('.announcement-item, .announcement-card, .announcement-simple-item');
       if (announcementItem) {
         const id = announcementItem.dataset.id;
@@ -31,25 +27,21 @@ class AnnouncementSystem {
         }
       }
 
-      // 关闭公告弹窗
       if (e.target.classList.contains('announcement-modal-close') || 
           e.target.classList.contains('announcement-modal-ok')) {
         this.hideAnnouncementModal();
       }
 
-      // 点击弹窗外部关闭
       if (e.target.classList.contains('announcement-modal')) {
         this.hideAnnouncementModal();
       }
 
-      // 翻译按钮点击事件
       if (e.target.closest('.announcement-translate-btn')) {
         e.preventDefault();
         e.stopPropagation();
         this.toggleTranslation();
       }
 
-      // 分页点击事件
       if (e.target.classList.contains('page-link')) {
         e.preventDefault();
         e.stopPropagation();
@@ -68,7 +60,6 @@ class AnnouncementSystem {
     });
   }
 
-  // 加载公告列表
   async loadAnnouncements() {
     try {
       const container = document.getElementById('announcements-container');
@@ -113,14 +104,12 @@ class AnnouncementSystem {
     }
   }
 
-  // 渲染公告列表
   renderAnnouncements() {
     const container = document.getElementById('announcements-container');
     if (!container) return;
     
     let html = '';
     
-    // 渲染置顶公告
     if (this.pinnedAnnouncements.length > 0) {
       html += `
         <div class="pinned-announcements-section">
@@ -141,7 +130,6 @@ class AnnouncementSystem {
       `;
     }
     
-    // 渲染普通公告
     if (this.announcements.length > 0) {
       html += `
         <div class="normal-announcements-section">
@@ -172,7 +160,6 @@ class AnnouncementSystem {
     container.innerHTML = html;
   }
 
-  // 渲染单个公告项
   renderAnnouncementItem(announcement) {
     const date = new Date(announcement.created_at).toLocaleDateString('zh-CN');
     const typeClass = announcement.type || 'notice';
@@ -189,7 +176,6 @@ class AnnouncementSystem {
     `;
   }
 
-  // 获取类型文本
   getTypeText(type) {
     const typeMap = {
       'top': '置顶',
@@ -200,7 +186,6 @@ class AnnouncementSystem {
     return typeMap[type] || '通知';
   }
 
-  // 渲染分页
   renderPagination() {
     let html = '<div class="announcement-pagination"><ul class="pagination">';
     
@@ -225,7 +210,6 @@ class AnnouncementSystem {
     return html;
   }
 
-  // 显示公告详情
   async showAnnouncementDetail(id) {
     try {
       const response = await fetch(`https://api.am-all.com.cn/api/announcements/${id}`);
@@ -242,18 +226,33 @@ class AnnouncementSystem {
     }
   }
 
-  // 显示公告弹窗
   showAnnouncementModal(announcement) {
-    // 重置语言状态
     this.currentLanguage = 'zh-CN';
     
-    // 存储原始内容
+    // 处理内容中的表情和图片标记
+    let processedContent = announcement.content;
+    
+    // 处理表情标记 [emoji:id:path] 或 [emoji:id:path:audioPath]
+    const emojiRegex = /\[emoji:(\d+):((?:https?:)?\/[^\]]+?)(?::([^\]]+?))?\]/g;
+    processedContent = processedContent.replace(emojiRegex, (match, id, path, audioPath) => {
+      const API_BASE_URL = 'https://api.am-all.com.cn';
+      const fullPath = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
+      return `<img src="${fullPath}" class="announcement-emoji" style="max-width: 60px; max-height: 60px; vertical-align: middle; margin: 0 4px;" alt="表情">`;
+    });
+    
+    // 处理图片标记 [image:/path/to/image]
+    const imageRegex = /\[image:(\/[^\]]+?)\]/g;
+    processedContent = processedContent.replace(imageRegex, (match, path) => {
+      const API_BASE_URL = 'https://api.am-all.com.cn';
+      const fullPath = `${API_BASE_URL}${path}`;
+      return `<img src="${fullPath}" class="announcement-image" style="max-width: 100%; height: auto; display: block; margin: 10px 0; border-radius: 8px;" alt="图片">`;
+    });
+    
     this.originalContent = {
       title: announcement.title,
-      content: announcement.content
+      content: processedContent
     };
     
-    // 获取当前网站语言
     const siteLanguage = typeof languageModule !== 'undefined' ? 
       languageModule.getCurrentLanguage() : 
       (localStorage.getItem('language') || 'zh-cn');
@@ -292,14 +291,11 @@ class AnnouncementSystem {
     const translateText = translateBtn ? translateBtn.querySelector('.translate-text') : null;
     
     if (titleElement) titleElement.textContent = announcement.title;
-    if (contentElement) contentElement.innerHTML = announcement.content;
+    if (contentElement) contentElement.innerHTML = processedContent;
     
-    // 根据网站语言设置翻译按钮
     if (siteLanguage !== 'zh-cn' && translateBtn) {
-      // 非中文时显示翻译按钮
       translateBtn.style.display = 'flex';
       
-      // 设置按钮文本
       const buttonTexts = {
         'en-us': { translate: 'Translate', original: 'Original' },
         'ja-jp': { translate: '翻訳', original: '原文' }
@@ -311,7 +307,6 @@ class AnnouncementSystem {
         translateText.setAttribute('data-original-text', buttonTexts[siteLanguage].original);
       }
     } else if (translateBtn) {
-      // 中文时隐藏翻译按钮
       translateBtn.style.display = 'none';
     }
     
@@ -319,7 +314,6 @@ class AnnouncementSystem {
     document.body.style.overflow = 'hidden';
   }
 
-  // 切换翻译
   async toggleTranslation() {
     const modal = document.getElementById('announcement-modal');
     if (!modal) return;
@@ -331,13 +325,11 @@ class AnnouncementSystem {
     
     if (!titleElement || !contentElement) return;
     
-    // 获取网站当前语言
     const siteLanguage = typeof languageModule !== 'undefined' ? 
       languageModule.getCurrentLanguage() : 
       (localStorage.getItem('language') || 'zh-cn');
     
-    // 根据网站语言设置目标翻译语言
-    let targetLang = 'en'; // 默认英文
+    let targetLang = 'en';
     let loadingText = 'Translating...';
     let originalBtnText = translateText.getAttribute('data-original-text') || 'Original';
     let translateBtnText = translateText.getAttribute('data-translate-text') || 'Translate';
@@ -350,13 +342,11 @@ class AnnouncementSystem {
       loadingText = '翻訳中...';
     }
     
-    // 显示加载状态
     translateBtn.disabled = true;
     translateText.textContent = loadingText;
     
     try {
       if (this.currentLanguage === 'zh-CN') {
-        // 翻译标题和内容
         const translatedTitle = await this.translateText(this.originalContent.title, targetLang);
         const translatedContent = await this.translateText(this.stripHtml(this.originalContent.content), targetLang);
         
@@ -366,7 +356,6 @@ class AnnouncementSystem {
         this.currentLanguage = targetLang;
         translateText.textContent = originalBtnText;
       } else {
-        // 恢复原文
         titleElement.textContent = this.originalContent.title;
         contentElement.innerHTML = this.originalContent.content;
         
@@ -382,14 +371,8 @@ class AnnouncementSystem {
     }
   }
 
-  // 调用翻译API
   async translateText(text, targetLang) {
-    // 使用Google翻译的Web API（需要注意：这是一个非官方的方法，可能会有限制）
-    // 更可靠的方案是使用官方的Google Translate API或其他翻译服务
-    
     try {
-      // 这里使用一个简单的翻译API示例
-      // 实际使用时，建议使用正规的翻译服务API
       const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
       
       const response = await fetch(url);
@@ -401,23 +384,19 @@ class AnnouncementSystem {
       
       throw new Error('翻译数据格式错误');
     } catch (error) {
-      // 如果API调用失败，使用备用方案：打开Google翻译网页
       console.warn('API翻译失败，使用备用方案');
       window.open(`https://translate.google.com/?sl=zh-CN&tl=${targetLang}&text=${encodeURIComponent(text)}&op=translate`, '_blank');
       throw error;
     }
   }
 
-  // 移除HTML标签
   stripHtml(html) {
     const tmp = document.createElement('div');
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || '';
   }
 
-  // 格式化翻译后的内容
   formatTranslatedContent(text) {
-    // 将纯文本转换为基本的HTML格式
     return text
       .split('\n')
       .map(line => line.trim())
@@ -426,14 +405,12 @@ class AnnouncementSystem {
       .join('');
   }
 
-  // 隐藏公告弹窗
   hideAnnouncementModal() {
     const modal = document.getElementById('announcement-modal');
     if (modal) {
       modal.classList.remove('show');
       document.body.style.overflow = '';
       
-      // 重置翻译状态
       this.currentLanguage = 'zh-CN';
       const translateBtn = modal.querySelector('.announcement-translate-btn');
       if (translateBtn) {
@@ -446,7 +423,7 @@ class AnnouncementSystem {
   }
 }
 
-// 公告管理系统（管理员功能）
+// 公告管理系统（管理员功能）- 使用论坛编辑器 + 列表布局
 class AnnouncementAdminSystem {
   constructor() {
     this._successNotifiedAt = 0;
@@ -454,32 +431,26 @@ class AnnouncementAdminSystem {
     this.currentAnnouncement = null;
     this.isEditing = false;
     this.editorModal = null;
+    this.forumEditor = null;
+    this.selectedIds = new Set();
   }
 
-  // 初始化公告管理系统
   init() {
     console.log('初始化公告管理系统');
-    // 先清理可能存在的旧弹窗
     this.cleanupOldModals();
-    // 创建新弹窗
     this.createEditorModal();
     this.loadAnnouncements();
-    // 延迟设置事件监听器，确保DOM准备就绪
     setTimeout(() => {
       this.setupEventListeners();
-      this.setupEditor();
     }, 100);
   }
 
-  // 清理旧的弹窗
   cleanupOldModals() {
     const oldModals = document.querySelectorAll('#announcement-editor-modal');
     oldModals.forEach(modal => modal.remove());
   }
 
-  // 创建编辑器弹窗
   createEditorModal() {
-    // 确保没有重复的弹窗
     this.cleanupOldModals();
     
     const modalHtml = `
@@ -512,17 +483,10 @@ class AnnouncementAdminSystem {
             
             <div class="form-group">
               <label for="announcement-editor-content">公告内容</label>
-              <div class="editor-toolbar">
-                <button type="button" data-command="bold" title="粗体"><i class="fas fa-bold"></i></button>
-                <button type="button" data-command="italic" title="斜体"><i class="fas fa-italic"></i></button>
-                <button type="button" data-command="underline" title="下划线"><i class="fas fa-underline"></i></button>
-                <button type="button" data-command="createLink" title="链接"><i class="fas fa-link"></i></button>
-                <button type="button" data-command="insertUnorderedList" title="无序列表"><i class="fas fa-list-ul"></i></button>
-                <button type="button" data-command="insertOrderedList" title="有序列表"><i class="fas fa-list-ol"></i></button>
-                <button type="button" data-command="formatBlock" title="标题"><i class="fas fa-heading"></i></button>
-                <button type="button" data-command="insertImage" title="图片"><i class="fas fa-image"></i></button>
+              <div class="forum-editor-container">
+                <div class="editor-toolbar"></div>
+                <div class="editor-content" contenteditable="true"></div>
               </div>
-              <div id="announcement-editor-content" class="editor-content" contenteditable="true"></div>
             </div>
           </div>
           <div class="announcement-editor-footer">
@@ -532,109 +496,113 @@ class AnnouncementAdminSystem {
       </div>
     `;
     
-    // 直接插入到body末尾
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     this.editorModal = document.getElementById('announcement-editor-modal');
   }
 
-  // 设置事件监听器 - 修复版本
-  setupEventListeners() {
-    const self = this;
-    
-    // 使用事件委托处理所有按钮点击 - 这是关键修复
-    document.addEventListener('click', function(e) {
-      // 新建公告按钮
-      if (e.target && e.target.id === 'create-announcement-btn') {
-        e.preventDefault();
-        console.log('点击新建公告');
-        self.showEditor(null);
-        return;
-      }
-      
-      // 【关键修复】保存公告按钮 - 使用事件委托确保可靠性
-      if (e.target && e.target.id === 'save-announcement-btn') {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('保存按钮被点击 - 通过事件委托');
-        self.saveAnnouncement();
-        return;
-      }
-      
-      // 关闭编辑器按钮
-      if (e.target && e.target.id === 'editor-close-btn') {
-        e.preventDefault();
-        console.log('关闭编辑器');
-        self.hideEditor();
-        return;
-      }
-      
-      // 点击弹窗外部关闭
-      if (e.target && e.target.id === 'announcement-editor-modal') {
-        console.log('点击弹窗外部，关闭编辑器');
-        self.hideEditor();
-        return;
-      }
-      
-      // 编辑按钮
-      const editBtn = e.target.closest('.btn-edit');
-      if (editBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        const id = editBtn.dataset.id;
-        console.log('编辑公告:', id);
-        self.editAnnouncement(id);
-        return;
-      }
-      
-      // 删除按钮
-      const deleteBtn = e.target.closest('.btn-delete');
-      if (deleteBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        const id = deleteBtn.dataset.id;
-        console.log('删除公告:', id);
-        self.deleteAnnouncement(id);
-        return;
-      }
-    });
-  }
-
-  // 设置编辑器
-  setupEditor() {
-    const editor = document.getElementById('announcement-editor-content');
-    if (editor) {
-      const toolbar = document.querySelector('.editor-toolbar');
-      if (toolbar) {
-        toolbar.querySelectorAll('button').forEach(button => {
-          button.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const command = button.dataset.command;
-            
-            if (command === 'createLink') {
-              const url = prompt('请输入URL:');
-              if (url) {
-                document.execCommand(command, false, url);
-              }
-            } else if (command === 'insertImage') {
-              const url = prompt('请输入图片URL:');
-              if (url) {
-                document.execCommand(command, false, url);
-              }
-            } else if (command === 'formatBlock') {
-              document.execCommand(command, false, '<h3>');
-            } else {
-              document.execCommand(command, false, null);
-            }
-            
-            editor.focus();
-          });
-        });
-      }
+setupEventListeners() {
+  const self = this;
+  
+  document.addEventListener('click', function(e) {
+    // 新建公告按钮 - 使用closest查找按钮
+    const createBtn = e.target.closest('#create-announcement-btn');
+    if (createBtn) {
+      e.preventDefault();
+      console.log('点击新建公告');
+      self.showEditor(null);
+      return;
     }
-  }
+    
+    // 保存公告按钮
+    const saveBtn = e.target.closest('#save-announcement-btn');
+    if (saveBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('保存按钮被点击');
+      self.saveAnnouncement();
+      return;
+    }
+    
+    // 关闭编辑器按钮
+    const closeBtn = e.target.closest('#editor-close-btn');
+    if (closeBtn) {
+      e.preventDefault();
+      console.log('关闭编辑器');
+      self.hideEditor();
+      return;
+    }
+    
+    // 点击弹窗外部关闭
+    if (e.target && e.target.id === 'announcement-editor-modal') {
+      console.log('点击弹窗外部,关闭编辑器');
+      self.hideEditor();
+      return;
+    }
+    
+    // 编辑按钮
+    const editBtn = e.target.closest('.btn-edit');
+    if (editBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = editBtn.dataset.id;
+      console.log('编辑公告:', id);
+      self.editAnnouncement(id);
+      return;
+    }
+    
+    // 删除按钮
+    const deleteBtn = e.target.closest('.btn-delete');
+    if (deleteBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = deleteBtn.dataset.id;
+      console.log('删除公告:', id);
+      self.deleteAnnouncement(id);
+      return;
+    }
+    
+    // 全选按钮 - 使用closest
+    const selectAllBtn = e.target.closest('#select-all-btn');
+    if (selectAllBtn) {
+      e.preventDefault();
+      console.log('点击全选');
+      self.selectAll();
+      return;
+    }
+    
+    // 取消全选按钮 - 使用closest
+    const deselectAllBtn = e.target.closest('#deselect-all-btn');
+    if (deselectAllBtn) {
+      e.preventDefault();
+      console.log('点击取消全选');
+      self.deselectAll();
+      return;
+    }
+    
+    // 批量删除按钮 - 使用closest
+    const batchDeleteBtn = e.target.closest('#batch-delete-btn');
+    if (batchDeleteBtn) {
+      e.preventDefault();
+      console.log('点击批量删除');
+      self.batchDelete();
+      return;
+    }
+    
+    // 复选框
+    const checkbox = e.target.closest('.announcement-checkbox');
+    if (checkbox) {
+      const id = checkbox.dataset.id;
+      if (checkbox.checked) {
+        self.selectedIds.add(id);
+      } else {
+        self.selectedIds.delete(id);
+      }
+      self.updateBatchButtons();
+      return;
+    }
+  });
+}
 
-  // 加载公告列表
   async loadAnnouncements() {
     try {
       const token = localStorage.getItem('token');
@@ -656,50 +624,80 @@ class AnnouncementAdminSystem {
     }
   }
 
-  // 渲染公告列表
-  renderAnnouncements(announcements) {
-    const container = document.getElementById('admin-announcements-list');
-    if (!container) return;
-    
-    let html = '';
-    
-    if (announcements.length === 0) {
-      html = '<div class="no-announcements text-center py-4" style="grid-column: 1/-1;">暂无公告</div>';
-    } else {
-      announcements.forEach(announcement => {
-        const date = new Date(announcement.created_at).toLocaleDateString('zh-CN');
-        const typeClass = announcement.type || 'notice';
-        const typeText = this.getTypeText(announcement.type);
-        const pinnedIcon = announcement.is_pinned ? '<i class="fas fa-thumbtack admin-announcement-pinned"></i>' : '';
-        
-        html += `
-          <div class="admin-announcement-item" data-id="${announcement.id}" data-type="${typeClass}">
-            ${pinnedIcon}
-            <div class="admin-announcement-header">
-              <span class="admin-announcement-type ${typeClass}">${typeText}</span>
-              <h4 class="admin-announcement-title">${announcement.title}</h4>
-              <div class="admin-announcement-date">${date}</div>
-            </div>
-            <div class="admin-announcement-content">
-              ${announcement.content.replace(/<[^>]*>/g, '').substring(0, 100)}${announcement.content.length > 100 ? '...' : ''}
-            </div>
-            <div class="admin-announcement-actions">
-              <button class="btn-edit" data-id="${announcement.id}">
-                <i class="fas fa-edit"></i> 编辑
-              </button>
-              <button class="btn-delete" data-id="${announcement.id}">
-                <i class="fas fa-trash"></i> 删除
-              </button>
-            </div>
+renderAnnouncements(announcements) {
+  const container = document.getElementById('admin-announcements-list');
+  if (!container) return;
+  
+  this.selectedIds.clear();
+  
+  let html = `
+    <div class="announcement-table-wrapper">
+      <div class="announcement-list-header">
+        <div class="header-checkbox">
+          <input type="checkbox" id="header-select-all" class="announcement-checkbox-header">
+        </div>
+        <div class="header-type">类型</div>
+        <div class="header-title">标题</div>
+        <div class="header-date">创建时间</div>
+        <div class="header-pinned">置顶</div>
+        <div class="header-actions">操作</div>
+      </div>
+  `;
+  
+  if (announcements.length === 0) {
+    html += '<div class="no-announcements">暂无公告</div>';
+  } else {
+    announcements.forEach(announcement => {
+      const date = new Date(announcement.created_at).toLocaleString('zh-CN');
+      const typeClass = announcement.type || 'notice';
+      const typeText = this.getTypeText(announcement.type);
+      const isPinned = announcement.is_pinned ? '是' : '否';
+      
+      html += `
+        <div class="announcement-list-item">
+          <div class="item-checkbox">
+            <input type="checkbox" class="announcement-checkbox" data-id="${announcement.id}">
           </div>
-        `;
-      });
-    }
-    
-    container.innerHTML = html;
+          <div class="item-type">
+            <span class="announcement-type-badge ${typeClass}">${typeText}</span>
+          </div>
+          <div class="item-title">${announcement.title}</div>
+          <div class="item-date">${date}</div>
+          <div class="item-pinned">
+            ${announcement.is_pinned ? '<i class="fas fa-thumbtack" style="color: #fbbf24;"></i>' : '-'}
+          </div>
+          <div class="item-actions">
+            <button class="btn-edit btn-sm" data-id="${announcement.id}">
+              <i class="fas fa-edit"></i> 编辑
+            </button>
+            <button class="btn-delete btn-sm" data-id="${announcement.id}">
+              <i class="fas fa-trash"></i> 删除
+            </button>
+          </div>
+        </div>
+      `;
+    });
   }
+  
+  html += `</div>`; // 关闭 announcement-table-wrapper
+  
+  container.innerHTML = html;
+  
+  // 设置表头全选复选框事件
+  const headerCheckbox = document.getElementById('header-select-all');
+  if (headerCheckbox) {
+    headerCheckbox.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        this.selectAll();
+      } else {
+        this.deselectAll();
+      }
+    });
+  }
+  
+  this.updateBatchButtons();
+}
 
-  // 获取类型文本
   getTypeText(type) {
     const typeMap = {
       'top': '置顶',
@@ -710,73 +708,136 @@ class AnnouncementAdminSystem {
     return typeMap[type] || '通知';
   }
 
-  // 显示编辑器 - 移除不稳定的setTimeout事件绑定
+  selectAll() {
+    const checkboxes = document.querySelectorAll('.announcement-checkbox');
+    checkboxes.forEach(cb => {
+      cb.checked = true;
+      this.selectedIds.add(cb.dataset.id);
+    });
+    const headerCheckbox = document.getElementById('header-select-all');
+    if (headerCheckbox) headerCheckbox.checked = true;
+    this.updateBatchButtons();
+  }
+
+  deselectAll() {
+    const checkboxes = document.querySelectorAll('.announcement-checkbox');
+    checkboxes.forEach(cb => {
+      cb.checked = false;
+    });
+    const headerCheckbox = document.getElementById('header-select-all');
+    if (headerCheckbox) headerCheckbox.checked = false;
+    this.selectedIds.clear();
+    this.updateBatchButtons();
+  }
+
+	updateBatchButtons() {
+	  const batchDeleteBtn = document.getElementById('batch-delete-btn');
+	  if (batchDeleteBtn) {
+		if (this.selectedIds.size > 0) {
+		  batchDeleteBtn.disabled = false;
+		  // 获取翻译文本
+		  const deleteText = typeof languageModule !== 'undefined' ? 
+			languageModule.t('announcementAdmin.batchDelete') : '删除选中';
+		  batchDeleteBtn.innerHTML = `<i class="fas fa-trash me-2"></i><span>${deleteText} (${this.selectedIds.size})</span>`;
+		} else {
+		  batchDeleteBtn.disabled = true;
+		  const deleteText = typeof languageModule !== 'undefined' ? 
+			languageModule.t('announcementAdmin.batchDelete') : '删除选中';
+		  batchDeleteBtn.innerHTML = `<i class="fas fa-trash me-2"></i><span>${deleteText}</span>`;
+		}
+	  }
+	}
+
+  async batchDelete() {
+    if (this.selectedIds.size === 0) {
+      alert('请先选择要删除的公告');
+      return;
+    }
+    
+    if (!confirm(`确定要删除选中的 ${this.selectedIds.size} 条公告吗？此操作不可撤销。`)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('https://api.am-all.com.cn/api/announcements/batch-delete', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ids: Array.from(this.selectedIds) })
+      });
+      
+      const result = await response.json();
+      
+      if (result.error) {
+        alert('批量删除失败: ' + result.error);
+        return;
+      }
+      
+      alert(result.message || '批量删除成功');
+      this.selectedIds.clear();
+      this.loadAnnouncements();
+    } catch (error) {
+      console.error('批量删除公告失败:', error);
+      alert('批量删除失败');
+    }
+  }
+
   showEditor(announcement) {
     console.log('显示编辑器，公告数据:', announcement);
     
-    // 强制重新获取元素，确保是最新的
     const titleInput = document.querySelector('#announcement-editor-modal #announcement-title');
     const typeSelect = document.querySelector('#announcement-editor-modal #announcement-type');
     const pinnedCheckbox = document.querySelector('#announcement-editor-modal #announcement-pinned');
-    const contentEditor = document.querySelector('#announcement-editor-modal #announcement-editor-content');
+    const editorContainer = document.querySelector('#announcement-editor-modal .forum-editor-container');
     const editorTitle = document.querySelector('#announcement-editor-modal #editor-title');
     
-    // 设置编辑状态
     this.isEditing = announcement !== null;
     this.currentAnnouncement = announcement;
     
-    // 先清空所有字段
-    if (titleInput) {
-      titleInput.value = '';
-    }
-    if (typeSelect) {
-      typeSelect.value = 'notice';
-    }
-    if (pinnedCheckbox) {
-      pinnedCheckbox.checked = false;
-    }
-    if (contentEditor) {
-      contentEditor.innerHTML = '';
-    }
+    if (titleInput) titleInput.value = '';
+    if (typeSelect) typeSelect.value = 'notice';
+    if (pinnedCheckbox) pinnedCheckbox.checked = false;
     
-    // 更新标题
     if (editorTitle) {
       editorTitle.textContent = this.isEditing ? '编辑公告' : '新建公告';
     }
     
-    // 如果是编辑模式，填充数据
+    // 初始化论坛编辑器
+    if (!this.forumEditor && editorContainer) {
+      this.forumEditor = new ForumEditor(editorContainer);
+    }
+    
+    // 清空编辑器内容
+    if (this.forumEditor) {
+      this.forumEditor.clear();
+    }
+    
     if (announcement) {
-      if (titleInput) {
-        titleInput.value = announcement.title || '';
-      }
-      if (typeSelect) {
-        typeSelect.value = announcement.type || 'notice';
-      }
-      if (pinnedCheckbox) {
-        pinnedCheckbox.checked = announcement.is_pinned === true || announcement.is_pinned === 1;
-      }
-      if (contentEditor) {
-        contentEditor.innerHTML = announcement.content || '';
+      if (titleInput) titleInput.value = announcement.title || '';
+      if (typeSelect) typeSelect.value = announcement.type || 'notice';
+      if (pinnedCheckbox) pinnedCheckbox.checked = announcement.is_pinned === true || announcement.is_pinned === 1;
+      
+      // 设置编辑器内容
+      if (this.forumEditor && announcement.content) {
+        this.forumEditor.setContent(announcement.content);
       }
     }
     
-    // 显示弹窗
     if (this.editorModal) {
       this.editorModal.classList.add('show');
       document.body.style.overflow = 'hidden';
-      
-      // 强制重绘，确保更新显示
       this.editorModal.offsetHeight;
     }
     
     console.log('编辑器状态:', {
       isEditing: this.isEditing,
-      title: titleInput?.value,
-      content: contentEditor?.innerHTML?.substring(0, 50)
+      title: titleInput?.value
     });
   }
 
-  // 隐藏编辑器
   hideEditor() {
     console.log('隐藏编辑器');
     
@@ -785,33 +846,31 @@ class AnnouncementAdminSystem {
       document.body.style.overflow = '';
     }
     
-    // 清空表单
     const titleInput = document.querySelector('#announcement-editor-modal #announcement-title');
     const typeSelect = document.querySelector('#announcement-editor-modal #announcement-type');
     const pinnedCheckbox = document.querySelector('#announcement-editor-modal #announcement-pinned');
-    const contentEditor = document.querySelector('#announcement-editor-modal #announcement-editor-content');
     
     if (titleInput) titleInput.value = '';
     if (typeSelect) typeSelect.value = 'notice';
     if (pinnedCheckbox) pinnedCheckbox.checked = false;
-    if (contentEditor) contentEditor.innerHTML = '';
+    
+    if (this.forumEditor) {
+      this.forumEditor.clear();
+    }
     
     this.currentAnnouncement = null;
     this.isEditing = false;
   }
 
-  // 保存公告 - 修复版本，添加更详细的错误处理
   async saveAnnouncement() {
     console.log('执行保存...');
     
     try {
-      // 重新获取元素
       const titleInput = document.querySelector('#announcement-editor-modal #announcement-title');
       const typeSelect = document.querySelector('#announcement-editor-modal #announcement-type');
       const pinnedCheckbox = document.querySelector('#announcement-editor-modal #announcement-pinned');
-      const contentEditor = document.querySelector('#announcement-editor-modal #announcement-editor-content');
       
-      if (!titleInput || !typeSelect || !pinnedCheckbox || !contentEditor) {
+      if (!titleInput || !typeSelect || !pinnedCheckbox || !this.forumEditor) {
         console.error('无法找到表单元素');
         alert('表单元素未找到，请刷新页面重试');
         return;
@@ -820,15 +879,13 @@ class AnnouncementAdminSystem {
       const title = titleInput.value.trim();
       const type = typeSelect.value;
       const isPinned = pinnedCheckbox.checked;
-      const content = contentEditor.innerHTML.trim();
-      const textContent = contentEditor.innerText.trim();
+      const content = this.forumEditor.getContent();
       
       console.log('保存数据:', {
         title: title,
         type: type,
         isPinned: isPinned,
-        contentLength: content.length,
-        textContentLength: textContent.length
+        contentLength: content.length
       });
       
       if (!title) {
@@ -837,9 +894,8 @@ class AnnouncementAdminSystem {
         return;
       }
       
-      if (!textContent) {
+      if (this.forumEditor.isEmpty()) {
         alert('请输入公告内容');
-        contentEditor.focus();
         return;
       }
       
@@ -889,7 +945,6 @@ class AnnouncementAdminSystem {
     }
   }
 
-  // 编辑公告
   async editAnnouncement(id) {
     console.log('开始编辑公告:', id);
     
@@ -909,7 +964,6 @@ class AnnouncementAdminSystem {
         return;
       }
       
-      // 延迟一下再显示，确保DOM更新
       setTimeout(() => {
         this.showEditor(announcement);
       }, 50);
@@ -920,9 +974,8 @@ class AnnouncementAdminSystem {
     }
   }
 
-  // 删除公告
   async deleteAnnouncement(id) {
-    if (!confirm('确定要删除这个公告吗？此操作不可撤销。')) {
+    if (!confirm('确定要删除这个公告吗?此操作不可撤销。')) {
       return;
     }
     
@@ -966,7 +1019,7 @@ window.initAnnouncementAdminSystem = function(){
   }catch(e){ console.error('initAnnouncementAdminSystem error:', e);} 
 };
 
-// 全局保存函数 - 作为备用（保留兼容性）
+// 全局保存函数 - 作为备用(保留兼容性)
 window.saveAnnouncement = function() {
   console.log('全局保存函数被调用');
   if (window.announcementAdminSystem) {
@@ -984,7 +1037,6 @@ window.addEventListener('languageChanged', function(e) {
     const translateText = translateBtn ? translateBtn.querySelector('.translate-text') : null;
     const siteLanguage = e.detail.language;
     
-    // 根据新语言更新翻译按钮
     if (siteLanguage !== 'zh-cn' && translateBtn) {
       translateBtn.style.display = 'flex';
       
@@ -994,7 +1046,6 @@ window.addEventListener('languageChanged', function(e) {
       };
       
       if (buttonTexts[siteLanguage] && translateText) {
-        // 如果当前是原文状态，更新按钮文本为对应语言
         if (window.announcementSystem && window.announcementSystem.currentLanguage === 'zh-CN') {
           translateText.textContent = buttonTexts[siteLanguage].translate;
         } else {
@@ -1005,7 +1056,6 @@ window.addEventListener('languageChanged', function(e) {
       }
     } else if (translateBtn) {
       translateBtn.style.display = 'none';
-      // 如果切换到中文，恢复原文
       if (window.announcementSystem && window.announcementSystem.currentLanguage !== 'zh-CN') {
         const titleElement = modal.querySelector('.announcement-modal-title');
         const contentElement = modal.querySelector('.announcement-modal-content.html-content');

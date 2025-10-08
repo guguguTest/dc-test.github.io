@@ -153,7 +153,7 @@ function getFullImageUrl(path) {
             <td>
               <input type="checkbox" class="tool-checkbox" data-id="${tool.id}">
             </td>
-            <td>${tool.id}</td>
+            <td>${tool.sort_order}</td>
             <td>
               <img src="${coverUrl}" 
                    alt="${tool.tool_name}" 
@@ -206,9 +206,8 @@ function getFullImageUrl(path) {
     if (!access) return '<span class="text-muted">-</span>';
     
     const accessMap = {
-      '0': 'maimoller',
-      '1': '合作管理员',
-      '2': '联合管理员',
+      '1': 'maimoller',
+      '2': '协同管理员',
       'personal_auth': '个人认证',
       'official_auth': '官方认证'
     };
@@ -349,9 +348,8 @@ function getFullImageUrl(path) {
                   <label for="secondary-access">二级访问权限</label>
                   <select id="secondary-access" class="form-control">
                     <option value="">无</option>
-                    <option value="0" ${editData?.secondary_access === '0' ? 'selected' : ''}>maimoller</option>
-                    <option value="1" ${editData?.secondary_access === '1' ? 'selected' : ''}>合作管理员</option>
-                    <option value="2" ${editData?.secondary_access === '2' ? 'selected' : ''}>联合管理员</option>
+                    <option value="0" ${editData?.secondary_access === '1' ? 'selected' : ''}>maimoller</option>
+                    <option value="1" ${editData?.secondary_access === '2' ? 'selected' : ''}>协同管理员</option>
                     <option value="personal_auth" ${editData?.secondary_access === 'personal_auth' ? 'selected' : ''}>
                       个人认证
                     </option>

@@ -227,9 +227,8 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  /* 计算高度：视口高度 - 顶部导航栏(70px) - main-content的padding(30px*2) */
+  /* 移除固定高度限制，让内容可以自然扩展 */
   min-height: calc(100vh - 70px - 60px);
-  height: calc(100vh - 70px - 60px);
   overflow: hidden;
 }
 

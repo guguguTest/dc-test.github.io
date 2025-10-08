@@ -1,4 +1,4 @@
-// language.js - 优化后的多语言功能模块（使用data-i18n属性）
+// language.js - 优化后的多语言功能模块(使用data-i18n属性)
 const languageModule = (function() {
     // 翻译数据
     const translations = {
@@ -76,10 +76,10 @@ const languageModule = (function() {
             'download.gameDownload': '游戏下载',
             'download.archiveDownload': '存档下载',
             'download.otherResources': '其他资源',
-            'download.warning': '重要提示：',
+            'download.warning': '重要提示:',
             'download.warningDetail': 'OneDrive下载渠道已下线',
             'download.lastUpdate': '最后更新',
-            'download.downloadInfo': '下载说明：',
+            'download.downloadInfo': '下载说明:',
             'download.downloadInfoDetail': '目前本站全部资源仅提供「百度网盘」作为下载方式',
             'download.backToDownload': '返回下载中心',
             'download.downloadList': '下载列表',
@@ -107,7 +107,7 @@ const languageModule = (function() {
             'downloadAdmin.categoryGame': '游戏下载',
             'downloadAdmin.categoryArchive': '存档下载',
             'downloadAdmin.categoryOther': '其他资源',
-            'downloadAdmin.pageIdHint': '唯一标识符，用于URL访问',
+            'downloadAdmin.pageIdHint': '唯一标识符,用于URL访问',
             'downloadAdmin.downloadLinks': '下载链接',
             'downloadAdmin.addLink': '添加链接',
             'downloadAdmin.permissions': '权限设置',
@@ -126,6 +126,9 @@ const languageModule = (function() {
             // 公告管理
             'announcementAdmin.title': '公告管理',
             'announcementAdmin.create': '新建公告',
+            'announcementAdmin.selectAll': '全选',
+            'announcementAdmin.deselectAll': '取消全选',
+            'announcementAdmin.batchDelete': '删除选中',
             'announcementAdmin.editorTitle': '新建公告',
             'announcementAdmin.announcementTitle': '标题',
             'announcementAdmin.type': '类型',
@@ -156,7 +159,7 @@ const languageModule = (function() {
             'orderEntry.modalEdit': '编辑订单',
             'orderEntry.taobaoIdPlaceholder': '请输入淘宝用户ID',
             'orderEntry.productNamePlaceholder': '请输入商品名称',
-            'orderEntry.orderNumberPlaceholder': '请输入订单号（唯一）',
+            'orderEntry.orderNumberPlaceholder': '请输入订单号(唯一)',
             'orderEntry.unredeemed': '未兑换',
             'orderEntry.redeemed': '已兑换',
             'orderEntry.saveOrder': '保存订单',
@@ -188,9 +191,9 @@ const languageModule = (function() {
             'auth.getVerificationCode': '获取验证码',
             'auth.loginNow': '立即登录',
             'auth.registerNow': '立即注册',
-            'auth.noAccount': '没有账号？',
-            'auth.hasAccount': '已有账号？',
-            'auth.forgotPassword': '忘记密码？',
+            'auth.noAccount': '没有账号?',
+            'auth.hasAccount': '已有账号?',
+            'auth.forgotPassword': '忘记密码?',
             'auth.resetPassword': '找回密码',
             'auth.newPassword': '新密码',
             'auth.verify': '验证',
@@ -215,11 +218,11 @@ const languageModule = (function() {
             'userSettings.creditPoints': 'CREDIT',
             'userSettings.changePassword': '修改密码',
             'userSettings.currentPassword': '当前密码',
-			'userSettings.currentPasswordPlaceholder': '请输入当前密码',
+            'userSettings.currentPasswordPlaceholder': '请输入当前密码',
             'userSettings.newPassword': '新密码',
-			'userSettings.newPasswordPlaceholder': '请输入新密码', 
+            'userSettings.newPasswordPlaceholder': '请输入新密码',
             'userSettings.confirmNewPassword': '确认新密码',
-			'userSettings.confirmNewPasswordPlaceholder': '请再次输入新密码',
+            'userSettings.confirmNewPasswordPlaceholder': '请再次输入新密码',
             'userSettings.updatePassword': '更新密码',
             'userSettings.ccbBinding': '查分绑定信息',
             'userSettings.server': '服务器',
@@ -246,8 +249,8 @@ const languageModule = (function() {
             'fortune.title': '每日签到',
             'fortune.backHome': '返回主页',
             'fortune.todayFortune': '今日运势',
-            'fortune.suitable': '宜：',
-            'fortune.unsuitable': '不宜：',
+            'fortune.suitable': '宜:',
+            'fortune.unsuitable': '不宜:',
             'fortune.signin': '签到',
             
             // 帮助中心
@@ -280,19 +283,19 @@ const languageModule = (function() {
             'settings.preloadEmoji': '预加载常用表情和音频',
             'settings.cursorStyle': '鼠标样式',
             'settings.cursorHint': '鼠标样式设置仅在桌面设备上生效',
-            'settings.cursorDesc': '选择您喜欢的鼠标指针样式，让浏览体验更加个性化',
-            'settings.cursorLoadingHint': '提示：自定义鼠标样式需要加载额外资源，首次使用可能需要几秒钟加载',
+            'settings.cursorDesc': '选择您喜欢的鼠标指针样式,让浏览体验更加个性化',
+            'settings.cursorLoadingHint': '提示:自定义鼠标样式需要加载额外资源,首次使用可能需要几秒钟加载',
             'settings.saveSettings': '保存设置',
             'settings.cursorDefault': '默认',
             'settings.cursorDefaultDesc': '系统默认鼠标',
             'settings.cursorCustom1': '井盖',
             'settings.cursorCustom1Desc': 'Dungeon & Fighter',
             'settings.cursorCustom2': '绪山真寻',
-            'settings.cursorCustom2Desc': 'お兄ちゃんおしまい！',
-			
-			// 交流区相关
-			'sidebar.forum': '交流区',
-			'sidebar.forumAdmin': '论坛管理',
+            'settings.cursorCustom2Desc': 'お兄ちゃんおしまい!',
+            
+            // 交流区相关
+            'sidebar.forum': '交流区',
+            'sidebar.forumAdmin': '论坛管理',
             
             // 通用按钮和操作
             'common.back': '返回',
@@ -437,6 +440,9 @@ const languageModule = (function() {
             // 公告管理
             'announcementAdmin.title': 'Announcement Admin',
             'announcementAdmin.create': 'Create Announcement',
+            'announcementAdmin.selectAll': 'Select All',
+            'announcementAdmin.deselectAll': 'Deselect All',
+            'announcementAdmin.batchDelete': 'Delete Selected',
             'announcementAdmin.editorTitle': 'New Announcement',
             'announcementAdmin.announcementTitle': 'Title',
             'announcementAdmin.type': 'Type',
@@ -526,11 +532,11 @@ const languageModule = (function() {
             'userSettings.creditPoints': 'CREDIT',
             'userSettings.changePassword': 'Change Password',
             'userSettings.currentPassword': 'Current Password',
-			'userSettings.currentPasswordPlaceholder': 'Enter current password',
+            'userSettings.currentPasswordPlaceholder': 'Enter current password',
             'userSettings.newPassword': 'New Password',
-			'userSettings.newPasswordPlaceholder': 'Enter new password',
+            'userSettings.newPasswordPlaceholder': 'Enter new password',
             'userSettings.confirmNewPassword': 'Confirm New Password',
-			'userSettings.confirmNewPasswordPlaceholder': 'Re-enter new password', 
+            'userSettings.confirmNewPasswordPlaceholder': 'Re-enter new password',
             'userSettings.updatePassword': 'Update Password',
             'userSettings.ccbBinding': 'CCB Binding Info',
             'userSettings.server': 'Server',
@@ -600,10 +606,10 @@ const languageModule = (function() {
             'settings.cursorCustom1Desc': 'Personalized cursor style',
             'settings.cursorCustom2': 'Mahiro',
             'settings.cursorCustom2Desc': 'Cute cursor style',
-			
-			// 交流区相关
-			'sidebar.forum': 'Forum',
-			'sidebar.forumAdmin': 'Forum Admin',
+            
+            // 交流区相关
+            'sidebar.forum': 'Forum',
+            'sidebar.forumAdmin': 'Forum Admin',
             
             // 通用按钮和操作
             'common.back': 'Back',
@@ -636,7 +642,7 @@ const languageModule = (function() {
             'sidebar.help': 'ヘルプ',
             'sidebar.tools': 'ツール',
             'sidebar.patcher': 'パッチツール',
-            'sidebar.fortune': 'おんみくじ',
+            'sidebar.fortune': 'おみくじ',
             'sidebar.ccb': 'ゲームスコア',
             'sidebar.exchange': 'シリアルコード',
             'sidebar.pointShop': 'ポイントショップ',
@@ -698,10 +704,10 @@ const languageModule = (function() {
             'download.gameDownload': 'ゲームダウンロード',
             'download.archiveDownload': 'アーカイブダウンロード',
             'download.otherResources': 'その他のリソース',
-            'download.warning': '重要：',
+            'download.warning': '重要:',
             'download.warningDetail': 'OneDriveダウンロードチャンネルはオフラインです',
             'download.lastUpdate': '最終更新',
-            'download.downloadInfo': 'ダウンロード情報：',
+            'download.downloadInfo': 'ダウンロード情報:',
             'download.downloadInfoDetail': 'すべてのリソースは百度网盘でのみ利用可能です',
             'download.backToDownload': 'ダウンロードに戻る',
             'download.downloadList': 'ダウンロードリスト',
@@ -748,6 +754,9 @@ const languageModule = (function() {
             // 公告管理
             'announcementAdmin.title': 'お知らせ管理',
             'announcementAdmin.create': '新規お知らせ',
+            'announcementAdmin.selectAll': 'すべて選択',
+            'announcementAdmin.deselectAll': '選択解除',
+            'announcementAdmin.batchDelete': '選択削除',
             'announcementAdmin.editorTitle': '新規お知らせ',
             'announcementAdmin.announcementTitle': 'タイトル',
             'announcementAdmin.type': 'タイプ',
@@ -778,7 +787,7 @@ const languageModule = (function() {
             'orderEntry.modalEdit': '注文を編集',
             'orderEntry.taobaoIdPlaceholder': 'TaoBaoユーザーIDを入力',
             'orderEntry.productNamePlaceholder': '商品名を入力',
-            'orderEntry.orderNumberPlaceholder': '注文番号を入力（一意）',
+            'orderEntry.orderNumberPlaceholder': '注文番号を入力(一意)',
             'orderEntry.unredeemed': '未交換',
             'orderEntry.redeemed': '交換済み',
             'orderEntry.saveOrder': '注文を保存',
@@ -810,14 +819,14 @@ const languageModule = (function() {
             'auth.getVerificationCode': 'コード取得',
             'auth.loginNow': '今すぐログイン',
             'auth.registerNow': '今すぐ登録',
-            'auth.noAccount': 'アカウントがありませんか？',
-            'auth.hasAccount': 'すでにアカウントをお持ちですか？',
-            'auth.forgotPassword': 'パスワードを忘れましたか？',
+            'auth.noAccount': 'アカウントがありませんか?',
+            'auth.hasAccount': 'すでにアカウントをお持ちですか?',
+            'auth.forgotPassword': 'パスワードを忘れましたか?',
             'auth.resetPassword': 'パスワードリセット',
             'auth.newPassword': '新しいパスワード',
             'auth.verify': '確認',
             
-            // 用户设置  
+            // 用户设置
             'userSettings.title': 'ユーザー設定',
             'userSettings.profile': 'プロフィール',
             'userSettings.pointsInfo': 'ポイント情報',
@@ -867,11 +876,11 @@ const languageModule = (function() {
             'userSettings.savePrivacy': 'プライバシー保存',
             
             // 每日签到
-            'fortune.title': 'おんみくじ',
+            'fortune.title': 'おみくじ',
             'fortune.backHome': '戻る',
             'fortune.todayFortune': '今日の運勢',
-            'fortune.suitable': '宜：',
-            'fortune.unsuitable': '不宜：',
+            'fortune.suitable': '宜:',
+            'fortune.unsuitable': '不宜:',
             'fortune.signin': 'チェックイン',
             
             // 帮助中心
@@ -905,18 +914,18 @@ const languageModule = (function() {
             'settings.cursorStyle': 'カーソルスタイル',
             'settings.cursorHint': 'カーソルスタイル設定はデスクトップデバイスでのみ有効',
             'settings.cursorDesc': 'お好みのカーソルスタイルを選択',
-            'settings.cursorLoadingHint': '注意：カスタムカーソルスタイルは追加リソースの読み込みが必要',
+            'settings.cursorLoadingHint': '注意:カスタムカーソルスタイルは追加リソースの読み込みが必要',
             'settings.saveSettings': '設定を保存',
             'settings.cursorDefault': 'デフォルト',
             'settings.cursorDefaultDesc': 'デフォルトカーソル',
             'settings.cursorCustom1': '井蓋',
             'settings.cursorCustom1Desc': 'アラド戦記',
             'settings.cursorCustom2': 'まひろ',
-            'settings.cursorCustom2Desc': 'お兄ちゃんおしまい！',
-			
-			// 交流区相关
-			'sidebar.forum': '掲示板',
-			'sidebar.forumAdmin': '掲示板管理',
+            'settings.cursorCustom2Desc': 'お兄ちゃんおしまい!',
+            
+            // 交流区相关
+            'sidebar.forum': '掲示板',
+            'sidebar.forumAdmin': '掲示板管理',
             
             // 通用按钮和操作
             'common.back': '戻る',
@@ -997,7 +1006,7 @@ const languageModule = (function() {
         const rememberLanguage = localStorage.getItem('rememberLanguage') === 'true';
         const savedLanguage = localStorage.getItem('savedLanguage');
         
-        // 优先级：URL参数 > 记忆的语言 > 默认语言
+        // 优先级:URL参数 > 记忆的语言 > 默认语言
         if (!lang && rememberLanguage && savedLanguage) {
             lang = savedLanguage;
         } else if (!lang) {
@@ -1010,7 +1019,7 @@ const languageModule = (function() {
         // 初始更新
         updateTranslations();
         
-        // 保存语言（如果开启了记忆功能）
+        // 保存语言(如果开启了记忆功能)
         if (rememberLanguage) {
             localStorage.setItem('savedLanguage', lang);
         }
@@ -1103,7 +1112,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, true);
 });
 
-// 监听页面内容更新，自动应用翻译
+// 监听页面内容更新,自动应用翻译
 window.addEventListener('contentUpdated', function() {
     languageModule.updateTranslations();
 });

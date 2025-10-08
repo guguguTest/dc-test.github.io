@@ -364,57 +364,33 @@ download: `
       </button>
       
       <div class="announcement-admin-container">
+        <!-- 操作按钮区域 - 包含所有批量操作按钮 -->
         <div class="announcement-admin-actions">
           <button id="create-announcement-btn" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i><span data-i18n="announcementAdmin.create">新建公告</span>
+            <i class="fas fa-plus me-2"></i>
+            <span data-i18n="announcementAdmin.create">新建公告</span>
+          </button>
+          <button id="select-all-btn" class="btn btn-secondary">
+            <i class="fas fa-check-square me-2"></i>
+            <span data-i18n="announcementAdmin.selectAll">全选</span>
+          </button>
+          <button id="deselect-all-btn" class="btn btn-secondary">
+            <i class="fas fa-square me-2"></i>
+            <span data-i18n="announcementAdmin.deselectAll">取消全选</span>
+          </button>
+          <button id="batch-delete-btn" class="btn btn-danger" disabled>
+            <i class="fas fa-trash me-2"></i>
+            <span data-i18n="announcementAdmin.batchDelete">删除选中</span>
           </button>
         </div>
         
-        <!-- 编辑器放在这里，初始状态为隐藏 -->
-        <div class="announcement-editor" id="announcement-editor" style="display: none;">
-          <h3 id="editor-title" data-i18n="announcementAdmin.editorTitle">新建公告</h3>
-          <div class="form-group">
-            <label for="announcement-title" data-i18n="announcementAdmin.announcementTitle">标题</label>
-            <input type="text" id="announcement-title" class="form-control">
-          </div>
-          <div class="form-group">
-            <label for="announcement-type" data-i18n="announcementAdmin.type">类型</label>
-            <select id="announcement-type" class="form-control">
-              <option value="notice" data-i18n="announcementAdmin.typeNotice">通知</option>
-              <option value="important" data-i18n="announcementAdmin.typeImportant">重要</option>
-              <option value="update" data-i18n="announcementAdmin.typeUpdate">更新</option>
-              <option value="top" data-i18n="announcementAdmin.typeTop">置顶</option>
-            </select>
-          </div>
-          <div class="form-group form-check">
-            <input type="checkbox" id="announcement-pinned" class="form-check-input">
-            <label for="announcement-pinned" class="form-check-label" data-i18n="announcementAdmin.pinned">置顶公告</label>
-          </div>
-          <div class="form-group">
-            <label data-i18n="announcementAdmin.content">内容</label>
-          <div class="editor-toolbar">
-            <button type="button" data-command="bold"><i class="fas fa-bold"></i></button>
-            <button type="button" data-command="italic"><i class="fas fa-italic"></i></button>
-            <button type="button" data-command="underline"><i class="fas fa-underline"></i></button>
-            <button type="button" data-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
-            <button type="button" data-command="insertOrderedList"><i class="fas fa-list-ol"></i></button>
-            <button type="button" data-command="createLink"><i class="fas fa-link"></i></button>
-            <button type="button" data-command="insertImage"><i class="fas fa-image"></i></button>
-          </div>
-            <div id="announcement-editor-content" class="editor-content"></div>
-          </div>
-          <div class="form-group">
-            <button id="save-announcement-btn" class="btn btn-primary" data-i18n="announcementAdmin.save">保存</button>
-            <button id="cancel-announcement-btn" class="btn btn-secondary" data-i18n="announcementAdmin.cancel">取消</button>
-          </div>
-        </div>
-        
+        <!-- 公告列表容器 - 支持横向滚动 -->
         <div id="admin-announcements-list" class="admin-announcements-list">
-          <div class="text-center">
+          <div class="text-center" style="padding: 2rem;">
             <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">加载中...</span>
             </div>
-            <p data-i18n="announcementAdmin.loading">公告加载中...</p>
+            <p data-i18n="announcementAdmin.loading" style="margin-top: 1rem;">公告加载中...</p>
           </div>
         </div>
       </div>
