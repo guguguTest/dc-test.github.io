@@ -361,14 +361,47 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+
+// 加载服务器列表并缓存（用于查分功能）
+async function loadServerListCache() {
+    if (window.serverListCache) {
+        return window.serverListCache;
+    }
+    
+    try {
+        const list = await secureFetch('https://api.am-all.com.cn/api/ccb/servers');
+        window.serverListCache = list || [];
+        return window.serverListCache;
+    } catch (error) {
+        console.error('加载服务器列表失败:', error);
+        window.serverListCache = [];
+        return window.serverListCache;
+    }
+}
+
+// 根据服务器URL获取服务器名称（用于查分功能）
+function getServerNameByUrl(serverUrl) {
+    if (!serverUrl || !window.serverListCache) {
+        return serverUrl || '未知服务器';
+    }
+    
+    const server = window.serverListCache.find(s => s.server_url === serverUrl);
+    return server ? server.server_name : serverUrl;
+}
+
 // 在用户设置页面显示查分绑定信息
-function displayCCBBindingInfo() {
+async function displayCCBBindingInfo() {
     const bindingSection = document.getElementById('ccb-binding-section');
     if (!bindingSection) return;
     
     if (currentUser && currentUser.game_server && currentUser.keychip && currentUser.guid) {
         bindingSection.style.display = 'block';
-        document.getElementById('ccb-server-info').textContent = currentUser.game_server;
+        
+        // 加载服务器列表并获取服务器名称
+        await loadServerListCache();
+        const serverName = getServerNameByUrl(currentUser.game_server);
+        
+        document.getElementById('ccb-server-info').textContent = serverName;
         document.getElementById('ccb-keychip-info').textContent = currentUser.keychip;
         document.getElementById('ccb-guid-info').textContent = currentUser.guid;
         

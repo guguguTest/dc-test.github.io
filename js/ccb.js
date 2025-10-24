@@ -17,13 +17,16 @@ function initCCBPage() {
         return;
     }
     
-    // 直接检查当前用户信息中的绑定状态
-    if (currentUser.game_server && currentUser.keychip && currentUser.guid) {
-        renderQueryPage(currentUser);
-    } else {
-        // 如果没有绑定信息，从服务器获取最新用户信息
-        checkUserBinding();
-    }
+    // 预加载服务器列表
+    loadServerListCache().then(() => {
+        // 直接检查当前用户信息中的绑定状态
+        if (currentUser.game_server && currentUser.keychip && currentUser.guid) {
+            renderQueryPage(currentUser);
+        } else {
+            // 如果没有绑定信息，从服务器获取最新用户信息
+            checkUserBinding();
+        }
+    });
 }
 
 // 检查用户绑定状态
@@ -113,6 +116,33 @@ function renderBindingPage() {
     });
 }
 
+// 加载服务器列表并缓存
+async function loadServerListCache() {
+    if (window.serverListCache) {
+        return window.serverListCache;
+    }
+    
+    try {
+        const list = await secureFetch('https://api.am-all.com.cn/api/ccb/servers');
+        window.serverListCache = list || [];
+        return window.serverListCache;
+    } catch (error) {
+        console.error('加载服务器列表失败:', error);
+        window.serverListCache = [];
+        return window.serverListCache;
+    }
+}
+
+// 根据服务器URL获取服务器名称
+function getServerNameByUrl(serverUrl) {
+    if (!serverUrl || !window.serverListCache) {
+        return serverUrl || '未知服务器';
+    }
+    
+    const server = window.serverListCache.find(s => s.server_url === serverUrl);
+    return server ? server.server_name : serverUrl;
+}
+
 // 加载服务器列表
 function loadServerList() {
 
@@ -123,6 +153,7 @@ function loadServerList() {
         const seen = new Set();
         secureFetch('https://api.am-all.com.cn/api/ccb/servers')
           .then(list => {
+            window.serverListCache = list || []; // 同时更新缓存
             (list || []).forEach(item => {
               const key = `${item.server_url}|${item.server_name}`;
               if (seen.has(key)) return;
@@ -193,13 +224,16 @@ function handleBindingSubmit(e) {
 function renderQueryPage(user) {
     const contentContainer = document.getElementById('content-container');
     
+    // 获取服务器名称
+    const serverName = getServerNameByUrl(user.game_server);
+    
     contentContainer.innerHTML = `
         <div class="section">
             <h1 class="page-title">游戏查分</h1>
             <div class="ccb-container">
                 <div class="ccb-section">
                     <h2 class="ccb-title">查询分数</h2>
-                    <p>已绑定服务器: ${user.game_server}</p>
+                    <p>已绑定服务器: ${serverName}</p>
                     
                     <form id="ccb-query-form" class="ccb-form">
                         <div class="form-group">
@@ -251,73 +285,42 @@ function renderQueryPage(user) {
     // 加载游戏列表
     loadGameList();
     
-    // 绑定表单提交事件
+    // 绑定查询表单提交事件
     document.getElementById('ccb-query-form').addEventListener('submit', handleQuerySubmit);
     
     // 绑定解绑按钮事件
     document.getElementById('unbind-btn').addEventListener('click', handleUnbind);
     
     // 绑定刷新积分按钮事件
-    document.getElementById('refresh-points-btn').addEventListener('click', refreshPoints);
-}
-
-// 刷新积分函数
-function refreshPoints() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        showErrorMessage('请先登录');
-        return;
-    }
-    
-    const refreshBtn = document.getElementById('refresh-points-btn');
-    refreshBtn.disabled = true;
-    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>刷新中...';
-    
-    secureFetch('https://api.am-all.com.cn/api/user', {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(user => {
-        // 更新当前用户信息
-        currentUser = user;
-        // 保存更新后的用户信息到本地存储
-        localStorage.setItem('userInfo', JSON.stringify(user));
-        
-        // 更新页面上的积分显示
-        const pointsInfo = document.querySelector('.ccb-points-info');
-        if (pointsInfo) {
-            pointsInfo.innerHTML = `当前积分: ${user.points || 0}
+    document.getElementById('refresh-points-btn').addEventListener('click', async function() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await secureFetch('https://api.am-all.com.cn/api/user', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            // 更新当前用户信息
+            currentUser.points = response.points;
+            
+            // 更新显示
+            document.querySelector('.ccb-points-info').innerHTML = `
+                当前积分: ${response.points || 0}  <!-- 只显示普通积分 -->
                 <button id="refresh-points-btn" class="refresh-points-btn">
                     <i class="fas fa-redo"></i>刷新积分
-                </button>`;
+                </button>
+            `;
             
-            // 创建并显示成功提示
-            const successMsg = document.createElement('span');
-            successMsg.textContent = '刷新积分成功';
-            successMsg.style.color = '#e74c3c';
-            successMsg.style.fontSize = '14px';
-            successMsg.style.fontWeight = '500';
-            successMsg.style.marginLeft = '10px';
-            pointsInfo.appendChild(successMsg);
+            // 重新绑定刷新按钮事件
+            document.getElementById('refresh-points-btn').addEventListener('click', arguments.callee);
             
-            // 2秒后移除提示
-            setTimeout(() => {
-                successMsg.remove();
-            }, 2000);
-            
-            // 重新绑定事件
-            document.getElementById('refresh-points-btn').addEventListener('click', refreshPoints);
+            showSuccessMessage('积分已刷新');
+        } catch (error) {
+            console.error('刷新积分失败:', error);
+            showErrorMessage('刷新积分失败');
         }
-    })
-    .catch(error => {
-        console.error('刷新积分失败:', error);
-        showErrorMessage('刷新积分失败');
-    })
-    .finally(() => {
-        refreshBtn.disabled = false;
-        refreshBtn.innerHTML = '<i class="fas fa-redo"></i>刷新积分';
     });
 }
 
@@ -478,9 +481,15 @@ function handleUnbind() {
 }
 
 // 在用户设置页面显示绑定信息
-function displayCCBInfoInSettings() {
+async function displayCCBInfoInSettings() {
     const settingsContainer = document.querySelector('.user-settings-container');
     if (!settingsContainer) return;
+    
+    // 确保服务器列表已加载
+    await loadServerListCache();
+    
+    // 获取服务器名称
+    const serverName = getServerNameByUrl(currentUser.game_server);
     
     const ccbInfoSection = document.createElement('div');
     ccbInfoSection.className = 'settings-section';
@@ -488,7 +497,7 @@ function displayCCBInfoInSettings() {
         <h3>游戏查分绑定信息</h3>
         ${currentUser.game_server && currentUser.keychip && currentUser.guid ? `
             <div class="ccb-info">
-                <p><strong>服务器:</strong> ${currentUser.game_server}</p>
+                <p><strong>服务器:</strong> ${serverName}</p>
                 <p><strong>KeyChip:</strong> ${currentUser.keychip}</p>
                 <p><strong>游戏卡号:</strong> ${currentUser.guid}</p>
                 <button type="button" class="ccb-btn ccb-btn-secondary" id="settings-unbind-btn">解绑查分信息</button>
