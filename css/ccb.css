@@ -1,5 +1,5 @@
-/* ccb.css - 游戏查分系统页面特定样式 */
-/* 注意：此文件依赖于main.css中定义的现代化CSS变量 */
+/* ccb.css - 游戏查分系统页面特定样式 (多卡片支持版本) */
+/* 注意:此文件依赖于main.css中定义的现代化CSS变量 */
 
 /* 主容器现代化设计 */
 .ccb-container {
@@ -38,6 +38,123 @@
 .ccb-section:hover {
     transform: translateY(-2px);
     box-shadow: var(--modern-shadow-heavy);
+}
+
+/* 卡片选择器样式 */
+.ccb-card-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.ccb-card-btn {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px 12px;
+    border: 2px solid var(--modern-border-color);
+    border-radius: var(--modern-border-radius-small);
+    background: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: var(--modern-transition);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--modern-text-primary);
+    box-shadow: var(--modern-shadow-light);
+    min-height: 100px;
+}
+
+.ccb-card-btn i.fa-credit-card {
+    font-size: 24px;
+    color: var(--modern-text-secondary);
+    transition: var(--modern-transition);
+}
+
+.ccb-card-btn span {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.ccb-card-btn small {
+    font-size: 11px;
+    color: var(--modern-text-secondary);
+    font-weight: 500;
+}
+
+/* 已绑定卡片样式 */
+.ccb-card-btn.bound {
+    border-color: var(--modern-success-color);
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.1) 0%, rgba(85, 230, 193, 0.1) 100%);
+}
+
+.ccb-card-btn.bound i.fa-credit-card {
+    color: var(--modern-success-color);
+}
+
+.ccb-card-btn.bound:hover {
+    border-color: var(--modern-success-color);
+    box-shadow: 0 4px 16px rgba(78, 205, 196, 0.3);
+    transform: translateY(-2px);
+}
+
+.ccb-card-btn.bound i.fa-check-circle,
+.ccb-card-btn.bound i.fa-star {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 16px;
+    color: var(--modern-success-color);
+}
+
+.ccb-card-btn.bound i.fa-star {
+    color: gold;
+}
+
+/* 激活卡片样式 */
+.ccb-card-btn.active {
+    border-color: var(--modern-primary-color);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), var(--modern-shadow-medium);
+}
+
+.ccb-card-btn.active i.fa-credit-card {
+    color: var(--modern-primary-color);
+}
+
+.ccb-card-btn.active::after {
+    content: '当前使用';
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--modern-primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* 未绑定卡片样式 */
+.ccb-card-btn.unbound {
+    border-color: var(--modern-border-color);
+    background: rgba(200, 200, 200, 0.1);
+    border-style: dashed;
+}
+
+.ccb-card-btn.unbound:hover {
+    border-color: var(--modern-primary-color);
+    border-style: solid;
+    background: rgba(102, 126, 234, 0.05);
+    box-shadow: var(--modern-shadow-medium);
+    transform: translateY(-2px);
+}
+
+.ccb-card-btn.unbound i.fa-credit-card {
+    color: var(--modern-text-secondary);
 }
 
 /* 标题现代化设计 */
@@ -509,6 +626,16 @@
         margin-bottom: 14px;
     }
     
+    .ccb-card-selector {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .ccb-card-btn {
+        min-height: 80px;
+        padding: 16px 12px;
+    }
+    
     .ccb-actions {
         flex-direction: column;
     }
@@ -544,6 +671,19 @@
     
     .ccb-title {
         font-size: 1.25rem;
+    }
+    
+    .ccb-card-btn {
+        min-height: 70px;
+        padding: 14px 10px;
+    }
+    
+    .ccb-card-btn i.fa-credit-card {
+        font-size: 20px;
+    }
+    
+    .ccb-card-btn span {
+        font-size: 13px;
     }
     
     .admin-container {
@@ -582,8 +722,19 @@
     }
 }
 
-/* 动画优化 - 移除滑入动画 */
-/* 卡片直接显示，不再使用动画 */
+/* 动画优化 */
+@keyframes cardPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(102, 126, 234, 0);
+    }
+}
+
+.ccb-card-btn.active {
+    animation: cardPulse 2s ease-in-out infinite;
+}
 
 /* 加载状态优化 */
 .ccb-btn:disabled {
@@ -605,4 +756,81 @@
 @keyframes loading {
     0% { left: -100%; }
     100% { left: 100%; }
+}
+
+/* 用户设置页面 - 查分卡片样式 */
+.ccb-cards-container {
+    display: grid;
+    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.ccb-card-item {
+    border: 1px solid var(--modern-border-color, #e0e0e0);
+    border-radius: 8px;
+    padding: 15px;
+    background: var(--modern-card-bg, #fff);
+    transition: all 0.3s ease;
+}
+
+.ccb-card-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.ccb-card-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--modern-border-color, #e0e0e0);
+}
+
+.ccb-card-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--modern-text-primary, #333);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ccb-card-body {
+    margin-bottom: 12px;
+}
+
+.ccb-card-body p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: var(--modern-text-secondary, #666);
+}
+
+.ccb-card-body strong {
+    color: var(--modern-text-primary, #333);
+    font-weight: 500;
+}
+
+.ccb-card-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.ccb-unbind-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+    border: none;
+    background-color: #dc3545;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ccb-unbind-btn:hover {
+    background-color: #c82333;
+    transform: scale(1.05);
+}
+
+.ccb-unbind-btn i {
+    margin-right: 4px;
 }

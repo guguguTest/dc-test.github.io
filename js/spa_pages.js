@@ -915,34 +915,145 @@ download: `
           <!-- 查分绑定卡片 -->
           <div class="settings-card" id="ccb-binding-section" style="display: none;">
             <div class="card-header">
-              <h3><i class="fas fa-gamepad"></i> <span data-i18n="userSettings.ccbBinding">查分绑定信息</span></h3>
+              <h3>
+                <i class="fas fa-gamepad"></i> 
+                <span data-i18n="userSettings.ccbBinding">查分绑定信息</span>
+              </h3>
+              <button id="ccb-visibility-toggle" class="visibility-toggle-btn" title="隐藏/显示绑定信息">
+                <i class="fas fa-eye"></i>
+              </button>
             </div>
             <div class="card-body">
-              <div class="binding-info">
-                <div class="binding-item">
-                  <i class="fas fa-server"></i>
-                  <div>
-                    <label data-i18n="userSettings.server">服务器</label>
-                    <div class="binding-value" id="ccb-server-info">-</div>
-                  </div>
-                </div>
-                <div class="binding-item">
-                  <i class="fas fa-microchip"></i>
-                  <div>
-                    <label>KeyChip</label>
-                    <div class="binding-value" id="ccb-keychip-info">-</div>
-                  </div>
-                </div>
-                <div class="binding-item">
-                  <i class="fas fa-id-badge"></i>
-                  <div>
-                    <label data-i18n="userSettings.cardNumber">游戏卡号</label>
-                    <div class="binding-value" id="ccb-guid-info">-</div>
-                  </div>
-                </div>
+              <!-- 卡片选项卡导航 -->
+              <div class="binding-tab-nav">
+                <button class="binding-tab-btn active" data-card="1">
+                  <i class="fas fa-credit-card"></i>
+                  <span data-i18n="ccb.card">卡片</span> 1
+                  <span class="card-active-star" style="display: none;">⭐</span>
+                </button>
+                <button class="binding-tab-btn" data-card="2">
+                  <i class="fas fa-credit-card"></i>
+                  <span data-i18n="ccb.card">卡片</span> 2
+                  <span class="card-active-star" style="display: none;">⭐</span>
+                </button>
+                <button class="binding-tab-btn" data-card="3">
+                  <i class="fas fa-credit-card"></i>
+                  <span data-i18n="ccb.card">卡片</span> 3
+                  <span class="card-active-star" style="display: none;">⭐</span>
+                </button>
               </div>
-              <button id="ccb-unbind-settings-btn" class="btn-danger btn-block">
-                <i class="fas fa-unlink"></i> <span data-i18n="userSettings.unbindCcb">解绑查分信息</span>
+
+              <!-- 卡片1面板 -->
+              <div class="binding-tab-panel active" id="card-1-panel">
+                <div class="binding-info" style="display: none;">
+                  <div class="binding-item">
+                    <i class="fas fa-server"></i>
+                    <div>
+                      <label data-i18n="userSettings.server">服务器</label>
+                      <div class="binding-value sensitive-data" data-field="server">-</div>
+                    </div>
+                  </div>
+                  <div class="binding-item">
+                    <i class="fas fa-microchip"></i>
+                    <div>
+                      <label>KeyChip</label>
+                      <div class="binding-value sensitive-data" data-field="keychip">-</div>
+                    </div>
+                  </div>
+                  <div class="binding-item">
+                    <i class="fas fa-id-badge"></i>
+                    <div>
+                      <label data-i18n="userSettings.cardNumber">游戏卡号</label>
+                      <div class="binding-value sensitive-data" data-field="guid">-</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="no-binding-hint" style="display: none;">
+                  <p class="text-muted text-center">
+                    <i class="fas fa-info-circle"></i>
+                    <span data-i18n="ccb.cardNotBound">该卡片尚未绑定</span>
+                  </p>
+                </div>
+                <button class="btn-danger btn-block ccb-unbind-btn" data-slot="1" style="display: none;">
+                  <i class="fas fa-unlink"></i> <span data-i18n="userSettings.unbindCard">解绑卡片</span>
+                </button>
+              </div>
+
+              <!-- 卡片2面板 -->
+              <div class="binding-tab-panel" id="card-2-panel">
+                <div class="binding-info" style="display: none;">
+                  <div class="binding-item">
+                    <i class="fas fa-server"></i>
+                    <div>
+                      <label data-i18n="userSettings.server">服务器</label>
+                      <div class="binding-value sensitive-data" data-field="server">-</div>
+                    </div>
+                  </div>
+                  <div class="binding-item">
+                    <i class="fas fa-microchip"></i>
+                    <div>
+                      <label>KeyChip</label>
+                      <div class="binding-value sensitive-data" data-field="keychip">-</div>
+                    </div>
+                  </div>
+                  <div class="binding-item">
+                    <i class="fas fa-id-badge"></i>
+                    <div>
+                      <label data-i18n="userSettings.cardNumber">游戏卡号</label>
+                      <div class="binding-value sensitive-data" data-field="guid">-</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="no-binding-hint" style="display: none;">
+                  <p class="text-muted text-center">
+                    <i class="fas fa-info-circle"></i>
+                    <span data-i18n="ccb.cardNotBound">该卡片尚未绑定</span>
+                  </p>
+                </div>
+                <button class="btn-danger btn-block ccb-unbind-btn" data-slot="2" style="display: none;">
+                  <i class="fas fa-unlink"></i> <span data-i18n="userSettings.unbindCard">解绑卡片</span>
+                </button>
+              </div>
+
+              <!-- 卡片3面板 -->
+              <div class="binding-tab-panel" id="card-3-panel">
+                <div class="binding-info" style="display: none;">
+                  <div class="binding-item">
+                    <i class="fas fa-server"></i>
+                    <div>
+                      <label data-i18n="userSettings.server">服务器</label>
+                      <div class="binding-value sensitive-data" data-field="server">-</div>
+                    </div>
+                  </div>
+                  <div class="binding-item">
+                    <i class="fas fa-microchip"></i>
+                    <div>
+                      <label>KeyChip</label>
+                      <div class="binding-value sensitive-data" data-field="keychip">-</div>
+                    </div>
+                  </div>
+                  <div class="binding-item">
+                    <i class="fas fa-id-badge"></i>
+                    <div>
+                      <label data-i18n="userSettings.cardNumber">游戏卡号</label>
+                      <div class="binding-value sensitive-data" data-field="guid">-</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="no-binding-hint" style="display: none;">
+                  <p class="text-muted text-center">
+                    <i class="fas fa-info-circle"></i>
+                    <span data-i18n="ccb.cardNotBound">该卡片尚未绑定</span>
+                  </p>
+                </div>
+                <button class="btn-danger btn-block ccb-unbind-btn" data-slot="3" style="display: none;">
+                  <i class="fas fa-unlink"></i> <span data-i18n="userSettings.unbindCard">解绑卡片</span>
+                </button>
+              </div>
+
+              <!-- 前往查分页按钮 -->
+              <button class="btn-primary btn-block mt-3" onclick="loadPage('ccb')">
+                <i class="fas fa-chart-line"></i> <span data-i18n="userSettings.goToCcbPage">前往查分页</span>
               </button>
             </div>
           </div>
@@ -962,7 +1073,13 @@ download: `
           <!-- 收货信息卡片 -->
           <div class="settings-card" id="shipping-binding-section" style="display: none;">
             <div class="card-header">
-              <h3><i class="fas fa-truck"></i> <span data-i18n="userSettings.shippingInfo">收货绑定信息</span></h3>
+              <h3>
+                <i class="fas fa-truck"></i> 
+                <span data-i18n="userSettings.shippingInfo">收货绑定信息</span>
+              </h3>
+              <button id="shipping-visibility-toggle" class="visibility-toggle-btn" title="隐藏/显示收货信息">
+                <i class="fas fa-eye"></i>
+              </button>
             </div>
             <div class="card-body">
               <div class="binding-info">
@@ -970,28 +1087,28 @@ download: `
                   <i class="fas fa-user"></i>
                   <div>
                     <label data-i18n="userSettings.recipient">收件人</label>
-                    <div class="binding-value" id="shipping-name">-</div>
+                    <div class="binding-value sensitive-data" data-field="name" id="shipping-name">-</div>
                   </div>
                 </div>
                 <div class="binding-item">
                   <i class="fas fa-phone"></i>
                   <div>
                     <label data-i18n="userSettings.phone">联系电话</label>
-                    <div class="binding-value" id="shipping-phone">-</div>
+                    <div class="binding-value sensitive-data" data-field="phone" id="shipping-phone">-</div>
                   </div>
                 </div>
                 <div class="binding-item">
                   <i class="fas fa-map-marker-alt"></i>
                   <div>
                     <label data-i18n="userSettings.address">收货地址</label>
-                    <div class="binding-value" id="shipping-address">-</div>
+                    <div class="binding-value sensitive-data" data-field="address" id="shipping-address">-</div>
                   </div>
                 </div>
                 <div class="binding-item">
                   <i class="fas fa-shopping-cart"></i>
                   <div>
                     <label data-i18n="orderEntry.taobaoId">淘宝ID</label>
-                    <div class="binding-value" id="shipping-postal-code">-</div>
+                    <div class="binding-value sensitive-data" data-field="postal_code" id="shipping-postal-code">-</div>
                   </div>
                 </div>
               </div>

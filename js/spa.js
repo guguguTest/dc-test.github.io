@@ -389,37 +389,82 @@ function getServerNameByUrl(serverUrl) {
     return server ? server.server_name : serverUrl;
 }
 
-// 在用户设置页面显示查分绑定信息
+// 在用户设置页面显示查分绑定信息（支持多卡片，选项卡形式）
 async function displayCCBBindingInfo() {
     const bindingSection = document.getElementById('ccb-binding-section');
-    if (!bindingSection) return;
+    const noBindingMessage = document.getElementById('no-binding-message');
     
-    if (currentUser && currentUser.game_server && currentUser.keychip && currentUser.guid) {
+    if (!bindingSection || !noBindingMessage) return;
+    
+    // 加载服务器列表
+    await loadServerListCache();
+    
+    // 检查所有卡片的绑定状态
+    const slot1Bound = currentUser && currentUser.game_server && currentUser.keychip && currentUser.guid;
+    const slot2Bound = currentUser && currentUser.ccb_slot2_server && currentUser.ccb_slot2_keychip && currentUser.ccb_slot2_guid;
+    const slot3Bound = currentUser && currentUser.ccb_slot3_server && currentUser.ccb_slot3_keychip && currentUser.ccb_slot3_guid;
+    
+    const hasAnyBinding = slot1Bound || slot2Bound || slot3Bound;
+    
+    if (hasAnyBinding) {
         bindingSection.style.display = 'block';
+        noBindingMessage.style.display = 'none';
         
-        // 加载服务器列表并获取服务器名称
-        await loadServerListCache();
-        const serverName = getServerNameByUrl(currentUser.game_server);
+        // 更新卡片1数据
+        updateCardPanel(1, slot1Bound, {
+            server: currentUser.game_server,
+            keychip: currentUser.keychip,
+            guid: currentUser.guid
+        });
         
-        document.getElementById('ccb-server-info').textContent = serverName;
-        document.getElementById('ccb-keychip-info').textContent = currentUser.keychip;
-        document.getElementById('ccb-guid-info').textContent = currentUser.guid;
+        // 更新卡片2数据
+        updateCardPanel(2, slot2Bound, {
+            server: currentUser.ccb_slot2_server,
+            keychip: currentUser.ccb_slot2_keychip,
+            guid: currentUser.ccb_slot2_guid
+        });
         
-        // 添加解绑事件
-        const unbindBtn = document.getElementById('ccb-unbind-settings-btn');
-        if (unbindBtn) {
-            // 先移除旧的监听器，再添加新的
-            unbindBtn.replaceWith(unbindBtn.cloneNode(true));
-            document.getElementById('ccb-unbind-settings-btn').addEventListener('click', handleUnbindFromSettings);
-        }
+        // 更新卡片3数据
+        updateCardPanel(3, slot3Bound, {
+            server: currentUser.ccb_slot3_server,
+            keychip: currentUser.ccb_slot3_keychip,
+            guid: currentUser.ccb_slot3_guid
+        });
+        
+        // 更新激活卡片标记
+        updateActiveCardMarkers();
+        
+        // 初始化选项卡切换功能
+        initBindingTabs();
+        
+        // 初始化眼睛图标功能
+        initVisibilityToggle('ccb');
+        
+        // 为所有解绑按钮绑定事件
+        const unbindBtns = bindingSection.querySelectorAll('.ccb-unbind-btn');
+        unbindBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const slot = parseInt(this.getAttribute('data-slot'));
+                handleUnbindFromSettings(slot);
+            });
+        });
+        
     } else {
         bindingSection.style.display = 'none';
+        noBindingMessage.style.display = 'block';
     }
 }
 
-// 从设置页面解绑
-function handleUnbindFromSettings() {
-    if (!confirm('确定要解绑查分信息吗？解绑后需要重新绑定才能使用查分功能。')) {
+// 从设置页面解绑（支持多卡片）
+function handleUnbindFromSettings(slot) {
+    // 参数验证
+    if (typeof slot !== 'number' || slot < 1 || slot > 3) {
+        console.error('handleUnbindFromSettings: 无效的卡片槽位', slot);
+        showErrorMessage('参数错误：无效的卡片槽位');
+        return;
+    }
+    
+    if (!confirm(`确定要解绑卡片${slot}吗？解绑后需要重新绑定才能使用查分功能。`)) {
         return;
     }
     
@@ -428,22 +473,36 @@ function handleUnbindFromSettings() {
     secureFetch('https://api.am-all.com.cn/api/ccb/unbind', {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${token}`
-        }
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ slot: slot })
     })
     .then(result => {
         if (result.success) {
-            showSuccessMessage('解绑成功');
+            showSuccessMessage(`卡片${slot}解绑成功`);
+            
             // 更新当前用户信息
-            currentUser.game_server = null;
-            currentUser.keychip = null;
-            currentUser.guid = null;
+            if (slot === 1) {
+                currentUser.game_server = null;
+                currentUser.keychip = null;
+                currentUser.guid = null;
+            } else if (slot === 2) {
+                currentUser.ccb_slot2_server = null;
+                currentUser.ccb_slot2_keychip = null;
+                currentUser.ccb_slot2_guid = null;
+            } else if (slot === 3) {
+                currentUser.ccb_slot3_server = null;
+                currentUser.ccb_slot3_keychip = null;
+                currentUser.ccb_slot3_guid = null;
+            }
             
             // 保存更新后的用户信息到本地存储
             localStorage.setItem('userInfo', JSON.stringify(currentUser));
             
-            // 隐藏绑定信息卡片
-            document.getElementById('ccb-binding-section').style.display = 'none';
+            // 重新显示绑定信息
+            displayCCBBindingInfo();
+            
         } else {
             showErrorMessage(result.error || '解绑失败');
         }
@@ -475,10 +534,31 @@ function displayShippingBindingInfo() {
             shippingSection.style.display = 'block';
             noShippingMessage.style.display = 'none';
             
-            document.getElementById('shipping-name').textContent = result.address.receiver_name || '-';
-            document.getElementById('shipping-phone').textContent = result.address.contact_phone || '-';
-            document.getElementById('shipping-address').textContent = result.address.shipping_address || '-';
-            document.getElementById('shipping-postal-code').textContent = result.address.taobao_id || '-';
+            // 更新数据并保存原始值
+            const nameEl = document.getElementById('shipping-name');
+            const phoneEl = document.getElementById('shipping-phone');
+            const addressEl = document.getElementById('shipping-address');
+            const postalEl = document.getElementById('shipping-postal-code');
+            
+            const name = result.address.receiver_name || '-';
+            const phone = result.address.contact_phone || '-';
+            const address = result.address.shipping_address || '-';
+            const postal = result.address.taobao_id || '-';
+            
+            nameEl.textContent = name;
+            nameEl.setAttribute('data-original', name);
+            
+            phoneEl.textContent = phone;
+            phoneEl.setAttribute('data-original', phone);
+            
+            addressEl.textContent = address;
+            addressEl.setAttribute('data-original', address);
+            
+            postalEl.textContent = postal;
+            postalEl.setAttribute('data-original', postal);
+            
+            // 初始化眼睛图标功能
+            initVisibilityToggle('shipping');
             
             // 添加事件监听器
             const unbindBtn = document.getElementById('unbind-shipping-btn');
@@ -505,6 +585,177 @@ function displayShippingBindingInfo() {
         console.error('获取收货信息失败:', error);
         shippingSection.style.display = 'none';
         noShippingMessage.style.display = 'block';
+    });
+}
+
+// 更新单个卡片面板的数据
+function updateCardPanel(cardNum, isBound, data) {
+    const panel = document.getElementById(`card-${cardNum}-panel`);
+    if (!panel) return;
+    
+    const bindingInfo = panel.querySelector('.binding-info');
+    const unbindBtn = panel.querySelector('.ccb-unbind-btn');
+    const noBindingHint = panel.querySelector('.no-binding-hint');
+    const tabBtn = document.querySelector(`.binding-tab-btn[data-card="${cardNum}"]`);
+    
+    if (isBound) {
+        // 显示绑定信息
+        bindingInfo.style.display = 'block';
+        unbindBtn.style.display = 'block';
+        noBindingHint.style.display = 'none';
+        
+        // 更新数据
+        const serverName = getServerNameByUrl(data.server);
+        const serverEl = panel.querySelector('[data-field="server"]');
+        if (serverEl) {
+            serverEl.textContent = serverName;
+            serverEl.setAttribute('data-original', serverName);
+        }
+        
+        const keychipEl = panel.querySelector('[data-field="keychip"]');
+        if (keychipEl) {
+            keychipEl.textContent = data.keychip;
+            keychipEl.setAttribute('data-original', data.keychip);
+        }
+        
+        const guidEl = panel.querySelector('[data-field="guid"]');
+        if (guidEl) {
+            guidEl.textContent = data.guid;
+            guidEl.setAttribute('data-original', data.guid);
+        }
+        
+        // 标记选项卡按钮为已绑定
+        if (tabBtn) {
+            tabBtn.classList.add('bound');
+        }
+    } else {
+        // 显示未绑定提示
+        bindingInfo.style.display = 'none';
+        unbindBtn.style.display = 'none';
+        noBindingHint.style.display = 'block';
+        
+        // 移除选项卡按钮的已绑定标记
+        if (tabBtn) {
+            tabBtn.classList.remove('bound');
+        }
+    }
+}
+
+// 更新激活卡片的星标
+function updateActiveCardMarkers() {
+    // 清除所有星标
+    document.querySelectorAll('.card-active-star').forEach(star => {
+        star.style.display = 'none';
+    });
+    
+    // 显示当前激活卡片的星标
+    if (currentUser && currentUser.ccb_active_slot) {
+        const activeSlot = currentUser.ccb_active_slot;
+        const activeBtn = document.querySelector(`.binding-tab-btn[data-card="${activeSlot}"]`);
+        if (activeBtn) {
+            const star = activeBtn.querySelector('.card-active-star');
+            if (star) {
+                star.style.display = 'inline-block';
+            }
+        }
+    }
+}
+
+// 初始化绑定选项卡切换功能
+function initBindingTabs() {
+    const tabBtns = document.querySelectorAll('.binding-tab-btn');
+    const tabPanels = document.querySelectorAll('.binding-tab-panel');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const cardNum = this.getAttribute('data-card');
+            
+            // 移除所有激活状态
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabPanels.forEach(p => p.classList.remove('active'));
+            
+            // 添加当前激活状态
+            this.classList.add('active');
+            const targetPanel = document.getElementById(`card-${cardNum}-panel`);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+        });
+    });
+}
+
+// 初始化可见性切换功能
+function initVisibilityToggle(type) {
+    const toggleBtn = document.getElementById(`${type}-visibility-toggle`);
+    if (!toggleBtn) return;
+    
+    // 移除旧的事件监听器（如果存在）
+    const newBtn = toggleBtn.cloneNode(true);
+    toggleBtn.parentNode.replaceChild(newBtn, toggleBtn);
+    
+    // 初始化状态（默认显示）
+    let isVisible = true;
+    
+    newBtn.addEventListener('click', function() {
+        isVisible = !isVisible;
+        
+        // 更新图标
+        const icon = this.querySelector('i');
+        if (isVisible) {
+            icon.className = 'fas fa-eye';
+        } else {
+            icon.className = 'fas fa-eye-slash';
+        }
+        
+        // 切换敏感数据显示
+        if (type === 'ccb') {
+            toggleCCBSensitiveData(isVisible);
+        } else if (type === 'shipping') {
+            toggleShippingSensitiveData(isVisible);
+        }
+    });
+}
+
+// 切换查分绑定敏感数据显示
+function toggleCCBSensitiveData(isVisible) {
+    const sensitiveElements = document.querySelectorAll('#ccb-binding-section .sensitive-data');
+    
+    sensitiveElements.forEach(el => {
+        const original = el.getAttribute('data-original');
+        if (!original || original === '-') return;
+        
+        if (isVisible) {
+            // 显示原始数据
+            el.textContent = original;
+        } else {
+            // 显示星号
+            el.textContent = '***********';
+        }
+    });
+}
+
+// 切换收货绑定敏感数据显示
+function toggleShippingSensitiveData(isVisible) {
+    const sensitiveElements = document.querySelectorAll('#shipping-binding-section .sensitive-data');
+    
+    sensitiveElements.forEach(el => {
+        const original = el.getAttribute('data-original');
+        if (!original || original === '-') return;
+        
+        if (isVisible) {
+            // 显示原始数据
+            el.textContent = original;
+        } else {
+            // 根据数据类型显示不同长度的星号
+            const fieldId = el.id;
+            if (fieldId === 'shipping-phone') {
+                el.textContent = '***********';
+            } else if (fieldId === 'shipping-postal-code') {
+                el.textContent = '********';
+            } else {
+                el.textContent = '***********';
+            }
+        }
     });
 }
 

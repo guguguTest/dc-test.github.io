@@ -1869,3 +1869,376 @@
     opacity: 1;
   }
 }
+
+/* ========== 绑定管理选项卡样式 ========== */
+
+/* 卡片头部样式 - 添加眼睛图标 */
+.settings-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--modern-border-color);
+}
+
+.settings-card .card-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* 可见性切换按钮 */
+.visibility-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    color: var(--modern-text-secondary);
+    font-size: 18px;
+}
+
+.visibility-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--modern-primary-color);
+}
+
+.visibility-toggle-btn i {
+    transition: all 0.3s ease;
+}
+
+/* 选项卡导航 */
+.binding-tabs-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--modern-border-color);
+    padding-bottom: 0;
+}
+
+.binding-tab-btn {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--modern-text-secondary);
+}
+
+.binding-tab-btn i.fa-credit-card {
+    font-size: 16px;
+}
+
+.binding-tab-btn:hover {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--modern-text-primary);
+}
+
+.binding-tab-btn.active {
+    color: var(--modern-primary-color);
+    border-bottom-color: var(--modern-primary-color);
+    font-weight: 600;
+}
+
+/* 已绑定卡片的选项卡按钮 */
+.binding-tab-btn.bound {
+    color: var(--modern-success-color);
+}
+
+.binding-tab-btn.bound.active {
+    color: var(--modern-primary-color);
+}
+
+/* 激活卡片星标 */
+.card-active-star {
+    color: gold;
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+/* 选项卡内容面板 */
+.binding-tabs-content {
+    position: relative;
+    min-height: 280px;
+}
+
+.binding-tab-panel {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.binding-tab-panel.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 绑定信息显示 */
+.binding-info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.binding-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.binding-item:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.binding-item > i {
+    font-size: 20px;
+    color: var(--modern-primary-color);
+    margin-top: 2px;
+    min-width: 24px;
+}
+
+.binding-item > div {
+    flex: 1;
+}
+
+.binding-item label {
+    display: block;
+    font-size: 12px;
+    color: var(--modern-text-secondary);
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.binding-value {
+    font-size: 14px;
+    color: var(--modern-text-primary);
+    font-weight: 500;
+    word-break: break-all;
+}
+
+/* 敏感数据样式 */
+.sensitive-data {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+}
+
+/* 未绑定提示 */
+.no-binding-hint {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--modern-text-secondary);
+}
+
+.no-binding-hint i {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+/* 操作按钮区域 */
+.binding-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.binding-actions button {
+    flex: 0 0 auto;
+}
+
+/* 空状态图标 */
+.empty-icon {
+    font-size: 64px;
+    color: var(--modern-text-secondary);
+    opacity: 0.3;
+    margin-bottom: 20px;
+}
+
+/* ========== 响应式设计 ========== */
+
+@media (max-width: 768px) {
+    .binding-tabs-nav {
+        flex-direction: column;
+        border-bottom: none;
+        gap: 4px;
+    }
+    
+    .binding-tab-btn {
+        border-bottom: none;
+        border-left: 3px solid transparent;
+        justify-content: flex-start;
+    }
+    
+    .binding-tab-btn.active {
+        border-left-color: var(--modern-primary-color);
+        background: rgba(var(--modern-primary-rgb), 0.1);
+    }
+    
+    .binding-item {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .binding-item > i {
+        font-size: 24px;
+    }
+    
+    .visibility-toggle-btn {
+        padding: 6px 10px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-card .card-header {
+        padding: 12px 16px;
+    }
+    
+    .settings-card .card-header h3 {
+        font-size: 16px;
+    }
+    
+    .binding-value {
+        font-size: 13px;
+    }
+    
+    .binding-tab-btn {
+        font-size: 13px;
+        padding: 10px 12px;
+    }
+}
+
+/* ========== 暗色主题支持 ========== */
+
+@media (prefers-color-scheme: dark) {
+    .binding-item {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .binding-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .binding-tab-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .binding-tab-btn.active {
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .visibility-toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* ========== 打印样式 ========== */
+
+@media print {
+    .visibility-toggle-btn {
+        display: none;
+    }
+    
+    .binding-tabs-nav {
+        display: none;
+    }
+    
+    .binding-tab-panel {
+        display: block !important;
+        page-break-inside: avoid;
+    }
+    
+    .sensitive-data {
+        /* 打印时隐藏敏感信息 */
+        color: transparent;
+        text-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* ========== 辅助类 ========== */
+
+.text-center {
+    text-align: center;
+}
+
+.mt-2 {
+    margin-top: 8px;
+}
+
+.mt-3 {
+    margin-top: 12px;
+}
+
+.text-muted {
+    color: var(--modern-text-secondary);
+}
+
+.btn-block {
+    width: 100%;
+    display: block;
+}
+
+.btn-primary {
+    background: var(--modern-primary-gradient);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
