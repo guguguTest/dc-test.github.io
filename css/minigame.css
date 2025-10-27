@@ -201,6 +201,9 @@
 .best-score-item .value {
   font-size: 1.3rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
 }
 
 .best-score-item .value.highlight {
@@ -323,14 +326,16 @@
   color: #2d3748;
 }
 
+/* ✅ 修改：统一所有等级徽章的基础样式 */
 .rank-badge {
   display: inline-block;
-  padding: 4px 12px;
+  padding: 0;  /* 去掉padding，移除底框效果 */
   background: transparent;
-  border-radius: 12px;
-  font-size: 0.85rem;
+  border-radius: 0;
+  font-size: 25px;  /* 统一字体大小为25px，与SSS一致 */
   font-weight: 700;
   letter-spacing: 0.5px;
+  line-height: 1;  /* 确保行高一致 */
 }
 
 /* SSS等级 - 彩虹色渐变特效 */
@@ -349,7 +354,6 @@
   background-clip: text;
   background-size: 200% auto;
   animation: rainbow-flow 3s linear infinite;
-  font-size: 25px;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   filter: brightness(1.1) contrast(1.2);
 }
@@ -749,6 +753,11 @@
 
   .minigame-play-container {
     height: calc(100vh - 60px);
+  }
+  
+  /* ✅ 移动端等级徽章字体大小调整 */
+  .rank-badge {
+    font-size: 20px;
   }
 }
 
