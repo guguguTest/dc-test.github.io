@@ -437,18 +437,19 @@ async saveUserChanges(userId) {
       { id: 'settings', name: '设置' },
       { id: 'help', name: '帮助' },
       { id: 'fortune', name: '每日签到' },
+      { id: 'ccb', name: '游戏查分' },
+      { id: 'exchange', name: '积分兑换' },
+	  { id: 'point-shop', name: '积分商店' },
+	  { id: 'forum', name: '交流区' },
+	  { id: 'minigame', name: '迷你游戏'},
       { id: 'user-settings', name: '用户设置' },
       { id: 'announcement-admin', name: '公告管理' },
       { id: 'site-admin', name: '网站管理' },
       { id: 'download-admin', name: '下载管理' },
       { id: 'user-manager', name: '用户管理' },
-      { id: 'ccb', name: '游戏查分' },
       { id: 'order-entry', name: '订单录入' },
-      { id: 'exchange', name: '积分兑换' },
-	  { id: 'point-shop', name: '积分商店' },
 	  { id: 'points-shop-admin', name: '积分商品管理' },
       { id: 'point2-shop-admin', name: '鸽屋积分商品管理' },
-	  { id: 'forum', name: '交流区' },
 	  { id: 'forum-admin', name: '论坛管理' }
     ];
 

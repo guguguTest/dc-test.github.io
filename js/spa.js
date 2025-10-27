@@ -13,7 +13,8 @@ const PROTECTED_PAGES = [
   'download','tools','dllpatcher','fortune','user-settings',
   'ccb','exchange','announcement-admin','site-admin','download-admin','order-entry','user-manager',
   'point-shop', 'points-shop-admin', 'point2-shop-admin',
-  'credit-shop-admin', 'redemption-code-admin', 'emoji-admin', 'forum', 'forum-admin'
+  'credit-shop-admin', 'redemption-code-admin', 'emoji-admin', 'forum', 'forum-admin',
+  'minigame'
 ];
 
 // 数据源
@@ -822,7 +823,8 @@ async function updateSidebarVisibility(user) {
 	  'ccb', 'exchange', 'announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry',
 	  'point-shop', 'points-shop-admin', 'point2-shop-admin',
 	  'credit-shop-admin', 'redemption-code-admin', 'emoji-admin',
-	  'forum', 'forum-admin'
+	  'forum', 'forum-admin',
+	  'minigame'
 	];
 
   // 存储每个页面的可见性
@@ -903,7 +905,8 @@ async function updateSidebarVisibility(user) {
     'sidebar-redemption-code-admin': 'redemption-code-admin',
     'sidebar-emoji-admin': 'emoji-admin',
 	'sidebar-forum': 'forum',
-    'sidebar-forum-admin': 'forum-admin'
+    'sidebar-forum-admin': 'forum-admin',
+	'sidebar-minigame': 'minigame'
   };
 
   for (const [id, pid] of Object.entries(legacyMap)) {
@@ -924,21 +927,21 @@ async function updateSidebarVisibility(user) {
   // 处理分类标题
   // 等待一段时间确保所有元素都已更新
   setTimeout(() => {
-	  // 功能分类
-	  const functionTitle = document.querySelector('.sidebar-section-title');
-	  const functionNav = functionTitle ? functionTitle.nextElementSibling : null;
+	// 功能分类
+	const functionTitle = document.querySelector('.sidebar-section-title');
+	const functionNav = functionTitle ? functionTitle.nextElementSibling : null;
 
-	  if (functionTitle && functionNav && functionNav.tagName === 'UL') {
-		if (!token) {
-		  setDisplay(functionTitle, false);
-		  setDisplay(functionNav, false);
-		} else {
-		  const functionPages = ['fortune', 'ccb', 'exchange', 'point-shop', 'forum'];
-		  const hasVisibleFunction = functionPages.some(p => pageVisibility[p]);
-		  setDisplay(functionTitle, hasVisibleFunction);
-		  setDisplay(functionNav, hasVisibleFunction);
-		}
+	if (functionTitle && functionNav && functionNav.tagName === 'UL') {
+	  if (!token) {
+		setDisplay(functionTitle, false);
+		setDisplay(functionNav, false);
+	  } else {
+		const functionPages = ['fortune', 'ccb', 'exchange', 'point-shop', 'forum', 'minigame'];
+		const hasVisibleFunction = functionPages.some(p => pageVisibility[p]);
+		setDisplay(functionTitle, hasVisibleFunction);
+		setDisplay(functionNav, hasVisibleFunction);
 	  }
+	}
 
 	// 管理分类
 	const adminTitle = document.getElementById('admin-section-title');
@@ -2482,7 +2485,7 @@ setTimeout(() => {
       return; // 重要：直接返回，不继续执行后续代码
     }
 
-    // 消息中心 - 不使用 await
+    // 消息中心
     if (pageId === 'message-center') {
       if (typeof renderMessageCenter === 'function') {
         renderMessageCenter();
@@ -2575,6 +2578,52 @@ setTimeout(() => {
 	  
 	  if (typeof renderEmojiManagement === 'function') {
 		renderEmojiManagement();
+	  }
+	  
+	  document.body.classList.remove('spa-loading');
+	  updateActiveMenuItem(pageId);
+	  return;
+	}
+
+	// 小游戏页面
+	if (pageId === 'minigame') {
+	  contentContainer.innerHTML = '<div class="section"><div class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div></div>';
+	  
+	  if (typeof renderMinigamePage === 'function') {
+		renderMinigamePage().then(html => {
+		  contentContainer.innerHTML = html;
+		  // 初始化小游戏页面
+		  if (typeof initMinigamePage === 'function') {
+			initMinigamePage();
+		  }
+		}).catch(error => {
+		  contentContainer.innerHTML = '<div class="section"><h1>加载失败</h1><p>小游戏模块加载失败: ' + error.message + '</p></div>';
+		});
+	  } else {
+		contentContainer.innerHTML = '<div class="section"><h1>加载失败</h1><p>小游戏模块未正确加载</p></div>';
+	  }
+	  
+	  document.body.classList.remove('spa-loading');
+	  updateActiveMenuItem(pageId);
+	  return;
+	}
+
+	// 小游戏播放页面
+	// 小游戏播放页面
+	if (pageId === 'minigame-play') {
+	  // ✅ 修复：从sessionStorage获取gameId,而不是从URL参数
+	  const gameId = sessionStorage.getItem('currentGameId');
+	  
+	  console.log('加载minigame-play页面, gameId:', gameId);
+	  
+	  if (typeof renderMinigamePlayPage === 'function') {
+		if (gameId) {
+		  contentContainer.innerHTML = renderMinigamePlayPage({ gameId });
+		} else {
+		  contentContainer.innerHTML = '<div class="section"><h1>加载失败</h1><p>游戏ID缺失,请从游戏列表选择游戏</p><button class="btn btn-primary" onclick="window.loadPage(\'minigame\')">返回游戏列表</button></div>';
+		}
+	  } else {
+		contentContainer.innerHTML = '<div class="section"><h1>加载失败</h1><p>小游戏播放模块未加载</p></div>';
 	  }
 	  
 	  document.body.classList.remove('spa-loading');
