@@ -7,14 +7,14 @@ const MINIGAMES = {
     name: 'IRODORIMIDORI FANTASY VII (强化版)',
     url: 'https://irodori.am-all.com.cn',
     description: 'イロドリミドリ2024年愚人节小游戏',
-    icon: '🎮'
+    icon: 'https://oss.am-all.com.cn/asset/img/other/dc/mgame/icon.png'
   },
   irodori2025: {
     id: 'irodori2025',
     name: 'IRODORIMIDORI FANTASY VII INTERNATIONAL',
     url: 'https://irodori2025.am-all.com.cn',
     description: 'イロドリミドリ2025年愚人节小游戏',
-    icon: '🎯'
+    icon: 'https://oss.am-all.com.cn/asset/img/other/dc/mgame/icon.png'
   }
 };
 
@@ -58,7 +58,10 @@ async function renderMinigamePage() {
         <div class="minigame-grid">
           ${Object.values(MINIGAMES).map(game => `
             <div class="minigame-card" data-game-id="${game.id}">
-              <div class="minigame-card-icon">${game.icon}</div>
+              <div class="minigame-card-icon">
+                <img src="${game.icon}" alt="${game.name}" style="width: 64px; height: 64px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <span style="display: none; font-size: 4rem;">🎮</span>
+              </div>
               <div class="minigame-card-content">
                 <h3 class="minigame-card-title">${game.name}</h3>
                 <p class="minigame-card-desc">${game.description}</p>
@@ -68,6 +71,27 @@ async function renderMinigamePage() {
               </div>
             </div>
           `).join('')}
+        </div>
+
+        <!-- 排行榜规则说明 -->
+        <div class="leaderboard-rules-notice">
+          <div class="rules-header">
+            <i class="fas fa-info-circle"></i> 排行榜规则
+          </div>
+          <div class="rules-content">
+            <p><strong>🏆 奖励规则：</strong>每月1日0点系统将自动清空排行榜并按排名发放奖励</p>
+            <ul class="rules-list">
+              <li><span class="rank-badge-mini gold">🥇 1位</span><strong>10 CREDIT</strong></li>
+              <li><span class="rank-badge-mini silver">🥈 2位</span><strong>100 积分</strong></li>
+              <li><span class="rank-badge-mini bronze">🥉 3位</span><strong>50 积分</strong></li>
+              <li><span class="rank-badge-mini top10">4-10位</span><strong>25 积分</strong></li>
+              <li><span class="rank-badge-mini top50">11-50位</span><strong>10 积分</strong></li>
+              <li><span class="rank-badge-mini participant">51位~</span><strong>5 积分</strong></li>
+            </ul>
+            <p class="rules-note">
+              <i class="fas fa-exclamation-circle"></i> 排名基于您在本月内提交的最高分数
+            </p>
+          </div>
         </div>
 
         <!-- 排行榜切换标签 -->
@@ -96,7 +120,7 @@ async function renderMinigamePage() {
       </div>
     `;
   } catch (error) {
-    console.error('渲染小游戏页面失败:', error);
+    console.error('渲染迷你游戏页面失败:', error);
     return `
       <div class="minigame-container">
         <div class="alert alert-danger">
@@ -170,19 +194,19 @@ function renderLeaderboard(gameId, data) {
     html += `
       <div class="user-best-score">
         <div class="best-score-header">
-          <i class="fas fa-trophy"></i> 您的最佳成绩
+          <i class="fas fa-trophy"></i> MY BEST SCORE
         </div>
         <div class="best-score-body">
           <div class="best-score-item">
             <span class="label">排名:</span>
-            <span class="value rank-${getRankClass(userBest.ranking)}">#${userBest.ranking}</span>
+            <span class="value rank-${getRankClass(userBest.ranking)}">${userBest.ranking}位</span>
           </div>
           <div class="best-score-item">
             <span class="label">总分:</span>
             <span class="value highlight">${userBest.total_score.toLocaleString()}</span>
           </div>
           <div class="best-score-item">
-            <span class="label">等级:</span>
+            <span class="label">评价:</span>
             <span class="value rank-badge ${getRankBadgeClass(userBest.rank)}">${userBest.rank || '-'}</span>
           </div>
           <div class="best-score-item">
@@ -210,7 +234,7 @@ function renderLeaderboard(gameId, data) {
             <tr>
               <th>排名</th>
               <th>玩家</th>
-              <th>等级</th>
+              <th>评价</th>
               <th>总分</th>
               <th>游戏时间</th>
               <th>回合数</th>
@@ -274,6 +298,7 @@ function getRankClass(ranking) {
 function getRankBadgeClass(rank) {
   if (!rank) return '';
   const rankUpper = rank.toUpperCase();
+  if (rankUpper === 'SSS+') return 'rank-sss-plus';
   if (rankUpper === 'SSS') return 'rank-sss';
   if (rankUpper === 'SS') return 'rank-ss';
   if (rankUpper === 'S') return 'rank-s';
@@ -380,8 +405,8 @@ function renderMinigamePlayPage(params) {
           frameborder="0"
           allowfullscreen
           class="minigame-iframe"
-          onload="console.log('游戏iframe加载完成')"
-          onerror="console.error('游戏iframe加载失败')"
+          onload="console.log('游戏框架加载完成')"
+          onerror="console.error('游戏框架加载失败')"
         ></iframe>
       </div>
     </div>

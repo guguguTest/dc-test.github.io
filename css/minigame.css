@@ -60,8 +60,15 @@
 }
 
 .minigame-card-icon {
-  font-size: 4rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.minigame-card-icon img {
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .minigame-card-content {
@@ -104,6 +111,124 @@
 
 .btn-minigame-play:active {
   transform: scale(0.98);
+}
+
+/* ==================== 排行榜规则说明 ==================== */
+.leaderboard-rules-notice {
+  background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+  border-radius: 15px;
+  padding: 25px 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border-left: 5px solid #667eea;
+}
+
+.rules-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 15px;
+}
+
+.rules-header i {
+  color: #667eea;
+  font-size: 1.3rem;
+}
+
+.rules-content p {
+  margin: 0 0 15px 0;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.rules-list {
+  list-style: none;
+  padding: 0;
+  margin: 15px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 10px;
+}
+
+.rules-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.rules-list li:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
+}
+
+.rank-badge-mini {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rank-badge-mini.gold {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+}
+
+.rank-badge-mini.silver {
+  background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(192, 192, 192, 0.4);
+}
+
+.rank-badge-mini.bronze {
+  background: linear-gradient(135deg, #CD7F32 0%, #B8860B 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(205, 127, 50, 0.4);
+}
+
+.rank-badge-mini.top10 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.rank-badge-mini.top50 {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+}
+
+.rank-badge-mini.participant {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #2d3748;
+  box-shadow: 0 2px 8px rgba(168, 237, 234, 0.3);
+}
+
+.rules-note {
+  margin-top: 15px !important;
+  padding: 12px 15px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+  color: #4a5568;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rules-note i {
+  color: #667eea;
 }
 
 /* ==================== 标签切换 ==================== */
@@ -336,6 +461,55 @@
   font-weight: 700;
   letter-spacing: 0.5px;
   line-height: 1;  /* 确保行高一致 */
+}
+
+/* ✅ SSS+等级 - 七彩流光+金色光晕+呼吸动画（最高评价） */
+.rank-badge.rank-sss-plus {
+  /* 更炫酷的七彩渐变 */
+  background: linear-gradient(90deg, 
+    #ff0066 0%,      /* 粉红 */
+    #ff6600 12.5%,   /* 橙色 */
+    #ffff00 25%,     /* 黄色 */
+    #00ff00 37.5%,   /* 绿色 */
+    #00ffff 50%,     /* 青色 */
+    #0066ff 62.5%,   /* 蓝色 */
+    #cc00ff 75%,     /* 紫色 */
+    #ff0066 100%     /* 回到粉红形成循环 */
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 300% auto;
+  animation: rainbow-flow-fast 2s linear infinite, pulse-scale 2s ease-in-out infinite;
+  
+  /* 金色外发光 */
+  text-shadow: 
+    0 0 15px rgba(255, 215, 0, 0.8),
+    0 0 30px rgba(255, 215, 0, 0.5),
+    0 0 45px rgba(255, 215, 0, 0.3);
+  
+  /* 增强亮度和对比度 */
+  filter: brightness(1.3) contrast(1.3);
+}
+
+/* 更快的彩虹流动动画（用于SSS+） */
+@keyframes rainbow-flow-fast {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 300% 50%;
+  }
+}
+
+/* 呼吸缩放动画（用于SSS+） */
+@keyframes pulse-scale {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 /* SSS等级 - 彩虹色渐变特效 */
@@ -695,6 +869,15 @@
   .minigame-card-icon {
     font-size: 3rem;
   }
+  
+  /* 排行榜规则说明移动端优化 */
+  .leaderboard-rules-notice {
+    padding: 20px;
+  }
+  
+  .rules-list {
+    grid-template-columns: 1fr;
+  }
 
   .minigame-tabs {
     flex-direction: column;
@@ -800,5 +983,24 @@
 
   .history-table-container {
     border-color: #4a5568;
+  }
+  
+  .leaderboard-rules-notice {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    border-left-color: #667eea;
+  }
+  
+  .rules-header,
+  .rules-content p {
+    color: #e2e8f0;
+  }
+  
+  .rules-list li {
+    background: #1a202c;
+  }
+  
+  .rules-note {
+    background: rgba(102, 126, 234, 0.15);
+    color: #cbd5e0;
   }
 }
