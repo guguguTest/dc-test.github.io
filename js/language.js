@@ -29,6 +29,8 @@ const languageModule = (function() {
             'sidebar.creditShopAdmin': 'CREDIT点数商品管理',
             'sidebar.orderEntry': '订单录入',
 			'sidebar.minigame': '迷你游戏',
+			'sidebar.userVerification': '用户认证',
+			'sidebar.verificationAdmin': '认证申请管理',
             
             // 用户区域
             'user.login': '登录',
@@ -349,6 +351,8 @@ const languageModule = (function() {
             'sidebar.creditShopAdmin': 'Credit Shop Admin',
             'sidebar.orderEntry': 'Order Entry',
 			'sidebar.minigame': 'Mini Game',
+			'sidebar.userVerification': 'Verified Account',
+			'sidebar.verificationAdmin': 'Verified Admin',
             
             // 用户区域
             'user.login': 'Login',
@@ -669,6 +673,8 @@ const languageModule = (function() {
             'sidebar.creditShopAdmin': 'クレジットショップ管理',
             'sidebar.orderEntry': '注文入力',
 			'sidebar.minigame': 'ミニゲーム',
+			'sidebar.userVerification': 'ユーザー認証',
+			'sidebar.verificationAdmin': 'ユーザー認証管理',
             
             // 用户区域
             'user.login': 'ログイン',

@@ -27,6 +27,26 @@ const pages = {
 	  </div>
 	`,
 
+  // 用户认证主页
+  'user-verification': `
+    <div class="section" id="user-verification-container">
+      <div class="verification-loading">
+        <div class="verification-loading-spinner"></div>
+        <p>加载中...</p>
+      </div>
+    </div>
+  `,
+  
+  // 认证申请管理（管理员）
+  'verification-admin': `
+    <div class="section" id="verification-admin-container">
+      <div class="verification-loading">
+        <div class="verification-loading-spinner"></div>
+        <p>加载中...</p>
+      </div>
+    </div>
+  `,
+
 // 用户管理界面
 'user-manager': `
 <div class="section">

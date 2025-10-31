@@ -443,6 +443,7 @@ async saveUserChanges(userId) {
 	  { id: 'forum', name: '交流区' },
 	  { id: 'minigame', name: '迷你游戏'},
       { id: 'user-settings', name: '用户设置' },
+      { id: 'user-verification', name: '账户认证' },
       { id: 'announcement-admin', name: '公告管理' },
       { id: 'site-admin', name: '网站管理' },
       { id: 'download-admin', name: '下载管理' },
@@ -450,7 +451,8 @@ async saveUserChanges(userId) {
       { id: 'order-entry', name: '订单录入' },
 	  { id: 'points-shop-admin', name: '积分商品管理' },
       { id: 'point2-shop-admin', name: '鸽屋积分商品管理' },
-	  { id: 'forum-admin', name: '论坛管理' }
+	  { id: 'forum-admin', name: '论坛管理' },
+      { id: 'verification-admin', name: '认证申请管理' }
     ];
 
     const list = this.permissionModal.querySelector('#permission-list');

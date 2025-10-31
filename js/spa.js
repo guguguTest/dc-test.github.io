@@ -14,7 +14,7 @@ const PROTECTED_PAGES = [
   'ccb','exchange','announcement-admin','site-admin','download-admin','order-entry','user-manager',
   'point-shop', 'points-shop-admin', 'point2-shop-admin',
   'credit-shop-admin', 'redemption-code-admin', 'emoji-admin', 'forum', 'forum-admin',
-  'minigame'
+  'minigame', 'user-verification', 'verification-admin'
 ];
 
 // 数据源
@@ -824,7 +824,7 @@ async function updateSidebarVisibility(user) {
 	  'point-shop', 'points-shop-admin', 'point2-shop-admin',
 	  'credit-shop-admin', 'redemption-code-admin', 'emoji-admin',
 	  'forum', 'forum-admin',
-	  'minigame'
+	  'minigame', 'user-verification', 'verification-admin'  // ✅ 新增
 	];
 
   // 存储每个页面的可见性
@@ -906,7 +906,9 @@ async function updateSidebarVisibility(user) {
     'sidebar-emoji-admin': 'emoji-admin',
 	'sidebar-forum': 'forum',
     'sidebar-forum-admin': 'forum-admin',
-	'sidebar-minigame': 'minigame'
+	'sidebar-minigame': 'minigame',
+	'sidebar-user-verification': 'user-verification',
+    'sidebar-verification-admin': 'verification-admin' 
   };
 
   for (const [id, pid] of Object.entries(legacyMap)) {
@@ -936,7 +938,7 @@ async function updateSidebarVisibility(user) {
 		setDisplay(functionTitle, false);
 		setDisplay(functionNav, false);
 	  } else {
-		const functionPages = ['fortune', 'ccb', 'exchange', 'point-shop', 'forum', 'minigame'];
+		const functionPages = ['fortune', 'ccb', 'exchange', 'point-shop', 'forum', 'minigame', 'user-verification'];
 		const hasVisibleFunction = functionPages.some(p => pageVisibility[p]);
 		setDisplay(functionTitle, hasVisibleFunction);
 		setDisplay(functionNav, hasVisibleFunction);
@@ -953,7 +955,10 @@ async function updateSidebarVisibility(user) {
 		setDisplay(adminNav, false);
 	  } else {
 		// 包含 site-admin 在内的所有管理页面
-		const adminPages = ['announcement-admin', 'site-admin', 'download-admin', 'user-manager', 'order-entry', 'points-shop-admin', 'point2-shop-admin', 'credit-shop-admin', 'redemption-code-admin', 'forum-admin'];
+		const adminPages = ['announcement-admin', 'site-admin', 'download-admin', 'user-manager', 
+						   'order-entry', 'points-shop-admin', 'point2-shop-admin', 
+						   'credit-shop-admin', 'redemption-code-admin', 'forum-admin', 
+						   'verification-admin'];
 		const hasVisibleAdmin = adminPages.some(p => pageVisibility[p]);
 		
 		console.log('管理页面可见性:', adminPages.map(p => `${p}: ${pageVisibility[p]}`));
@@ -3241,24 +3246,51 @@ function initCursorSettingsManually() {
 		  }, 100);
 		}
       
-      if (pageId === 'home') {
-        // 初始化公告系统
-        try {
-          if (typeof window.initAnnouncementSystem === 'function') {
-            setTimeout(() => {
-              try {
-                window.initAnnouncementSystem();
-              } catch (e) {
-                console.error('初始化公告系统失败:', e);
-              }
-            }, 100);
-          } else {
-            console.warn('initAnnouncementSystem 不是函数');
-          }
-        } catch (e) {
-          console.error('公告系统初始化异常:', e);
-        }
-      }
+	if (pageId === 'home') {
+	  // 初始化公告系统
+	  try {
+		if (typeof window.initAnnouncementSystem === 'function') {
+		  setTimeout(() => {
+			try {
+			  window.initAnnouncementSystem();
+			} catch (e) {
+			  console.error('初始化公告系统失败:', e);
+			}
+		  }, 100);
+		} else {
+		  console.warn('initAnnouncementSystem 不是函数');
+		}
+	  } catch (e) {
+		console.error('公告系统初始化异常:', e);
+	  }
+	  
+	  // ✅ 新增：加载首页广告
+	  try {
+		if (typeof window.loadHomeAdvertisementsDebounced === 'function') {
+		  setTimeout(() => {
+			try {
+			  // 检查是否需要刷新
+			  const needsRefresh = localStorage.getItem('homeAdsNeedRefresh') === 'true';
+			  console.log('[SPA] 加载首页，需要刷新:', needsRefresh);
+			  
+			  if (needsRefresh) {
+				// 需要刷新 - 强制重新加载
+				window.loadHomeAdvertisementsDebounced(true, 500);
+			  } else {
+				// 正常加载
+				window.loadHomeAdvertisementsDebounced(false, 500);
+			  }
+			} catch (e) {
+			  console.error('[SPA] 加载广告失败:', e);
+			}
+		  }, 400);  // 延迟400ms，确保公告容器已加载
+		} else {
+		  console.warn('[SPA] loadHomeAdvertisementsDebounced 函数未定义');
+		}
+	  } catch (e) {
+		console.error('[SPA] 广告系统初始化异常:', e);
+	  }
+	}
 
       // 公告管理页面
       if (pageId === 'announcement-admin') {
@@ -3267,6 +3299,35 @@ function initCursorSettingsManually() {
         }
       }
 
+	  // 用户认证页面
+	  if (pageId === 'user-verification') {
+		if (typeof initVerificationHome === 'function') {
+		  setTimeout(() => {
+			initVerificationHome();
+		  }, 100);
+		} else {
+		  contentContainer.innerHTML = '<div class="section"><h1>加载失败</h1><p>认证模块未正确加载</p></div>';
+		}
+		
+		document.body.classList.remove('spa-loading');
+		updateActiveMenuItem(pageId);
+		return;
+	  }
+	  
+	  // 认证申请管理页面（管理员）
+	  if (pageId === 'verification-admin') {
+		if (typeof initVerificationAdmin === 'function') {
+		  setTimeout(() => {
+			initVerificationAdmin();
+		  }, 100);
+		} else {
+		  contentContainer.innerHTML = '<div class="section"><h1>加载失败</h1><p>认证管理模块未正确加载</p></div>';
+		}
+		
+		document.body.classList.remove('spa-loading');
+		updateActiveMenuItem(pageId);
+		return;
+	  }
 
       if (pageId === 'order-entry') {
         initOrderEntryPage();

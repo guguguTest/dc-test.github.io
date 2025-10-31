@@ -43,6 +43,9 @@
   <link rel="stylesheet" href="css/patcherTools.css">
   <link rel="stylesheet" href="css/patcherAdmin.css">
 
+  <!-- 认证系统CSS -->
+  <link rel="stylesheet" href="/css/verification.css">
+
   <!-- 管理后台样式 -->
   <link rel="stylesheet" href="css/dladmin.css">
   <link rel="stylesheet" href="css/siteAdmin.css">
@@ -198,24 +201,28 @@
 
     <ul class="sidebar-nav">
       <li><a href="#" class="active" data-page="home">
-        <i class="fas fa-home"></i>
+        <i class="fas fa-home me-2"></i>
         <span data-i18n="sidebar.home">首页</span>
       </a></li>
       <li><a href="#" data-page="download">
-        <i class="fas fa-download"></i>
+        <i class="fas fa-download me-2"></i>
         <span data-i18n="sidebar.download">下载</span>
       </a></li>
       <li><a href="#" data-page="tools">
-        <i class="fas fa-edit"></i>
+        <i class="fas fa-edit me-2"></i>
         <span data-i18n="sidebar.tools">实用工具</span>
       </a></li>
       <li><a href="#" data-page="dllpatcher">
-        <i class="fas fa-plug"></i>
+        <i class="fas fa-plug me-2"></i>
         <span data-i18n="sidebar.patcher">补丁工具</span>
       </a></li>
       <li><a href="#" data-page="settings">
-        <i class="fas fa-cog"></i>
+        <i class="fas fa-cog me-2"></i>
         <span data-i18n="sidebar.settings">设置</span>
+      </a></li>
+      <li><a href="#" data-page="user-verification" id="sidebar-user-verification" style="display: none;">
+        <i class="fas fa-user-shield me-2"></i>
+        <span data-i18n="sidebar.userVerification">账户认证</span>
       </a></li>
     </ul>
 
@@ -280,6 +287,10 @@
       <li><a href="#" data-page="download-admin" id="sidebar-download-admin" style="display: none;">
         <i class="fas fa-download me-2"></i>
         <span data-i18n="sidebar.downloadAdmin">下载管理</span>
+      </a></li>
+      <li><a href="#" data-page="verification-admin" id="sidebar-verification-admin" style="display: none;">
+        <i class="fas fa-tasks me-2"></i>
+        <span data-i18n="sidebar.verificationAdmin">认证申请管理</span>
       </a></li>
       <li><a href="#" data-page="points-shop-admin" id="sidebar-points-shop-admin" style="display: none;">
         <i class="fas fa-coins me-2"></i>
@@ -377,11 +388,17 @@
   <script defer src="js/userManager.js"></script>
   <script defer src="js/siteAdmin.js"></script>
 
-  <!-- 12. SPA路由（最后加载） -->
+  <!-- 12. 认证系统JavaScript -->
+  <!-- 12. 认证系统JavaScript -->
+  <script defer src="js/verification.js"></script>
+  <script defer src="js/verification-management.js"></script>
+  <script defer src="js/verification-admin.js"></script>
+  <script defer src="js/verification-home-ads.js"></script>
+  <!-- 13. SPA路由（最后加载） -->
   <script defer src="js/spa.js"></script>
   <script defer src="js/spa_pages.js"></script>
 
-  <!-- 13. 移动端优化 -->
+  <!-- 14. 移动端优化 -->
   <script defer src="js/mobile-sidebar.js"></script>
   
   <!-- 页面加载完成后初始化语言 -->
