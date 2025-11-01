@@ -138,9 +138,15 @@ function renderBindingPage() {
                         
                         <div class="form-group">
                             <label for="guid-input">游戏卡号 (20位纯数字)</label>
-                            <input type="text" id="guid-input" required placeholder="请输入20位游戏卡号" maxlength="20">
+                            <div class="guid-input-container">
+                                <input type="text" id="guid-input" required placeholder="请输入20位游戏卡号" maxlength="20">
+                                <button type="button" class="scan-btn" onclick="openScanModal()">
+                                    <i class="fas fa-camera"></i>
+                                    <span>扫码输入</span>
+                                </button>
+                            </div>
                             <small style="color: var(--modern-text-secondary); margin-top: 4px; display: block;">
-                                仅限输入20位纯数字
+                                仅限输入20位纯数字，或点击扫码按钮识别卡片
                             </small>
                         </div>
                         
@@ -203,6 +209,11 @@ function renderBindingPage() {
             keychipInput.disabled = false;
         }
     });
+    
+    // 初始化扫码功能
+    if (typeof initScanner === 'function') {
+        initScanner();
+    }
 }
 
 // 切换卡片槽位（在绑定页面使用）

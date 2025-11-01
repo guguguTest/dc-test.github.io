@@ -1,4 +1,4 @@
-/* ccb.css - 游戏查分系统页面特定样式 (多卡片支持版本) */
+/* ccb.css - 游戏查分系统页面特定样式 (多卡片支持版本 + 扫码功能) */
 /* 注意:此文件依赖于main.css中定义的现代化CSS变量 */
 
 /* 主容器现代化设计 */
@@ -234,6 +234,354 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
+/* 扫码输入框容器样式 */
+.guid-input-container {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.guid-input-container input {
+    flex: 1;
+}
+
+/* 扫码按钮样式 */
+.scan-btn {
+    padding: 10px 16px;
+    border: 2px solid var(--modern-primary-color);
+    border-radius: var(--modern-border-radius-small);
+    background: var(--modern-primary-gradient);
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: var(--modern-transition);
+    box-shadow: var(--modern-shadow-light);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    min-height: 44px;
+}
+
+.scan-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--modern-shadow-medium);
+}
+
+.scan-btn:active {
+    transform: translateY(0);
+}
+
+.scan-btn i {
+    font-size: 16px;
+}
+
+/* 扫码模态框样式 */
+.scan-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.scan-modal.active {
+    display: flex;
+}
+
+.scan-modal-content {
+    background: var(--modern-card-background);
+    backdrop-filter: blur(20px);
+    border-radius: var(--modern-border-radius);
+    padding: 24px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: var(--modern-shadow-heavy);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+}
+
+.scan-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--modern-border-color);
+}
+
+.scan-modal-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--modern-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.scan-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    color: var(--modern-text-secondary);
+    cursor: pointer;
+    transition: var(--modern-transition);
+    padding: 5px 10px;
+    border-radius: var(--modern-border-radius-small);
+}
+
+.scan-modal-close:hover {
+    color: var(--modern-text-primary);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.scan-video-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+    border-radius: var(--modern-border-radius-small);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+#scan-video {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: 400px;
+    object-fit: contain;
+}
+
+/* 扫描框样式 */
+.scan-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.scan-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 60%;
+    border: 3px solid #4ECDC4;
+    border-radius: 12px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+}
+
+.scan-frame::before,
+.scan-frame::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #4ECDC4;
+}
+
+.scan-frame::before {
+    top: -3px;
+    left: -3px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.scan-frame::after {
+    top: -3px;
+    right: -3px;
+    border-left: none;
+    border-bottom: none;
+}
+
+.scan-frame-corner-bl {
+    position: absolute;
+    bottom: -3px;
+    left: -3px;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #4ECDC4;
+    border-right: none;
+    border-top: none;
+}
+
+.scan-frame-corner-br {
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #4ECDC4;
+    border-left: none;
+    border-top: none;
+}
+
+/* 扫描线动画 */
+.scan-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #4ECDC4, transparent);
+    animation: scanning 2s ease-in-out infinite;
+}
+
+@keyframes scanning {
+    0%, 100% {
+        top: 0;
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        top: 100%;
+        opacity: 0;
+    }
+}
+
+/* 识别状态提示 */
+.scan-status {
+    text-align: center;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: var(--modern-border-radius-small);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.scan-status.scanning {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    color: var(--modern-primary-color);
+}
+
+.scan-status.success {
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.1) 0%, rgba(85, 230, 193, 0.1) 100%);
+    color: var(--modern-success-color);
+}
+
+.scan-status.error {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 81, 81, 0.1) 100%);
+    color: var(--modern-error-color);
+}
+
+/* 识别结果显示 */
+.scan-result {
+    padding: 12px;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: var(--modern-border-radius-small);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    margin-bottom: 12px;
+}
+
+.scan-result-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--modern-text-secondary);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.scan-result-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--modern-primary-color);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+}
+
+/* 扫码提示 */
+.scan-tips {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: var(--modern-border-radius-small);
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.scan-tips-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f57c00;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.scan-tips-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.scan-tips-list li {
+    font-size: 12px;
+    color: #e65100;
+    margin-bottom: 4px;
+    padding-left: 16px;
+    position: relative;
+}
+
+.scan-tips-list li::before {
+    content: '•';
+    position: absolute;
+    left: 4px;
+    font-weight: bold;
+}
+
+/* 操作按钮组 */
+.scan-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.scan-action-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--modern-border-radius-small);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: var(--modern-transition);
+    box-shadow: var(--modern-shadow-light);
+}
+
+.scan-action-btn.primary {
+    background: var(--modern-primary-gradient);
+    color: white;
+}
+
+.scan-action-btn.secondary {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--modern-text-primary);
+}
+
+.scan-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--modern-shadow-medium);
+}
+
+.scan-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* 复选框组现代化 */
 .checkbox-group {
     display: flex;
@@ -372,97 +720,97 @@
     box-shadow: var(--modern-shadow-medium);
 }
 
-.ccb-btn:disabled {
-    background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+.ccb-btn-secondary:active {
+    transform: translateY(0);
 }
 
-.ccb-btn:disabled::before {
-    display: none;
-}
-
-/* 查询结果区域 */
+/* 查询结果现代化 */
 .ccb-result {
-    margin-top: 0;
-    text-align: center;
+    margin-top: 20px;
+    padding: 20px;
     min-height: 300px;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
+    border-radius: var(--modern-border-radius);
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed var(--modern-border-color);
+}
+
+.ccb-result.loading {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-style: solid;
+    border-color: var(--modern-primary-color);
 }
 
 .ccb-result img {
     max-width: 100%;
-    max-height: calc(100vh - 150px);
-    width: auto;
     height: auto;
-    border-radius: var(--modern-border-radius);
+    border-radius: var(--modern-border-radius-small);
     box-shadow: var(--modern-shadow-heavy);
-    transition: var(--modern-transition);
+    border: 3px solid white;
 }
 
-.ccb-result img:hover {
-    transform: scale(1.02);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-}
-
-/* 保存按钮容器 */
-.ccb-save-action {
-    margin-top: 12px;
+.ccb-result-empty {
     text-align: center;
-}
-
-/* 冷却计时器 */
-.ccb-cooldown {
-    margin-top: 12px;
-    color: var(--modern-error-color);
-    font-weight: 600;
-    text-align: center;
-    padding: 10px 16px;
-    background: rgba(255, 107, 107, 0.1);
-    border-radius: var(--modern-border-radius-small);
-    border: 1px solid rgba(255, 107, 107, 0.2);
-    font-size: 13px;
-}
-
-/* 积分信息现代化 */
-.ccb-points-info {
-    margin-top: 10px;
     color: var(--modern-text-secondary);
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    background: rgba(102, 126, 234, 0.05);
-    border-radius: var(--modern-border-radius-small);
-    border: 1px solid rgba(102, 126, 234, 0.1);
+    font-size: 14px;
 }
 
-.refresh-points-btn {
-    background: var(--modern-success-gradient);
-    border: none;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
+/* 积分信息卡片 */
+.ccb-points-info {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    padding: 5px 10px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
     border-radius: var(--modern-border-radius-small);
-    transition: var(--modern-transition);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    margin-bottom: 16px;
+}
+
+.ccb-points-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f57c00;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    box-shadow: 0 2px 8px rgba(78, 205, 196, 0.3);
+}
+
+.ccb-points-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #e65100;
+}
+
+/* 刷新积分按钮 */
+.refresh-points-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--modern-border-radius-small);
+    background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: var(--modern-transition);
+    box-shadow: var(--modern-shadow-light);
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .refresh-points-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(78, 205, 196, 0.4);
+    transform: translateY(-2px);
+    box-shadow: var(--modern-shadow-medium);
+}
+
+.refresh-points-btn:active {
+    transform: translateY(0);
+}
+
+.refresh-points-btn i {
+    font-size: 14px;
 }
 
 .refresh-points-btn:disabled {
@@ -644,6 +992,32 @@
         width: 100%;
     }
     
+    .guid-input-container {
+        flex-direction: column;
+    }
+    
+    .scan-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .scan-modal-content {
+        padding: 16px;
+        max-width: 95%;
+    }
+    
+    .scan-modal-title {
+        font-size: 1.2rem;
+    }
+    
+    .scan-actions {
+        flex-direction: column;
+    }
+    
+    .scan-action-btn {
+        width: 100%;
+    }
+    
     .admin-container {
         padding: 16px;
         gap: 24px;
@@ -684,6 +1058,19 @@
     
     .ccb-card-btn span {
         font-size: 13px;
+    }
+    
+    .scan-modal-content {
+        padding: 12px;
+    }
+    
+    #scan-video {
+        max-height: 300px;
+    }
+    
+    .scan-frame {
+        width: 85%;
+        height: 65%;
     }
     
     .admin-container {
