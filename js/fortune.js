@@ -339,11 +339,16 @@ async function checkFortuneStatus() {
       if (song.we_kanji || song.we_star) {
         const weDiv = document.createElement('div');
         weDiv.className = 'difficulty-tag lev-we';
-        weDiv.textContent = 'World\'s End: ';
+        
+        // 创建文字容器
+        const textSpan = document.createElement('span');
+        textSpan.textContent = 'World\'s End: ';
         
         if (song.we_kanji) {
-          weDiv.textContent += song.we_kanji;
+          textSpan.textContent += song.we_kanji;
         }
+        
+        weDiv.appendChild(textSpan);
         
         if (song.we_star) {
           const starsContainer = document.createElement('span');

@@ -492,10 +492,11 @@ function renderQueryPage(user) {
                         </div>
                         
                         <div class="ccb-points-info">
-                            当前积分: ${user.points || 0}
-                            <button id="refresh-points-btn" class="refresh-points-btn">
+                            当前积分: <span id="points-display">${user.points || 0}</span>
+                            <button id="refresh-points-btn" class="refresh-points-btn" type="button">
                                 <i class="fas fa-redo"></i>刷新积分
                             </button>
+                            <span id="refresh-success-msg" style="display: none; color: #ef4444; font-weight: 600; margin-left: 8px;">刷新成功</span>
                         </div>
                         
                         <div class="ccb-cooldown" id="cooldown-message" style="display: none;"></div>
@@ -524,9 +525,24 @@ function renderQueryPage(user) {
     // 绑定全部解绑按钮事件
     document.getElementById('unbind-all-btn').addEventListener('click', handleUnbindAll);
     
-    // 绑定刷新积分按钮事件
-    document.getElementById('refresh-points-btn').addEventListener('click', async function() {
+    // 绑定刷新积分按钮事件 - 修复版本
+    document.getElementById('refresh-points-btn').addEventListener('click', async function(e) {
+        // 防止事件冒泡
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const btn = this;
+        const icon = btn.querySelector('i');
+        const successMsg = document.getElementById('refresh-success-msg');
+        
+        // 防止重复点击
+        if (btn.disabled) return;
+        
         try {
+            // 禁用按钮并显示加载状态
+            btn.disabled = true;
+            icon.classList.add('fa-spin');
+            
             const token = localStorage.getItem('token');
             const response = await secureFetch('https://api.am-all.com.cn/api/user', {
                 method: 'GET',
@@ -538,21 +554,24 @@ function renderQueryPage(user) {
             // 更新当前用户信息
             currentUser.points = response.points;
             
-            // 更新显示
-            document.querySelector('.ccb-points-info').innerHTML = `
-                当前积分: ${response.points || 0}
-                <button id="refresh-points-btn" class="refresh-points-btn">
-                    <i class="fas fa-redo"></i>刷新积分
-                </button>
-            `;
+            // 更新积分显示
+            document.getElementById('points-display').textContent = response.points || 0;
             
-            // 重新绑定刷新按钮事件
-            document.getElementById('refresh-points-btn').addEventListener('click', arguments.callee);
+            // 显示红色成功提示
+            successMsg.style.display = 'inline';
             
-            showSuccessMessage('积分已刷新');
+            // 2秒后隐藏提示
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 2000);
+            
         } catch (error) {
             console.error('刷新积分失败:', error);
             showErrorMessage('刷新积分失败');
+        } finally {
+            // 恢复按钮状态
+            btn.disabled = false;
+            icon.classList.remove('fa-spin');
         }
     });
 }
@@ -699,8 +718,9 @@ function handleQuerySubmit(e) {
                 // 绑定保存按钮事件
                 document.getElementById('save-image-btn').addEventListener('click', saveCCBImage);
                 
-                // 更新用户积分
+                // 更新用户积分显示
                 currentUser.points -= 5;
+                document.getElementById('points-display').textContent = currentUser.points;
                 updateUserInfo(currentUser);
                 
                 // 启动冷却计时器
@@ -720,10 +740,22 @@ function handleQuerySubmit(e) {
     });
 }
 
-// 启动冷却计时器
+// 启动冷却计时器 - 修复版本
 function startCooldown() {
+    // 清除之前可能存在的计时器，防止重叠
+    if (cooldownTimer) {
+        clearInterval(cooldownTimer);
+        cooldownTimer = null;
+    }
+    
     queryCooldown = true;
     const cooldownMessage = document.getElementById('cooldown-message');
+    
+    if (!cooldownMessage) {
+        console.error('cooldown-message 元素不存在');
+        return;
+    }
+    
     let seconds = 10;
     
     cooldownMessage.style.display = 'block';
@@ -735,6 +767,7 @@ function startCooldown() {
         
         if (seconds <= 0) {
             clearInterval(cooldownTimer);
+            cooldownTimer = null;
             cooldownMessage.style.display = 'none';
             queryCooldown = false;
         }
