@@ -248,130 +248,187 @@ download: `
       </table>
     </div>
     
-	<!-- 下载项目模态框 -->
-	<div id="download-modal" class="modal">
-	  <div class="modal-content">
-		<div class="modal-header">
-		  <h5 id="modal-title" data-i18n="downloadAdmin.modalTitle">新建下载项目</h5>
-		  <span class="close">×</span>
-		</div>
-		<form id="download-form">
-		  <div class="modal-body">
-			<input type="hidden" id="download-id">
-			
-			<!-- 基本信息区 -->
-			<div class="form-section">
-			  <h6 class="section-title" data-i18n="downloadAdmin.basicInfo">基本信息</h6>
-			  <div class="form-row">
-				<div class="form-group">
-				  <label><span data-i18n="downloadAdmin.title2">标题</span> <span class="text-danger">*</span></label>
-				  <input type="text" class="form-control" id="download-title" required>
-				</div>
-				<div class="form-group">
-				  <label><span data-i18n="downloadAdmin.category">分类</span> <span class="text-danger">*</span></label>
-				  <select class="form-control" id="download-category" required>
-					<option value="game" data-i18n="downloadAdmin.categoryGame">游戏下载</option>
-					<option value="archive" data-i18n="downloadAdmin.categoryArchive">存档下载</option>
-					<option value="other" data-i18n="downloadAdmin.categoryOther">其他资源</option>
-				  </select>
-				</div>
-			  </div>
-			  
-			  <div class="form-row">
-				<div class="form-group">
-				  <label><span data-i18n="downloadAdmin.pageId">页面ID</span> <span class="text-danger">*</span></label>
-				  <input type="text" class="form-control" id="download-page-id" required>
-				  <small class="form-text text-muted" data-i18n="downloadAdmin.pageIdHint">唯一标识符，用于URL访问</small>
-				</div>
-				<div class="form-group">
-				  <label data-i18n="downloadAdmin.version">版本号</label>
-				  <input type="text" class="form-control" id="download-version">
-				</div>
-				<div class="form-group">
-				  <label data-i18n="downloadAdmin.fileCount">文件数</label>
-				  <input type="number" class="form-control" id="download-file-count" min="0">
-				</div>
-			  </div>
-			</div>
-			
-			<!-- 下载链接区 -->
-			<div class="download-links-section">
-			  <div class="download-links-header">
-				<h4 data-i18n="downloadAdmin.downloadLinks">下载链接</h4>
-				<button type="button" id="add-download-link">
-				  <i class="fas fa-plus"></i> <span data-i18n="downloadAdmin.addLink">添加链接</span>
-				</button>
-			  </div>
-			  <div id="download-links-container">
-				<!-- 动态添加下载链接 -->
-			  </div>
-			</div>
-			
-			<!-- 权限设置区 -->
-			<div class="form-section">
-			  <h6 class="section-title" data-i18n="downloadAdmin.permissions">权限设置</h6>
-			  <div class="form-row">
-				<div class="form-group">
-				  <label data-i18n="downloadAdmin.accessLevel">访问权限</label>
-				  <select class="form-control" id="download-access-level">
-					<option value="-1" data-i18n="downloadAdmin.unlimited">不限</option>
-					<option value="0" data-i18n="userManager.normalUser">普通用户</option>
-					<option value="1" data-i18n="userManager.juniorUser">初级用户</option>
-					<option value="2" data-i18n="userManager.middleUser">中级用户</option>
-					<option value="3" data-i18n="userManager.seniorUser">高级用户</option>
-					<option value="4" data-i18n="userManager.vipUser">贵宾用户</option>
-					<option value="5" data-i18n="userManager.admin">系统管理员</option>
-				  </select>
-				</div>
-				<div class="form-group">
-				  <label data-i18n="userManager.specialGroup">特殊用户组</label>
-				  <input type="text" class="form-control" id="download-special-group">
-				  <small class="form-text text-muted" data-i18n="downloadAdmin.specialGroupHint">留空表示无限制</small>
-				</div>
-				<div class="form-group">
-				  <label data-i18n="downloadAdmin.requiredPoints">所需积分</label>
-				  <input type="number" class="form-control" id="download-required-points" min="0" value="0">
-				</div>
-			  </div>
-			</div>
-			
-			<!-- 其他信息区 -->
-			<div class="form-section">
-			  <h6 class="section-title" data-i18n="downloadAdmin.otherInfo">其他信息</h6>
-			  <div class="form-row">
-				<div class="form-group">
-				  <label data-i18n="downloadAdmin.lastUpdate">最后更新</label>
-				  <input type="date" class="form-control" id="download-last-update">
-				</div>
-				<div class="form-group">
-				  <label data-i18n="downloadAdmin.status">状态</label>
-				  <select class="form-control" id="download-status">
-					<option value="1" data-i18n="downloadAdmin.active">激活</option>
-					<option value="0" data-i18n="downloadAdmin.disabled">禁用</option>
-				  </select>
-				</div>
-			  </div>
-			  
-			  <div class="form-group">
-				<label data-i18n="downloadAdmin.imageUrl">图片URL</label>
-				<input type="url" class="form-control" id="download-image-url">
-			  </div>
-			  
-			  <div class="form-group">
-				<label data-i18n="downloadAdmin.description">描述</label>
-				<textarea class="form-control" id="download-description" rows="3"></textarea>
-			  </div>
-			</div>
-		  </div>
-		  
-		  <div class="modal-footer">
-			<button type="button" class="btn btn-secondary" id="cancel-download-btn" data-i18n="downloadAdmin.cancel">取消</button>
-			<button type="submit" class="btn btn-primary" data-i18n="downloadAdmin.save">保存</button>
-		  </div>
-		</form>
-	  </div>
-	</div>
+    <!-- 下载项目模态框 -->
+    <div id="download-modal" class="modal">
+      <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header">
+          <h5 id="modal-title" data-i18n="downloadAdmin.modalTitle">新建下载项目</h5>
+          <span class="close">×</span>
+        </div>
+        <form id="download-form">
+          <div class="modal-body">
+            <input type="hidden" id="download-id">
+            
+            <!-- 简单的标签页导航 -->
+            <div class="simple-tabs">
+              <div class="simple-tab-nav">
+                <button type="button" class="simple-tab-btn active" data-tab="basic">
+                  <i class="fas fa-info-circle"></i> <span data-i18n="downloadAdmin.basicInfo">基本信息</span>
+                </button>
+                <button type="button" class="simple-tab-btn" data-tab="links">
+                  <i class="fas fa-link"></i> <span data-i18n="downloadAdmin.downloadLinks">下载链接</span>
+                </button>
+                <button type="button" class="simple-tab-btn" data-tab="files">
+                  <i class="fas fa-file-upload"></i> <span data-i18n="downloadAdmin.fileManagement">文件管理</span>
+                </button>
+                <button type="button" class="simple-tab-btn" data-tab="permissions">
+                  <i class="fas fa-lock"></i> <span data-i18n="downloadAdmin.permissions">权限设置</span>
+                </button>
+              </div>
+              
+              <!-- 标签页内容 -->
+              <div class="simple-tab-content">
+                <!-- 基本信息标签页 -->
+                <div class="simple-tab-pane active" id="basic-pane">
+                  <div class="form-section">
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label><span data-i18n="downloadAdmin.title2">标题</span> <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="download-title" required>
+                      </div>
+                      <div class="form-group">
+                        <label><span data-i18n="downloadAdmin.category">分类</span> <span class="text-danger">*</span></label>
+                        <select class="form-control" id="download-category" required>
+                          <option value="game" data-i18n="downloadAdmin.categoryGame">游戏下载</option>
+                          <option value="archive" data-i18n="downloadAdmin.categoryArchive">存档下载</option>
+                          <option value="other" data-i18n="downloadAdmin.categoryOther">其他资源</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label><span data-i18n="downloadAdmin.pageId">页面ID</span> <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="download-page-id" required>
+                        <small class="form-text text-muted" data-i18n="downloadAdmin.pageIdHint">唯一标识符，用于URL访问</small>
+                      </div>
+                      <div class="form-group">
+                        <label data-i18n="downloadAdmin.version">版本号</label>
+                        <input type="text" class="form-control" id="download-version">
+                      </div>
+                      <div class="form-group">
+                        <label data-i18n="downloadAdmin.fileCount">文件数</label>
+                        <input type="number" class="form-control" id="download-file-count" min="0" value="0">
+                      </div>
+                    </div>
+                    
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label data-i18n="downloadAdmin.lastUpdate">最后更新</label>
+                        <input type="date" class="form-control" id="download-last-update">
+                      </div>
+                      <div class="form-group">
+                        <label data-i18n="downloadAdmin.status">状态</label>
+                        <select class="form-control" id="download-status">
+                          <option value="1" data-i18n="downloadAdmin.active">激活</option>
+                          <option value="0" data-i18n="downloadAdmin.disabled">禁用</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label data-i18n="downloadAdmin.imageUrl">图片URL</label>
+                      <input type="url" class="form-control" id="download-image-url">
+                    </div>
+                    
+                    <div class="form-group">
+                      <label data-i18n="downloadAdmin.description">描述</label>
+                      <textarea class="form-control" id="download-description" rows="3"></textarea>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- 下载链接标签页 -->
+                <div class="simple-tab-pane" id="links-pane">
+                  <div class="download-links-section">
+                    <div class="download-links-header">
+                      <h4 data-i18n="downloadAdmin.downloadLinks">下载链接</h4>
+                      <button type="button" id="add-download-link" class="btn btn-sm btn-secondary">
+                        <i class="fas fa-plus"></i> <span data-i18n="downloadAdmin.addLink">添加链接</span>
+                      </button>
+                    </div>
+                    <div id="download-links-container">
+                      <!-- 动态添加下载链接 -->
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- 文件管理标签页 -->
+                <div class="simple-tab-pane" id="files-pane">
+                  <div class="files-section">
+                    <div class="files-header mb-3">
+                      <h5>
+                        <i class="fas fa-folder-open"></i> 
+                        <span data-i18n="downloadAdmin.uploadedFiles">已上传文件</span>
+                      </h5>
+                      <button type="button" class="btn btn-success btn-sm" id="upload-file-btn" style="display: none;">
+                        <i class="fas fa-cloud-upload-alt"></i> <span data-i18n="downloadAdmin.uploadFile">上传新文件</span>
+                      </button>
+                    </div>
+                    
+                    <!-- 文件列表容器 -->
+                    <div id="files-list-container" class="files-list">
+                      <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <span data-i18n="downloadAdmin.saveBeforeUpload">请先保存下载项目，然后才能上传文件。</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- 权限设置标签页 -->
+                <div class="simple-tab-pane" id="permissions-pane">
+                  <div class="form-section">
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label data-i18n="downloadAdmin.accessLevel">访问权限</label>
+                        <select class="form-control" id="download-access-level">
+                          <option value="-1" data-i18n="downloadAdmin.unlimited">不限</option>
+                          <option value="0" data-i18n="userManager.normalUser">普通用户</option>
+                          <option value="1" data-i18n="userManager.juniorUser">初级用户</option>
+                          <option value="2" data-i18n="userManager.middleUser">中级用户</option>
+                          <option value="3" data-i18n="userManager.seniorUser">高级用户</option>
+                          <option value="4" data-i18n="userManager.vipUser">贵宾用户</option>
+                          <option value="5" data-i18n="userManager.admin">系统管理员</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label data-i18n="userManager.specialGroup">特殊用户组</label>
+                        <input type="text" class="form-control" id="download-special-group">
+                        <small class="form-text text-muted" data-i18n="downloadAdmin.specialGroupHint">留空表示无限制</small>
+                      </div>
+                      <div class="form-group">
+                        <label data-i18n="downloadAdmin.requiredPoints">所需积分</label>
+                        <input type="number" class="form-control" id="download-required-points" min="0" value="0">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancel-download-btn" data-i18n="downloadAdmin.cancel">取消</button>
+            <button type="submit" class="btn btn-primary" data-i18n="downloadAdmin.save">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
+  
+  <script>
+    // 页面加载完成后初始化
+    setTimeout(function() {
+      if (typeof initDownloadAdminPage === 'function') {
+        initDownloadAdminPage();
+      }
+      // 更新翻译
+      if (typeof languageModule !== 'undefined' && languageModule.updateTranslations) {
+        languageModule.updateTranslations();
+      }
+    }, 100);
+  </script>
 `,
 
   // 公告管理页面
