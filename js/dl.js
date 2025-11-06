@@ -1,4 +1,4 @@
-// downloads.js - 动态加载下载内容
+// downloads.js - 动态加载下载内容（v3.1 最终修复版 - Token清理 + Blob下载）
 if (typeof window.API_BASE_URL === 'undefined') {
     window.API_BASE_URL = 'https://api.am-all.com.cn';
 }
@@ -9,10 +9,12 @@ const SPECIAL_GROUP_MAP = {
   // 可以添加其他特殊用户组映射
 };
 
-// 初始化下载页面
+// ========== 初始化下载页面 ==========
 function initDownloadPage() {
+  console.log('🔄 初始化下载页面...');
   const token = localStorage.getItem('token');
   if (!token) {
+    console.log('⚠️ 用户未登录');
     if (typeof showLoginRequired==='function') { showLoginRequired('download'); }
     else { console.warn('[download] login required'); }
     return;
@@ -23,9 +25,17 @@ function initDownloadPage() {
       const resp = await fetch(base + '/api/check-permission?page=download', {
         headers: { 'Authorization': 'Bearer ' + token }
       });
-      if (!resp.ok) { console.warn('[download] check-permission HTTP', resp.status); showPermissionDenied && showPermissionDenied(); return; }
+      if (!resp.ok) { 
+        console.warn('[download] check-permission HTTP', resp.status); 
+        showPermissionDenied && showPermissionDenied(); 
+        return; 
+      }
       const data = await resp.json();
-      if (!data || !data.hasAccess) { showPermissionDenied && showPermissionDenied(); return; }
+      if (!data || !data.hasAccess) { 
+        showPermissionDenied && showPermissionDenied(); 
+        return; 
+      }
+      console.log('✅ 权限检查通过');
       if (typeof loadDownloadContent === 'function') loadDownloadContent();
       else if (typeof renderDownloadPage === 'function') renderDownloadPage();
     } catch (e) {
@@ -67,7 +77,7 @@ function showPermissionDenied() {
 
 async function loadDownloadContent() {
   try {
-    console.log('开始加载下载内容...');
+    console.log('📥 开始加载下载内容...');
     const token = localStorage.getItem('token');
     const headers = {};
     
@@ -80,7 +90,7 @@ async function loadDownloadContent() {
       cache: 'no-cache'
     });
     
-    console.log('下载内容响应状态:', response.status);
+    console.log('📡 下载内容响应状态:', response.status);
     
     // 调试输出
     console.log('API响应详情:', {
@@ -103,11 +113,11 @@ async function loadDownloadContent() {
     }
     
     const downloads = await response.json();
-    console.log('下载内容数据:', downloads);
+    console.log('✅ 下载内容数据:', downloads.length, '个项目');
     
     renderDownloadContent(downloads);
   } catch (error) {
-    console.error('加载下载内容错误:', error);
+    console.error('❌ 加载下载内容错误:', error);
     showErrorMessage('加载下载内容失败: ' + error.message);
     
     // 即使出错也显示空内容，而不是空白页面
@@ -117,7 +127,7 @@ async function loadDownloadContent() {
 
 // 渲染下载内容
 function renderDownloadContent(downloads) {
-  console.log('开始渲染下载内容，数量:', downloads.length);
+  console.log('🎨 开始渲染下载内容，数量:', downloads.length);
   
   // 按分类分组
   const gameDownloads = downloads.filter(d => d.category === 'game');
@@ -140,7 +150,7 @@ function renderDownloadContent(downloads) {
 function renderDownloadSection(containerId, downloads, lastUpdateId) {
   const container = document.getElementById(containerId);
   if (!container) {
-    console.error('容器不存在:', containerId);
+    console.error('❌ 容器不存在:', containerId);
     return;
   }
   
@@ -148,7 +158,7 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
   
   if (downloads.length === 0) {
     container.innerHTML = '<p>暂无内容</p>';
-    console.log('没有内容用于:', containerId);
+    console.log('ℹ️ 没有内容用于:', containerId);
     return;
   }
   
@@ -214,14 +224,6 @@ function renderDownloadSection(containerId, downloads, lastUpdateId) {
             hasAccess
           });
         }
-        
-        // 调试输出
-        console.log('普通权限检查:', {
-          title: download.title,
-          userRank,
-          accessLevel: download.access_level,
-          hasAccess: download.access_level === -1 || download.access_level === null || userRank >= (download.access_level || 0)
-        });
         
         const accessLevelNames = {
           '-1': '不限',
@@ -350,7 +352,7 @@ function getSpecialGroupDisplayName(specialGroup) {
 // 加载下载详情
 async function loadDownloadDetail(downloadId) {
   try {
-    console.log('加载下载详情:', downloadId);
+    console.log('📄 加载下载详情:', downloadId);
     const token = localStorage.getItem('token');
     const headers = {};
     
@@ -369,7 +371,7 @@ async function loadDownloadDetail(downloadId) {
     }
     
     const download = await response.json();
-    console.log('下载详情数据:', download);
+    console.log('✅ 下载详情数据:', download);
     
     // 先加载页面，等待页面渲染完成后再填充内容
     loadPage('download-detail');
@@ -390,14 +392,14 @@ async function loadDownloadDetail(downloadId) {
       }
     }, 100);
   } catch (error) {
-    console.error('加载下载详情错误:', error);
+    console.error('❌ 加载下载详情错误:', error);
     showErrorMessage('加载下载详情失败: ' + error.message);
   }
 }
 
-// 渲染下载详情
+// 渲染下载详情（v2.1.1 修复版）
 function renderDownloadDetail(download, retryCount = 0) {
-  console.log('渲染下载详情:', download.title);
+  console.log('🎨 渲染下载详情:', download.title);
   
   // 获取页面元素
   const detailTitle = document.getElementById('detail-title');
@@ -406,7 +408,7 @@ function renderDownloadDetail(download, retryCount = 0) {
   
   // 检查元素是否存在
   if (!detailTitle || !detailLastUpdate || !container) {
-    console.error('必要的DOM元素未找到，尝试重试', retryCount);
+    console.error('❌ 必要的DOM元素未找到，尝试重试', retryCount);
     
     if (retryCount < 5) {
       // 稍后重试
@@ -414,7 +416,7 @@ function renderDownloadDetail(download, retryCount = 0) {
         renderDownloadDetail(download, retryCount + 1);
       }, 100 * (retryCount + 1));
     } else {
-      console.error('无法找到必要的DOM元素，请检查页面结构');
+      console.error('❌ 无法找到必要的DOM元素，请检查页面结构');
     }
     return;
   }
@@ -436,25 +438,12 @@ function renderDownloadDetail(download, retryCount = 0) {
       downloadLinks = typeof download.download_links === 'string' 
         ? JSON.parse(download.download_links)
         : download.download_links;
-    } else if (download.baidu_url) {
-      // 兼容旧数据格式
-      downloadLinks = [{
-        name: '百度网盘',
-        url: download.baidu_url,
-        code: download.baidu_code || ''
-      }];
     }
   } catch (e) {
-    console.error('解析下载链接失败:', e);
-    // 兼容旧数据格式
-    if (download.baidu_url) {
-      downloadLinks = [{
-        name: '百度网盘',
-        url: download.baidu_url,
-        code: download.baidu_code || ''
-      }];
-    }
+    console.error('❌ 解析下载链接失败:', e);
   }
+  
+  console.log('📦 下载链接数量:', downloadLinks.length);
   
   // 渲染下载链接表格
   container.innerHTML = '';
@@ -468,20 +457,255 @@ function renderDownloadDetail(download, retryCount = 0) {
   } else {
     downloadLinks.forEach((link, index) => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td data-label="下载方式">
-          <a href="${link.url}" target="_blank" class="external-link">
-            <i class="fas fa-external-link-alt me-2"></i>${link.name || '下载链接' + (index + 1)}
-          </a>
-        </td>
-        <td data-label="文件数">${download.file_count || '-'}</td>
-        <td data-label="提取码/访问密码">${link.code || '无'}</td>
-        <td data-label="资源有效期">无期限</td>
-      `;
+      
+      // 获取下载方式的显示名称
+      const methodNames = {
+        'baidu': '百度网盘',
+        '123pan': '123网盘',
+        'onedrive': 'One Drive',
+        'direct': '直链下载',
+        'other': '其他下载'
+      };
+      
+      const methodName = methodNames[link.method] || link.name || '下载链接' + (index + 1);
+      
+      // 判断是否是直链下载
+      if (link.method === 'direct') {
+        // 直链下载：需要通过API带token
+        const fileId = link.file_id || '';
+        console.log('🔗 直链下载，文件ID:', fileId);
+        tr.innerHTML = `
+          <td data-label="下载方式">
+            <a href="#" class="direct-download-link" data-file-id="${fileId}">
+              <i class="fas fa-download me-2"></i>${methodName}
+            </a>
+          </td>
+          <td data-label="文件数">${download.file_count || '-'}</td>
+          <td data-label="提取码/访问密码">无需密码</td>
+          <td data-label="资源有效期">无期限</td>
+        `;
+      } else {
+        // 其他方式：直接跳转
+        tr.innerHTML = `
+          <td data-label="下载方式">
+            <a href="${link.url}" target="_blank" class="external-link">
+              <i class="fas fa-external-link-alt me-2"></i>${methodName}
+            </a>
+          </td>
+          <td data-label="文件数">${download.file_count || '-'}</td>
+          <td data-label="提取码/访问密码">${link.password || '无'}</td>
+          <td data-label="资源有效期">无期限</td>
+        `;
+      }
       container.appendChild(tr);
+    });
+    
+    // 为直链下载添加点击事件
+    container.querySelectorAll('.direct-download-link').forEach(link => {
+      link.addEventListener('click', handleDirectDownload);
     });
   }
   
   // 移除旧的全局函数，不再需要
   delete window.handleExternalLink;
 }
+
+// ========== 直链下载处理函数（v3.1 最终版 - Token清理 + Blob下载）==========
+async function handleDirectDownload(e) {
+  e.preventDefault();
+  
+  const button = e.currentTarget;
+  const fileId = button.getAttribute('data-file-id');
+  
+  console.log('🎯 开始直接下载，文件ID:', fileId);
+  
+  if (!fileId) {
+    console.error('❌ 无效的文件ID');
+    showErrorMessage('无效的文件ID');
+    return;
+  }
+  
+  // 防止重复点击
+  if (button.classList.contains('downloading')) {
+    console.log('⚠️ 正在下载中，忽略重复点击');
+    return;
+  }
+  
+  try {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      console.error('❌ 用户未登录');
+      showErrorMessage('请先登录');
+      setTimeout(() => {
+        showLoginRequired('download');
+      }, 1500);
+      return;
+    }
+    
+    // 显示下载准备中状态
+    const originalHTML = button.innerHTML;
+    button.classList.add('downloading');
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>准备下载...';
+    button.style.pointerEvents = 'none';
+    
+    console.log('📥 步骤1: 请求下载令牌，文件ID:', fileId);
+    
+    // 第一步：获取下载token
+    const tokenResponse = await fetch(`${window.API_BASE_URL}/api/download-files/${fileId}/token`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('📊 令牌请求响应状态:', tokenResponse.status);
+    
+    if (!tokenResponse.ok) {
+      const errorData = await tokenResponse.json();
+      console.error('❌ 获取令牌失败:', errorData);
+      throw new Error(errorData.error || '获取下载令牌失败');
+    }
+    
+    const tokenData = await tokenResponse.json();
+    console.log('📦 收到令牌数据');
+    
+    if (!tokenData.success || !tokenData.downloadUrl) {
+      console.error('❌ 令牌数据无效:', tokenData);
+      throw new Error('下载令牌无效');
+    }
+    
+    console.log('✅ 步骤2: 下载令牌获取成功');
+    console.log('📝 原始下载URL:', tokenData.downloadUrl);
+    
+    // 更新按钮状态
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>下载中...';
+    
+    // 🔧 清理Token URL中的异常字符
+    let cleanDownloadUrl = tokenData.downloadUrl;
+    try {
+      const url = new URL(cleanDownloadUrl);
+      let downloadToken = url.searchParams.get('token');
+      
+      if (downloadToken) {
+        console.log('📝 原始Token:', downloadToken.substring(0, 16) + '...', '长度:', downloadToken.length);
+        
+        // 移除token末尾的异常字符（如 :1, :2 等）
+        if (downloadToken.includes(':')) {
+          console.log('⚠️ 检测到Token包含冒号，正在清理...');
+          downloadToken = downloadToken.split(':')[0].trim();
+          console.log('✅ 清理后Token:', downloadToken.substring(0, 16) + '...', '长度:', downloadToken.length);
+        }
+        
+        // 验证Token长度（应该是64位十六进制）
+        if (downloadToken.length !== 64) {
+          console.warn('⚠️ Token长度异常:', downloadToken.length, '(正常应该是64位)');
+        }
+        
+        // 更新URL参数
+        url.searchParams.set('token', downloadToken);
+        cleanDownloadUrl = url.toString();
+        console.log('✅ 最终下载URL已清理');
+      }
+    } catch (error) {
+      console.error('❌ URL解析错误:', error);
+      console.log('⚠️ 使用原始URL继续');
+      // 继续使用原URL
+    }
+    
+    // 第二步：使用Fetch API下载文件（Blob方式，避免页面跳转）
+    console.log('📥 步骤3: 开始下载文件...');
+    const downloadResponse = await fetch(cleanDownloadUrl);
+    
+    if (!downloadResponse.ok) {
+      let errorMessage = '文件下载失败';
+      try {
+        const errorData = await downloadResponse.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch {
+        errorMessage = `HTTP ${downloadResponse.status}: ${downloadResponse.statusText}`;
+      }
+      console.error('❌ 下载失败:', errorMessage);
+      throw new Error(errorMessage);
+    }
+    
+    // 获取文件名（从Content-Disposition头）
+    const contentDisposition = downloadResponse.headers.get('Content-Disposition');
+    let filename = 'download';
+    
+    if (contentDisposition) {
+      // 尝试提取UTF-8文件名
+      const utf8Match = contentDisposition.match(/filename\*=UTF-8''(.+)/);
+      if (utf8Match) {
+        filename = decodeURIComponent(utf8Match[1]);
+      } else {
+        // 尝试提取普通文件名
+        const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (normalMatch) {
+          filename = normalMatch[1];
+        }
+      }
+    }
+    
+    console.log('📦 文件名:', filename);
+    
+    // 将响应转为Blob
+    const blob = await downloadResponse.blob();
+    console.log('📦 文件大小:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
+    
+    // 创建Blob URL并触发下载
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    
+    console.log('🖱️ 触发下载...');
+    a.click();
+    
+    // 清理Blob URL
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+      console.log('🧹 清理完成');
+    }, 100);
+    
+    // 恢复按钮状态
+    setTimeout(() => {
+      button.innerHTML = originalHTML;
+      button.classList.remove('downloading');
+      button.style.pointerEvents = '';
+      console.log('🔄 按钮状态已恢复');
+    }, 1000);
+    
+    showSuccessMessage('下载已开始，请查看浏览器下载');
+    console.log('🎉 下载流程完成');
+    
+  } catch (error) {
+    console.error('❌ 下载错误:', error);
+    console.error('❌ 错误信息:', error.message);
+    showErrorMessage('下载失败: ' + error.message);
+    
+    // 恢复按钮状态
+    const originalHTML = button.getAttribute('data-original-html') || '<i class="fas fa-download me-2"></i>直链下载';
+    button.innerHTML = originalHTML;
+    button.classList.remove('downloading');
+    button.style.pointerEvents = '';
+  }
+}
+
+// ========== 确保函数全局可用 ==========
+// 将关键函数暴露到 window 对象，确保 spa.js 可以调用
+window.initDownloadPage = initDownloadPage;
+window.loadDownloadContent = loadDownloadContent;
+window.renderDownloadContent = renderDownloadContent;
+window.loadDownloadDetail = loadDownloadDetail;
+window.handleDirectDownload = handleDirectDownload;
+
+console.log('✅ 下载功能已加载（v3.1 最终修复版 - Token清理 + Blob下载）');
+console.log('✅ initDownloadPage 函数已注册到 window 对象');
+console.log('ℹ️ handleDirectDownload 已优化：');
+console.log('   - 使用Blob下载避免页面导航');
+console.log('   - 自动清理Token中的异常字符（:1等）');

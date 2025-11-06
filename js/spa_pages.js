@@ -110,7 +110,7 @@ const pages = {
 // 下载页面
 download: `
   <h1 class="page-title" data-i18n="download.title">下载中心</h1>
-  <div class="section">
+  <div class="section download-section">
     <h2 class="section-title">
       <i class="fas fa-gamepad"></i>
       <span data-i18n="download.gameDownload">游戏下载</span>
@@ -125,7 +125,7 @@ download: `
     </div>
   </div>
   
-  <div class="section">
+  <div class="section download-section">
     <h2 class="section-title">
       <i class="fas fa-archive"></i>
       <span data-i18n="download.archiveDownload">存档下载</span>
@@ -136,7 +136,7 @@ download: `
     </div>
   </div>
   
-  <div class="section">
+  <div class="section download-section">
     <h2 class="section-title">
       <i class="fas fa-folder-plus"></i>
       <span data-i18n="download.otherResources">其他资源</span>
@@ -147,7 +147,7 @@ download: `
     </div>
     <div class="warning mt-4">
       <strong><i class="fas fa-info-circle me-2"></i> <span data-i18n="download.downloadInfo">下载说明：</span></strong>
-      <span data-i18n="download.downloadInfoDetail">目前本站全部资源仅提供「百度网盘」作为下载方式</span>
+      <span data-i18n="download.downloadInfoDetail">支持多种下载方式：百度网盘、123网盘、One Drive、直链等</span>
     </div>
   </div>
 
@@ -179,7 +179,7 @@ download: `
       <span data-i18n="download.backToDownload">返回下载中心</span>
     </button>
     
-    <div class="section">
+    <div class="section download-section">
       <h2 class="section-title" id="detail-title">
         <i class="fas fa-download"></i>
         <span data-i18n="download.downloadList">下载列表</span>
@@ -187,14 +187,14 @@ download: `
       
       <div class="mb-4">
         <p><span data-i18n="download.lastUpdate">最后更新</span>: <span id="detail-last-update"></span></p>
-        <div class="table-container">
-          <table class="table">
+        <div class="detail-table-wrapper">
+          <table class="detail-table">
             <thead>
               <tr>
-                <td data-i18n="download.downloadMethod">下载方式</td>
-                <td data-i18n="download.fileCount">文件数</td>
-                <td data-i18n="download.accessCode">提取码/访问密码</td>
-                <td data-i18n="download.validity">资源有效期</td>
+                <th data-i18n="download.downloadMethod">下载方式</th>
+                <th data-i18n="download.fileCount">文件数</th>
+                <th data-i18n="download.accessCode">提取码/访问密码</th>
+                <th data-i18n="download.validity">资源有效期</th>
               </tr>
             </thead>
             <tbody id="detail-download-info">
@@ -210,9 +210,25 @@ download: `
       <p data-i18n="footer.text2">1145141919810</p>
     </footer>
   </div>
+  
+  <script>
+    // 添加滚动检测以隐藏滑动提示
+    setTimeout(function() {
+      const tableWrapper = document.querySelector('.detail-table-wrapper');
+      if (tableWrapper) {
+        tableWrapper.addEventListener('scroll', function() {
+          if (this.scrollLeft > 10) {
+            this.classList.add('scrolled');
+          } else {
+            this.classList.remove('scrolled');
+          }
+        });
+      }
+    }, 200);
+  </script>
 `,
 
-// 下载管理页面
+// 下载管理页面（删除文件管理标签页）
 'download-admin': `
   <div class="section">
     <h1 class="page-title" data-i18n="downloadAdmin.title">下载管理</h1>
@@ -259,7 +275,7 @@ download: `
           <div class="modal-body">
             <input type="hidden" id="download-id">
             
-            <!-- 简单的标签页导航 -->
+            <!-- 简单的标签页导航（只保留基本信息、下载链接、权限设置） -->
             <div class="simple-tabs">
               <div class="simple-tab-nav">
                 <button type="button" class="simple-tab-btn active" data-tab="basic">
@@ -267,9 +283,6 @@ download: `
                 </button>
                 <button type="button" class="simple-tab-btn" data-tab="links">
                   <i class="fas fa-link"></i> <span data-i18n="downloadAdmin.downloadLinks">下载链接</span>
-                </button>
-                <button type="button" class="simple-tab-btn" data-tab="files">
-                  <i class="fas fa-file-upload"></i> <span data-i18n="downloadAdmin.fileManagement">文件管理</span>
                 </button>
                 <button type="button" class="simple-tab-btn" data-tab="permissions">
                   <i class="fas fa-lock"></i> <span data-i18n="downloadAdmin.permissions">权限设置</span>
@@ -349,29 +362,6 @@ download: `
                     </div>
                     <div id="download-links-container">
                       <!-- 动态添加下载链接 -->
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- 文件管理标签页 -->
-                <div class="simple-tab-pane" id="files-pane">
-                  <div class="files-section">
-                    <div class="files-header mb-3">
-                      <h5>
-                        <i class="fas fa-folder-open"></i> 
-                        <span data-i18n="downloadAdmin.uploadedFiles">已上传文件</span>
-                      </h5>
-                      <button type="button" class="btn btn-success btn-sm" id="upload-file-btn" style="display: none;">
-                        <i class="fas fa-cloud-upload-alt"></i> <span data-i18n="downloadAdmin.uploadFile">上传新文件</span>
-                      </button>
-                    </div>
-                    
-                    <!-- 文件列表容器 -->
-                    <div id="files-list-container" class="files-list">
-                      <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> 
-                        <span data-i18n="downloadAdmin.saveBeforeUpload">请先保存下载项目，然后才能上传文件。</span>
-                      </div>
                     </div>
                   </div>
                 </div>

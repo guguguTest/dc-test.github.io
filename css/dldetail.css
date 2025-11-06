@@ -1,0 +1,156 @@
+/* download-detail.css - 下载详情页专用样式 */
+
+/* 详情页表格容器 */
+.detail-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 20px 0;
+}
+
+/* 详情页表格样式 */
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  white-space: nowrap;
+}
+
+.detail-table thead {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.detail-table th {
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: 700;
+  color: #2c3e50;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #667eea;
+  white-space: nowrap;
+}
+
+.detail-table td {
+  padding: 16px 20px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f3f4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail-table tr:hover {
+  background: linear-gradient(135deg, #f8f9ff 0%, #fff5f8 100%);
+}
+
+.detail-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* 外部链接样式 */
+.external-link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, transparent 0%, rgba(102, 126, 234, 0.05) 100%);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.external-link:hover {
+  color: #764ba2;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  transform: translateX(3px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.external-link i {
+  font-size: 0.9em;
+}
+
+/* ========== PC端样式 ========== */
+@media (min-width: 769px) {
+  .detail-table-wrapper {
+    overflow-x: visible;
+  }
+  
+  .detail-table {
+    table-layout: auto;
+  }
+  
+  /* PC端文本不换行 */
+  .detail-table th,
+  .detail-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* ========== 移动端优化 ========== */
+@media (max-width: 768px) {
+  .detail-table-wrapper {
+    margin: 15px -15px;
+    padding: 0 15px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .detail-table {
+    min-width: 100%;
+    font-size: 0.85rem;
+  }
+  
+  /* 移动端表头 */
+  .detail-table th {
+    padding: 12px 15px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    z-index: 10;
+  }
+  
+  /* 移动端单元格 */
+  .detail-table td {
+    padding: 12px 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+  
+  /* 移动端链接样式 */
+  .external-link {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+  }
+  
+  /* 添加滚动提示 */
+  .detail-table-wrapper::after {
+    content: '→ 左右滑动查看更多';
+    display: block;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #999;
+    margin-top: 10px;
+    animation: fadeInOut 2s ease-in-out infinite;
+  }
+  
+  @keyframes fadeInOut {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+  
+  /* 滚动时隐藏提示 */
+  .detail-table-wrapper.scrolled::after {
+    display: none;
+  }
+}

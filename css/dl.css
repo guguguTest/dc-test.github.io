@@ -1,14 +1,15 @@
-/* dl.css - 增强版下载页面样式 */
+/* dl.css - 增强版下载页面样式（白色背景版） */
 
-/* 基础容器样式 */
+/* 基础容器样式 - 白色背景版本 */
 .download-section {
   margin-bottom: 3rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: white;
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   position: relative;
   overflow: hidden;
+  border: 1px solid #e9ecef;
 }
 
 .download-section::before {
@@ -17,16 +18,15 @@
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
   pointer-events: none;
 }
 
 .download-section .section-title {
-  color: white;
+  color: #2c3e50;
   margin-bottom: 1.5rem;
   font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -34,7 +34,7 @@
 
 .download-section .section-title i {
   font-size: 1.2em;
-  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  background: linear-gradient(45deg, #667eea, #764ba2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -87,6 +87,7 @@
   text-transform: uppercase;
   font-size: 0.85rem;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .download-table th::after {
@@ -106,6 +107,9 @@
   border-bottom: 1px solid #f1f3f4;
   transition: all 0.3s ease;
   position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .download-table tr {
@@ -150,6 +154,12 @@
 
 .download-table a:hover i {
   transform: scale(1.1) rotate(5deg);
+}
+
+/* 下载中状态 */
+.download-table a.downloading {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* 锁定状态样式 */
@@ -214,6 +224,7 @@
   overflow: hidden;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .access-badge::before {
@@ -290,6 +301,7 @@
   overflow: hidden;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .special-access-badge::before {
@@ -376,106 +388,12 @@
   padding: 4px 8px;
   border-radius: 12px;
   border: 1px solid rgba(231, 76, 60, 0.3);
+  white-space: nowrap;
 }
 
 .points-cost::before {
   content: '💎';
   font-size: 0.9em;
-}
-
-/* 响应式设计增强 */
-@media (max-width: 768px) {
-  .download-section {
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .download-table {
-    font-size: 0.9rem;
-  }
-  
-  .download-table thead {
-    display: none;
-  }
-  
-  .download-table tr {
-    display: block;
-    margin-bottom: 20px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    transition: all 0.3s ease;
-  }
-
-  .download-table tr:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
-  }
-  
-  .download-table td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #f1f3f4;
-    text-align: right;
-  }
-
-  .download-table td:last-child {
-    border-bottom: none;
-    border-radius: 0 0 12px 12px;
-  }
-  
-  .download-table td::before {
-    content: attr(data-label);
-    font-weight: 700;
-    color: #2c3e50;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-  }
-  
-  /* 移动端徽章样式调整 */
-  .access-badge,
-  .special-access-badge {
-    font-size: 0.7rem;
-    padding: 4px 10px;
-    margin: 2px 0;
-  }
-  
-  .points-cost {
-    font-size: 0.7rem;
-    padding: 3px 6px;
-  }
-
-  /* 移动端链接样式 */
-  .download-table a {
-    padding: 6px 10px;
-    border-radius: 6px;
-    flex-shrink: 0;
-    max-width: 60%;
-  }
-}
-
-/* 中等屏幕适配 */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .download-table th:nth-child(3),
-  .download-table td:nth-child(3) {
-    display: none;
-  }
-  
-  .download-section {
-    padding: 1.8rem;
-  }
-}
-
-/* 小屏幕进一步优化 */
-@media (max-width: 992px) and (min-width: 769px) {
-  .download-table th:nth-child(2),
-  .download-table td:nth-child(2) {
-    display: none;
-  }
 }
 
 /* 页面标题样式增强 */
@@ -532,4 +450,115 @@
 
 .back-button:hover i {
   transform: translateX(-2px);
+}
+
+/* ========== 移动端优化 - 改进版 ========== */
+@media (max-width: 768px) {
+  .download-section {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  /* 移动端使用简洁的表格样式，不要卡片布局 */
+  .download-table {
+    font-size: 0.85rem;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .download-table thead {
+    display: none; /* 隐藏表头 */
+  }
+  
+  .download-table tbody {
+    display: block;
+  }
+  
+  .download-table tr {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #667eea;
+  }
+
+  .download-table tr:hover {
+    transform: translateY(0);
+    box-shadow: 0 3px 12px rgba(102, 126, 234, 0.15);
+  }
+  
+  .download-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f3f4;
+    text-align: right;
+    white-space: normal;
+    overflow: visible;
+  }
+
+  .download-table td:last-child {
+    border-bottom: none;
+  }
+  
+  .download-table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: #2c3e50;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    text-align: left;
+    flex-shrink: 0;
+    margin-right: 10px;
+  }
+  
+  /* 移动端链接样式 */
+  .download-table a {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+  }
+  
+  /* 移动端徽章样式调整 */
+  .access-badge,
+  .special-access-badge {
+    font-size: 0.65rem;
+    padding: 4px 8px;
+    margin: 2px 0;
+  }
+  
+  .points-cost {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+  }
+
+  .page-title {
+    font-size: 1.8rem;
+  }
+}
+
+/* 中等屏幕适配 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .download-table th:nth-child(3),
+  .download-table td:nth-child(3) {
+    display: none;
+  }
+  
+  .download-section {
+    padding: 1.8rem;
+  }
+}
+
+/* 小屏幕进一步优化 */
+@media (max-width: 992px) and (min-width: 769px) {
+  .download-table th:nth-child(2),
+  .download-table td:nth-child(2) {
+    display: none;
+  }
 }
