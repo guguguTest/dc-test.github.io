@@ -720,9 +720,11 @@ function handleQuerySubmit(e) {
             if (result.status === 'ok' && result.image_base64) {
                 // 显示查询结果
                 document.getElementById('query-result').innerHTML = `
-                    <img src="data:image/png;base64,${result.image_base64}" alt="查分结果">
-                    <div class="ccb-save-action">
-                        <button id="save-image-btn" class="ccb-btn ccb-btn-primary">保存图片</button>
+                    <div class="ccb-result-container">
+                        <img src="data:image/png;base64,${result.image_base64}" alt="查分结果">
+                        <div class="ccb-save-action">
+                            <button id="save-image-btn" class="ccb-btn ccb-btn-primary">保存图片</button>
+                        </div>
                     </div>
                 `;
 

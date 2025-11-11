@@ -630,21 +630,55 @@ async function handleDirectDownload(e) {
       throw new Error(errorMessage);
     }
     
-    // 获取文件名（从Content-Disposition头）
+    // ⭐ 从Content-Disposition响应头提取文件名
     const contentDisposition = downloadResponse.headers.get('Content-Disposition');
-    let filename = 'download';
+    let filename = 'download'; // 默认文件名
+    
+    console.log('📋 Content-Disposition:', contentDisposition);
     
     if (contentDisposition) {
-      // 尝试提取UTF-8文件名
-      const utf8Match = contentDisposition.match(/filename\*=UTF-8''(.+)/);
-      if (utf8Match) {
-        filename = decodeURIComponent(utf8Match[1]);
-      } else {
-        // 尝试提取普通文件名
-        const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/);
-        if (normalMatch) {
-          filename = normalMatch[1];
+      // 优先尝试提取 UTF-8 编码的文件名（RFC 5987 格式）
+      // 格式：filename*=UTF-8''encoded_name
+      const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;,\s]+)/i);
+      if (utf8Match && utf8Match[1]) {
+        try {
+          filename = decodeURIComponent(utf8Match[1]);
+          console.log('✅ 提取UTF-8文件名:', filename);
+        } catch (e) {
+          console.warn('⚠️ UTF-8解码失败:', e);
         }
+      }
+      
+      // 如果UTF-8提取失败，尝试提取普通文件名（ASCII fallback）
+      // 格式：filename="name" 或 filename=name
+      if (filename === 'download') {
+        const asciiMatch = contentDisposition.match(/filename=["']?([^"';,\s]+)["']?/i);
+        if (asciiMatch && asciiMatch[1]) {
+          filename = asciiMatch[1];
+          console.log('✅ 提取ASCII文件名:', filename);
+        }
+      }
+      
+      // 清理文件名中的特殊字符
+      filename = filename.replace(/[<>:"|?*]/g, '_').trim();
+      
+      console.log('📦 最终文件名:', filename);
+    } else {
+      console.warn('⚠️ 响应头中没有Content-Disposition');
+    }
+    
+    // 如果还是没有提取到有效文件名，尝试从URL获取
+    if (filename === 'download' || !filename) {
+      try {
+        const url = new URL(cleanDownloadUrl);
+        const pathParts = url.pathname.split('/');
+        const urlFilename = pathParts[pathParts.length - 1];
+        if (urlFilename && urlFilename !== 'download') {
+          filename = decodeURIComponent(urlFilename);
+          console.log('✅ 从URL提取文件名:', filename);
+        }
+      } catch (e) {
+        console.warn('⚠️ 从URL提取文件名失败:', e);
       }
     }
     

@@ -743,6 +743,15 @@
     border-color: var(--modern-primary-color);
 }
 
+/* 查询结果容器 - 垂直布局 */
+.ccb-result-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+}
+
 .ccb-result img {
     max-width: 100%;
     height: auto;
@@ -751,10 +760,42 @@
     border: 3px solid white;
 }
 
+/* 保存按钮容器 */
+.ccb-save-action {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+}
+
 .ccb-result-empty {
     text-align: center;
     color: var(--modern-text-secondary);
     font-size: 14px;
+}
+
+/* 冷却倒计时提示框 - 红色边框样式 */
+.ccb-cooldown {
+    margin-top: 16px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+    border: 2px solid #ef4444;
+    border-radius: var(--modern-border-radius-small);
+    color: #dc2626;
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+    animation: pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+    }
+    50% {
+        box-shadow: 0 2px 16px rgba(239, 68, 68, 0.4);
+    }
 }
 
 /* 积分信息卡片 */
