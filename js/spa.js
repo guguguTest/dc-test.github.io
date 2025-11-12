@@ -2766,25 +2766,38 @@ if (pageId === 'user-settings') {
           img.id = 'avatar-to-crop';
           img.src = event.target.result;
           img.style.maxWidth = '100%';
-          img.style.maxHeight = '300px';
+          img.style.maxHeight = '100%';
+          img.style.display = 'block';
           
           cropContainer.appendChild(img);
           
-          cropper = new Cropper(img, {
-            aspectRatio: 1,
-            viewMode: 1,
-            autoCropArea: 0.8,
-            movable: true,
-            zoomable: true,
-            rotatable: false,
-            scalable: false,
-            guides: true,
-            highlight: false,
-            background: false,
-            cropBoxResizable: true,
-            minCropBoxWidth: 100,
-            minCropBoxHeight: 100
-          });
+          // 等待图片加载后初始化cropper
+          img.onload = function() {
+            cropper = new Cropper(img, {
+              aspectRatio: 1,
+              viewMode: 1,
+              autoCropArea: 0.8,
+              movable: true,
+              zoomable: true,
+              rotatable: false,
+              scalable: true,
+              guides: false,
+              center: true,
+              highlight: true,
+              background: true,
+              cropBoxResizable: true,
+              cropBoxMovable: true,
+              dragMode: 'move',
+              minCropBoxWidth: 100,
+              minCropBoxHeight: 100,
+              responsive: true,
+              restore: true,
+              checkCrossOrigin: true,
+              checkOrientation: true,
+              modal: true,
+              toggleDragModeOnDblclick: false
+            });
+          };
           
           cropSection.style.display = 'flex';
         };

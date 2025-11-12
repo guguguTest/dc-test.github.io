@@ -1429,44 +1429,108 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.9);
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 10px;
 }
 
 .crop-modal-content {
   background: white;
-  border-radius: 16px;
-  padding: 30px;
-  max-width: 500px;
-  width: 100%;
+  border-radius: 12px;
+  padding: 15px;
+  max-width: 90vw;
+  width: 900px;
+  height: 85vh;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
 .crop-modal-content h3 {
-  margin: 0 0 20px;
+  margin: 0 0 10px;
   text-align: center;
   color: #2c3e50;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  padding: 0;
 }
 
 .crop-container {
-  margin-bottom: 20px;
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 300px;
+  width: 100%;
+  min-height: 0;
   background: #f8f9fa;
-  border-radius: 10px;
-  padding: 20px;
+  border-radius: 8px;
+  padding: 10px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.crop-container img {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+
+/* Cropper.js 圆形遮罩样式 */
+.crop-container .cropper-view-box,
+.crop-container .cropper-face {
+  border-radius: 50%;
+  outline: 0;
+}
+
+.crop-container .cropper-view-box {
+  box-shadow: 0 0 0 1px #39f;
+  outline: 0;
+}
+
+.crop-container .cropper-crop-box {
+  border-radius: 50%;
+}
+
+.crop-container .cropper-line,
+.crop-container .cropper-point {
+  background-color: #39f;
+}
+
+.crop-container .cropper-point.point-se {
+  width: 10px;
+  height: 10px;
+  opacity: 1;
+  border-radius: 50%;
+}
+
+.crop-container .cropper-dashed {
+  border: 0;
+}
+
+.crop-container .cropper-center {
+  opacity: 1;
+}
+
+/* 确保cropper容器占满整个空间 */
+.crop-container .cropper-container {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .crop-actions {
   display: flex;
   gap: 10px;
   justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  margin: 0;
 }
+
 
 /* 移动端适配 - 用户设置页面 */
 @media (max-width: 768px) {
@@ -1487,6 +1551,39 @@
   .avatar-wrapper {
     width: 100px;
     height: 100px;
+  }
+  
+  /* 移动端头像裁剪modal优化 */
+  .avatar-crop-modal {
+    padding: 5px;
+  }
+  
+  .crop-modal-content {
+    padding: 12px;
+    max-width: 98vw;
+    width: 98vw;
+    height: 90vh;
+    max-height: 90vh;
+  }
+  
+  .crop-modal-content h3 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+  
+  .crop-container {
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .crop-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .crop-actions button {
+    width: 100%;
+    padding: 12px;
   }
   
   .user-display-name {
