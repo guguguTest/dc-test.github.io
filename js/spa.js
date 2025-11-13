@@ -253,8 +253,8 @@ function handleRegisterWithAnimation() {
     return;
   }
 
-  if (nickname && (nickname.length < 6 || nickname.length > 20)) {
-    showTempErrorMessage(errorElement, '昵称长度需在6-20个字符之间');
+  if (nickname && (nickname.length < 2 || nickname.length > 12)) {
+    showTempErrorMessage(errorElement, '昵称长度需在2-12个字符之间');
     return;
   }
 
@@ -1873,8 +1873,8 @@ function handleRegister() {
     return;
   }
 
-  if (nickname && (nickname.length < 6 || nickname.length > 20)) {
-    showTempErrorMessage(errorElement, '昵称长度需在6-20个字符之间');
+  if (nickname && (nickname.length < 2 || nickname.length > 12)) {
+    showTempErrorMessage(errorElement, '昵称长度需在2-12个字符之间');
     return;
   }
 
@@ -2746,8 +2746,8 @@ if (pageId === 'user-settings') {
     avatarUpload.addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
-        if (file.size > 150 * 1024) {
-          showErrorMessage('头像大小不能超过150KB');
+        if (file.size > 500 * 1024) {
+          showErrorMessage('头像大小不能超过500KB');
           return;
         }
         
@@ -2875,8 +2875,8 @@ if (pageId === 'user-settings') {
     saveProfileBtn.addEventListener('click', function() {
       const nickname = document.getElementById('settings-nickname').value;
       
-      if (nickname && (nickname.length < 6 || nickname.length > 20)) {
-        showErrorMessage('昵称长度需在6-20个字符之间');
+      if (nickname && (nickname.length < 2 || nickname.length > 12)) {
+        showErrorMessage('昵称长度需在2-12个字符之间');
         return;
       }
       
