@@ -73,6 +73,7 @@ const languageModule = (function() {
             'userManager.gameServer': '游戏服务器',
             'userManager.status': '状态',
             'userManager.actions': '操作',
+			'userSettings.adjustAvatar': '上传头像',
             
             // 下载中心
             'download.title': '下载中心',
@@ -395,6 +396,7 @@ const languageModule = (function() {
             'userManager.gameServer': 'Game Server',
             'userManager.status': 'Status',
             'userManager.actions': 'Actions',
+			'userSettings.adjustAvatar': 'Avatar Update',
             
             // 下载中心
             'download.title': 'Download Center',
@@ -717,6 +719,7 @@ const languageModule = (function() {
             'userManager.gameServer': 'ゲームサーバー',
             'userManager.status': 'ステータス',
             'userManager.actions': 'アクション',
+			'userSettings.adjustAvatar': 'アバター変更',
             
             // 下载中心
             'download.title': 'ダウンロードセンター',
@@ -871,7 +874,6 @@ const languageModule = (function() {
             'userSettings.confirmNewPassword': '新しいパスワード確認',
             'userSettings.confirmNewPasswordPlaceholder': '新しいパスワードを再入力',
             'userSettings.updatePassword': 'パスワード更新',
-            'userSettings.adjustAvatar': 'アバターアップデート',
             'userSettings.ccbBinding': 'CCBバインディング情報',
             'userSettings.server': 'サーバー',
             'userSettings.cardNumber': 'Aimeカード番号',
@@ -900,7 +902,7 @@ const languageModule = (function() {
             'userSettings.savePrivacy': 'プライバシー保存',
             
             // 每日签到
-            'fortune.title': 'おみくじ',
+            'fortune.title': 'おんみくじ',
             'fortune.backHome': '戻る',
             'fortune.todayFortune': '今日の運勢',
             'fortune.suitable': '宜:',

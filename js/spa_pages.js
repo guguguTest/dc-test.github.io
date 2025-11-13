@@ -115,10 +115,10 @@ download: `
       <i class="fas fa-gamepad"></i>
       <span data-i18n="download.gameDownload">游戏下载</span>
     </h2>
-    <div class="warning">
+    <!-- <div class="warning">
       <strong><i class="fas fa-exclamation-circle me-2"></i> <span data-i18n="download.warning">重要提示：</span></strong>
       <span data-i18n="download.warningDetail">OneDrive下载渠道已下线</span>
-    </div>
+    </div> -->
     <p class="mb-4"><strong><span data-i18n="download.lastUpdate">最后更新</span>: <span id="game-last-update"></span></strong></p>
     <div class="table-container" id="game-downloads">
       <!-- 游戏下载内容将通过JavaScript动态填充 -->
@@ -145,10 +145,10 @@ download: `
     <div class="table-container" id="other-downloads">
       <!-- 其他资源内容将通过JavaScript动态填充 -->
     </div>
-    <div class="warning mt-4">
+    <!-- <div class="warning mt-4">
       <strong><i class="fas fa-info-circle me-2"></i> <span data-i18n="download.downloadInfo">下载说明：</span></strong>
       <span data-i18n="download.downloadInfoDetail">支持多种下载方式：百度网盘、123网盘、One Drive、直链等</span>
-    </div>
+    </div> -->
   </div>
 
   <script>
