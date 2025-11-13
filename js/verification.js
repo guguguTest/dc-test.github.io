@@ -115,7 +115,7 @@ function loadVerificationEntry() {
           </div>
           <div class="verification-entry-title">个人认证</div>
           <div class="verification-entry-desc">
-            适合个人用户，可发布闲鱼、淘宝等店铺广告
+            个人用户：可发布二手购物平台个人店铺广告信息
           </div>
         </div>
         
@@ -126,7 +126,7 @@ function loadVerificationEntry() {
           </div>
           <div class="verification-entry-title">官方认证</div>
           <div class="verification-entry-desc">
-            适合官方机构，享受更高权益和信任度
+            官方用户：可发布大型购物平台个人品牌或大型品牌店铺广告信息
           </div>
         </div>
       </div>
@@ -208,10 +208,20 @@ async function loadVerificationForm(type) {
               <img id="proof-image-preview-img" src="" alt="凭证预览">
             </div>
           </div>
-          
+
+          <div class="verification-warning">
+            <i class="fas fa-info-circle"></i>
+            <b>申请凭证：能够证明您的身份信息，例如：店铺后台页面、购物平台卖家界面。</b>
+          </div>
+
+          <div class="verification-warning">
+            <i class="fas fa-info-circle"></i>
+            <b>申请通过后，您所发布的店铺其经营内容必须包含音乐游戏或街机游戏的相关内容</b>
+          </div>
+
           <div class="verification-tip">
             <i class="fas fa-info-circle"></i>
-            请确保上传的凭证清晰可见，能够证明您的身份信息。
+            <b>请确保上传的凭证清晰可见，敏感信息可隐去，但店铺名与用户名必须展示出来。</b>
           </div>
           
           <!-- 提交按钮 -->
