@@ -740,7 +740,7 @@ async function submitPost() {
                 <img src="${post.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
                 
                 <!-- 彩虹光环特效 (rankSp === 1) -->
-                ${post.rankSp === 1 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
+                ${post.user_rank === 5 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
                 
                 <!-- 账户认证图标 (右下角) -->
                 ${post.account_auth === 1 ? `
@@ -855,7 +855,7 @@ async function submitPost() {
               <img src="${reply.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
               
               <!-- 彩虹光环特效 (rankSp === 1) -->
-              ${reply.rankSp === 1 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
+              ${reply.user_rank === 5 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
               
               <!-- 账户认证图标 (右下角) -->
               ${reply.account_auth === 1 ? `

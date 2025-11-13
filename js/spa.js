@@ -1255,7 +1255,7 @@ if (userAvatarPc) {
   oldIcons.forEach(icon => icon.remove());
   
   // 添加七彩光环特效
-  if (user.rankSp === 1) {
+  if (user.user_rank === 5) {
     const effect = document.createElement('div');
     effect.className = 'avatar-effect-rainbow';
     avatarWrapper.appendChild(effect);
@@ -1358,7 +1358,7 @@ if (userAvatarMobile) {
   oldIcons.forEach(icon => icon.remove());
   
   // 添加七彩光环特效
-  if (user.rankSp === 1) {
+  if (user.user_rank === 5) {
     const effect = document.createElement('div');
     effect.className = 'avatar-effect-rainbow';
     avatarWrapper.appendChild(effect);
