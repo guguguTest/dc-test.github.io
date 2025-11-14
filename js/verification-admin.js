@@ -40,7 +40,6 @@ function showRenewalModal() {
               required
             >
               <option value="">请选择续费期限</option>
-              <option value="test-1min">测试用1分钟</option>
               <option value="trial-1month">试用1个月</option>
               <option value="1month">1个月</option>
               <option value="3months">3个月</option>

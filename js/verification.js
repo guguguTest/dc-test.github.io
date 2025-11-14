@@ -13,7 +13,6 @@ const VerificationModule = {
   // 价格配置
   PRICES: {
     personal: {
-      'test-1min': 0,
       'trial-1month': 0,
       '1month': 150,
       '3months': 400,
@@ -21,7 +20,6 @@ const VerificationModule = {
       '12months': 1500
     },
     official: {
-      'test-1min': 0,
       'trial-1month': 0,
       '1month': 300,
       '3months': 800,
@@ -32,7 +30,6 @@ const VerificationModule = {
   
   // 期限配置（天数）
   DURATIONS: {
-    'test-1min': 1 / (24 * 60), // 1分钟转换为天数
     'trial-1month': 30,
     '1month': 30,
     '3months': 90,
@@ -42,7 +39,6 @@ const VerificationModule = {
   
   // 期限显示文本
   DURATION_LABELS: {
-    'test-1min': '测试用1分钟',
     'trial-1month': '试用1个月',
     '1month': '1个月',
     '3months': '3个月',
