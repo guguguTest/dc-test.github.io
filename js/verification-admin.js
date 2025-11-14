@@ -11,6 +11,17 @@ function showRenewalModal() {
   
   if (!application || !ad) return;
   
+  // 前端也做一层校验：只允许“生效中 + 剩余 ≤ 7 天”的广告续费
+  const now = new Date();
+  const endDate = new Date(ad.end_date);
+  const diffMs = endDate.getTime() - now.getTime();
+  const remainingDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (ad.status !== 'active' || remainingDays > 7 || remainingDays < 0) {
+    showErrorMessage('只有在广告剩余时间 7 天内且尚未过期时才可以续费。');
+    return;
+  }
+  
   const isPersonal = application.type === 'personal';
   const typeText = isPersonal ? '个人认证' : '官方认证';
   
@@ -18,16 +29,17 @@ function showRenewalModal() {
     <div class="verification-modal show" id="renewal-modal">
       <div class="verification-modal-content">
         <div class="verification-modal-header">
-          <div class="verification-modal-title">广告续费</div>
+          <div class="verification-modal-title">广告续费（${typeText}）</div>
           <button class="verification-modal-close" onclick="closeRenewalModal()">×</button>
         </div>
         
-        <div class="verification-tip mb-3">
-          <i class="fas fa-info-circle"></i>
-          续费时间将在当前到期时间基础上叠加
-        </div>
-        
         <form id="renewal-form">
+          <!-- 提示：7 天内才能续费 -->
+          <div class="verification-tip mb-3">
+            <i class="fas fa-info-circle"></i>
+            当前广告剩余 <strong>${remainingDays}</strong> 天，仅在到期前 7 天内可以续费。
+          </div>
+          
           <!-- 续费期限 -->
           <div class="verification-form-group">
             <label class="verification-form-label">
@@ -65,13 +77,16 @@ function showRenewalModal() {
           <!-- 续费后到期时间 -->
           <div class="verification-info-item" id="new-end-date-container" style="display: none">
             <div class="verification-info-label">续费后到期时间</div>
-            <div class="verification-info-value text-success" id="new-end-date">-</div>
+            <div class="verification-info-value" id="new-end-date">--</div>
           </div>
           
-          <!-- 提交按钮 -->
+          <!-- 底部按钮 -->
           <div class="text-center mt-4">
+            <button type="button" class="verification-btn verification-btn-secondary me-2" onclick="closeRenewalModal()">
+              取消
+            </button>
             <button type="submit" class="verification-btn verification-btn-success">
-              <i class="fas fa-check"></i> 确认续费
+              <i class="fas fa-sync-alt"></i> 确认续费
             </button>
           </div>
         </form>

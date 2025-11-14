@@ -39,90 +39,98 @@ async function loadVerificationManagement() {
     
     let advertisementSection = '';
     
-    if (adResponse && adResponse.advertisement) {
-      // 已发布广告
-      const ad = adResponse.advertisement;
-      VerificationModule.currentAdvertisement = ad;
-      
-      const remainingDays = Math.ceil((new Date(ad.end_date) - new Date()) / (1000 * 60 * 60 * 24));
-      const isExpired = ad.status === 'expired' || remainingDays < 0;
-      const isCancelled = ad.status === 'cancelled';
-      
-      // 确定广告的实际状态
-      let statusText = '';
-      let statusBadgeClass = '';
-      if (isCancelled) {
-        statusText = '已下架';
-        statusBadgeClass = 'status-cancelled';
-      } else if (isExpired) {
-        statusText = '已过期';
-        statusBadgeClass = 'status-expired';
-      } else {
-        statusText = '生效中';
-        statusBadgeClass = 'status-active';
-      }
-      
-      advertisementSection = `
-        <div class="advertisement-card">
-          <div class="advertisement-header">
-            <div class="advertisement-title">
-              <i class="fas fa-ad"></i> 首页广告
-            </div>
-            <span class="advertisement-status-badge ${statusBadgeClass}">
-              ${statusText}
-            </span>
-          </div>
-          
-          <div class="advertisement-details">
-            <div class="advertisement-detail-item">
-              <span class="advertisement-detail-label">店铺名称</span>
-              <span class="advertisement-detail-value">${ad.shop_name}</span>
-            </div>
-            <div class="advertisement-detail-item">
-              <span class="advertisement-detail-label">店铺类型</span>
-              <span class="advertisement-detail-value">${getShopTypeText(ad.shop_type)}</span>
-            </div>
-            <div class="advertisement-detail-item">
-              <span class="advertisement-detail-label">剩余时间</span>
-              <span class="advertisement-detail-value ${isExpired ? 'text-danger' : ''}">
-                ${isExpired ? '已过期' : remainingDays + ' 天'}
-              </span>
-            </div>
-            <div class="advertisement-detail-item">
-              <span class="advertisement-detail-label">发布时间</span>
-              <span class="advertisement-detail-value">${formatDateTime(ad.start_date)}</span>
-            </div>
-            <div class="advertisement-detail-item">
-              <span class="advertisement-detail-label">到期时间</span>
-              <span class="advertisement-detail-value">${formatDateTime(ad.end_date)}</span>
-            </div>
-          </div>
-          
-          <div class="text-center mt-3">
-            <button class="verification-btn verification-btn-secondary me-2" onclick="viewAdvertisementDetails()">
-              <i class="fas fa-eye"></i> 查看详情
-            </button>
-            ${!isExpired ? `
-              <button class="verification-btn verification-btn-primary me-2" onclick="showEditAdModal()">
-                <i class="fas fa-edit"></i> 修改
-              </button>
-              ${!isCancelled ? `
-                <button class="verification-btn verification-btn-warning me-2" onclick="deactivateAdvertisement()">
-                  <i class="fas fa-toggle-off"></i> 下架
-                </button>
-              ` : `
-                <button class="verification-btn verification-btn-info me-2" onclick="reactivateAdvertisement()">
-                  <i class="fas fa-toggle-on"></i> 上架
-                </button>
-              `}
-            ` : ''}
-            <button class="verification-btn verification-btn-success" onclick="showRenewalModal()">
-              <i class="fas fa-sync-alt"></i> 续费
-            </button>
-          </div>
-        </div>
-      `;
-    } else {
+	if (adResponse && adResponse.advertisement) {
+	  // 已发布广告
+	  const ad = adResponse.advertisement;
+	  VerificationModule.currentAdvertisement = ad;
+	  
+	  const remainingDays = Math.ceil(
+		(new Date(ad.end_date) - new Date()) / (1000 * 60 * 60 * 24)
+	  );
+	  const isExpired = ad.status === 'expired' || remainingDays < 0;
+	  const isCancelled = ad.status === 'cancelled';
+	  // 只有“未过期且剩余 ≤ 7 天”的广告可以续费
+	  const canRenew = !isExpired && remainingDays <= 7;
+	  
+	  // 确定广告的实际状态
+	  let statusText = '';
+	  let statusBadgeClass = '';
+	  if (isCancelled) {
+		statusText = '已下架';
+		statusBadgeClass = 'status-cancelled';
+	  } else if (isExpired) {
+		statusText = '已过期';
+		statusBadgeClass = 'status-expired';
+	  } else {
+		statusText = '生效中';
+		statusBadgeClass = 'status-active';
+	  }
+	  
+	  advertisementSection = `
+		<div class="advertisement-card">
+		  <div class="advertisement-header">
+			<div class="advertisement-title">
+			  <i class="fas fa-ad"></i> 首页广告
+			</div>
+			<span class="advertisement-status-badge ${statusBadgeClass}">
+			  ${statusText}
+			</span>
+		  </div>
+		  
+		  <div class="advertisement-details">
+			<div class="advertisement-detail-item">
+			  <span class="advertisement-detail-label">店铺名称</span>
+			  <span class="advertisement-detail-value">${ad.shop_name}</span>
+			</div>
+			<div class="advertisement-detail-item">
+			  <span class="advertisement-detail-label">店铺类型</span>
+			  <span class="advertisement-detail-value">${getShopTypeText(ad.shop_type)}</span>
+			</div>
+			<div class="advertisement-detail-item">
+			  <span class="advertisement-detail-label">剩余时间</span>
+			  <span class="advertisement-detail-value ${isExpired ? 'text-danger' : ''}">
+				${isExpired ? '已过期' : remainingDays + ' 天'}
+			  </span>
+			</div>
+			<div class="advertisement-detail-item">
+			  <span class="advertisement-detail-label">发布时间</span>
+			  <span class="advertisement-detail-value">${formatDateTime(ad.start_date)}</span>
+			</div>
+			<div class="advertisement-detail-item">
+			  <span class="advertisement-detail-label">到期时间</span>
+			  <span class="advertisement-detail-value">${formatDateTime(ad.end_date)}</span>
+			</div>
+		  </div>
+		  
+		  <div class="text-center mt-3">
+			<button class="verification-btn verification-btn-secondary me-2" onclick="viewAdvertisementDetails()">
+			  <i class="fas fa-eye"></i> 查看详情
+			</button>
+			${!isExpired ? `
+			  <button class="verification-btn verification-btn-primary me-2" onclick="showEditAdModal()">
+				<i class="fas fa-edit"></i> 修改
+			  </button>
+			  ${!isCancelled ? `
+				<button class="verification-btn verification-btn-warning me-2" onclick="deactivateAdvertisement()">
+				  <i class="fas fa-toggle-off"></i> 下架
+				</button>
+			  ` : `
+				<button class="verification-btn verification-btn-info me-2" onclick="reactivateAdvertisement()">
+				  <i class="fas fa-toggle-on"></i> 上架
+				</button>
+			  `}
+			` : ''}
+			<button 
+			  class="verification-btn verification-btn-success ${canRenew ? '' : 'verification-btn-disabled'}"
+			  ${canRenew ? '' : 'disabled title="只有在广告剩余时间 7 天内才可以续费"'}
+			  onclick="showRenewalModal()"
+			>
+			  <i class="fas fa-sync-alt"></i> 续费
+			</button>
+		  </div>
+		</div>
+	  `;
+	} else {
       // 未发布广告
       advertisementSection = `
         <div class="verification-status-card">
