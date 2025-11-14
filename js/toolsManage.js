@@ -16,7 +16,7 @@
           <div class="message-center-header">
             <h1 class="message-center-title">实用工具管理</h1>
             <div class="message-actions">
-              <button class="message-btn message-btn-primary" onclick="showAddToolModal()">
+              <button class="message-btn message-btn-primary" onclick="toolsAdminShowAddToolModal()">
                 <i class="fas fa-plus"></i> 添加工具
               </button>
               <button class="message-btn message-btn-ghost" data-page="site-admin">
@@ -27,19 +27,19 @@
           
           <div class="tools-admin-table">
             <table>
-				<thead>
-				  <tr>
-					<th>排序</th>
-					<th>标题</th>
-					<th>介绍</th>
-					<th>类型</th>
-					<th>权限要求</th>
-					<th>积分</th>
-					<th>状态</th>
-					<th>更新时间</th>
-					<th>操作</th>
-				  </tr>
-				</thead>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>标题</th>
+                  <th class="desktop-only">描述</th>
+                  <th class="desktop-only">类型</th>
+                  <th class="desktop-only">权限</th>
+                  <th class="desktop-only">积分</th>
+                  <th>状态</th>
+                  <th class="desktop-only">更新时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
               <tbody id="tools-list-body">
                 <tr><td colspan="9" style="text-align:center;padding:40px;">加载中...</td></tr>
               </tbody>
@@ -56,105 +56,105 @@
     await loadToolsList();
   }
 
-// 创建工具编辑模态框
-function createToolModal() {
-  if (document.getElementById('tool-edit-modal')) return;
+  function createToolModal() {
+    if (document.getElementById('tool-edit-modal')) return;
 
-  const modalHtml = `
-    <div id="tool-edit-modal" class="tool-modal">
-      <div class="tool-modal-content">
-        <div class="tool-modal-header">
-          <h3 class="tool-modal-title" id="tool-modal-title">添加工具</h3>
-          <button class="tool-modal-close" onclick="closeToolModal()">&times;</button>
-        </div>
-        <div class="tool-modal-body">
-          <form id="tool-form">
-            <input type="hidden" id="tool-id">
-            
-            <div class="tool-form-group">
-              <label for="tool-title">工具标题 *</label>
-              <input type="text" id="tool-title" required>
-            </div>
-            
-            <div class="tool-form-group">
-              <label for="tool-description">工具介绍</label>
-              <textarea id="tool-description" rows="3"></textarea>
-            </div>
-            
-            <div class="tool-form-group">
-              <label for="tool-type">工具类型 *</label>
-              <select id="tool-type" required onchange="onToolTypeChange()">
-                <option value="link">直接下载链接</option>
-                <option value="page">网站内部页面</option>
-              </select>
-            </div>
-            
-            <div class="tool-form-group">
-              <label for="tool-target">
-                <span id="target-label">下载链接</span> *
-              </label>
-              <input type="text" id="tool-target" required placeholder="https://example.com/file.zip">
-            </div>
-            
-            <div class="tool-form-group" id="file-size-group">
-              <label for="tool-file-size">文件大小</label>
-              <input type="text" id="tool-file-size" placeholder="例如: 10.5MB">
-              <small class="form-help">仅对下载链接类型工具有效</small>
-            </div>
-            
-            <div class="tool-form-group">
-              <label for="tool-icon">图标类名</label>
-              <input type="text" id="tool-icon" placeholder="fas fa-tools" value="fas fa-tools">
-            </div>
-            
-            <div class="tool-form-group">
-              <label for="tool-access-level">最低用户组权限</label>
-              <select id="tool-access-level">
-                <option value="0">普通用户</option>
-                <option value="1">初级用户</option>
-                <option value="2">中级用户</option>
-                <option value="3">高级用户</option>
-                <option value="4">贵宾用户</option>
-                <option value="5">管理员</option>
-              </select>
-            </div>
-            
-            <div class="tool-form-group">
-              <label for="tool-special-group">特殊用户组要求</label>
-              <select id="tool-special-group">
-                <option value="">无</option>
-                <option value="1">maimoller</option>
-                <option value="2">协同管理员</option>
-              </select>
-            </div>
-            
-            <div class="tool-form-group">
-              <label for="tool-points">使用所需积分</label>
-              <input type="number" id="tool-points" min="0" value="0">
-            </div>
-            
-            <div class="tool-form-group">
-              <label for="tool-sort">排序值</label>
-              <input type="number" id="tool-sort" min="0" value="0">
-            </div>
-            
-            <div class="tool-form-group">
-              <label class="checkbox-label">
-                <input type="checkbox" id="tool-active" checked> 启用
-              </label>
-            </div>
-          </form>
-        </div>
-        <div class="tool-modal-footer">
-          <button class="btn-modal-cancel" onclick="closeToolModal()">取消</button>
-          <button class="btn-modal-save" onclick="saveToolData()">保存</button>
+    const modalHtml = `
+      <div id="tool-edit-modal" class="tool-modal">
+        <div class="tool-modal-content">
+          <div class="tool-modal-header">
+            <h3 class="tool-modal-title" id="tool-modal-title">添加工具</h3>
+            <button class="tool-modal-close" onclick="toolsAdminCloseToolModal()">&times;</button>
+          </div>
+          <div class="tool-modal-body">
+            <form id="tool-form">
+              <input type="hidden" id="tool-id">
+              
+              <div class="tool-form-group">
+                <label for="tool-title">工具标题 *</label>
+                <input type="text" id="tool-title" required maxlength="255" placeholder="例如：ICF Editor">
+              </div>
+              
+              <div class="tool-form-group">
+                <label for="tool-description">工具介绍</label>
+                <textarea id="tool-description" rows="3" maxlength="2000" placeholder="简要描述工具用途和注意事项"></textarea>
+              </div>
+              
+              <div class="tool-form-row">
+                <div class="tool-form-group">
+                  <label for="tool-type">工具类型 *</label>
+                  <select id="tool-type" required onchange="onToolTypeChange()">
+                    <option value="page">内部页面</option>
+                    <option value="link">下载链接</option>
+                  </select>
+                </div>
+                
+                <div class="tool-form-group">
+                  <label for="tool-sort">排序值</label>
+                  <input type="number" id="tool-sort" value="0">
+                </div>
+              </div>
+              
+              <div class="tool-form-group">
+                <label for="tool-target" id="target-label">页面路径</label>
+                <input type="text" id="tool-target" required placeholder="例如: icfeditor.html">
+              </div>
+              
+              <div class="tool-form-group" id="file-size-group" style="display:none;">
+                <label for="tool-file-size">文件大小</label>
+                <input type="text" id="tool-file-size" placeholder="例如：1.2 GB">
+              </div>
+              
+              <div class="tool-form-group">
+                <label for="tool-icon">图标类名</label>
+                <input type="text" id="tool-icon" placeholder="fas fa-tools" value="fas fa-tools">
+              </div>
+              
+              <div class="tool-form-group">
+                <label for="tool-access-level">最低用户组权限</label>
+                <select id="tool-access-level">
+                  <option value="0">普通用户</option>
+                  <option value="1">初级用户</option>
+                  <option value="2">中级用户</option>
+                  <option value="3">高级用户</option>
+                  <option value="4">贵宾用户</option>
+                  <option value="5">管理员</option>
+                </select>
+              </div>
+              
+              <div class="tool-form-group">
+                <label for="tool-special-group">特殊用户组要求</label>
+                <select id="tool-special-group">
+                  <option value="">无</option>
+                  <option value="1">maimoller</option>
+                  <option value="2">协同管理员</option>
+                </select>
+              </div>
+              
+              <div class="tool-form-group">
+                <label for="tool-points">使用所需积分</label>
+                <input type="number" id="tool-points" min="0" value="0">
+              </div>
+              
+              <div class="tool-form-group tool-form-switch">
+                <label for="tool-active">启用状态</label>
+                <label class="switch">
+                  <input type="checkbox" id="tool-active" checked>
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </form>
+          </div>
+          <div class="tool-modal-footer">
+            <button class="btn-modal-cancel" onclick="toolsAdminCloseToolModal()">取消</button>
+            <button class="btn-modal-save" onclick="toolsAdminSaveToolData()">保存</button>
+          </div>
         </div>
       </div>
-    </div>
-  `;
+    `;
 
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-}
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  }
 
   // 加载工具列表
   async function loadToolsList() {
@@ -175,55 +175,67 @@ function createToolModal() {
     }
   }
 
-// 渲染工具列表
-function renderToolsList(tools) {
-  const tbody = document.getElementById('tools-list-body');
-  if (!tools || tools.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">暂无工具</td></tr>';
-    return;
+  // 渲染工具列表
+  function renderToolsList(tools) {
+    const tbody = document.getElementById('tools-list-body');
+    if (!tbody) return;
+
+    if (!tools || tools.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;">暂无工具</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = tools.map(tool => {
+      const specialGroupText = (() => {
+        if (!tool.special_group) return '';
+        if (tool.special_group === '1') return 'maimoller';
+        if (tool.special_group === '2') return '协同管理员';
+        return tool.special_group;
+      })();
+
+      return `
+      <tr>
+        <td data-label="ID">${tool.id}</td>
+        <td data-label="标题">
+          <div class="tool-title-cell">
+            <div class="tool-icon">
+              <i class="${tool.icon_class || 'fas fa-tools'}"></i>
+            </div>
+            <div class="tool-title-wrapper">
+              <div class="tool-title">${tool.title}</div>
+              <div class="tool-target mobile-only">${tool.target_url}</div>
+              ${tool.file_size ? `<div class="tool-file-size mobile-only">大小: ${tool.file_size}</div>` : ''}
+            </div>
+          </div>
+        </td>
+        <td data-label="介绍" class="tool-description-cell">
+          <div class="tool-description">${tool.description || '无描述'}</div>
+        </td>
+        <td data-label="类型" class="desktop-only">${tool.tool_type === 'page' ? '内部页面' : '下载链接'}</td>
+        <td data-label="权限" class="desktop-only">
+          ${tool.access_level > 0 ? `Lv.${tool.access_level}` : '无'}
+          ${specialGroupText ? ` + ${specialGroupText}` : ''}
+        </td>
+        <td data-label="积分" class="desktop-only">${tool.required_points || 0} 积分</td>
+        <td data-label="状态">${tool.is_active ? '<span class="status-active">启用</span>' : '<span class="status-inactive">停用</span>'}</td>
+        <td data-label="更新时间" class="desktop-only">${new Date(tool.last_update).toLocaleDateString()}</td>
+        <td data-label="操作" class="tool-admin-actions">
+          <button class="btn-tool-edit" onclick="toolsAdminEditTool(${tool.id})" title="编辑">
+            <i class="fas fa-edit"></i>
+            <span class="mobile-text">编辑</span>
+          </button>
+          <button class="btn-tool-delete" onclick="toolsAdminDeleteTool(${tool.id})" title="删除">
+            <i class="fas fa-trash-alt"></i>
+            <span class="mobile-text">删除</span>
+          </button>
+        </td>
+      </tr>
+      `;
+    }).join('');
   }
 
-  tbody.innerHTML = tools.map(tool => {
-    const specialGroupText = tool.special_group ? 
-      (tool.special_group == 1 ? 'maimoller' : 
-       tool.special_group == 2 ? '协同管理员' : `特殊组${tool.special_group}`) : '';
-
-	return `
-	  <tr>
-		<td data-label="排序">${tool.sort_order || 0}</td>
-		<td data-label="标题" class="tool-title-cell">
-		  <div class="tool-title">${tool.title}</div>
-		  <div class="tool-target mobile-only">${tool.target_url}</div>
-		  ${tool.file_size ? `<div class="tool-file-size mobile-only">大小: ${tool.file_size}</div>` : ''}
-		</td>
-		<td data-label="介绍" class="tool-description-cell">
-		  <div class="tool-description">${tool.description || '无描述'}</div>
-		</td>
-		<td data-label="类型" class="desktop-only">${tool.tool_type === 'page' ? '内部页面' : '下载链接'}</td>
-		<td data-label="权限" class="desktop-only">
-		  ${tool.access_level > 0 ? `Lv.${tool.access_level}` : '无'}
-		  ${specialGroupText ? ` + ${specialGroupText}` : ''}
-		</td>
-		<td data-label="积分" class="desktop-only">${tool.required_points || 0} 积分</td>
-		<td data-label="状态">${tool.is_active ? '<span class="status-active">启用</span>' : '<span class="status-inactive">停用</span>'}</td>
-		<td data-label="更新时间" class="desktop-only">${new Date(tool.last_update).toLocaleDateString()}</td>
-		<td data-label="操作" class="tool-admin-actions">
-		  <button class="btn-tool-edit" onclick="editTool(${tool.id})" title="编辑">
-			<i class="fas fa-edit"></i>
-			<span class="mobile-text">编辑</span>
-		  </button>
-		  <button class="btn-tool-delete" onclick="deleteTool(${tool.id})" title="删除">
-			<i class="fas fa-trash-alt"></i>
-			<span class="mobile-text">删除</span>
-		  </button>
-		</td>
-	  </tr>
-	`;
-  }).join('');
-}
-
   // 显示添加工具模态框
-  window.showAddToolModal = function() {
+  window.toolsAdminShowAddToolModal = function() {
     currentEditingTool = null;
     document.getElementById('tool-modal-title').textContent = '添加工具';
     document.getElementById('tool-form').reset();
@@ -233,7 +245,7 @@ function renderToolsList(tools) {
   };
 
   // 编辑工具
-  window.editTool = async function(toolId) {
+  window.toolsAdminEditTool = async function(toolId) {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`https://api.am-all.com.cn/api/admin/tools/${toolId}`, {
@@ -268,7 +280,7 @@ function renderToolsList(tools) {
   };
 
   // 删除工具
-  window.deleteTool = async function(toolId) {
+  window.toolsAdminDeleteTool = async function(toolId) {
     if (!confirm('确定要删除这个工具吗？')) return;
 
     try {
@@ -291,7 +303,7 @@ function renderToolsList(tools) {
   };
 
   // 关闭模态框
-  window.closeToolModal = function() {
+  window.toolsAdminCloseToolModal = function() {
     document.getElementById('tool-edit-modal').classList.remove('show');
   };
 
@@ -314,7 +326,7 @@ function renderToolsList(tools) {
   };
 
   // 保存工具数据
-  window.saveToolData = async function() {
+  window.toolsAdminSaveToolData = async function() {
     const form = document.getElementById('tool-form');
     if (!form.checkValidity()) {
       form.reportValidity();
@@ -353,7 +365,7 @@ function renderToolsList(tools) {
 
       if (!response.ok) throw new Error('保存失败');
       
-      closeToolModal();
+      toolsAdminCloseToolModal();
       await loadToolsList();
       
       if (typeof showSuccessMessage === 'function') {
