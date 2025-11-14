@@ -344,7 +344,13 @@ download: `
                       <input type="url" class="form-control" id="download-image-url">
                     </div>
                     
-                    <div class="form-group">
+                    
+                    <div class="form-group sort-order-group">
+                      <label data-i18n="downloadAdmin.sortOrder">排序ID</label>
+                      <input type="number" class="form-control" id="download-sort-order" min="0" step="1" value="0">
+                      <small class="form-text text-muted">数字越小越靠上；留空或 0 时按创建时间倒序。相同值按创建时间新在前。</small>
+                    </div>
+<div class="form-group">
                       <label data-i18n="downloadAdmin.description">描述</label>
                       <textarea class="form-control" id="download-description" rows="3"></textarea>
                     </div>

@@ -126,6 +126,7 @@ const languageModule = (function() {
             'downloadAdmin.description': '描述',
             'downloadAdmin.cancel': '取消',
             'downloadAdmin.save': '保存',
+			'downloadAdmin.sortOrder': '页面排序',
             
             // 公告管理
             'announcementAdmin.title': '公告管理',
@@ -449,6 +450,7 @@ const languageModule = (function() {
             'downloadAdmin.description': 'Description',
             'downloadAdmin.cancel': 'Cancel',
             'downloadAdmin.save': 'Save',
+			'downloadAdmin.sortOrder': 'Sort',
             
             // 公告管理
             'announcementAdmin.title': 'Announcement Admin',
@@ -772,6 +774,7 @@ const languageModule = (function() {
             'downloadAdmin.description': '説明',
             'downloadAdmin.cancel': 'キャンセル',
             'downloadAdmin.save': '保存',
+			'downloadAdmin.sortOrder': 'ソート',
             
             // 公告管理
             'announcementAdmin.title': 'お知らせ管理',

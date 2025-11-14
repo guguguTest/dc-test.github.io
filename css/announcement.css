@@ -383,45 +383,45 @@
   background: #94a3b8;
 }
 
-.announcement-modal-content.html-content {
+.html-content {
   line-height: 1.7;
   color: #334155;
   font-size: 14px;
 }
 
-.announcement-modal-content.html-content h1,
-.announcement-modal-content.html-content h2,
-.announcement-modal-content.html-content h3 {
+.html-content h1,
+.html-content h2,
+.html-content h3 {
   color: #1e293b;
   margin-top: 16px;
   margin-bottom: 12px;
 }
 
-.announcement-modal-content.html-content p {
+.html-content p {
   margin-bottom: 12px;
 }
 
-.announcement-modal-content.html-content a {
+.html-content a {
   color: #667eea;
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: all 0.2s ease;
 }
 
-.announcement-modal-content.html-content a:hover {
+.html-content a:hover {
   color: #764ba2;
   border-bottom-color: #764ba2;
 }
 
 /* 首页公告内容中的图片和表情 */
-.announcement-modal-content.html-content .announcement-emoji {
+.html-content .announcement-emoji {
   max-width: 60px;
   max-height: 60px;
   vertical-align: middle;
   margin: 0 4px;
 }
 
-.announcement-modal-content.html-content .announcement-image {
+.html-content .announcement-image {
   max-width: 100%;
   height: auto;
   display: block;

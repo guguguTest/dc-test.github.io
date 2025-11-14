@@ -1,4 +1,4 @@
-// forum-editor.js - 富文本编辑器模块(含表情和图片上传支持)
+// forum-editor.js - 完整版富文本编辑器(包含所有功能)
 
 class ForumEditor {
   constructor(container) {
@@ -7,7 +7,8 @@ class ForumEditor {
     this.content = container.querySelector('.editor-content');
     this.emojiPicker = null;
     this.imageUploader = null;
-    this.uploadedImages = []; // 存储已上传的图片信息
+    this.uploadedImages = [];
+    this.savedSelection = null;
     this.init();
   }
 
@@ -18,42 +19,500 @@ class ForumEditor {
   }
 
   setupToolbar() {
+    this.createFontSizeSelector();
+    this.createHeadingSelector();
+    
     const buttons = [
       { icon: 'bold', command: 'bold', title: '粗体' },
       { icon: 'italic', command: 'italic', title: '斜体' },
       { icon: 'underline', command: 'underline', title: '下划线' },
-      { icon: 'strikethrough', command: 'strikethrough', title: '删除线' },
-      { icon: 'heading', command: 'formatBlock', value: 'h3', title: '标题' },
-      { icon: 'list-ul', command: 'insertUnorderedList', title: '无序列表' },
-      { icon: 'list-ol', command: 'insertOrderedList', title: '有序列表' },
-      { icon: 'quote-left', command: 'formatBlock', value: 'blockquote', title: '引用' },
-      { icon: 'link', command: 'createLink', title: '插入链接' },
-      { icon: 'image', command: 'uploadImage', title: '上传图片' },
-      { icon: 'smile', command: 'emoji', title: '插入表情', regular: true },
-      { icon: 'at', command: 'mention', title: '@用户' },
-      { icon: 'code', command: 'formatBlock', value: 'pre', title: '代码块' }
+      { icon: 'strikethrough', command: 'strikethrough', title: '删除线' }
     ];
 
     buttons.forEach(btn => {
-      const button = document.createElement('button');
-      button.className = 'editor-btn';
-      button.type = 'button';
-      button.title = btn.title;
-      button.innerHTML = `<i class="${btn.regular ? 'far' : 'fas'} fa-${btn.icon}"></i>`;
-      
-      button.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (btn.command === 'emoji') {
-          this.toggleEmojiPicker(button);
-        } else if (btn.command === 'uploadImage') {
-          this.toggleImageUploader(button);
-        } else {
-          this.executeCommand(btn.command, btn.value);
-        }
-      });
-      
+      const button = this.createButton(btn);
       this.toolbar.appendChild(button);
     });
+    
+    this.createColorPicker('foreColor', '文字颜色', 'palette');
+    this.createColorPicker('backColor', '背景颜色', 'fill-drip');
+    
+    const alignButtons = [
+      { icon: 'align-left', command: 'justifyLeft', title: '左对齐' },
+      { icon: 'align-center', command: 'justifyCenter', title: '居中对齐' },
+      { icon: 'align-right', command: 'justifyRight', title: '右对齐' }
+    ];
+    
+    alignButtons.forEach(btn => {
+      const button = this.createButton(btn);
+      this.toolbar.appendChild(button);
+    });
+    
+    const listButtons = [
+      { icon: 'list-ul', command: 'insertUnorderedList', title: '无序列表' },
+      { icon: 'list-ol', command: 'insertOrderedList', title: '有序列表' }
+    ];
+    
+    listButtons.forEach(btn => {
+      const button = this.createButton(btn);
+      this.toolbar.appendChild(button);
+    });
+    
+    const mediaButtons = [
+      { icon: 'link', command: 'createLink', title: '插入链接' },
+      { icon: 'image', command: 'uploadImage', title: '上传图片' },
+      { icon: 'smile', command: 'emoji', title: '插入表情', regular: true },
+      { icon: 'at', command: 'mention', title: '@用户' }
+    ];
+    
+    mediaButtons.forEach(btn => {
+      const button = this.createButton(btn);
+      this.toolbar.appendChild(button);
+    });
+    
+    const clearButton = this.createButton({ icon: 'eraser', command: 'removeFormat', title: '清除格式' });
+    this.toolbar.appendChild(clearButton);
+  }
+  
+  createButton(btn) {
+    const button = document.createElement('button');
+    button.className = 'editor-btn';
+    button.type = 'button';
+    button.title = btn.title;
+    button.innerHTML = `<i class="${btn.regular ? 'far' : 'fas'} fa-${btn.icon}"></i>`;
+    
+    button.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+    });
+    
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (btn.command === 'emoji') {
+        this.toggleEmojiPicker(button);
+      } else if (btn.command === 'uploadImage') {
+        this.toggleImageUploader(button);
+      } else {
+        this.executeCommand(btn.command, btn.value);
+      }
+    });
+    
+    return button;
+  }
+  
+  createFontSizeSelector() {
+    const container = document.createElement('div');
+    container.className = 'editor-dropdown';
+    container.style.position = 'relative';
+    
+    const button = document.createElement('button');
+    button.className = 'editor-btn editor-dropdown-btn';
+    button.type = 'button';
+    button.title = '字号';
+    button.innerHTML = '<i class="fas fa-text-height"></i> <i class="fas fa-caret-down" style="font-size: 10px; margin-left: 2px;"></i>';
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'editor-dropdown-menu';
+    dropdown.style.display = 'none';
+    
+    const sizes = [
+      { label: '小号 (12px)', value: '12px' },
+      { label: '正常 (14px)', value: '14px' },
+      { label: '中号 (16px)', value: '16px' },
+      { label: '大号 (18px)', value: '18px' },
+      { label: '特大 (22px)', value: '22px' },
+      { label: '超大 (28px)', value: '28px' }
+    ];
+    
+    sizes.forEach(size => {
+      const item = document.createElement('div');
+      item.className = 'editor-dropdown-item';
+      item.textContent = size.label;
+      item.style.fontSize = size.value;
+      
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+      });
+      
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        this.applyFontSize(size.value);
+        dropdown.style.display = 'none';
+        button.classList.remove('active');
+      });
+      dropdown.appendChild(item);
+    });
+    
+    button.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+    });
+    
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const isVisible = dropdown.style.display === 'block';
+      document.querySelectorAll('.editor-dropdown-menu').forEach(m => m.style.display = 'none');
+      document.querySelectorAll('.editor-dropdown-btn').forEach(b => b.classList.remove('active'));
+      
+      dropdown.style.display = isVisible ? 'none' : 'block';
+      button.classList.toggle('active', !isVisible);
+    });
+    
+    container.appendChild(button);
+    container.appendChild(dropdown);
+    this.toolbar.appendChild(container);
+    
+    document.addEventListener('click', (e) => {
+      if (!container.contains(e.target)) {
+        dropdown.style.display = 'none';
+        button.classList.remove('active');
+      }
+    });
+  }
+  
+  createHeadingSelector() {
+    const container = document.createElement('div');
+    container.className = 'editor-dropdown';
+    container.style.position = 'relative';
+    
+    const button = document.createElement('button');
+    button.className = 'editor-btn editor-dropdown-btn';
+    button.type = 'button';
+    button.title = '标题';
+    button.innerHTML = '<i class="fas fa-heading"></i> <i class="fas fa-caret-down" style="font-size: 10px; margin-left: 2px;"></i>';
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'editor-dropdown-menu';
+    dropdown.style.display = 'none';
+    
+    const headings = [
+      { label: '正文', tag: 'p' },
+      { label: '标题 1', tag: 'h1' },
+      { label: '标题 2', tag: 'h2' },
+      { label: '标题 3', tag: 'h3' },
+      { label: '标题 4', tag: 'h4' },
+      { label: '标题 5', tag: 'h5' },
+      { label: '标题 6', tag: 'h6' }
+    ];
+    
+    headings.forEach(heading => {
+      const item = document.createElement('div');
+      item.className = 'editor-dropdown-item';
+      item.textContent = heading.label;
+      item.style.fontWeight = heading.tag !== 'p' ? 'bold' : 'normal';
+      item.style.fontSize = heading.tag === 'h1' ? '20px' : 
+                            heading.tag === 'h2' ? '18px' :
+                            heading.tag === 'h3' ? '16px' : '14px';
+      
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+      });
+      
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        this.applyHeading(heading.tag);
+        dropdown.style.display = 'none';
+        button.classList.remove('active');
+      });
+      dropdown.appendChild(item);
+    });
+    
+    button.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+    });
+    
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const isVisible = dropdown.style.display === 'block';
+      document.querySelectorAll('.editor-dropdown-menu').forEach(m => m.style.display = 'none');
+      document.querySelectorAll('.editor-dropdown-btn').forEach(b => b.classList.remove('active'));
+      
+      dropdown.style.display = isVisible ? 'none' : 'block';
+      button.classList.toggle('active', !isVisible);
+    });
+    
+    container.appendChild(button);
+    container.appendChild(dropdown);
+    this.toolbar.appendChild(container);
+    
+    document.addEventListener('click', (e) => {
+      if (!container.contains(e.target)) {
+        dropdown.style.display = 'none';
+        button.classList.remove('active');
+      }
+    });
+  }
+  
+  createColorPicker(command, title, icon) {
+    const container = document.createElement('div');
+    container.className = 'editor-dropdown';
+    container.style.position = 'relative';
+    
+    const button = document.createElement('button');
+    button.className = 'editor-btn editor-color-btn';
+    button.type = 'button';
+    button.title = title;
+    button.innerHTML = `<i class="fas fa-${icon}"></i>`;
+    
+    const colorIndicator = document.createElement('div');
+    colorIndicator.className = 'editor-color-indicator';
+    colorIndicator.style.cssText = 'width: 20px; height: 3px; background: #000; margin-top: 2px; border-radius: 2px;';
+    button.appendChild(colorIndicator);
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'editor-dropdown-menu editor-color-picker';
+    dropdown.style.display = 'none';
+    dropdown.style.width = '220px';
+    dropdown.style.padding = '12px';
+    
+    const colors = [
+      '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc',
+      '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff',
+      '#4a86e8', '#0000ff', '#9900ff', '#ff00ff', '#e06666', '#f6b26b',
+      '#ffd966', '#93c47d', '#76a5af', '#6d9eeb'
+    ];
+    
+    const colorGrid = document.createElement('div');
+    colorGrid.style.cssText = 'display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-bottom: 8px;';
+    
+    colors.forEach(color => {
+      const colorBox = document.createElement('div');
+      colorBox.style.cssText = `
+        width: 28px;
+        height: 28px;
+        background: ${color};
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      `;
+      
+      colorBox.addEventListener('mouseenter', () => {
+        colorBox.style.transform = 'scale(1.2)';
+      });
+      
+      colorBox.addEventListener('mouseleave', () => {
+        colorBox.style.transform = 'scale(1)';
+      });
+      
+      colorBox.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+      });
+      
+      colorBox.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        if (command === 'foreColor') {
+          this.applyTextColor(color);
+        } else {
+          this.applyBackgroundColor(color);
+        }
+        
+        colorIndicator.style.background = color;
+        dropdown.style.display = 'none';
+        button.classList.remove('active');
+      });
+      
+      colorGrid.appendChild(colorBox);
+    });
+    
+    dropdown.appendChild(colorGrid);
+    
+    const customColorContainer = document.createElement('div');
+    customColorContainer.style.cssText = 'display: flex; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;';
+    
+    const customColorInput = document.createElement('input');
+    customColorInput.type = 'color';
+    customColorInput.style.cssText = 'width: 40px; height: 30px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;';
+    
+    const customColorLabel = document.createElement('span');
+    customColorLabel.textContent = '自定义颜色';
+    customColorLabel.style.cssText = 'font-size: 12px; color: #666;';
+    
+    customColorInput.addEventListener('change', (e) => {
+      const color = e.target.value;
+      if (command === 'foreColor') {
+        this.applyTextColor(color);
+      } else {
+        this.applyBackgroundColor(color);
+      }
+      colorIndicator.style.background = color;
+      dropdown.style.display = 'none';
+      button.classList.remove('active');
+    });
+    
+    customColorContainer.appendChild(customColorInput);
+    customColorContainer.appendChild(customColorLabel);
+    dropdown.appendChild(customColorContainer);
+    
+    button.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+    });
+    
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const isVisible = dropdown.style.display === 'block';
+      document.querySelectorAll('.editor-dropdown-menu').forEach(m => m.style.display = 'none');
+      document.querySelectorAll('.editor-dropdown-btn, .editor-color-btn').forEach(b => b.classList.remove('active'));
+      
+      dropdown.style.display = isVisible ? 'none' : 'block';
+      button.classList.toggle('active', !isVisible);
+    });
+    
+    container.appendChild(button);
+    container.appendChild(dropdown);
+    this.toolbar.appendChild(container);
+    
+    document.addEventListener('click', (e) => {
+      if (!container.contains(e.target)) {
+        dropdown.style.display = 'none';
+        button.classList.remove('active');
+      }
+    });
+  }
+
+  // ========== DOM 操作方法 ==========
+  
+  applyFontSize(size) {
+    this.content.focus();
+    
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    
+    if (!range.collapsed) {
+      const span = document.createElement('span');
+      span.style.fontSize = size;
+      
+      try {
+        range.surroundContents(span);
+      } catch (e) {
+        const contents = range.extractContents();
+        span.appendChild(contents);
+        range.insertNode(span);
+      }
+      
+      range.selectNodeContents(span);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } else {
+      document.execCommand('fontSize', false, '7');
+      const fontElements = this.content.querySelectorAll('font[size="7"]');
+      fontElements.forEach(font => {
+        const span = document.createElement('span');
+        span.style.fontSize = size;
+        span.innerHTML = font.innerHTML;
+        font.parentNode.replaceChild(span, font);
+      });
+    }
+    
+    this.content.focus();
+  }
+  
+  applyHeading(tag) {
+    this.content.focus();
+    
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    
+    let block = range.commonAncestorContainer;
+    while (block && block.nodeType !== 1) {
+      block = block.parentNode;
+    }
+    
+    while (block && block !== this.content && !this.isBlockElement(block)) {
+      block = block.parentNode;
+    }
+    
+    if (block && block !== this.content) {
+      const newElement = document.createElement(tag);
+      newElement.innerHTML = block.innerHTML;
+      block.parentNode.replaceChild(newElement, block);
+      
+      range.selectNodeContents(newElement);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } else {
+      document.execCommand('formatBlock', false, '<' + tag + '>');
+    }
+    
+    this.content.focus();
+  }
+  
+  applyTextColor(color) {
+    this.content.focus();
+    
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    
+    if (!range.collapsed) {
+      const span = document.createElement('span');
+      span.style.color = color;
+      
+      try {
+        range.surroundContents(span);
+      } catch (e) {
+        const contents = range.extractContents();
+        span.appendChild(contents);
+        range.insertNode(span);
+      }
+      
+      range.selectNodeContents(span);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } else {
+      document.execCommand('foreColor', false, color);
+    }
+    
+    this.content.focus();
+  }
+  
+  applyBackgroundColor(color) {
+    this.content.focus();
+    
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    
+    if (!range.collapsed) {
+      const span = document.createElement('span');
+      span.style.backgroundColor = color;
+      
+      try {
+        range.surroundContents(span);
+      } catch (e) {
+        const contents = range.extractContents();
+        span.appendChild(contents);
+        range.insertNode(span);
+      }
+      
+      range.selectNodeContents(span);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } else {
+      document.execCommand('backColor', false, color);
+    }
+    
+    this.content.focus();
+  }
+  
+  isBlockElement(element) {
+    const blockTags = ['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'PRE', 'UL', 'OL', 'LI'];
+    return blockTags.includes(element.tagName);
   }
 
   setupContent() {
@@ -101,7 +560,14 @@ class ForumEditor {
       return;
     }
 
-    document.execCommand(command, false, value);
+    this.content.focus();
+    
+    try {
+      document.execCommand(command, false, value);
+    } catch (error) {
+      console.error(`执行命令 ${command} 时出错:`, error);
+    }
+    
     this.content.focus();
   }
 
@@ -141,7 +607,6 @@ class ForumEditor {
       btn.classList.toggle('active', !isVisible);
       
       if (!isVisible) {
-        // 更新位置
         const editorRect = this.container.getBoundingClientRect();
         this.imageUploader.style.bottom = `${window.innerHeight - editorRect.top + 10}px`;
         this.imageUploader.style.left = `${editorRect.left}px`;
@@ -151,11 +616,9 @@ class ForumEditor {
     }
     
     this.imageUploader = this.createImageUploader();
-    // 附加到 body 而不是容器，避免被限制
     document.body.appendChild(this.imageUploader);
     btn.classList.add('active');
     
-    // 点击外部关闭
     const closeOnClickOutside = (e) => {
       if (this.imageUploader && 
           !this.imageUploader.contains(e.target) && 
@@ -165,12 +628,10 @@ class ForumEditor {
       }
     };
     
-    // 延迟添加点击事件监听，避免立即触发
     setTimeout(() => {
       document.addEventListener('click', closeOnClickOutside);
     }, 100);
     
-    // 保存清理函数
     this.imageUploader._closeHandler = closeOnClickOutside;
   }
 
@@ -178,10 +639,8 @@ class ForumEditor {
     const uploader = document.createElement('div');
     uploader.className = 'forum-image-uploader';
     
-    // 获取编辑器容器的位置信息
     const editorRect = this.container.getBoundingClientRect();
     
-    // 使用 fixed 定位，避免被父容器限制
     uploader.style.cssText = `
       display: flex;
       flex-direction: column;
@@ -273,7 +732,6 @@ class ForumEditor {
       }
     });
     
-    // 监听窗口滚动和调整大小，更新图片上传器位置
     const updateUploaderPosition = () => {
       if (uploader && uploader.style.display === 'flex') {
         const editorRect = this.container.getBoundingClientRect();
@@ -286,7 +744,6 @@ class ForumEditor {
     window.addEventListener('scroll', updateUploaderPosition);
     window.addEventListener('resize', updateUploaderPosition);
     
-    // 清理函数
     const originalRemove = uploader.remove.bind(uploader);
     uploader.remove = function() {
       window.removeEventListener('scroll', updateUploaderPosition);
@@ -301,13 +758,11 @@ class ForumEditor {
   }
 
   async handleImageUpload(file, uploader) {
-    // 验证文件类型
     if (!file.type.startsWith('image/')) {
       alert('请选择图片文件!');
       return;
     }
     
-    // 验证文件大小 (300KB = 300 * 1024 bytes)
     if (file.size > 300 * 1024) {
       alert('图片大小不能超过300KB!');
       return;
@@ -342,7 +797,6 @@ class ForumEditor {
         if (xhr.status === 200) {
           const result = JSON.parse(xhr.responseText);
           
-          // 保存上传的图片信息
           const imageInfo = {
             filename: result.filename,
             path: result.path,
@@ -353,7 +807,6 @@ class ForumEditor {
           this.uploadedImages.push(imageInfo);
           this.addImageToList(imageInfo, uploader);
           
-          // 重置上传区域
           setTimeout(() => {
             progressContainer.style.display = 'none';
             progressBar.style.width = '0%';
@@ -422,7 +875,6 @@ class ForumEditor {
         await this.deleteUploadedImage(imageInfo);
         item.remove();
         
-        // 如果没有图片了,隐藏列表
         if (grid.children.length === 0) {
           listContainer.style.display = 'none';
         }
@@ -485,13 +937,11 @@ class ForumEditor {
       });
       
       if (response.ok) {
-        // 从列表中移除
         const index = this.uploadedImages.findIndex(img => img.path === imageInfo.path);
         if (index > -1) {
           this.uploadedImages.splice(index, 1);
         }
         
-        // 从编辑器中移除所有使用此图片的元素
         const images = this.content.querySelectorAll(`img[data-image-path="${imageInfo.path}"]`);
         images.forEach(img => img.remove());
         
@@ -546,7 +996,6 @@ class ForumEditor {
       }
     });
     
-    // 移动端支持手势缩放
     if (isMobile) {
       const img = modal.querySelector('img');
       let scale = 1;
@@ -582,135 +1031,6 @@ class ForumEditor {
     document.body.appendChild(modal);
   }
 
-  getContent() {
-    console.log('=== getContent Start ===');
-    
-    const tempContainer = document.createElement('div');
-    tempContainer.innerHTML = this.content.innerHTML;
-    
-    console.log('Original HTML:', tempContainer.innerHTML);
-    
-    // 处理表情标记
-    const emojiImages = tempContainer.querySelectorAll('img.editor-emoji-preview');
-    const emojiPlaceholders = [];
-    
-    emojiImages.forEach((img, index) => {
-      const emojiId = img.dataset.emojiId;
-      const emojiPath = img.dataset.emojiPath;
-      const audioPath = img.dataset.audioPath;
-      
-      let emojiMarkup;
-      if (audioPath) {
-        emojiMarkup = `[emoji:${emojiId}:${emojiPath}:${audioPath}]`;
-      } else {
-        emojiMarkup = `[emoji:${emojiId}:${emojiPath}]`;
-      }
-      
-      console.log(`Emoji ${index}:`, emojiMarkup);
-      
-      const placeholder = `__EMOJI_PLACEHOLDER_${index}__`;
-      emojiPlaceholders.push({ placeholder, markup: emojiMarkup });
-      
-      const textNode = document.createTextNode(placeholder);
-      img.parentNode.replaceChild(textNode, img);
-    });
-    
-    // 处理上传的图片
-    const uploadedImages = tempContainer.querySelectorAll('img.editor-uploaded-image');
-    const imagePlaceholders = [];
-    
-    uploadedImages.forEach((img, index) => {
-      const imagePath = img.dataset.imagePath;
-      const imageMarkup = `[image:${imagePath}]`;
-      
-      console.log(`Image ${index}:`, imageMarkup);
-      
-      const placeholder = `__IMAGE_PLACEHOLDER_${index}__`;
-      imagePlaceholders.push({ placeholder, markup: imageMarkup });
-      
-      const textNode = document.createTextNode(placeholder);
-      img.parentNode.replaceChild(textNode, img);
-    });
-    
-    let content = tempContainer.innerHTML;
-    console.log('After placeholder:', content);
-    
-    // 恢复表情标记
-    emojiPlaceholders.forEach(({ placeholder, markup }) => {
-      const regex = new RegExp(placeholder, 'g');
-      content = content.replace(regex, markup);
-    });
-    
-    // 恢复图片标记
-    imagePlaceholders.forEach(({ placeholder, markup }) => {
-      const regex = new RegExp(placeholder, 'g');
-      content = content.replace(regex, markup);
-    });
-    
-    console.log('After restoration:', content);
-    
-    content = content.replace(/&nbsp;/g, ' ');
-    content = content.trim();
-    
-    console.log('Final content:', content);
-    console.log('=== getContent End ===');
-    
-    return content;
-  }
-
-  setContent(html) {
-    console.log('=== setContent ===');
-    console.log('Input HTML:', html);
-    
-    let processedHtml = html;
-    
-    // 处理表情标记
-    const emojiRegex = /\[emoji:(\d+):((?:https?:)?\/[^\]]+?)(?::([^\]]+?))?\]/g;
-    processedHtml = processedHtml.replace(emojiRegex, (match, id, path, audioPath) => {
-      const API_BASE_URL = window.API_BASE_URL || 'https://api.am-all.com.cn';
-      const fullPath = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
-      
-      let audioAttr = audioPath ? `data-audio-path="${audioPath.trim()}"` : '';
-      
-      return `<img src="${fullPath}" 
-                   class="editor-emoji-preview" 
-                   data-emoji-id="${id}" 
-                   data-emoji-path="${path.trim()}" 
-                   ${audioAttr}
-                   style="max-width: 80px; max-height: 80px; vertical-align: middle; margin: 0 4px; border-radius: 6px; cursor: pointer;" 
-                   alt="表情">`;
-    });
-    
-    // 处理图片标记
-    const imageRegex = /\[image:(\/[^\]]+?)\]/g;
-    processedHtml = processedHtml.replace(imageRegex, (match, path) => {
-      const API_BASE_URL = window.API_BASE_URL || 'https://api.am-all.com.cn';
-      const fullPath = `${API_BASE_URL}${path}`;
-      
-      return `<img src="${fullPath}" 
-                   class="editor-uploaded-image" 
-                   data-image-path="${path}" 
-                   data-original-src="${fullPath}"
-                   style="max-width: 50%; height: auto; display: inline-block; margin: 4px; border-radius: 8px; cursor: pointer; vertical-align: middle;" 
-                   alt="图片">`;
-    });
-    
-    this.content.innerHTML = processedHtml;
-    console.log('Content set');
-  }
-
-  clear() {
-    this.content.innerHTML = '';
-    this.uploadedImages = [];
-  }
-
-  isEmpty() {
-    const hasText = this.content.textContent.trim().length > 0;
-    const hasEmoji = this.content.querySelector('img.editor-emoji-preview') !== null;
-    const hasImage = this.content.querySelector('img.editor-uploaded-image') !== null;
-    return !hasText && !hasEmoji && !hasImage;
-  }
-
   // ============ 表情选择器功能 ============
   
   toggleEmojiPicker(btn) {
@@ -721,7 +1041,6 @@ class ForumEditor {
       
       if (!isVisible && window.emojiPacks && window.emojiPacks.length > 0) {
         this.loadEmojiPackContent(window.emojiPacks[0].id);
-        // 更新位置
         const editorRect = this.container.getBoundingClientRect();
         const isMobile = window.innerWidth <= 768;
         this.emojiPicker.style.bottom = `${window.innerHeight - editorRect.top + 10}px`;
@@ -734,13 +1053,11 @@ class ForumEditor {
     
     this.emojiPicker = this.createEmojiPicker();
     this.emojiPickerButton = btn;
-    // 附加到 body 而不是容器，避免被限制
     document.body.appendChild(this.emojiPicker);
     btn.classList.add('active');
     
     this.loadEmojiPacks();
     
-    // 点击外部关闭
     const closeOnClickOutside = (e) => {
       if (this.emojiPicker && 
           !this.emojiPicker.contains(e.target) && 
@@ -750,12 +1067,10 @@ class ForumEditor {
       }
     };
     
-    // 延迟添加点击事件监听，避免立即触发
     setTimeout(() => {
       document.addEventListener('click', closeOnClickOutside);
     }, 100);
     
-    // 保存清理函数
     this.emojiPicker._closeHandler = closeOnClickOutside;
   }
 
@@ -763,11 +1078,9 @@ class ForumEditor {
     const picker = document.createElement('div');
     picker.className = 'forum-emoji-picker';
     
-    // 获取编辑器容器的位置信息
     const editorRect = this.container.getBoundingClientRect();
     const isMobile = window.innerWidth <= 768;
     
-    // 使用 fixed 定位，避免被父容器限制
     picker.style.cssText = `
       display: flex;
       flex-direction: column;
@@ -811,10 +1124,8 @@ class ForumEditor {
       e.stopPropagation();
     });
     
-    // 保存对编辑器按钮的引用，用于定位更新
     this.emojiPickerButton = null;
     
-    // 监听窗口滚动和调整大小，更新表情选择器位置
     const updatePickerPosition = () => {
       if (picker && picker.style.display === 'flex') {
         const editorRect = this.container.getBoundingClientRect();
@@ -829,7 +1140,6 @@ class ForumEditor {
     window.addEventListener('scroll', updatePickerPosition);
     window.addEventListener('resize', updatePickerPosition);
     
-    // 清理函数
     const originalRemove = picker.remove.bind(picker);
     picker.remove = function() {
       window.removeEventListener('scroll', updatePickerPosition);
@@ -959,7 +1269,6 @@ class ForumEditor {
     
     const grid = document.createElement('div');
     const isMobile = window.innerWidth <= 768;
-    // 移动端8列，PC端10列，增加密度减少占用空间
     const columns = isMobile ? 8 : 10;
     grid.style.cssText = `display: grid; grid-template-columns: repeat(${columns}, 1fr); gap: 4px;`;
     
@@ -985,7 +1294,6 @@ class ForumEditor {
       const img = document.createElement('img');
       img.src = `${API_BASE_URL}${emoji.file_path}`;
       img.alt = emoji.emoji_name || emoji.file_name;
-      // 减小表情图片尺寸
       img.style.cssText = 'width: 100%; height: 100%; max-width: 32px; max-height: 32px; object-fit: contain;';
       
       item.appendChild(img);
@@ -1130,6 +1438,59 @@ class ForumEditor {
     } catch (error) {
       console.error('记录表情使用失败:', error);
     }
+  }
+
+  // ============ 内容获取和设置 ============
+  
+  getContent() {
+    let html = this.content.innerHTML;
+    
+    html = html.replace(/<img[^>]*class="editor-emoji-preview"[^>]*>/gi, (match) => {
+      const idMatch = match.match(/data-emoji-id="(\d+)"/);
+      const pathMatch = match.match(/data-emoji-path="([^"]+)"/);
+      const audioMatch = match.match(/data-audio-path="([^"]+)"/);
+      
+      if (idMatch && pathMatch) {
+        const id = idMatch[1];
+        const path = pathMatch[1];
+        const audioPath = audioMatch ? audioMatch[1] : '';
+        
+        if (audioPath) {
+          return `[emoji:${id}:${path}:${audioPath}]`;
+        }
+        return `[emoji:${id}:${path}]`;
+      }
+      return match;
+    });
+    
+    html = html.replace(/<img[^>]*class="editor-uploaded-image"[^>]*>/gi, (match) => {
+      const srcMatch = match.match(/data-original-src="([^"]+)"/);
+      if (srcMatch) {
+        return `[image:${srcMatch[1]}]`;
+      }
+      return match;
+    });
+    
+    return html.trim();
+  }
+  
+  setContent(content) {
+    this.content.innerHTML = content;
+  }
+  
+  clear() {
+    this.content.innerHTML = '';
+    this.uploadedImages = [];
+  }
+  
+  isEmpty() {
+    const text = this.content.innerText.trim();
+    const images = this.content.querySelectorAll('img');
+    return text === '' && images.length === 0;
+  }
+  
+  getUploadedImages() {
+    return this.uploadedImages;
   }
 }
 

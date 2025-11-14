@@ -499,3 +499,8 @@
 .modal-body::-webkit-scrollbar-thumb:hover {
   background: #764ba2;
 }
+
+/* sort-order field */
+.form-group.sort-order-group input[type="number"] {
+  max-width: 200px;
+}

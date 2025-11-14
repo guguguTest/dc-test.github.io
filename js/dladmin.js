@@ -3,6 +3,17 @@ if (typeof window.API_BASE_URL === 'undefined') {
     window.API_BASE_URL = 'https://api.am-all.com.cn';
 }
 
+
+
+// 与后端一致的排序比较函数：先按 sort_order 升序，其次按 created_at 降序
+function compareBySortOrderAndDate(a, b) {
+  const sa = Number(a && a.sort_order || 0);
+  const sb = Number(b && b.sort_order || 0);
+  if (sa !== sb) return sa - sb;
+  const ta = (a && a.created_at) ? new Date(a.created_at).getTime() : 0;
+  const tb = (b && b.created_at) ? new Date(b.created_at).getTime() : 0;
+  return (isFinite(tb) ? tb : 0) - (isFinite(ta) ? ta : 0);
+}
 let currentDownloads = [];
 let isSaving = false;
 let downloadLinksCount = 1; // 下载链接计数器
@@ -107,6 +118,8 @@ async function loadDownloads() {
       return download;
     });
     
+    // 服务器已按排序返回；为避免外部改动，这里再幂等排序一次
+    currentDownloads.sort(compareBySortOrderAndDate);
     renderDownloads();
   } catch (error) {
     console.error('加载下载列表错误:', error);
@@ -203,6 +216,9 @@ function showDownloadModal(download = null) {
     document.getElementById('download-status').value = download.is_active ? '1' : '0';
     document.getElementById('download-image-url').value = download.image_url || '';
     document.getElementById('download-description').value = download.description || '';
+    // 新增：排序ID回填
+    var soEl = document.getElementById('download-sort-order');
+    if (soEl) soEl.value = Number(download.sort_order || 0);
     
     // 填充权限设置
     document.getElementById('download-access-level').value = download.access_level ?? '-1';
@@ -259,6 +275,8 @@ function showDownloadModal(download = null) {
     // 新建模式
     modalTitle.textContent = '新建下载项目';
     downloadId.value = '';
+    var soEl = document.getElementById('download-sort-order');
+    if (soEl) soEl.value = 0;
     addDownloadLink();
   }
   
@@ -557,6 +575,9 @@ async function saveDownload() {
       throw new Error('请输入页面ID');
     }
     
+    // 收集排序ID（新增）
+    const sortOrder = document.getElementById('download-sort-order') ? document.getElementById('download-sort-order').value : '0';
+
     // 收集权限设置
     const accessLevel = document.getElementById('download-access-level').value;
     const specialGroup = document.getElementById('download-special-group').value.trim();
@@ -629,6 +650,8 @@ async function saveDownload() {
       access_level: parseInt(accessLevel),
       special_group: specialGroup || null,
       required_points: parseInt(requiredPoints) || 0,
+      // 新增：排序ID（数字，默认0）
+      sort_order: parseInt(sortOrder) || 0,
       download_links: downloadLinks
     };
     

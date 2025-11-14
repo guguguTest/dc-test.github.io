@@ -275,7 +275,7 @@ class AnnouncementSystem {
             </div>
           </div>
           <div class="announcement-modal-body">
-            <div class="announcement-modal-content html-content"></div>
+            <div class="html-content"></div>
           </div>
           <div class="announcement-modal-footer">
             <button class="announcement-modal-ok">关闭</button>
@@ -286,7 +286,7 @@ class AnnouncementSystem {
     }
     
     const titleElement = modal.querySelector('.announcement-modal-title');
-    const contentElement = modal.querySelector('.announcement-modal-content.html-content');
+    const contentElement = modal.querySelector('.html-content');
     const translateBtn = modal.querySelector('.announcement-translate-btn');
     const translateText = translateBtn ? translateBtn.querySelector('.translate-text') : null;
     
@@ -319,7 +319,7 @@ class AnnouncementSystem {
     if (!modal) return;
     
     const titleElement = modal.querySelector('.announcement-modal-title');
-    const contentElement = modal.querySelector('.announcement-modal-content.html-content');
+    const contentElement = modal.querySelector('.html-content');
     const translateBtn = modal.querySelector('.announcement-translate-btn');
     const translateText = translateBtn.querySelector('.translate-text');
     
@@ -1058,7 +1058,7 @@ window.addEventListener('languageChanged', function(e) {
       translateBtn.style.display = 'none';
       if (window.announcementSystem && window.announcementSystem.currentLanguage !== 'zh-CN') {
         const titleElement = modal.querySelector('.announcement-modal-title');
-        const contentElement = modal.querySelector('.announcement-modal-content.html-content');
+        const contentElement = modal.querySelector('.html-content');
         if (titleElement && window.announcementSystem.originalContent.title) {
           titleElement.textContent = window.announcementSystem.originalContent.title;
         }

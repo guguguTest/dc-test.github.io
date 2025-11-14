@@ -9,6 +9,17 @@ const SPECIAL_GROUP_MAP = {
   // 可以添加其他特殊用户组映射
 };
 
+// 与后端一致的排序比较函数：先按 sort_order 升序，其次按 created_at 降序
+function compareBySortOrderAndDate(a, b) {
+  const sa = Number(a && a.sort_order || 0);
+  const sb = Number(b && b.sort_order || 0);
+  if (sa !== sb) return sa - sb;
+  const ta = (a && a.created_at) ? new Date(a.created_at).getTime() : 0;
+  const tb = (b && b.created_at) ? new Date(b.created_at).getTime() : 0;
+  return (isFinite(tb) ? tb : 0) - (isFinite(ta) ? ta : 0);
+}
+
+
 // ========== 初始化下载页面 ==========
 function initDownloadPage() {
   console.log('🔄 初始化下载页面...');
@@ -115,6 +126,9 @@ async function loadDownloadContent() {
     const downloads = await response.json();
     console.log('✅ 下载内容数据:', downloads.length, '个项目');
     
+    // 为保证与后端一致，这里再按 sort_order、created_at 排序一次（幂等）
+    downloads.sort(compareBySortOrderAndDate);
+
     renderDownloadContent(downloads);
   } catch (error) {
     console.error('❌ 加载下载内容错误:', error);
