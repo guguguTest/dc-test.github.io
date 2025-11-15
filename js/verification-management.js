@@ -101,7 +101,12 @@ async function loadVerificationManagement() {
 			  <span class="advertisement-detail-value">${formatDateTime(ad.end_date)}</span>
 			</div>
 		  </div>
-		  
+
+          <div class="verification-tip">
+            <i class="fas fa-info-circle"></i>
+            <b>剩余时间不足7天或到期时才可以进行续费。</b>
+          </div>
+
 		  <div class="text-center mt-3">
 			<button class="verification-btn verification-btn-secondary me-2" onclick="viewAdvertisementDetails()">
 			  <i class="fas fa-eye"></i> 查看详情

@@ -733,6 +733,16 @@
   color: #721c24;
 }
 
+.verification-note {
+  background: #d7f8d8;
+  border-left: 4px solid #1f9d00;
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin: 15px 0;
+  font-size: 14px;
+  color: #1f9d00;
+}
+
 /* 辅助工具类 */
 .text-danger {
   color: #dc3545 !important;
