@@ -1245,3 +1245,64 @@
     width: 100%;
   }
 }
+/* 无限库存选项样式 */
+.stock-setting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stock-setting input[type="number"] {
+  flex: 1;
+}
+
+.unlimited-stock-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.unlimited-stock-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+
+/* ========== 商品排序样式 ========== */
+.sort-order-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 32px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.help-text {
+  color: #999;
+  font-size: 0.85rem;
+  font-weight: normal;
+  margin-left: 5px;
+}
+
+.form-row .form-group label {
+  display: flex;
+  align-items: center;
+}
+
+/* 表格列宽优化 */
+.admin-table th:nth-child(9) {
+  text-align: center;
+}
+
+.admin-table td:has(.sort-order-badge) {
+  text-align: center;
+}

@@ -563,7 +563,7 @@ window.skipShippingBinding = function() {
         </div>
         <div class="item-name">${item.item_name}</div>
         <div class="item-price">${item.price} ${currentShopType === 'points' ? '积分' : '鸽屋积分'}</div>
-        <div class="item-stock">库存: ${item.stock > 0 ? item.stock : '等待补货'}</div>
+        <div class="item-stock">库存: ${item.stock === -1 ? '无限' : (item.stock > 0 ? item.stock : '等待补货')}</div>
       </div>
     `).join('');
   }
@@ -609,7 +609,7 @@ window.showItemDetail = async function(itemId) {
           <div class="detail-info">
             <div class="detail-desc">${item.item_description || '暂无介绍'}</div>
             <div class="detail-price">价格：${item.price} ${currentShopType === 'points' ? '积分' : '鸽屋积分'}</div>
-            <div class="detail-stock">库存：${item.stock}</div>
+            <div class="detail-stock">库存：${item.stock === -1 ? '无限' : item.stock}</div>
           </div>
         </div>
         <div class="modal-footer">
@@ -773,12 +773,13 @@ function getUserRankName(rank) {
                 <th width="80">库存</th>
                 <th width="80">限购</th>
                 ${isPointShop ? '<th width="100">类型</th>' : ''}
+                <th width="80">排序</th>
                 <th width="120">操作</th>
               </tr>
             </thead>
             <tbody id="items-tbody">
               <tr>
-                <td colspan="${isPointShop ? 9 : 8}" class="loading-cell">
+                <td colspan="${isPointShop ? 10 : 9}" class="loading-cell">
                   <i class="fas fa-spinner fa-spin"></i> 加载中...
                 </td>
               </tr>
@@ -817,7 +818,7 @@ function getUserRankName(rank) {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="${isPointShop ? 9 : 8}" class="empty-cell">暂无商品</td>
+          <td colspan="${isPointShop ? 10 : 9}" class="empty-cell">暂无商品</td>
         </tr>
       `;
       return;
@@ -831,6 +832,8 @@ function getUserRankName(rank) {
       }[item.item_type] || '实体商品';
       
       const limitText = item.max_per_user ? `${item.max_per_user}次` : '不限';
+      const stockText = item.stock === -1 ? '无限' : item.stock;
+      const sortOrder = item.sort_order !== undefined && item.sort_order !== null ? item.sort_order : 0;
       
       return `
         <tr data-item-id="${item.id}">
@@ -842,9 +845,10 @@ function getUserRankName(rank) {
           <td>${item.item_name}</td>
           <td class="desc-cell">${item.item_description || '-'}</td>
           <td>${item.price}</td>
-          <td>${item.stock}</td>
+          <td>${stockText}</td>
           <td>${limitText}</td>
           ${isPointShop ? `<td>${typeText}</td>` : ''}
+          <td><span class="sort-order-badge">${sortOrder}</span></td>
           <td>
             <button class="btn-small btn-edit" onclick="editItem(${item.id}, '${shopType}')">
               <i class="fas fa-edit"></i> 编辑
@@ -908,7 +912,20 @@ function getUserRankName(rank) {
             
             <div class="form-group">
               <label>库存 <span class="required">*</span></label>
-              <input type="number" name="stock" value="${item?.stock || 0}" min="0" required>
+              <div class="stock-setting">
+                <input type="number" name="stock" id="stock-input" value="${item?.stock === -1 ? 0 : (item?.stock || 0)}" min="0" ${item?.stock === -1 ? 'disabled' : ''} required>
+                <label class="unlimited-stock-label">
+                  <input type="checkbox" id="unlimited-stock" ${item?.stock === -1 ? 'checked' : ''} onchange="toggleUnlimitedStock()">
+                  不限库存
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>排序 <span class="help-text">(数字越小越靠前)</span></label>
+              <input type="number" name="sort_order" value="${item?.sort_order !== undefined && item?.sort_order !== null ? item.sort_order : 0}" min="0" step="1">
             </div>
           </div>
           
@@ -1005,6 +1022,19 @@ function getUserRankName(rank) {
     }
   };
   
+  // ========== 切换无限库存 ==========
+  window.toggleUnlimitedStock = function() {
+    const checkbox = document.getElementById('unlimited-stock');
+    const input = document.getElementById('stock-input');
+    if (checkbox.checked) {
+      input.disabled = true;
+      input.value = 0;
+    } else {
+      input.disabled = false;
+      if (input.value == 0) input.value = 1;
+    }
+  };
+  
   // 物品类型变化
   window.onItemTypeChange = function(type) {
     const upgradeGroup = document.getElementById('upgrade-rank-group');
@@ -1065,15 +1095,20 @@ function getUserRankName(rank) {
     const maxPerUserInput = document.getElementById('max-per-user');
     const maxPerUser = enableLimit && maxPerUserInput ? parseInt(maxPerUserInput.value) : null;
     
+    // 获取无限库存选项
+    const unlimitedStock = document.getElementById('unlimited-stock')?.checked || false;
+    const stockValue = unlimitedStock ? -1 : parseInt(formData.get('stock')) || 0;
+    
     // 构建要发送的数据对象
     const data = {
       item_name: formData.get('item_name') || '',
       item_description: formData.get('item_description') || '',
       price: parseInt(formData.get('price')) || 0,
-      stock: parseInt(formData.get('stock')) || 0,
+      stock: stockValue,
       item_image: formData.get('item_image') || null,
       shop_type: shopType,
       max_per_user: maxPerUser,
+      sort_order: parseInt(formData.get('sort_order')) || 0,
       is_active: true
     };
     
@@ -1102,8 +1137,8 @@ function getUserRankName(rank) {
       return;
     }
     
-    if (data.stock < 0) {
-      showErrorMessage('库存不能为负数');
+    if (data.stock < -1) {
+      showErrorMessage('库存不能小于-1');
       return;
     }
     

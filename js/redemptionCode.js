@@ -41,6 +41,7 @@
                   <th>项目名称</th>
                   <th>兑换类型</th>
                   <th>兑换值</th>
+                  <th>使用模式</th>
                   <th>状态</th>
                   <th>有效期</th>
                   <th>使用者</th>
@@ -50,7 +51,7 @@
               </thead>
               <tbody id="codes-tbody">
                 <tr>
-                  <td colspan="10" class="loading-cell">
+                  <td colspan="11" class="loading-cell">
                     <i class="fas fa-spinner fa-spin"></i> 加载中...
                   </td>
                 </tr>
@@ -90,7 +91,7 @@
     if (codes.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="10" class="empty-cell">暂无兑换码</td>
+          <td colspan="11" class="empty-cell">暂无兑换码</td>
         </tr>
       `;
       return;
@@ -103,6 +104,11 @@
         'user_group': '用户组升级',
         'coupon': '优惠券'
       }[code.redemption_type] || '未知';
+      
+      const useModeText = code.multi_use ? '多次使用' : '单次使用';
+      const useModeBadge = code.multi_use ? 
+        '<span class="code-status" style="background: #e3f2fd; color: #1976d2;">多次</span>' : 
+        '<span class="code-status" style="background: #fff3e0; color: #f57c00;">单次</span>';
       
       const statusText = code.is_used ? '已使用' : '未使用';
       const statusClass = code.is_used ? 'status-used' : 'status-unused';
@@ -126,6 +132,7 @@
           <td>${code.project_name}</td>
           <td>${typeText}</td>
           <td>${code.redemption_value || '-'}</td>
+          <td>${useModeBadge}</td>
           <td><span class="code-status ${statusClass}">${statusText}</span></td>
           <td>${expiresText}</td>
           <td>${code.username || '-'}</td>
@@ -244,6 +251,14 @@
               <input type="number" name="custom_days" id="custom-days" min="1" 
                      style="display: none; margin-top: 10px;" placeholder="天数">
             </div>
+            
+            <div class="code-form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="multi-use" name="multi_use">
+                多次使用（每个账号限用1次）
+              </label>
+              <p style="font-size: 0.85rem; color: #666; margin: 5px 0 0 0;">勾选后，此兑换码可被多个用户使用，但每个用户只能使用1次</p>
+            </div>
           </form>
         </div>
         <div class="code-modal-footer">
@@ -306,7 +321,8 @@
       redemption_type: formData.get('redemption_type'),
       batch_issue: document.getElementById('batch-issue').checked,
       batch_count: parseInt(formData.get('batch_count')) || 1,
-      validity_period: formData.get('validity_period')
+      validity_period: formData.get('validity_period'),
+      multi_use: document.getElementById('multi-use')?.checked || false
     };
     
     // 处理兑换值

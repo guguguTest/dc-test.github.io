@@ -489,7 +489,7 @@ function renderQueryPage(user) {
                         <div class="ccb-notice">
                             <h4 class="ccb-notice-title"><i class="fas fa-exclamation-circle"></i>&ensp;提示</h4>
                             <p class="ccb-notice-content">
-                                每次查分将消耗<b>5点普通积分</b>,查询结果以图片形式展示。<br>
+                                每次查分将消耗<b>1点普通积分</b>,查询结果以图片形式展示。<br>
                                 每次查分后需要等待10秒后才能再次查询。<br>
 								<br>
 								保存图片按钮在移动端某些浏览器可能会无效。<br>
@@ -690,8 +690,8 @@ function handleQuerySubmit(e) {
     }
     
     // 检查积分
-    if ((currentUser.points || 0) < 5) {
-        showErrorMessage('积分不足,需要5积分才能查询');
+    if ((currentUser.points || 0) < 1) {
+        showErrorMessage('积分不足,需要1积分才能查询');
         return;
     }
     
@@ -732,7 +732,7 @@ function handleQuerySubmit(e) {
                 document.getElementById('save-image-btn').addEventListener('click', saveCCBImage);
                 
                 // 更新用户积分显示
-                currentUser.points -= 5;
+                currentUser.points -= 1;
                 document.getElementById('points-display').textContent = currentUser.points;
                 updateUserInfo(currentUser);
                 

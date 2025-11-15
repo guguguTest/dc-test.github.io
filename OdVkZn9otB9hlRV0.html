@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="shortcut icon" href="https://oss.am-all.com.cn/asset/img/main/favicon.png">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>ICF Viewer</title>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/aes-js/3.1.2/index.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+	<style type="text/css">
+		* {
+			box-sizing: border-box;
+		}
+		
+		html, body {
+			margin: 0;
+			padding: 0;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			min-height: 100vh;
+		}
+		
+		body {
+			font-size: 14px;
+		}
+		
+		.container {
+			max-width: 900px;
+			margin: 0 auto;
+			padding: 20px;
+		}
+		
+		.header {
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 12px;
+			padding: 20px;
+			margin-bottom: 20px;
+			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+		}
+		
+		.header h1 {
+			margin: 0 0 10px 0;
+			font-size: 28px;
+			background: linear-gradient(135deg, #667eea, #764ba2);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
+		
+		.header p {
+			margin: 0;
+			color: #6b7280;
+			font-size: 14px;
+		}
+		
+		#controls {
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 12px;
+			padding: 20px;
+			margin-bottom: 20px;
+			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+		}
+		
+		#controls button {
+			padding: 10px 20px;
+			margin-right: 10px;
+			border: none;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 14px;
+			font-weight: 500;
+			transition: transform 0.2s, box-shadow 0.2s;
+			background: #e5e7eb;
+			color: #374151;
+		}
+		
+		#controls button:hover {
+			background: #d1d5db;
+			transform: translateY(-1px);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		}
+		
+		.error {
+			color: #ef4444;
+			font-weight: 500;
+			margin-top: 10px;
+			margin-bottom: 0;
+		}
+		
+		#main {
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 12px;
+			padding: 20px;
+			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+			min-height: 400px;
+		}
+		
+		.section-label {
+			font-size: 12px;
+			font-weight: 600;
+			color: #6b7280;
+			text-transform: uppercase;
+			margin-bottom: 10px;
+			letter-spacing: 0.5px;
+		}
+		
+		#viewer {
+			margin: 0;
+			padding: 15px;
+			font-family: 'Courier New', monospace;
+			background: #f9fafb;
+			border: 2px solid #e5e7eb;
+			border-radius: 8px;
+			overflow-y: auto;
+			max-height: 600px;
+			list-style-position: inside;
+		}
+		
+		#viewer li {
+			font-size: 1.2em;
+			margin: 0;
+			padding: 10px 5px;
+			border-bottom: 1px solid #e5e7eb;
+			min-height: 2em;
+			line-height: 1.5;
+			color: #1f2937;
+		}
+		
+		#viewer li:last-child {
+			border-bottom: none;
+		}
+		
+		#viewer li.error {
+			background: #fef2f2;
+			color: #dc2626;
+		}
+		
+		.empty-state {
+			text-align: center;
+			padding: 60px 20px;
+			color: #9ca3af;
+		}
+		
+		.empty-state svg {
+			width: 64px;
+			height: 64px;
+			margin-bottom: 16px;
+			opacity: 0.5;
+		}
+		
+		#filedrop {
+			display: none;
+			position: fixed;
+			width: 100%;
+			height: 100%;
+			left: 0;
+			top: 0;
+			z-index: 99999;
+			background: rgba(102, 126, 234, 0.95);
+			border: 1em dashed rgba(255, 255, 255, 0.5);
+			transition: opacity 0.3s ease-out;
+			opacity: 0;
+		}
+		
+		#filedrop::before {
+			content: "拖放 ICF 文件到这里";
+			position: absolute;
+			top: calc(50% - 0.5em);
+			width: 100%;
+			font-size: 3em;
+			display: block;
+			font-family: sans-serif;
+			text-align: center;
+			color: white;
+			font-weight: 500;
+		}
+		
+		@media (max-width: 768px) {
+			.container {
+				padding: 10px;
+			}
+			
+			.header h1 {
+				font-size: 20px;
+			}
+			
+			#controls button {
+				display: block;
+				width: 100%;
+				margin: 10px 0;
+			}
+			
+			#filedrop::before {
+				font-size: 1.5em;
+			}
+		}
+		
+		::-webkit-scrollbar {
+			width: 8px;
+			height: 8px;
+		}
+		
+		::-webkit-scrollbar-track {
+			background: #f1f1f1;
+			border-radius: 4px;
+		}
+		
+		::-webkit-scrollbar-thumb {
+			background: #9ca3af;
+			border-radius: 4px;
+		}
+		
+		::-webkit-scrollbar-thumb:hover {
+			background: #6b7280;
+		}
+	</style>
+</head>
+<body>
+	<div id="filedrop"></div>
+	
+	<div class="container">
+		<div class="header">
+			<h1>ICF 文件查看器</h1>
+			<p>拖放 ICF 文件或点击"选择文件"按钮来查看内容</p>
+		</div>
+		
+		<div id="controls">
+			<input type="file" id="fileInput" accept=".icf" style="display: none;">
+			<button onclick="document.getElementById('fileInput').click()">选择文件</button>
+			<button id="ctrl_clear">清空</button>
+			<p class="error" id="errmsg"></p>
+		</div>
+		
+		<div id="main">
+			<div class="section-label">文件内容</div>
+			<ol id="viewer">
+				<div class="empty-state">
+					<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+					</svg>
+					<p>暂无文件内容</p>
+					<p style="font-size: 0.9em;">请选择或拖放 ICF 文件</p>
+				</div>
+			</ol>
+		</div>
+	</div>
+
+	<script>
+		// ========== ICF 解析功能 ==========
+		
+		// CRC32 计算
+		function crc32(data, crc) {
+			var table = crc32.table;
+			if (!table) {
+				table = new Int32Array(256);
+				var mask = new Int32Array(1);
+				mask[0] = 0xEDB88320;
+				for (var i = 0; i < 256; i++) {
+					table[i] = i;
+					for (var z = 8; z; z--) {
+						table[i] = (table[i] & 1) ? (table[i] >>> 1) ^ mask[0] : table[i] >>> 1;
+					}
+				}
+				crc32.table = table;
+			}
+			if (!crc) {
+				crc = new Int32Array(1);
+			}
+			crc[0] = ~crc[0];
+			for (var i = 0; i < data.length; i++) {
+				crc[0] = table[(crc[0] ^ data[i]) & 0xff] ^ (crc[0] >>> 8);
+			}
+			crc[0] = ~crc[0];
+			return crc[0];
+		}
+
+		// 十六进制工具函数
+		function hex2bin(text) {
+			var len = text.length >> 1;
+			var result = new Uint8Array(len);
+			for (var i = 0; i < len; i++) {
+				var val = parseInt(text.substr(i*2, 2), 16);
+				if (isNaN(val)) return null;
+				result[i] = val;
+			}
+			return result;
+		}
+
+		function dec2(val) {
+			if (val < 10) return "0" + val;
+			return val.toString();
+		}
+
+		function dec4(val) {
+			if (val < 10) return "000" + val;
+			if (val < 100) return "00" + val;
+			if (val < 1000) return "0" + val;
+			return val.toString();
+		}
+
+		// ICF 密钥和 IV
+		var icf_key = hex2bin('09ca5efd30c9aaef3804d0a7e3fa7120');
+		var icf_iv  = hex2bin('b155c22c2e7f0491fa7f0fdc217aff90');
+
+		// ICF 完整性检查
+		function icf_sanity_error(data) {
+			if (!data) return 'Invalid input';
+			var buffer = data.buffer;
+			if (data.length < 0x40) return 'Bad length';
+
+			var len = new Int32Array(buffer, 4, 1);
+			if (len[0] != data.length) return 'Bad length';
+
+			var crcsum = new Int32Array(buffer, 0, 1);
+			var crc_range = new Uint8Array(buffer, 4);
+			if (crc32(crc_range) != crcsum[0]) return 'Bad CRC';
+
+			var enc_sections = new Uint16Array(buffer, 0x10, 1);
+			var num_sections = data.length / 0x40;
+			if (enc_sections[0] != num_sections - 1) return "Bad section count";
+
+			var crc2 = new Int32Array(1);
+			for (var i = 1; i < num_sections; i++) {
+				var secdata = new Uint8Array(buffer, i*0x40, 0x40);
+				if (secdata[0] != 2 || secdata[1] != 1) continue;
+				crc2[0] ^= crc32(secdata);
+			}
+			var crcsum2 = new Int32Array(buffer, 0x20, 1);
+			if (crcsum2[0] != crc2[0]) return "Bad section CRC";
+
+			return null;
+		}
+
+		// ICF 解密
+		function icf_decrypt(data) {
+			if (data.length & 0xf) {
+				console.error('Attempted to decrypt non-full data block');
+				return null;
+			}
+			var aesCbc = new aesjs.ModeOfOperation.cbc(icf_key, icf_iv);
+			return aesCbc.decrypt(data);
+		}
+
+		// 版本解码
+		function icf_decodeVersion(vals, zeropad) {
+			var major = (vals[3] << 8) | vals[2];
+			if (zeropad) major = dec4(major);
+			return major + '.' + dec2(vals[1]) + '.' + dec2(vals[0]);
+		}
+
+		// 时间解码
+		function icf_decodeTime(vals) {
+			var year = (vals[1] << 8) | vals[0];
+			return dec4(year) + dec2(vals[2]) + dec2(vals[3]) + dec2(vals[4]) + dec2(vals[5]) + dec2(vals[6]);
+		}
+
+		// ICF 内容解码
+		function icf_decode(data) {
+			var buffer = data.buffer;
+			var entries = [];
+
+			var hdrerr = icf_sanity_error(data);
+			var gameid = "SXXX";
+			var platid = "AXX";
+			
+			if (hdrerr) {
+				entries[0] = '! ' + hdrerr;
+			} else {
+				var platbuf = new Uint8Array(buffer, 0x18, 8);
+				gameid = String.fromCharCode(platbuf[0], platbuf[1], platbuf[2], platbuf[3]);
+				platid = String.fromCharCode(platbuf[4], platbuf[5], platbuf[6]);
+				entries[0] = gameid + platid + platbuf[7];
+			}
+
+			var num_sections = data.length / 0x40;
+			var sysver = null;
+			var app_part = 0, app_last_ver, app_last_time;
+			var datanames = {};
+			var patch_num = 0x101;
+
+			for (var i = 1; i < num_sections; i++) {
+				var base = i * 0x40;
+				var magic = new Uint16Array(buffer, base+0, 1);
+				var type = new Uint32Array(buffer, base+4, 1);
+				var ver = new Uint8Array(buffer, base+0x20, 4);
+				var time = new Uint8Array(buffer, base+0x24, 8);
+				var platver = new Uint32Array(buffer, base+0x2c, 1);
+				var base_ver = new Uint8Array(buffer, base+0x30, 4);
+				var base_time = new Uint8Array(buffer, base+0x34, 8);
+
+				if (magic[0] != 0x102) {
+					entries[i] = '! Invalid Magic';
+					continue;
+				}
+
+				var pfx = '', sfx = '', dataname = '', basename = '';
+				var timestamp = icf_decodeTime(time);
+
+				switch (type[0]) {
+					case 0: // SYS
+						sfx = '0.pack';
+						pfx = platid;
+						dataname = icf_decodeVersion(ver, true);
+						if (sysver) {
+							entries[i] = '! Redundant SYSTEM image';
+							continue;
+						}
+						sysver = platver;
+						break;
+					case patch_num: // APP PATCH
+						patch_num += 0x100;
+						app_part++;
+						dataname = icf_decodeVersion(ver);
+						basename = icf_decodeVersion(base_ver);
+						if (basename != app_last_ver) {
+							app_last_ver = dataname;
+							entries[i] = '! Unable to locate base APP ' + basename;
+							continue;
+						}
+						app_last_ver = dataname;
+						var basetime = icf_decodeTime(base_time);
+						if (basetime != app_last_time) {
+							app_last_time = timestamp;
+							entries[i] = '! Base APP timestamp mismatch';
+							continue;
+						}
+						app_last_time = timestamp;
+						sfx = app_part + '_' + basename + '.app';
+						// fall thru
+					case 1: // APP
+						dataname = icf_decodeVersion(ver);
+						app_last_ver = dataname;
+						app_last_time = timestamp;
+						if (platver[0] != sysver[0]) {
+							entries[i] = '! SYSTEM version mismatch';
+							continue;
+						}
+						pfx = gameid;
+						dataname = icf_decodeVersion(ver);
+						if (!basename) {
+							if (app_part) {
+								entries[i] = '! Redundant base APP';
+								continue;
+							}
+							sfx = '0.app';
+						}
+						break;
+					case 2: // OPT
+						sfx = '0.opt';
+						pfx = gameid;
+						dataname = String.fromCharCode(...Array.from(ver));
+						break;
+					default:
+						entries[i] = '! Unknown Type: ' + type[0].toString(16);
+						continue;
+				}
+
+				entries[i] = pfx + '_' + dataname + '_' + timestamp + '_' + sfx;
+
+				if (datanames[entries[i]]) {
+					entries[i] = '! Duplicate entry?';
+				} else {
+					datanames[entries[i]] = i;
+				}
+			}
+
+			return entries;
+		}
+
+		// ========== UI 控制 ==========
+		
+		const viewer = document.getElementById('viewer');
+		const errmsg = document.getElementById('errmsg');
+		const fileInput = document.getElementById('fileInput');
+		const dropZone = document.getElementById('filedrop');
+		
+		// 清空按钮
+		document.getElementById('ctrl_clear').addEventListener('click', function() {
+			viewer.innerHTML = `
+				<div class="empty-state">
+					<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+					</svg>
+					<p>暂无文件内容</p>
+					<p style="font-size: 0.9em;">请选择或拖放 ICF 文件</p>
+				</div>
+			`;
+			errmsg.innerText = '';
+		});
+		
+		// 文件选择
+		fileInput.addEventListener('change', function(e) {
+			if (e.target.files.length > 0) {
+				processFile(e.target.files[0]);
+			}
+		});
+		
+		// 拖放功能
+		function showDropZone(e) {
+			if (e.dataTransfer.types[0] != 'Files') return;
+			dropZone.style.display = "block";
+			setTimeout(() => dropZone.style.opacity = "0.8", 1);
+		}
+		
+		function hideDropZone() {
+			dropZone.style.opacity = "0.0";
+			setTimeout(() => {
+				dropZone.style.display = "none";
+				dropZone.style.opacity = "0.0";
+			}, 310);
+		}
+		
+		function allowDrag(e) {
+			if (e.dataTransfer.types[0] == 'Files') {
+				e.dataTransfer.dropEffect = 'copy';
+				e.preventDefault();
+			}
+		}
+		
+		function handleDrop(e) {
+			e.preventDefault();
+			hideDropZone();
+			const files = Array.from(e.dataTransfer.files);
+			if (files.length > 0) {
+				processFile(files[0]);
+			}
+		}
+		
+		window.addEventListener('dragenter', showDropZone);
+		dropZone.addEventListener('dragenter', allowDrag);
+		dropZone.addEventListener('dragover', allowDrag);
+		dropZone.addEventListener('dragleave', hideDropZone);
+		dropZone.addEventListener('drop', handleDrop);
+		
+		// 处理文件
+		function processFile(file) {
+			if (file.size > 0x2800) {
+				file = file.slice(0, 0x2800);
+			}
+			
+			file.arrayBuffer().then(buffer => {
+				try {
+					var data = icf_decrypt(new Uint8Array(buffer));
+					var error = icf_sanity_error(data);
+					
+					if (error) {
+						errmsg.innerText = '文件解析错误: ' + error;
+						displayContent(['! ' + error]);
+					} else {
+						var entries = icf_decode(data);
+						displayContent(entries);
+						errmsg.innerText = '';
+					}
+				} catch (err) {
+					errmsg.innerText = '处理文件时出错: ' + err.message;
+					console.error(err);
+				}
+			}).catch(err => {
+				errmsg.innerText = '读取文件失败: ' + err.message;
+			});
+		}
+		
+		// 显示内容
+		function displayContent(lines) {
+			viewer.innerHTML = '';
+			
+			if (!lines || lines.length === 0) {
+				viewer.innerHTML = `
+					<div class="empty-state">
+						<p>文件内容为空</p>
+					</div>
+				`;
+				return;
+			}
+			
+			lines.forEach((line, index) => {
+				const li = document.createElement('li');
+				li.innerText = line;
+				if (line && line.toString().startsWith('!')) {
+					li.className = 'error';
+				}
+				viewer.appendChild(li);
+			});
+		}
+	</script>
+</body>
+</html>
