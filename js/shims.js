@@ -60,7 +60,6 @@
       renderCCBGamesPage: '→ initSiteAdminPage'
     };
     try {
-      console.info('[shims] 已加载。映射：', map);
     } catch (_) {}
   }
 })(typeof window !== 'undefined' ? window : globalThis);

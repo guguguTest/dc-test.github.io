@@ -15,7 +15,6 @@ const HomeAdsManager = {
    * 重置状态
    */
   reset() {
-    console.log('[广告系统] 重置状态');
     this.loaded = false;
     this.loading = false;
   },
@@ -28,12 +27,10 @@ const HomeAdsManager = {
     const timeSinceLastLoad = now - this.lastLoadTime;
     
     if (this.loading) {
-      console.log('[广告系统] 正在加载中,跳过');
       return false;
     }
     
     if (timeSinceLastLoad < this.MIN_LOAD_INTERVAL) {
-      console.log('[广告系统] 加载间隔过短,跳过');
       return false;
     }
     
@@ -63,7 +60,6 @@ const HomeAdsManager = {
 function clearAllAdvertisements() {
   const existingAds = document.querySelectorAll('.home-advertisements');
   if (existingAds.length > 0) {
-    console.log(`[广告系统] 清除 ${existingAds.length} 个现有广告区`);
     existingAds.forEach(ad => ad.remove());
     return true;
   }
@@ -75,31 +71,28 @@ function clearAllAdvertisements() {
  * @param {boolean} forceReload - 是否强制重新加载
  */
 async function loadHomeAdvertisements(forceReload = false) {
-  console.log('[广告系统] loadHomeAdvertisements 被调用, forceReload:', forceReload);
+
   
   // 检查是否在首页
   const hash = window.location.hash;
   const isHomePage = hash === '#/home' || hash === '' || hash === '#/';
   
   if (!isHomePage) {
-    console.log('[广告系统] 不在首页,跳过加载');
     return;
   }
   
   // 检查公告容器是否存在
   const announcementsContainer = document.getElementById('announcements-container');
   if (!announcementsContainer) {
-    console.log('[广告系统] 未找到公告容器,跳过加载');
     return;
   }
   
   // 检查刷新标记
   const needsRefresh = localStorage.getItem('homeAdsNeedRefresh') === 'true';
-  console.log('[广告系统] 刷新标记:', needsRefresh, '强制重载:', forceReload);
+
   
   // 如果需要刷新或强制重载,先清除所有广告和状态
   if (needsRefresh || forceReload) {
-    console.log('[广告系统] 需要刷新,清除旧广告和状态');
     clearAllAdvertisements();
     HomeAdsManager.reset();
     localStorage.removeItem('homeAdsNeedRefresh');
@@ -107,13 +100,11 @@ async function loadHomeAdvertisements(forceReload = false) {
   
   // 如果已加载且不需要刷新,跳过
   if (HomeAdsManager.loaded && !needsRefresh && !forceReload) {
-    console.log('[广告系统] 广告已加载且无需刷新,跳过');
     // 但要确保广告真的存在
     const existingAds = document.querySelector('.home-advertisements');
     if (existingAds) {
       return;
     } else {
-      console.log('[广告系统] 状态显示已加载但广告不存在,重置状态');
       HomeAdsManager.reset();
     }
   }
@@ -127,26 +118,21 @@ async function loadHomeAdvertisements(forceReload = false) {
   HomeAdsManager.startLoading();
   
   try {
-    console.log('[广告系统] 开始请求广告数据');
     const response = await fetch('https://api.am-all.com.cn/api/verification/active-ads');
     
     if (!response.ok) {
-      console.error('[广告系统] 获取广告失败,HTTP状态:', response.status);
       HomeAdsManager.finishLoading(false);
       return;
     }
     
     const data = await response.json();
-    console.log('[广告系统] 获取到广告数据:', data);
     
     if (!data.advertisements || data.advertisements.length === 0) {
-      console.log('[广告系统] 没有活跃广告');
       HomeAdsManager.finishLoading(true);
       return;
     }
     
     const ads = data.advertisements;
-    console.log('[广告系统] 准备显示', ads.length, '个广告');
     
     // 再次确保没有重复的广告区
     clearAllAdvertisements();
@@ -173,12 +159,9 @@ async function loadHomeAdvertisements(forceReload = false) {
     
     // 插入广告
     announcementsContainer.insertAdjacentHTML('afterend', adsHTML);
-    console.log('[广告系统] 广告已成功插入页面');
-    
     HomeAdsManager.finishLoading(true);
     
   } catch (error) {
-    console.error('[广告系统] 加载首页广告失败:', error);
     HomeAdsManager.finishLoading(false);
   }
 }
@@ -187,7 +170,6 @@ async function loadHomeAdvertisements(forceReload = false) {
  * 带防抖的加载函数
  */
 function loadHomeAdvertisementsDebounced(forceReload = false, delay = 300) {
-  console.log('[广告系统] 防抖加载,延迟:', delay, 'ms');
   
   // 清除之前的计时器
   if (HomeAdsManager.loadTimer) {
@@ -241,7 +223,6 @@ async function handleAdClick(adId, shopType) {
     }
     
   } catch (error) {
-    console.error('处理广告点击失败:', error);
     showErrorMessage('操作失败,请稍后重试');
   }
 }
@@ -316,7 +297,6 @@ async function showAdQRCode(adId) {
     showAdQRCodeDirect(ad);
     
   } catch (error) {
-    console.error('显示二维码失败:', error);
     showErrorMessage('获取店铺信息失败');
   }
 }
@@ -343,7 +323,6 @@ async function recordAdClick(adId) {
       method: 'POST'
     });
   } catch (error) {
-    console.error('记录广告点击失败:', error);
   }
 }
 
@@ -351,7 +330,6 @@ async function recordAdClick(adId) {
  * 强制刷新首页广告
  */
 function refreshHomeAdvertisements() {
-  console.log('[广告系统] 强制刷新');
   clearAllAdvertisements();
   HomeAdsManager.reset();
   localStorage.removeItem('homeAdsNeedRefresh');
@@ -362,7 +340,6 @@ function refreshHomeAdvertisements() {
  * 标记首页广告需要刷新
  */
 function markHomeAdsForRefresh() {
-  console.log('[广告系统] 标记需要刷新');
   localStorage.setItem('homeAdsNeedRefresh', 'true');
   // 同时重置加载状态,确保下次可以重新加载
   HomeAdsManager.reset();
@@ -390,7 +367,6 @@ if (typeof window !== 'undefined') {
   
   // 1. 页面加载完成
   document.addEventListener('DOMContentLoaded', () => {
-    console.log('[广告系统] DOMContentLoaded');
     // 使用防抖加载
     loadHomeAdvertisementsDebounced(false, 800);
   });
@@ -398,19 +374,15 @@ if (typeof window !== 'undefined') {
   // 2. 路由变化 - 这是最重要的
   window.addEventListener('hashchange', () => {
     const hash = window.location.hash;
-    console.log('[广告系统] hashchange:', hash);
     
     // 只在切换到首页时处理
     if (hash === '#/home' || hash === '' || hash === '#/') {
-      console.log('[广告系统] 切换到首页');
       
       // 检查是否需要刷新
       const needsRefresh = localStorage.getItem('homeAdsNeedRefresh') === 'true';
-      console.log('[广告系统] 需要刷新:', needsRefresh);
       
       if (needsRefresh) {
         // 需要刷新 - 清除旧的并重新加载
-        console.log('[广告系统] 执行强制刷新');
         clearAllAdvertisements();
         HomeAdsManager.reset();
         localStorage.removeItem('homeAdsNeedRefresh');
@@ -418,24 +390,18 @@ if (typeof window !== 'undefined') {
       } else {
         // 不需要刷新 - 如果还没加载则加载
         if (!HomeAdsManager.loaded) {
-          console.log('[广告系统] 首次加载');
           loadHomeAdvertisementsDebounced(false, 400);
         } else {
-          console.log('[广告系统] 已加载,跳过');
         }
       }
     } else {
       // 离开首页 - 重置状态,但保留刷新标记
-      console.log('[广告系统] 离开首页,重置状态');
       HomeAdsManager.loaded = false;
     }
   });
   
   // 3. 全局手动刷新函数
   window.forceRefreshHomeAds = function() {
-    console.log('[广告系统] 手动强制刷新');
     refreshHomeAdvertisements();
   };
-  
-  console.log('[广告系统] 事件监听器已初始化');
 }

@@ -1,6 +1,3 @@
-// js/minigame.js - 小游戏系统前端代码
-
-// 游戏配置
 const MINIGAMES = {
   irodori: {
     id: 'irodori',
@@ -351,8 +348,6 @@ function playMinigame(gameId) {
     return;
   }
 
-  console.log('开始游戏:', gameId, game);
-
   // 保存当前游戏ID到sessionStorage,供minigame-play页面使用
   sessionStorage.setItem('currentGameId', gameId);
   
@@ -372,9 +367,6 @@ function renderMinigamePlayPage(params) {
   if (!gameId) {
     gameId = sessionStorage.getItem('currentGameId');
   }
-  
-  console.log('渲染游戏页面,gameId:', gameId);
-  
   const game = MINIGAMES[gameId];
   
   if (!game) {

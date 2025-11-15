@@ -3,8 +3,6 @@
 (function(global) {
   'use strict';
 
-  console.log('Loading message fix patch...');
-
   // ==================== 修复1：消息下拉窗口重新打开问题 ====================
   
   // 监听消息图标点击事件（使用事件委托，避免覆盖原有事件）
@@ -22,7 +20,6 @@
       // 确保移除可能存在的 display: none
       if (dropdown.style.display === 'none') {
         dropdown.style.display = '';
-        console.log('Removed display:none from dropdown');
       }
     }
   }, true); // 使用捕获阶段，确保在其他事件处理之前执行
@@ -61,7 +58,6 @@
     try {
       // 检查 EmojiCache 是否存在
       if (!window.EmojiCache) {
-        console.log('EmojiCache not loaded, using default values');
         updateCacheDisplayDefault();
         return;
       }
@@ -74,7 +70,6 @@
       // 获取统计数据
       if (window.EmojiCache.getStats) {
         const stats = await window.EmojiCache.getStats();
-        console.log('Cache stats loaded:', stats);
         if (stats) {
           updateCacheDisplay(stats);
         } else {
@@ -145,7 +140,6 @@
     const cacheCard = document.getElementById('emoji-cache-card');
     
     if (settingsContainer && cacheCard) {
-      console.log('Settings page detected, auto-refreshing cache stats...');
       
       // 静默刷新缓存统计（不显示任何提示）
       refreshCacheStatsSilently();
@@ -215,13 +209,9 @@
     }, 300);
   }
 
-  console.log('Message fix patch loaded successfully');
-
   // ==================== 修复3：聊天窗口高度和调整大小修复 ====================
   (function() {
     'use strict';
-    
-    console.log('Loading chat window resize fix...');
     
     // 监听聊天窗口创建
     const chatObserver = new MutationObserver((mutations) => {
@@ -250,7 +240,6 @@
       const isMobile = modal.classList.contains('mobile-centered');
       
       if (isPCDraggable) {
-        console.log('Fixing PC draggable chat window...');
         
         // 获取当前高度
         const currentHeight = parseInt(container.style.height);
@@ -260,7 +249,6 @@
           container.style.width = '450px';
           container.style.height = '550px';  // 强制设置合理高度
           container.dataset.initialized = 'true';
-          console.log('Set chat window to default height: 550px');
         }
         
         // 设置尺寸限制
@@ -292,7 +280,6 @@
         addManualResize(container);
         
       } else if (isMobile) {
-        console.log('Fixing mobile chat window...');
         
         const viewportHeight = window.innerHeight;
         const maxHeight = Math.min(600, viewportHeight - 100);
@@ -351,9 +338,7 @@
     function addManualResize(container) {
       // 检查是否已经添加
       if (container.querySelector('.manual-resize-handle')) return;
-      
-      console.log('Adding manual resize functionality...');
-      
+   
       // 创建调整手柄
       const handle = document.createElement('div');
       handle.className = 'manual-resize-handle';
@@ -443,15 +428,11 @@
     setTimeout(() => {
       clearInterval(checkInterval);
     }, 5000);
-    
-    console.log('Chat window resize fix loaded');
   })();
 
   // ==================== 修复4：iframe高度自适应问题 ====================
   (function() {
     'use strict';
-    
-    console.log('Loading iframe height fix...');
     
     // 强制修复所有iframe
     function forceFixAllIframes() {
@@ -516,8 +497,6 @@
           const finalHeight = Math.max(600, contentHeight + 50);
           iframe.style.height = finalHeight + 'px';
           iframe.style.minHeight = '600px';
-          
-          console.log(`Iframe height adjusted to ${finalHeight}px`);
         } else {
           // 无法访问内容，使用默认高度
           iframe.style.height = '650px';
@@ -525,7 +504,6 @@
         }
       } catch (e) {
         // 跨域iframe，使用较大的默认高度
-        console.log('Cross-origin iframe, using large default height');
         iframe.style.height = '650px';
         iframe.style.minHeight = '600px';
       }
@@ -665,8 +643,6 @@
         clearInterval(checkInterval);
       }
     }, 1000);
-    
-    console.log('Iframe height fix loaded');
   })();
 
 })(window);

@@ -813,7 +813,6 @@ async function updateSidebarVisibility(user) {
   const setDisplay = (el, show) => { 
     if (el) {
       el.style.display = show ? '' : 'none';
-      console.log(`设置元素 ${el.id || el.className} 显示: ${show}`);
     }
   };
 
@@ -863,7 +862,6 @@ async function updateSidebarVisibility(user) {
     const results = await Promise.all(visibilityPromises);
     results.forEach(result => {
       pageVisibility[result.pageId] = result.visible;
-      console.log(`页面 ${result.pageId} 可见性: ${result.visible}`);
     });
   }
 
@@ -961,9 +959,6 @@ async function updateSidebarVisibility(user) {
 						   'verification-admin'];
 		const hasVisibleAdmin = adminPages.some(p => pageVisibility[p]);
 		
-		console.log('管理页面可见性:', adminPages.map(p => `${p}: ${pageVisibility[p]}`));
-		console.log('是否显示管理分类:', hasVisibleAdmin);
-		
 		setDisplay(adminTitle, hasVisibleAdmin);
 		setDisplay(adminNav, hasVisibleAdmin);
 		
@@ -1033,11 +1028,8 @@ function checkLoginStatus() {
     
     fetchUserInfo(token)
       .then(() => {
-        // fetchUserInfo 已经调用了 updateSidebarVisibility
-        console.log('用户信息加载完成，侧边栏已更新');
       })
       .catch(error => {
-        console.error('检查登录状态失败:', error);
         showAuthLinks();
       })
       .finally(() => {
@@ -3284,7 +3276,6 @@ function initCursorSettingsManually() {
 			try {
 			  // 检查是否需要刷新
 			  const needsRefresh = localStorage.getItem('homeAdsNeedRefresh') === 'true';
-			  console.log('[SPA] 加载首页，需要刷新:', needsRefresh);
 			  
 			  if (needsRefresh) {
 				// 需要刷新 - 强制重新加载

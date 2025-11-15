@@ -597,8 +597,6 @@ async function saveDownload() {
       const password = document.getElementById(`link-password-${linkId}`)?.value || '';
       const fileId = document.getElementById(`link-file-id-${linkId}`)?.value || '';
       
-      console.log(`链接 ${linkId}:`, { method, name, url, password, fileId });
-      
       // 修复：对于直链方式，即使URL为空，只要有fileId就应该收集
       if (method === 'direct' && fileId) {
         const link = {
@@ -772,5 +770,3 @@ function showErrorMessage(message) {
     alert('错误: ' + message);
   }
 }
-
-console.log('✅ 下载管理功能已加载（修复版 v2.1）');

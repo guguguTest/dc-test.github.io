@@ -3,8 +3,6 @@
 (function(global) {
   'use strict';
 
-  console.log('Loading emoji cache system...');
-
   // ==================== 缓存配置 ====================
   const CACHE_CONFIG = {
     dbName: 'EmojiCacheDB',

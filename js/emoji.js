@@ -1827,7 +1827,4 @@
   } else {
     setTimeout(initEmojiSystem, 100);
   }
-
-  console.log('Emoji system loaded successfully (merged version)');
-
 })(window);

@@ -103,14 +103,6 @@ async function loadDownloadContent() {
     
     console.log('📡 下载内容响应状态:', response.status);
     
-    // 调试输出
-    console.log('API响应详情:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.url,
-      headers: Object.fromEntries([...response.headers])
-    });
-    
     if (response.status === 401) {
       // Token 无效或过期
       localStorage.removeItem('token');
@@ -385,7 +377,6 @@ async function loadDownloadDetail(downloadId) {
     }
     
     const download = await response.json();
-    console.log('✅ 下载详情数据:', download);
     
     // 先加载页面，等待页面渲染完成后再填充内容
     loadPage('download-detail');
@@ -422,7 +413,6 @@ function renderDownloadDetail(download, retryCount = 0) {
   
   // 检查元素是否存在
   if (!detailTitle || !detailLastUpdate || !container) {
-    console.error('❌ 必要的DOM元素未找到，尝试重试', retryCount);
     
     if (retryCount < 5) {
       // 稍后重试
@@ -573,25 +563,16 @@ async function handleDirectDownload(e) {
         'Content-Type': 'application/json'
       }
     });
-    
-    console.log('📊 令牌请求响应状态:', tokenResponse.status);
-    
+
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json();
-      console.error('❌ 获取令牌失败:', errorData);
       throw new Error(errorData.error || '获取下载令牌失败');
     }
     
     const tokenData = await tokenResponse.json();
-    console.log('📦 收到令牌数据');
-    
     if (!tokenData.success || !tokenData.downloadUrl) {
-      console.error('❌ 令牌数据无效:', tokenData);
       throw new Error('下载令牌无效');
     }
-    
-    console.log('✅ 步骤2: 下载令牌获取成功');
-    console.log('📝 原始下载URL:', tokenData.downloadUrl);
     
     // 更新按钮状态
     button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>下载中...';
@@ -696,11 +677,8 @@ async function handleDirectDownload(e) {
       }
     }
     
-    console.log('📦 文件名:', filename);
-    
     // 将响应转为Blob
     const blob = await downloadResponse.blob();
-    console.log('📦 文件大小:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
     
     // 创建Blob URL并触发下载
     const blobUrl = window.URL.createObjectURL(blob);
@@ -709,15 +687,13 @@ async function handleDirectDownload(e) {
     a.download = filename;
     a.style.display = 'none';
     document.body.appendChild(a);
-    
-    console.log('🖱️ 触发下载...');
+
     a.click();
     
     // 清理Blob URL
     setTimeout(() => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(blobUrl);
-      console.log('🧹 清理完成');
     }, 100);
     
     // 恢复按钮状态
@@ -725,11 +701,9 @@ async function handleDirectDownload(e) {
       button.innerHTML = originalHTML;
       button.classList.remove('downloading');
       button.style.pointerEvents = '';
-      console.log('🔄 按钮状态已恢复');
     }, 1000);
     
     showSuccessMessage('下载已开始，请查看浏览器下载');
-    console.log('🎉 下载流程完成');
     
   } catch (error) {
     console.error('❌ 下载错误:', error);
@@ -751,9 +725,3 @@ window.loadDownloadContent = loadDownloadContent;
 window.renderDownloadContent = renderDownloadContent;
 window.loadDownloadDetail = loadDownloadDetail;
 window.handleDirectDownload = handleDirectDownload;
-
-console.log('✅ 下载功能已加载（v3.1 最终修复版 - Token清理 + Blob下载）');
-console.log('✅ initDownloadPage 函数已注册到 window 对象');
-console.log('ℹ️ handleDirectDownload 已优化：');
-console.log('   - 使用Blob下载避免页面导航');
-console.log('   - 自动清理Token中的异常字符（:1等）');

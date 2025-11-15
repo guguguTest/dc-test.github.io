@@ -9,8 +9,8 @@
   let currentPostAuthorId = null;
   let postEditor = null;
   let replyEditor = null;
-  let currentRepliesCache = []; // 缓存当前帖子的回复列表
-  let currentUserInfo = {}; // 存储当前用户信息
+  let currentRepliesCache = [];
+  let currentUserInfo = {};
 
   // 初始化论坛
   function initForum() {
@@ -1087,14 +1087,9 @@ async function submitPost() {
   function processContent(content) {
     if (!content) return '';
     
-    console.log('=== processContent Debug ===');
-    console.log('Input:', content);
-    
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = content;
     let decodedContent = tempDiv.innerHTML;
-    
-    console.log('Decoded:', decodedContent);
     
     // 处理表情标记
     const emojiRegex = /\[emoji:(\d+):((?:https?:)?\/[^\]]+?)(?::([^\]]+?))?\]/g;
@@ -1102,13 +1097,10 @@ async function submitPost() {
     let hasEmoji = false;
     let processedContent = decodedContent.replace(emojiRegex, function(match, emojiId, imagePath, audioPath) {
       hasEmoji = true;
-      console.log('Found emoji:', { match, emojiId, imagePath, audioPath });
       
       imagePath = imagePath.trim();
       const API_BASE_URL = window.API_BASE_URL || 'https://api.am-all.com.cn';
       const fullImagePath = imagePath.startsWith('http') ? imagePath : `${API_BASE_URL}${imagePath}`;
-      
-      console.log('Image URL:', fullImagePath);
       
       let audioAttr = '';
       if (audioPath) {
@@ -1120,13 +1112,10 @@ async function submitPost() {
       
       const emojiHtml = `<img src="${fullImagePath}" class="emoji-message-img" ${audioAttr} style="max-width: 120px; max-height: 120px; vertical-align: middle; border-radius: 8px; margin: 0 4px;" alt="表情">`;
       
-      console.log('Generated HTML:', emojiHtml);
-      
       return emojiHtml;
     });
     
     if (hasEmoji) {
-      console.log('After emoji processing:', processedContent);
     }
     
     // 处理图片标记
@@ -1166,10 +1155,6 @@ async function submitPost() {
         return `<span class="mention" data-username="${username}">@${username}</span>`;
       }
     );
-    
-    console.log('Final output:', processedContent);
-    console.log('=== End processContent Debug ===');
-    
     return processedContent;
   }
 

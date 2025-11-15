@@ -220,7 +220,7 @@
 	
 	<div class="container">
 		<div class="header">
-			<h1>ICF 文件查看器</h1>
+			<h1>ICF Viewer</h1>
 			<p>拖放 ICF 文件或点击"选择文件"按钮来查看内容</p>
 		</div>
 		
@@ -246,9 +246,6 @@
 	</div>
 
 	<script>
-		// ========== ICF 解析功能 ==========
-		
-		// CRC32 计算
 		function crc32(data, crc) {
 			var table = crc32.table;
 			if (!table) {
@@ -274,7 +271,6 @@
 			return crc[0];
 		}
 
-		// 十六进制工具函数
 		function hex2bin(text) {
 			var len = text.length >> 1;
 			var result = new Uint8Array(len);
@@ -298,11 +294,9 @@
 			return val.toString();
 		}
 
-		// ICF 密钥和 IV
 		var icf_key = hex2bin('09ca5efd30c9aaef3804d0a7e3fa7120');
 		var icf_iv  = hex2bin('b155c22c2e7f0491fa7f0fdc217aff90');
 
-		// ICF 完整性检查
 		function icf_sanity_error(data) {
 			if (!data) return 'Invalid input';
 			var buffer = data.buffer;
@@ -331,7 +325,6 @@
 			return null;
 		}
 
-		// ICF 解密
 		function icf_decrypt(data) {
 			if (data.length & 0xf) {
 				console.error('Attempted to decrypt non-full data block');
@@ -341,20 +334,17 @@
 			return aesCbc.decrypt(data);
 		}
 
-		// 版本解码
 		function icf_decodeVersion(vals, zeropad) {
 			var major = (vals[3] << 8) | vals[2];
 			if (zeropad) major = dec4(major);
 			return major + '.' + dec2(vals[1]) + '.' + dec2(vals[0]);
 		}
 
-		// 时间解码
 		function icf_decodeTime(vals) {
 			var year = (vals[1] << 8) | vals[0];
 			return dec4(year) + dec2(vals[2]) + dec2(vals[3]) + dec2(vals[4]) + dec2(vals[5]) + dec2(vals[6]);
 		}
 
-		// ICF 内容解码
 		function icf_decode(data) {
 			var buffer = data.buffer;
 			var entries = [];

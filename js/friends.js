@@ -89,8 +89,6 @@
     
     // 每30秒发送一次心跳
     heartbeatInterval = setInterval(sendHeartbeat, 30000);
-    
-    console.log('心跳机制已启动');
   }
 
   async function sendHeartbeat() {
