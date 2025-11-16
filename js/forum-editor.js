@@ -19,6 +19,9 @@ class ForumEditor {
   }
 
   setupToolbar() {
+    // 清空工具栏，防止重复初始化时按钮累加
+    this.toolbar.innerHTML = '';
+    
     this.createFontSizeSelector();
     this.createHeadingSelector();
     
@@ -811,11 +814,16 @@ class ForumEditor {
             progressContainer.style.display = 'none';
             progressBar.style.width = '0%';
             progressPercent.textContent = '0%';
+            
+            // 在上传区域显示成功提示
+            const uploadArea = uploader.querySelector('.upload-area');
+            const successMsg = document.createElement('div');
+            successMsg.style.cssText = 'color: #10b981; font-size: 14px; margin-top: 8px; text-align: center;';
+            successMsg.innerHTML = '<i class="fas fa-check-circle"></i> 上传成功！点击下方"插入"按钮将图片插入到编辑器';
+            uploadArea.appendChild(successMsg);
+            
+            setTimeout(() => successMsg.remove(), 3000);
           }, 500);
-          
-          if (typeof showSuccessMessage === 'function') {
-            showSuccessMessage('图片上传成功!');
-          }
         } else {
           throw new Error('上传失败');
         }
@@ -917,8 +925,17 @@ class ForumEditor {
     
     this.content.dispatchEvent(new Event('input', { bubbles: true }));
     
-    if (typeof showSuccessMessage === 'function') {
-      showSuccessMessage('图片已插入编辑器!');
+    // 在上传窗口显示插入成功提示
+    if (this.imageUploader && this.imageUploader.style.display === 'flex') {
+      const uploadArea = this.imageUploader.querySelector('.upload-area');
+      if (uploadArea) {
+        const successMsg = document.createElement('div');
+        successMsg.style.cssText = 'color: #10b981; font-size: 14px; margin-top: 8px; text-align: center; font-weight: 600;';
+        successMsg.innerHTML = '<i class="fas fa-check-circle"></i> 图片已插入编辑器！';
+        uploadArea.appendChild(successMsg);
+        
+        setTimeout(() => successMsg.remove(), 2000);
+      }
     }
   }
 
@@ -1464,9 +1481,9 @@ class ForumEditor {
     });
     
     html = html.replace(/<img[^>]*class="editor-uploaded-image"[^>]*>/gi, (match) => {
-      const srcMatch = match.match(/data-original-src="([^"]+)"/);
-      if (srcMatch) {
-        return `[image:${srcMatch[1]}]`;
+      const pathMatch = match.match(/data-image-path="([^"]+)"/);
+      if (pathMatch) {
+        return `[image:${pathMatch[1]}]`;
       }
       return match;
     });

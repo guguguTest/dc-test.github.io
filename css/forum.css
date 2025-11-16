@@ -850,6 +850,45 @@
   white-space: nowrap;
 }
 
+.reply-author-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.reply-author-info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.reply-author-info-item:hover {
+  background: #e5e7eb;
+}
+
+.reply-author-info-item i {
+  font-size: 10px;
+  color: #9ca3af;
+  min-width: 12px;
+  text-align: center;
+}
+
+.reply-author-info-item span {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+}
+
 .reply-author-badge {
   font-size: 12px;
   padding: 4px 8px;

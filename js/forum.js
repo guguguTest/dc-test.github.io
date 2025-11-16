@@ -760,6 +760,26 @@ async function submitPost() {
               <div class="reply-author-name">${escapeHtml(post.author_name)}</div>
               <div class="reply-author-rank">${getUserRankText(post.user_rank)}</div>
               
+              <!-- 用户详细信息 -->
+              <div class="reply-author-info">
+                <div class="reply-author-info-item">
+                  <i class="fas fa-id-card"></i>
+                  <span>UID: ${post.uid || post.user_id}</span>
+                </div>
+                ${post.registered_at ? `
+                  <div class="reply-author-info-item">
+                    <i class="fas fa-user-plus"></i>
+                    <span title="注册时间">${formatDate(post.registered_at)}</span>
+                  </div>
+                ` : ''}
+                ${post.last_login_at ? `
+                  <div class="reply-author-info-item">
+                    <i class="fas fa-clock"></i>
+                    <span title="最后登录">${formatTime(post.last_login_at)}</span>
+                  </div>
+                ` : ''}
+              </div>
+              
               <!-- 特殊用户组显示 -->
               ${post.rankSp === 2 ? `
                 <div class="reply-author-badge special-rank">
@@ -874,6 +894,26 @@ async function submitPost() {
             
             <div class="reply-author-name">${escapeHtml(reply.author_name)}</div>
             <div class="reply-author-rank">${getUserRankText(reply.user_rank)}</div>
+            
+            <!-- 用户详细信息 -->
+            <div class="reply-author-info">
+              <div class="reply-author-info-item">
+                <i class="fas fa-id-card"></i>
+                <span>UID: ${reply.uid || reply.user_id}</span>
+              </div>
+              ${reply.registered_at ? `
+                <div class="reply-author-info-item">
+                  <i class="fas fa-user-plus"></i>
+                  <span title="注册时间">${formatDate(reply.registered_at)}</span>
+                </div>
+              ` : ''}
+              ${reply.last_login_at ? `
+                <div class="reply-author-info-item">
+                  <i class="fas fa-clock"></i>
+                  <span title="最后登录">${formatTime(reply.last_login_at)}</span>
+                </div>
+              ` : ''}
+            </div>
             
             <!-- 特殊用户组显示 -->
             ${reply.rankSp === 2 ? `
@@ -1556,6 +1596,15 @@ async function submitPost() {
     if (diff < 2592000) return Math.floor(diff / 86400) + '天前';
 
     return date.toLocaleDateString();
+  }
+
+  function formatDate(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   function getUserRankText(rank) {

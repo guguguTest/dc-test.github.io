@@ -805,14 +805,15 @@ renderAnnouncements(announcements) {
       editorTitle.textContent = this.isEditing ? '编辑公告' : '新建公告';
     }
     
-    // 初始化论坛编辑器
-    if (!this.forumEditor && editorContainer) {
+    // 每次都重新初始化论坛编辑器，避免引用旧的DOM元素
+    if (editorContainer) {
+      // 先清理旧的编辑器实例
+      if (this.forumEditor) {
+        this.forumEditor = null;
+      }
+      
+      // 重新创建编辑器实例
       this.forumEditor = new ForumEditor(editorContainer);
-    }
-    
-    // 清空编辑器内容
-    if (this.forumEditor) {
-      this.forumEditor.clear();
     }
     
     if (announcement) {
