@@ -735,13 +735,48 @@ async function submitPost() {
           <!-- 楼主帖子 -->
           <div class="reply-item" id="floor-0">
             <div class="reply-author">
+              <!-- PC端：头像容器,添加光环和认证图标 -->
+              <div class="reply-author-avatar-container">
+                <img src="${post.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
+                
+                <!-- 彩虹光环特效 (user_rank === 5) -->
+                ${post.user_rank === 5 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
+                
+                <!-- 账户认证图标 (右下角) -->
+                ${post.account_auth === 1 ? `
+                  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
+                       class="forum-auth-icon" 
+                       title="个人认证" 
+                       alt="个人认证">
+                ` : ''}
+                ${post.account_auth === 2 ? `
+                  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
+                       class="forum-auth-icon" 
+                       title="官方认证" 
+                       alt="官方认证">
+                ` : ''}
+              </div>
+              
+              <!-- PC端：昵称 -->
+              <div class="reply-author-name">${escapeHtml(post.author_name)}</div>
+              
+              <!-- PC端：用户组 -->
+              <div class="reply-author-rank">${getUserRankText(post.user_rank)}</div>
+              
+              <!-- PC端：特殊用户组显示 -->
+              ${post.rankSp === 2 ? `
+                <div class="reply-author-badge special-rank">
+                  <i class="fas fa-crown"></i> 协作管理员
+                </div>
+              ` : ''}
+              
               <!-- 移动端：头像和昵称/用户组的横向布局 -->
               <div class="reply-author-header-mobile">
                 <!-- 头像容器,添加光环和认证图标 -->
-                <div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
+                <div class="reply-author-avatar-container">
                   <img src="${post.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
                   
-                  <!-- 彩虹光环特效 (rankSp === 1) -->
+                  <!-- 彩虹光环特效 (user_rank === 5) -->
                   ${post.user_rank === 5 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
                   
                   <!-- 账户认证图标 (右下角) -->
@@ -876,13 +911,50 @@ async function submitPost() {
       const replyHtml = `
         <div class="reply-item ${isAccepted ? 'reply-accepted' : ''}" id="floor-${reply.floor_number}">
           <div class="reply-author">
+            <!-- PC端：头像容器,添加光环和认证图标 -->
+            <div class="reply-author-avatar-container">
+              <img src="${reply.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
+              
+              <!-- 彩虹光环特效 (user_rank === 5) -->
+              ${reply.user_rank === 5 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
+              
+              <!-- 账户认证图标 (右下角) -->
+              ${reply.account_auth === 1 ? `
+                <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
+                     class="forum-auth-icon" 
+                     title="个人认证" 
+                     alt="个人认证">
+              ` : ''}
+              ${reply.account_auth === 2 ? `
+                <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
+                     class="forum-auth-icon" 
+                     title="官方认证" 
+                     alt="官方认证">
+              ` : ''}
+            </div>
+            
+            <!-- PC端：昵称 -->
+            <div class="reply-author-name">${escapeHtml(reply.author_name)}</div>
+            
+            <!-- PC端：用户组 -->
+            <div class="reply-author-rank">${getUserRankText(reply.user_rank)}</div>
+            
+            <!-- PC端：特殊用户组和已采纳显示 -->
+            ${reply.rankSp === 2 ? `
+              <div class="reply-author-badge special-rank">
+                <i class="fas fa-crown"></i> 协作管理员
+              </div>
+            ` : ''}
+            
+            ${isAccepted ? '<div class="reply-author-badge accepted"><i class="fas fa-check-circle"></i> 已采纳</div>' : ''}
+            
             <!-- 移动端：头像和昵称/用户组的横向布局 -->
             <div class="reply-author-header-mobile">
               <!-- 头像容器,添加光环和认证图标 -->
-              <div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
+              <div class="reply-author-avatar-container">
                 <img src="${reply.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
                 
-                <!-- 彩虹光环特效 (rankSp === 1) -->
+                <!-- 彩虹光环特效 (user_rank === 5) -->
                 ${reply.user_rank === 5 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
                 
                 <!-- 账户认证图标 (右下角) -->

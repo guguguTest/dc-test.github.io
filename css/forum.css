@@ -906,13 +906,43 @@
   gap: 4px;
 }
 
-/* 桌面端隐藏移动端专用容器 */
-.reply-author-header-mobile {
-  display: none;
+/* 桌面端隐藏移动端专用容器,显示PC端布局 */
+@media (min-width: 769px) {
+  .reply-author-header-mobile {
+    display: none !important;
+  }
+  
+  .reply-author-name-group-mobile {
+    display: none !important;
+  }
 }
 
-.reply-author-name-group-mobile {
-  display: none;
+/* 移动端隐藏PC端直接子元素,显示移动端布局 */
+@media (max-width: 768px) {
+  .reply-author-header-mobile {
+    display: flex !important;
+  }
+  
+  .reply-author-name-group-mobile {
+    display: flex !important;
+  }
+  
+  /* 隐藏PC端的直接子元素 */
+  .reply-author > .reply-author-avatar-container:not(.reply-author-header-mobile .reply-author-avatar-container) {
+    display: none;
+  }
+  
+  .reply-author > .reply-author-name:not(.reply-author-header-mobile *) {
+    display: none;
+  }
+  
+  .reply-author > .reply-author-rank:not(.reply-author-header-mobile *) {
+    display: none;
+  }
+  
+  .reply-author > .reply-author-badge:not(.reply-author-header-mobile *) {
+    display: none;
+  }
 }
 
 .reply-content-wrapper {
@@ -1317,20 +1347,20 @@
     min-width: 0;
   }
   
-  /* 移动端：隐藏桌面端的直接子元素昵称和用户组 */
-  .reply-author > .reply-author-avatar-container {
+  /* 移动端：隐藏PC端的直接子元素(不在mobile容器内的) */
+  .reply-author > .reply-author-avatar-container:not(.reply-author-header-mobile .reply-author-avatar-container) {
     display: none;
   }
   
-  .reply-author > .reply-author-name {
+  .reply-author > .reply-author-name:not(.reply-author-header-mobile .reply-author-name) {
     display: none;
   }
   
-  .reply-author > .reply-author-rank {
+  .reply-author > .reply-author-rank:not(.reply-author-header-mobile .reply-author-rank) {
     display: none;
   }
   
-  .reply-author > .reply-author-badge {
+  .reply-author > .reply-author-badge:not(.reply-author-header-mobile .reply-author-badge) {
     display: none;
   }
   
