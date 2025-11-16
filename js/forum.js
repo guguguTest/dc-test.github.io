@@ -735,30 +735,43 @@ async function submitPost() {
           <!-- 楼主帖子 -->
           <div class="reply-item" id="floor-0">
             <div class="reply-author">
-              <!-- 头像容器,添加光环和认证图标 -->
-              <div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
-                <img src="${post.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
+              <!-- 移动端：头像和昵称/用户组的横向布局 -->
+              <div class="reply-author-header-mobile">
+                <!-- 头像容器,添加光环和认证图标 -->
+                <div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
+                  <img src="${post.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
+                  
+                  <!-- 彩虹光环特效 (rankSp === 1) -->
+                  ${post.user_rank === 5 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
+                  
+                  <!-- 账户认证图标 (右下角) -->
+                  ${post.account_auth === 1 ? `
+                    <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
+                         class="forum-auth-icon" 
+                         title="个人认证" 
+                         alt="个人认证">
+                  ` : ''}
+                  ${post.account_auth === 2 ? `
+                    <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
+                         class="forum-auth-icon" 
+                         title="官方认证" 
+                         alt="官方认证">
+                  ` : ''}
+                </div>
                 
-                <!-- 彩虹光环特效 (rankSp === 1) -->
-                ${post.user_rank === 5 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
-                
-                <!-- 账户认证图标 (右下角) -->
-                ${post.account_auth === 1 ? `
-                  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
-                       class="forum-auth-icon" 
-                       title="个人认证" 
-                       alt="个人认证">
-                ` : ''}
-                ${post.account_auth === 2 ? `
-                  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
-                       class="forum-auth-icon" 
-                       title="官方认证" 
-                       alt="官方认证">
-                ` : ''}
+                <!-- 昵称和用户组的垂直容器 -->
+                <div class="reply-author-name-group-mobile">
+                  <div class="reply-author-name">${escapeHtml(post.author_name)}</div>
+                  <div class="reply-author-rank">${getUserRankText(post.user_rank)}</div>
+                  
+                  <!-- 特殊用户组显示 -->
+                  ${post.rankSp === 2 ? `
+                    <div class="reply-author-badge special-rank">
+                      <i class="fas fa-crown"></i> 协作管理员
+                    </div>
+                  ` : ''}
+                </div>
               </div>
-              
-              <div class="reply-author-name">${escapeHtml(post.author_name)}</div>
-              <div class="reply-author-rank">${getUserRankText(post.user_rank)}</div>
               
               <!-- 用户详细信息 -->
               <div class="reply-author-info">
@@ -779,13 +792,6 @@ async function submitPost() {
                   </div>
                 ` : ''}
               </div>
-              
-              <!-- 特殊用户组显示 -->
-              ${post.rankSp === 2 ? `
-                <div class="reply-author-badge special-rank">
-                  <i class="fas fa-crown"></i> 协作管理员
-                </div>
-              ` : ''}
             </div>
             <div class="reply-content-wrapper">
               <div class="reply-meta">
@@ -870,30 +876,45 @@ async function submitPost() {
       const replyHtml = `
         <div class="reply-item ${isAccepted ? 'reply-accepted' : ''}" id="floor-${reply.floor_number}">
           <div class="reply-author">
-            <!-- 头像容器,添加光环和认证图标 -->
-            <div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
-              <img src="${reply.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
+            <!-- 移动端：头像和昵称/用户组的横向布局 -->
+            <div class="reply-author-header-mobile">
+              <!-- 头像容器,添加光环和认证图标 -->
+              <div class="reply-author-avatar-container" style="position: relative; display: inline-block;">
+                <img src="${reply.avatar || 'https://api.am-all.com.cn/avatars/default_avatar.png'}" class="reply-author-avatar" alt="avatar">
+                
+                <!-- 彩虹光环特效 (rankSp === 1) -->
+                ${reply.user_rank === 5 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
+                
+                <!-- 账户认证图标 (右下角) -->
+                ${reply.account_auth === 1 ? `
+                  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
+                       class="forum-auth-icon" 
+                       title="个人认证" 
+                       alt="个人认证">
+                ` : ''}
+                ${reply.account_auth === 2 ? `
+                  <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
+                       class="forum-auth-icon" 
+                       title="官方认证" 
+                       alt="官方认证">
+                ` : ''}
+              </div>
               
-              <!-- 彩虹光环特效 (rankSp === 1) -->
-              ${reply.user_rank === 5 ? '<div class="avatar-effect-rainbow-forum"></div>' : ''}
-              
-              <!-- 账户认证图标 (右下角) -->
-              ${reply.account_auth === 1 ? `
-                <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_1.png" 
-                     class="forum-auth-icon" 
-                     title="个人认证" 
-                     alt="个人认证">
-              ` : ''}
-              ${reply.account_auth === 2 ? `
-                <img src="https://oss.am-all.com.cn/asset/img/other/dc/account/account_auth_2.png" 
-                     class="forum-auth-icon" 
-                     title="官方认证" 
-                     alt="官方认证">
-              ` : ''}
+              <!-- 昵称和用户组的垂直容器 -->
+              <div class="reply-author-name-group-mobile">
+                <div class="reply-author-name">${escapeHtml(reply.author_name)}</div>
+                <div class="reply-author-rank">${getUserRankText(reply.user_rank)}</div>
+                
+                <!-- 特殊用户组显示 -->
+                ${reply.rankSp === 2 ? `
+                  <div class="reply-author-badge special-rank">
+                    <i class="fas fa-crown"></i> 协作管理员
+                  </div>
+                ` : ''}
+                
+                ${isAccepted ? '<div class="reply-author-badge accepted"><i class="fas fa-check-circle"></i> 已采纳</div>' : ''}
+              </div>
             </div>
-            
-            <div class="reply-author-name">${escapeHtml(reply.author_name)}</div>
-            <div class="reply-author-rank">${getUserRankText(reply.user_rank)}</div>
             
             <!-- 用户详细信息 -->
             <div class="reply-author-info">
@@ -914,15 +935,6 @@ async function submitPost() {
                 </div>
               ` : ''}
             </div>
-            
-            <!-- 特殊用户组显示 -->
-            ${reply.rankSp === 2 ? `
-              <div class="reply-author-badge special-rank">
-                <i class="fas fa-crown"></i> 协作管理员
-              </div>
-            ` : ''}
-            
-            ${isAccepted ? '<div class="reply-author-badge accepted"><i class="fas fa-check-circle"></i> 已采纳</div>' : ''}
           </div>
           <div class="reply-content-wrapper">
             <div class="reply-meta">

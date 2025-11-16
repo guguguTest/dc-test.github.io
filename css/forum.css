@@ -906,6 +906,15 @@
   gap: 4px;
 }
 
+/* 桌面端隐藏移动端专用容器 */
+.reply-author-header-mobile {
+  display: none;
+}
+
+.reply-author-name-group-mobile {
+  display: none;
+}
+
 .reply-content-wrapper {
   padding: 20px;
 }
@@ -1274,13 +1283,105 @@
   .reply-author {
     border-right: none;
     border-bottom: 1px solid #e5e7eb;
-    flex-direction: row;
-    padding: 16px;
+    flex-direction: column;
+    padding: 12px;
+    align-items: flex-start;
+    gap: 8px;
   }
 
   .reply-author-avatar {
     width: 48px;
     height: 48px;
+  }
+  
+  /* 移动端头像容器 */
+  .reply-author-avatar-container {
+    margin-bottom: 0 !important;
+  }
+  
+  /* 移动端：显示头像和用户信息的横向布局容器 */
+  .reply-author-header-mobile {
+    display: flex !important;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+  
+  /* 移动端：显示昵称和用户组的垂直容器 */
+  .reply-author-name-group-mobile {
+    display: flex !important;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  /* 移动端：隐藏桌面端的直接子元素昵称和用户组 */
+  .reply-author > .reply-author-avatar-container {
+    display: none;
+  }
+  
+  .reply-author > .reply-author-name {
+    display: none;
+  }
+  
+  .reply-author > .reply-author-rank {
+    display: none;
+  }
+  
+  .reply-author > .reply-author-badge {
+    display: none;
+  }
+  
+  .reply-author-name {
+    font-size: 14px;
+    text-align: left;
+    width: 100%;
+    word-break: break-word;
+  }
+  
+  .reply-author-rank {
+    font-size: 11px;
+    padding: 3px 8px;
+    width: fit-content;
+  }
+  
+  /* 移动端用户信息改为水平紧凑布局 */
+  .reply-author-info {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 0;
+    width: 100%;
+  }
+  
+  .reply-author-info-item {
+    padding: 2px 6px;
+    font-size: 10px;
+    background: transparent;
+    border-radius: 4px;
+    flex: 0 0 auto;
+  }
+  
+  .reply-author-info-item:hover {
+    background: #f3f4f6;
+  }
+  
+  .reply-author-info-item i {
+    font-size: 9px;
+    min-width: 10px;
+  }
+  
+  .reply-author-info-item span {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+  
+  /* 移动端特殊徽章样式调整 */
+  .reply-author-badge {
+    margin-top: 0;
+    width: fit-content;
   }
 
   .post-navigation {
