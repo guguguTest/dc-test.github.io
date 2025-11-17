@@ -9,7 +9,7 @@ function __getPermissionModalRoot(){
 class UserManager {
   constructor() {
     this.currentPage = 1;
-    this.usersPerPage = 20;
+    this.usersPerPage = 50; // 默认50条
     this.totalPages = 1;
     this.users = [];
     this.editingUserId = null;
@@ -57,6 +57,9 @@ class UserManager {
     // 过滤
     const rankFilter = document.getElementById('user-rank-filter');
     const stateFilter = document.getElementById('user-state-filter');
+    const authFilter = document.getElementById('user-auth-filter'); // 新增：认证类型过滤
+    const perPageSelect = document.getElementById('users-per-page'); // 新增：每页显示数量
+    
     if (rankFilter) {
       rankFilter.addEventListener('change', () => {
         this.currentPage = 1;
@@ -65,6 +68,23 @@ class UserManager {
     }
     if (stateFilter) {
       stateFilter.addEventListener('change', () => {
+        this.currentPage = 1;
+        this.loadUsers();
+      });
+    }
+    
+    // 新增：认证类型过滤事件
+    if (authFilter) {
+      authFilter.addEventListener('change', () => {
+        this.currentPage = 1;
+        this.loadUsers();
+      });
+    }
+    
+    // 新增：每页显示数量变更事件
+    if (perPageSelect) {
+      perPageSelect.addEventListener('change', () => {
+        this.usersPerPage = parseInt(perPageSelect.value) || 50;
         this.currentPage = 1;
         this.loadUsers();
       });
@@ -121,11 +141,17 @@ class UserManager {
       const search = (document.getElementById('user-search-input') || {}).value || '';
       const rankFilter = (document.getElementById('user-rank-filter') || {}).value || '';
       const stateFilter = (document.getElementById('user-state-filter') || {}).value || '';
+      const authFilter = (document.getElementById('user-auth-filter') || {}).value || ''; // 新增：获取认证类型过滤
+      const perPageSelect = document.getElementById('users-per-page');
+      if (perPageSelect) {
+        this.usersPerPage = parseInt(perPageSelect.value) || 50;
+      }
 
       let url = `https://api.am-all.com.cn/api/admin/users?page=${this.currentPage}&limit=${this.usersPerPage}`;
       if (search) url += `&search=${encodeURIComponent(search)}`;
       if (rankFilter) url += `&user_rank=${rankFilter}`;
       if (stateFilter) url += `&banState=${stateFilter}`;
+      if (authFilter) url += `&account_auth=${authFilter}`; // 新增：添加认证类型参数
 
       const resp = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }});
       if (!resp.ok) {
@@ -257,36 +283,83 @@ getUserRowHTML(user, isEditing) {
     const ul = document.createElement('ul');
     ul.className = 'pagination';
 
+    // 上一页按钮
     if (this.currentPage > 1) {
       const prevLi = document.createElement('li');
       prevLi.className = 'page-item';
-      prevLi.innerHTML = `<a class="page-link" href="#" data-page="${this.currentPage - 1}">上一页</a>`;
+      // 修复：使用 javascript:void(0) 替代 #，避免触发路由
+      prevLi.innerHTML = `<a class="page-link" href="javascript:void(0)" data-page="${this.currentPage - 1}">上一页</a>`;
       ul.appendChild(prevLi);
     }
 
-    for (let i = 1; i <= this.totalPages; i++) {
+    // 页码按钮 - 智能显示（当页数过多时只显示部分页码）
+    const maxVisiblePages = 10;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    // 调整起始页，确保显示足够的页码
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // 显示第一页（如果不在可见范围内）
+    if (startPage > 1) {
+      const li = document.createElement('li');
+      li.className = 'page-item';
+      li.innerHTML = `<a class="page-link" href="javascript:void(0)" data-page="1">1</a>`;
+      ul.appendChild(li);
+      
+      if (startPage > 2) {
+        const ellipsis = document.createElement('li');
+        ellipsis.className = 'page-item disabled';
+        ellipsis.innerHTML = `<span class="page-link">...</span>`;
+        ul.appendChild(ellipsis);
+      }
+    }
+
+    // 显示可见范围的页码
+    for (let i = startPage; i <= endPage; i++) {
       const li = document.createElement('li');
       li.className = `page-item ${i===this.currentPage ? 'active' : ''}`;
-      li.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+      li.innerHTML = `<a class="page-link" href="javascript:void(0)" data-page="${i}">${i}</a>`;
       ul.appendChild(li);
     }
 
+    // 显示最后一页（如果不在可见范围内）
+    if (endPage < this.totalPages) {
+      if (endPage < this.totalPages - 1) {
+        const ellipsis = document.createElement('li');
+        ellipsis.className = 'page-item disabled';
+        ellipsis.innerHTML = `<span class="page-link">...</span>`;
+        ul.appendChild(ellipsis);
+      }
+      
+      const li = document.createElement('li');
+      li.className = 'page-item';
+      li.innerHTML = `<a class="page-link" href="javascript:void(0)" data-page="${this.totalPages}">${this.totalPages}</a>`;
+      ul.appendChild(li);
+    }
+
+    // 下一页按钮
     if (this.currentPage < this.totalPages) {
       const nextLi = document.createElement('li');
       nextLi.className = 'page-item';
-      nextLi.innerHTML = `<a class="page-link" href="#" data-page="${this.currentPage + 1}">下一页</a>`;
+      nextLi.innerHTML = `<a class="page-link" href="javascript:void(0)" data-page="${this.currentPage + 1}">下一页</a>`;
       ul.appendChild(nextLi);
     }
 
-    ul.querySelectorAll('.page-link').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const page = parseInt(e.currentTarget.dataset.page, 10);
-        if (page && page !== this.currentPage) {
-          this.currentPage = page;
-          this.loadUsers();
-        }
-      });
+    // 绑定事件（使用事件委托）
+    ul.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const link = e.target.closest('.page-link');
+      if (!link || link.parentElement.classList.contains('disabled')) return;
+      
+      const page = parseInt(link.dataset.page, 10);
+      if (page && page !== this.currentPage && page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+        this.loadUsers();
+      }
     });
 
     container.appendChild(ul);

@@ -1,13 +1,26 @@
-/* 用户管理页面样式 */
+/* ============================================
+   用户管理页面完整样式表
+   User Manager Complete Stylesheet
+   Version: 2.0.0
+   Last Updated: 2025-11-17
+   ============================================ */
+
+/* ========== 容器和布局 ========== */
 .user-manager-container {
     padding: 20px;
     background: #fff;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    margin: 0 auto;
 }
 
+/* ========== 搜索和过滤区域 ========== */
 .user-search-section {
     margin-bottom: 20px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
 }
 
 .search-filters {
@@ -17,10 +30,12 @@
     flex-wrap: wrap;
 }
 
+/* 搜索输入框组合 */
 .search-input {
     display: flex;
     flex: 1;
     min-width: 300px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .search-input input {
@@ -29,57 +44,144 @@
     border: 1px solid #ddd;
     border-radius: 4px 0 0 4px;
     outline: none;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.search-input input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.search-input input::placeholder {
+    color: #999;
 }
 
 .search-input button {
-    padding: 8px 16px;
+    padding: 8px 20px;
     border: 1px solid #007bff;
     background: #007bff;
     color: white;
     border-radius: 0 4px 4px 0;
     cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
 }
 
+.search-input button:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+}
+
+.search-input button:active {
+    background: #004085;
+    transform: translateY(1px);
+}
+
+/* 过滤器下拉框 */
 .filter-select {
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
     outline: none;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    min-width: 140px;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+.filter-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.filter-select:hover {
+    border-color: #999;
+}
+
+/* ========== 表格容器 ========== */
 .user-table-container {
     overflow-x: auto;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
 }
 
+/* 表格样式 */
 .user-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px; /* 调整字体大小 */
+    font-size: 14px;
+    background: white;
 }
 
 .user-table th,
 .user-table td {
-    padding: 12px 8px;
+    padding: 12px 10px;
     text-align: left;
     border-bottom: 1px solid #eee;
-    color: #333; /* 设置文字颜色为深色 */
+    color: #333;
+    vertical-align: middle;
 }
 
 .user-table th {
     background: #f8f9fa;
     font-weight: 600;
+    color: #495057;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+    border-bottom: 2px solid #dee2e6;
 }
 
+.user-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.user-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.user-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 表格单元格特殊样式 */
+.user-table td {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+/* ========== 用户头像 ========== */
 .user-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
+    border: 2px solid #e9ecef;
+    transition: transform 0.2s;
 }
 
+.user-avatar:hover {
+    transform: scale(1.1);
+    border-color: #007bff;
+}
+
+/* ========== 操作按钮 ========== */
 .user-actions {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .user-actions button {
@@ -88,6 +190,9 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .btn-edit {
@@ -95,9 +200,19 @@
     color: white;
 }
 
+.btn-edit:hover {
+    background: #218838;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
 .btn-auth {
     background: #007bff;
     color: white;
+}
+
+.btn-auth:hover {
+    background: #0056b3;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
 .btn-save {
@@ -105,123 +220,303 @@
     color: white;
 }
 
+.btn-save:hover {
+    background: #218838;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
 .btn-cancel {
     background: #6c757d;
     color: white;
 }
 
-/* 分页样式 */
+.btn-cancel:hover {
+    background: #5a6268;
+    box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
+}
+
+.user-actions button:active {
+    transform: translateY(1px);
+}
+
+/* ========== 编辑模式输入框 ========== */
+.edit-mode-input,
+.edit-mode-select {
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 13px;
+    width: 100%;
+    max-width: 150px;
+    transition: border-color 0.2s;
+}
+
+.edit-mode-input:focus,
+.edit-mode-select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.edit-mode-select {
+    cursor: pointer;
+    background: white;
+}
+
+/* ========== 分页样式 ========== */
 .pagination-container {
     margin-top: 20px;
+    padding: 15px;
     display: flex;
     justify-content: center;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 6px;
 }
 
 .pagination {
     display: flex;
-    gap: 8px;
+    gap: 5px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .page-item {
     display: inline-block;
 }
 
+.page-item.disabled .page-link {
+    color: #999;
+    cursor: default;
+    pointer-events: none;
+    background: transparent;
+    border: none;
+}
+
 .page-link {
+    display: block;
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
     color: #007bff;
     text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    user-select: none;
+    background: white;
+    font-weight: 500;
+    min-width: 36px;
+    text-align: center;
+}
+
+.page-link:hover:not(.page-item.disabled .page-link) {
+    background: #e9ecef;
+    border-color: #007bff;
+    color: #0056b3;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .page-item.active .page-link {
     background: #007bff;
     color: white;
     border-color: #007bff;
+    cursor: default;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
-/* 权限模态框样式 */
+.page-item.active .page-link:hover {
+    background: #007bff;
+    border-color: #007bff;
+}
+
+/* 省略号样式 */
+.page-item.disabled .page-link {
+    background: transparent;
+    border: none;
+    color: #999;
+    padding: 8px 4px;
+}
+
+/* ========== 权限模态框 ========== */
 .permission-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
 }
 
 .permission-modal.show {
     display: flex;
-    align-items: center;
-    justify-content: center;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .permission-modal-content {
-    background: white;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow: hidden;
+    background: #fff;
+    width: min(900px, 92vw);
+    max-height: 85vh;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
+    animation: modalSlideIn 0.3s ease;
 }
 
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 模态框头部 */
 .permission-modal-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid #eee;
+    padding: 18px 24px;
+    border-bottom: 1px solid #e9ecef;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: linear-gradient(to bottom, #ffffff, #f8f9fa);
 }
 
 .permission-modal-header h3 {
     margin: 0;
+    font-size: 18px;
     color: #333;
+    font-weight: 600;
 }
 
 .permission-modal-close {
-    background: none;
+    background: transparent;
     border: none;
-    font-size: 20px;
+    font-size: 28px;
     cursor: pointer;
+    color: #999;
+    transition: all 0.2s;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    line-height: 1;
 }
 
+.permission-modal-close:hover {
+    color: #333;
+    background: #e9ecef;
+}
+
+/* 模态框主体 */
 .permission-modal-body {
-    padding: 20px;
+    padding: 16px 24px;
     overflow-y: auto;
     flex: 1;
 }
 
-.permission-item {
+/* 自定义滚动条 */
+.permission-modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.permission-modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.permission-modal-body::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.permission-modal-body::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 权限行 */
+.permission-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #f0f0f0;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 10px;
+    border-bottom: 1px dashed #e9ecef;
+    transition: background-color 0.2s;
+}
+
+.permission-row:hover {
+    background-color: #f8f9fa;
+}
+
+.permission-row:last-child {
+    border-bottom: none;
 }
 
 .permission-name {
-    font-weight: 500;
+    font-weight: 600;
     color: #333;
+    flex: 0 0 160px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
 }
 
-.permission-switch {
+.permission-controls {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    flex: 1;
+    justify-content: flex-start;
+}
+
+.permission-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.permission-label {
+    min-width: 70px;
+    font-size: 13px;
+    color: #555;
+    user-select: none;
+    font-weight: 500;
+}
+
+/* ========== 开关按钮样式 ========== */
+.switch {
     position: relative;
     display: inline-block;
-    width: 50px;
-    height: 24px;
+    width: 48px;
+    height: 26px;
 }
 
-.permission-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
+.switch input {
+    display: none;
 }
 
-.permission-slider {
+.slider {
     position: absolute;
     cursor: pointer;
     top: 0;
@@ -229,43 +524,53 @@
     right: 0;
     bottom: 0;
     background-color: #ccc;
-    transition: .4s;
-    border-radius: 24px;
+    transition: 0.3s;
+    border-radius: 26px;
 }
 
-.permission-slider:before {
+.slider:before {
     position: absolute;
     content: "";
-    height: 16px;
-    width: 16px;
-    left: 4px;
-    bottom: 4px;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
     background-color: white;
-    transition: .4s;
+    transition: 0.3s;
     border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-input:checked + .permission-slider {
-    background-color: #2196F3;
+input:checked + .slider {
+    background-color: #4caf50;
 }
 
-input:checked + .permission-slider:before {
-    transform: translateX(26px);
+input:checked + .slider:before {
+    transform: translateX(22px);
 }
 
+.slider:hover {
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 模态框底部 */
 .permission-modal-footer {
-    padding: 16px 20px;
-    border-top: 1px solid #eee;
+    padding: 16px 24px;
+    border-top: 1px solid #e9ecef;
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 12px;
+    background: #f8f9fa;
 }
 
 .permission-modal-footer button {
-    padding: 8px 16px;
+    padding: 10px 24px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
 }
 
 #permission-cancel {
@@ -273,341 +578,417 @@ input:checked + .permission-slider:before {
     color: white;
 }
 
+#permission-cancel:hover {
+    background: #5a6268;
+    box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
+}
+
 #permission-save {
     background: #007bff;
     color: white;
 }
 
-.permission-modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+#permission-save:hover {
+    background: #0056b3;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
-.permission-modal.show {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.permission-modal-footer button:active {
+    transform: translateY(1px);
 }
 
-.permission-modal-content {
-  background-color: #fff;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
-  overflow-y: auto;
+/* ========== 加载状态 ========== */
+.loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-size: 16px;
 }
 
-.permission-modal-header {
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.loading::after {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
 }
 
-.permission-modal-body {
-  padding: 20px;
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
-.permission-modal-footer {
-  padding: 15px 20px;
-  border-top: 1px solid #eee;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+/* ========== 空状态 ========== */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
 }
 
-.permission-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
+.empty-state-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.5;
 }
 
-.permission-switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
+.empty-state-text {
+    font-size: 16px;
+    color: #666;
 }
 
-.permission-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+/* ========== 响应式设计 ========== */
+@media (max-width: 1200px) {
+    .user-table {
+        font-size: 13px;
+    }
+    
+    .permission-controls {
+        gap: 24px;
+    }
 }
 
-.permission-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 24px;
+@media (max-width: 992px) {
+    .search-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-input {
+        min-width: 100%;
+    }
+    
+    .filter-select {
+        width: 100%;
+    }
+    
+    .user-table th,
+    .user-table td {
+        padding: 10px 6px;
+    }
 }
 
-.permission-slider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
+@media (max-width: 768px) {
+    .user-manager-container {
+        padding: 15px;
+    }
+    
+    .user-search-section {
+        padding: 12px;
+    }
+    
+    .user-table {
+        font-size: 12px;
+    }
+    
+    .user-table th,
+    .user-table td {
+        padding: 8px 4px;
+    }
+    
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .user-actions button {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+    
+    .permission-modal-content {
+        width: 95vw;
+        max-height: 90vh;
+    }
+    
+    .permission-modal-header,
+    .permission-modal-body,
+    .permission-modal-footer {
+        padding: 12px 16px;
+    }
+    
+    .permission-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .permission-name {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+    
+    .permission-controls {
+        width: 100%;
+        justify-content: space-between;
+        gap: 16px;
+    }
+    
+    .pagination {
+        gap: 3px;
+    }
+    
+    .page-link {
+        padding: 6px 10px;
+        font-size: 13px;
+        min-width: 32px;
+    }
 }
 
-input:checked + .permission-slider {
-  background-color: #2196F3;
+@media (max-width: 576px) {
+    .user-manager-container {
+        padding: 10px;
+        border-radius: 4px;
+    }
+    
+    .search-filters {
+        gap: 10px;
+    }
+    
+    .filter-select {
+        min-width: 100%;
+        padding: 10px;
+    }
+    
+    .permission-modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .permission-controls {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .permission-item {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 
-input:checked + .permission-slider:before {
-  transform: translateX(26px);
+/* ========== 打印样式 ========== */
+@media print {
+    .user-search-section,
+    .user-actions,
+    .pagination-container,
+    .permission-modal {
+        display: none !important;
+    }
+    
+    .user-manager-container {
+        box-shadow: none;
+        padding: 0;
+    }
+    
+    .user-table {
+        border: 1px solid #000;
+    }
+    
+    .user-table th,
+    .user-table td {
+        border: 1px solid #000;
+        padding: 8px;
+    }
 }
 
-/* 权限模态框样式 */
-.permission-modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+/* ========== 辅助类 ========== */
+.text-success {
+    color: #28a745 !important;
 }
 
-.permission-modal.show {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.text-danger {
+    color: #dc3545 !important;
 }
 
-.permission-modal-content {
-  background-color: #fff;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+.text-warning {
+    color: #ffc107 !important;
 }
 
-.permission-modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.text-info {
+    color: #17a2b8 !important;
 }
 
-.permission-modal-header h3 {
-  margin: 0;
-  color: #333;
+.text-muted {
+    color: #6c757d !important;
 }
 
-.permission-modal-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #999;
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 3px;
 }
 
-.permission-modal-body {
-  padding: 20px;
+.badge-success {
+    background-color: #28a745;
 }
 
-.permission-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f5f5f5;
+.badge-danger {
+    background-color: #dc3545;
 }
 
-.permission-name {
-  font-size: 16px;
-  color: #333;
+.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
 }
 
-.permission-switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
+.badge-info {
+    background-color: #17a2b8;
 }
 
-.permission-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+/* ========== 工具提示 ========== */
+[data-tooltip] {
+    position: relative;
+    cursor: help;
 }
 
-.permission-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 24px;
+[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    background: #333;
+    color: white;
+    font-size: 12px;
+    white-space: nowrap;
+    border-radius: 4px;
+    z-index: 1000;
+    margin-bottom: 5px;
 }
 
-.permission-slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
+[data-tooltip]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #333;
+    z-index: 1000;
 }
 
-input:checked + .permission-slider {
-  background-color: #2196F3;
+/* ========== 动画效果 ========== */
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
 }
 
-input:checked + .permission-slider:before {
-  transform: translateX(26px);
+.fade-out {
+    animation: fadeOut 0.3s ease;
 }
 
-.permission-modal-footer {
-  padding: 20px;
-  border-top: 1px solid #eee;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+/* ========== 滚动条美化（Webkit浏览器） ========== */
+.user-table-container::-webkit-scrollbar {
+    height: 8px;
 }
 
-.permission-modal {
-  /* 确保模态框在最上层 */
-  z-index: 10000;
+.user-table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
 }
 
-.permission-item {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+.user-table-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
 }
 
-.permission-name {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 8px;
+.user-table-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
-.permission-controls {
-  display: flex;
-  flex-direction: column;
+/* ========== 暗色模式支持（可选） ========== */
+@media (prefers-color-scheme: dark) {
+    .user-manager-container {
+        background: #1e1e1e;
+        color: #e0e0e0;
+    }
+    
+    .user-search-section {
+        background: #2d2d2d;
+    }
+    
+    .search-input input,
+    .filter-select,
+    .edit-mode-input,
+    .edit-mode-select {
+        background: #2d2d2d;
+        border-color: #444;
+        color: #e0e0e0;
+    }
+    
+    .user-table {
+        background: #1e1e1e;
+    }
+    
+    .user-table th {
+        background: #2d2d2d;
+        color: #e0e0e0;
+        border-bottom-color: #444;
+    }
+    
+    .user-table td {
+        border-bottom-color: #333;
+        color: #e0e0e0;
+    }
+    
+    .user-table tbody tr:hover {
+        background-color: #2d2d2d;
+    }
+    
+    .page-link {
+        background: #2d2d2d;
+        border-color: #444;
+        color: #61dafb;
+    }
+    
+    .page-link:hover:not(.page-item.disabled .page-link) {
+        background: #3d3d3d;
+        border-color: #61dafb;
+    }
+    
+    .permission-modal-content {
+        background: #1e1e1e;
+    }
+    
+    .permission-modal-header {
+        background: linear-gradient(to bottom, #1e1e1e, #2d2d2d);
+        border-bottom-color: #444;
+    }
+    
+    .permission-modal-header h3 {
+        color: #e0e0e0;
+    }
+    
+    .permission-row {
+        border-bottom-color: #333;
+    }
+    
+    .permission-row:hover {
+        background-color: #2d2d2d;
+    }
+    
+    .permission-name,
+    .permission-label {
+        color: #e0e0e0;
+    }
+    
+    .permission-modal-footer {
+        background: #2d2d2d;
+        border-top-color: #444;
+    }
 }
 
-.permission-switch {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
-.permission-label {
-  margin-right: 10px;
-  min-width: 80px;
-  font-size: 14px;
-}
-
-/* 区分两种权限的标签颜色 */
-.permission-switch:first-child .permission-label {
-  color: #4CAF50; /* 访问权限 - 绿色 */
-}
-
-.permission-switch:last-child .permission-label {
-  color: #2196F3; /* 显示权限 - 蓝色 */
-}
-
-/* ===== 权限弹窗布局优化，避免文字被开关遮挡 ===== */
-.permission-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  border-bottom: 1px solid #eee;
-}
-.permission-name {
-  font-weight: 600;
-  flex: 0 0 auto;
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.permission-controls {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  flex: 0 0 auto;
-}
-.permission-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.permission-label {
-  display: inline-block;
-  min-width: 64px;
-  line-height: 1.2;
-  user-select: none;
-}
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 46px;
-  height: 24px;
-}
-.switch input { display: none; }
-.slider {
-  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-  background: #ccc; transition: .3s; border-radius: 12px;
-}
-.slider:before {
-  position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
-  background: white; transition: .3s; border-radius: 50%;
-}
-input:checked + .slider { background: #4caf50; }
-input:checked + .slider:before { transform: translateX(22px); }
-
-/* userManager.final.v3.css — 授权弹窗排版修复 */
-.permission-modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index: 10000; }
-.permission-modal.show { display:flex; }
-.permission-modal-content { background:#fff; width:min(900px, 92vw); border-radius:12px; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
-.permission-modal-header, .permission-modal-footer { padding:14px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #eee; }
-.permission-modal-footer { border-top:1px solid #eee; border-bottom:none; }
-.permission-modal-header h3 { margin:0; font-size:18px; }
-.permission-modal-close { background:transparent; border:0; font-size:20px; cursor:pointer; }
-.permission-modal-body { padding: 12px 16px; max-height: 60vh; overflow:auto; }
-
-.permission-row { display:flex; align-items:center; justify-content:space-between; gap: 12px; padding:10px 6px; border-bottom:1px dashed #f0f0f0; }
-.permission-name { font-weight:600; flex:0 0 140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.permission-controls { display:flex; gap:28px; align-items:center; }
-.permission-item { display:inline-flex; align-items:center; gap:8px; }
-.permission-label { min-width:64px; font-size:13px; color:#555; }
-
-.switch { position:relative; display:inline-block; width:46px; height:24px; }
-.switch input { display:none; }
-.slider { position:absolute; inset:0; background:#ccc; border-radius:12px; transition:.25s; }
-.slider:before { content:''; position:absolute; left:3px; bottom:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition:.25s; }
-input:checked + .slider { background:#3bb273; }
-input:checked + .slider:before { transform: translateX(22px); }
+/* ========== 完成标记 ========== */
+/* 样式表结束 - User Manager CSS v2.0.0 */

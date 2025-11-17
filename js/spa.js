@@ -1612,26 +1612,22 @@ function sendVerificationCode(email, type) {
   console.log(`发送验证码: ${email} (${type})`);
   
   const sendBtn = document.getElementById(type === 'register' ? 'send-verification-code' : 'send-reset-code');
-  const originalText = sendBtn.innerHTML;
   
-  if (sendBtn) {
-    sendBtn.disabled = true;
-    let seconds = 60;
-    
-    // 添加加载动画
-    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>发送中...';
-    
-    const timer = setInterval(() => {
-      sendBtn.innerHTML = `<i class="fas fa-clock me-2"></i>${seconds}秒后重试`;
-      seconds--;
-      if (seconds < 0) {
-        clearInterval(timer);
-        sendBtn.innerHTML = originalText;
-        sendBtn.disabled = false;
-      }
-    }, 1000);
+  // ⭐ 防止重复点击：如果按钮已经被禁用或正在倒计时，直接返回
+  if (!sendBtn || sendBtn.disabled || sendBtn._timer) {
+    console.log('按钮已禁用或正在倒计时，忽略点击');
+    return Promise.reject(new Error('请勿重复点击'));
   }
   
+  const originalText = sendBtn.innerHTML;
+  
+  // 禁用按钮
+  sendBtn.disabled = true;
+  
+  // 添加加载动画
+  sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>发送中...';
+  
+  // 发送请求
   return fetch('https://api.am-all.com.cn/api/send-verification-code', {
     method: 'POST',
     headers: {
@@ -1652,21 +1648,33 @@ function sendVerificationCode(email, type) {
     return response.json();
   })
   .then(data => {
-    // 添加成功动画效果
-    const sendBtn = document.getElementById(type === 'register' ? 'send-verification-code' : 'send-reset-code');
+    // ⭐ 发送成功后才开始倒计时
     if (sendBtn) {
+      let seconds = 60;
+      
+      // 显示成功状态
       sendBtn.innerHTML = '<i class="fas fa-check me-2"></i>已发送';
       sendBtn.classList.add('btn-success');
       
-      // 3秒后恢复原状
+      // 1秒后开始倒计时
       setTimeout(() => {
-        if (sendBtn._timer) {
-          clearInterval(sendBtn._timer);
-        }
-        sendBtn.innerHTML = '获取验证码';
-        sendBtn.disabled = false;
         sendBtn.classList.remove('btn-success');
-      }, 3000);
+        sendBtn.innerHTML = `<i class="fas fa-clock me-2"></i>${seconds}秒后重试`;
+        
+        // ⭐ 将定时器存储在按钮对象上，便于管理
+        sendBtn._timer = setInterval(() => {
+          seconds--;
+          if (seconds < 0) {
+            // 倒计时结束，清理定时器并恢复按钮
+            clearInterval(sendBtn._timer);
+            sendBtn._timer = null;
+            sendBtn.innerHTML = originalText;
+            sendBtn.disabled = false;
+          } else {
+            sendBtn.innerHTML = `<i class="fas fa-clock me-2"></i>${seconds}秒后重试`;
+          }
+        }, 1000);
+      }, 1000);
     }
     
     showSuccessMessage('验证码已发送至您的邮箱');
@@ -1675,13 +1683,14 @@ function sendVerificationCode(email, type) {
   .catch(error => {
     console.error('验证码发送失败:', error);
     
-    // 恢复按钮状态
-    const sendBtn = document.getElementById(type === 'register' ? 'send-verification-code' : 'send-reset-code');
+    // ⭐ 发送失败时立即恢复按钮状态
     if (sendBtn) {
+      // 清除可能存在的定时器
       if (sendBtn._timer) {
         clearInterval(sendBtn._timer);
+        sendBtn._timer = null;
       }
-      sendBtn.innerHTML = '获取验证码';
+      sendBtn.innerHTML = originalText;
       sendBtn.disabled = false;
       sendBtn.classList.remove('btn-success');
     }

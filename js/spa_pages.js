@@ -75,6 +75,18 @@ const pages = {
           <option value="1" data-i18n="userManager.restricted">受限</option>
           <option value="2" data-i18n="userManager.banned">封禁</option>
         </select>
+		<select id="user-auth-filter" class="filter-select">
+		  <option value="">所有认证类型</option>
+		  <option value="0">未认证</option>
+		  <option value="1">个人认证</option>
+		  <option value="2">官方认证</option>
+		</select>
+		<select id="users-per-page" class="filter-select">
+		  <option value="50" selected>每页50条</option>
+		  <option value="100">每页100条</option>
+		  <option value="300">每页300条</option>
+		  <option value="500">每页500条</option>
+		</select>
       </div>
     </div>
     
