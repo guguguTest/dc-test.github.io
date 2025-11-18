@@ -56,6 +56,60 @@
   margin-top: 30px;
 }
 
+/* 绑定提示框样式 */
+.shipping-notice {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin: 0 auto 30px;
+  max-width: 800px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  animation: slideDown 0.5s ease;
+}
+
+.shipping-notice i {
+  font-size: 24px;
+}
+
+.shipping-notice span {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.shipping-notice .btn-sm {
+  padding: 8px 16px;
+  font-size: 14px;
+  background: white;
+  color: #667eea;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 600;
+}
+
+.shipping-notice .btn-sm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* 商店选择页面 */
 .shop-selection-container {
   padding: 30px;

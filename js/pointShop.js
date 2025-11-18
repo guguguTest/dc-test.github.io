@@ -212,7 +212,7 @@ window.initPointShop = async function() {
 };
 
 // 渲染收货信息表单
-function renderShippingForm() {
+window.renderShippingForm = function() {
   const content = document.getElementById('content-container');
   content.innerHTML = `
     <div class="section">
@@ -291,6 +291,8 @@ window.skipShippingBinding = function() {
       
       if (res.success) {
         shippingAddress = data;
+        // 清除跳过标记
+        localStorage.removeItem('shipping_skipped');
         showSuccessMessage('收货信息绑定成功');
         renderShopSelection();
       }
@@ -302,9 +304,22 @@ window.skipShippingBinding = function() {
   // 渲染商店选择页面
   function renderShopSelection() {
     const content = document.getElementById('content-container');
+    
+    // 检查是否需要显示绑定按钮（未绑定且已跳过）
+    const showBindButton = !shippingAddress && localStorage.getItem('shipping_skipped') === 'true';
+    
     content.innerHTML = `
       <div class="section">
         <h1 class="page-title">积分商城</h1>
+        ${showBindButton ? `
+          <div class="shipping-notice">
+            <i class="fas fa-info-circle"></i>
+            <span>您尚未绑定收货信息，无法兑换实物商品</span>
+            <button class="btn btn-primary btn-sm" onclick="renderShippingForm()">
+              <i class="fas fa-link"></i> 绑定收货地址
+            </button>
+          </div>
+        ` : ''}
         <div class="shop-selection-container">
           <div class="shop-cards">
             <div class="shop-card" onclick="openPointShop('points')">
@@ -1484,7 +1499,7 @@ function getUserRankName(rank) {
       } else {
         container.innerHTML = `
           <p class="no-shipping">未绑定收货信息</p>
-          <button class="btn btn-primary" onclick="loadPage('point-shop')">
+          <button class="btn btn-primary" onclick="goToShippingBinding()">
             <i class="fas fa-link"></i> 去绑定
           </button>
         `;
@@ -1504,12 +1519,22 @@ function getUserRankName(rank) {
       });
       
       if (res.success) {
+        // 清除跳过标记，让用户重新选择
+        localStorage.removeItem('shipping_skipped');
         showSuccessMessage('解绑成功');
         initShippingSettings();
       }
     } catch (error) {
       showErrorMessage('解绑失败');
     }
+  };
+  
+  // 从用户设置页面跳转到绑定页面
+  window.goToShippingBinding = function() {
+    // 清除跳过标记，确保显示绑定表单
+    localStorage.removeItem('shipping_skipped');
+    // 跳转到积分商城页面
+    loadPage('point-shop');
   };
   
 })();
